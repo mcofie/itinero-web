@@ -132,7 +132,7 @@ export default function LandingPage() {
             {/* Hero + Wizard */}
             <section className="mx-auto w-full max-w-6xl px-6 py-12 md:py-20">
                 <div className="mx-auto max-w-3xl text-center">
-                    <h1 className="text-3xl md:text-5xl font-semibold tracking-tight">
+                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-semibold tracking-tight">
                         Plan smarter trips in minutes — then share, tweak, and go.
                     </h1>
                     <p className="mt-4 text-muted-foreground text-lg">
@@ -151,14 +151,14 @@ export default function LandingPage() {
 
                 {/* Wizard */}
                 <div className="mt-10">
-                    <div className="mx-auto max-w-2xl rounded-xl border bg-card p-4 md:p-6">
+                    <div className="mx-auto max-w-2xl rounded-xl  p-4 md:p-6">
                         <TripWizard/>
                     </div>
                 </div>
             </section>
 
             {/* Curated trips carousel */}
-            <section className="mx-auto w-full max-w-6xl px-6 pb-8">
+            <section className="hidden mx-auto w-full max-w-6xl px-6 pb-8">
                 <div className="flex items-end justify-between gap-4">
                     <div>
                         <h2 className="text-xl md:text-2xl font-semibold tracking-tight">Curated trips you can start
@@ -204,7 +204,7 @@ export default function LandingPage() {
             </section>
 
             {/* NEW: Deals section */}
-            <section className="mx-auto w-full max-w-6xl px-6 pb-16">
+            <section className="hidden mx-auto w-full max-w-6xl px-6 pb-16">
                 <div className="flex items-end justify-between gap-4">
                     <div>
                         <h2 className="text-xl md:text-2xl font-semibold tracking-tight">Limited-time deals</h2>
@@ -260,10 +260,10 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            <Separator className="my-8"/>
+            <Separator className="my-8 hidden"/>
 
             {/* Features */}
-            <section className="mx-auto w-full max-w-6xl px-6 pb-16">
+            <section className="mx-auto w-full max-w-6xl px-6 pb-16 hidden">
                 <div className="grid gap-6 md:grid-cols-3">
                     <div className="rounded-lg border p-5">
                         <h3 className="font-medium text-lg">Personalized picks</h3>
