@@ -1,18 +1,23 @@
 // supabase/functions/build_preview_itinerary/index.ts
-// Deno/Edge Function
 import { serve } from "https://deno.land/std/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+type Lodging = { name: string; lat: number; lng: number; address?: string };
+
 type Input = {
     destinations: { name: string; country?: string; lat?: number; lng?: number }[];
-    start_date: string; // YYYY-MM-DD
-    end_date: string;   // YYYY-MM-DD
+    start_date: string;
+    end_date: string;
     budget_daily: number;
-    currency?: string;  // e.g. 'USD'
+    currency?: string;
     party?: { adults: number; children?: number };
-    interests?: string[]; // ['food','culture',...]
+    interests?: string[]; // e.g. ["food","culture","beach"]
     pace?: "chill" | "balanced" | "packed";
     mode?: "walk" | "bike" | "car" | "transit";
+    lodging?: Lodging; // single base
+    lodging_by_date?: Record<string, Lodging>; // per-day base
+    // optional tunables (soft bias only)
+    soft_distance?: { anchor_km?: number; hop_km?: number };
 };
 
 type Block = {
@@ -25,105 +30,282 @@ type Block = {
     notes?: string;
 };
 
-type Day = { date: string; blocks: Block[]; map_polyline?: string };
+type Day =
+    & { date: string; blocks: Block[]; map_polyline?: string }
+    & { lodging?: { name: string; lat: number; lng: number } | null; return_to_lodging_min?: number | null; est_day_cost?: number; budget_daily?: number };
 
 serve(async (req) => {
-    // CORS
-    if (req.method === "OPTIONS") {
-        return new Response(null, {
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-            },
-        });
-    }
-
+    if (req.method === "OPTIONS") return cors();
     try {
         const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
         const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-        const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { headers: { Authorization: req.headers.get("Authorization")! } } });
+        const auth = req.headers.get("Authorization") ?? "";
+        const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            db: { schema: "itinero" },
+            global: { headers: { Authorization: auth } },
+        });
 
-        const input: Input = await req.json();
-        // Basic validation
-        if (!input.destinations?.length || !input.start_date || !input.end_date) {
-            return json({ error: "destinations[], start_date, end_date required" }, 400);
+        const input = (await req.json()) as Input;
+        if (!input?.destinations?.length) return j({ error: "destinations[] is required" }, 400);
+        if (!input.start_date || !input.end_date) return j({ error: "start_date and end_date are required" }, 400);
+
+        const interests = (input.interests ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean);
+        const mode = input.mode ?? "walk";
+        const pace = input.pace ?? "balanced";
+
+        // === Destination anchor & broad bbox for initial fetch ===
+        const destAnchor = input.destinations[0];
+        const hasDestCoords = typeof destAnchor.lat === "number" && typeof destAnchor.lng === "number";
+        const delta = 0.3;
+        const bbox = hasDestCoords
+            ? { latMin: destAnchor.lat! - delta, latMax: destAnchor.lat! + delta, lngMin: destAnchor.lng! - delta, lngMax: destAnchor.lng! + delta }
+            : null;
+
+        // === Transport speed ===
+        const { data: speedRow } = await client.from("transport_speeds").select("km_per_hour").eq("mode", mode).maybeSingle();
+        const kmph = Number(speedRow?.km_per_hour ?? 4.5);
+
+        // === Candidate places (pull as much metadata as we might use; degrade gracefully if missing) ===
+        let q = client.from("places").select("id,name,lat,lng,category,tags,popularity,cost_typical,cost_currency");
+        if (bbox) q = q.gte("lat", bbox.latMin).lte("lat", bbox.latMax).gte("lng", bbox.lngMin).lte("lng", bbox.lngMax);
+        const { data: places, error: pErr } = await q.limit(300);
+        if (pErr) throw pErr;
+        const pool = places ?? [];
+
+        // === Opening hours (optional) ===
+        const ids = pool.map((p) => p.id);
+        const { data: hours } =
+            ids.length
+                ? await client.from("place_hours").select("place_id,dow,open_min,close_min").in("place_id", ids)
+                : { data: [] as any[] };
+
+        const hoursByPlace: Record<string, { [dow: number]: { open: number; close: number } }> = {};
+        for (const r of (hours ?? [])) {
+            hoursByPlace[r.place_id] ??= {};
+            hoursByPlace[r.place_id][Number(r.dow)] = { open: Number(r.open_min), close: Number(r.close_min) };
         }
 
-        // (Optional) naive IP rate-limit (very light)
-        const ip = req.headers.get("x-forwarded-for") ?? "unknown";
-        // TODO: store counts in KV/Rate-limit table if needed
+        // === Build days & rotate interests ===
+        const dayDates = buildDays(input.start_date, input.end_date);
+        const days: Day[] = dayDates.map((date) => ({ date, blocks: [] }));
+        const rotatedInterests: (string | null)[] = days.map((_, i) => (interests.length ? interests[i % interests.length] : null));
 
-        // Example: choose first destination as anchor
-        const anchor = input.destinations[0];
-
-        // Pull a few candidate places (you likely have places_in_bbox or similar).
-        // Here’s a safe fallback query by interest category:
-        const interest = input.interests?.[0] ?? "culture";
-        const { data: places, error: pErr } = await client
-            .from("itinero.places")
-            .select("id,name,lat,lng,category")
-            .eq("category", interest)
-            .limit(20);
-
-        if (pErr) throw pErr;
-
-        // Build day skeletons between start and end
-        const days: Day[] = buildDays(input.start_date, input.end_date).map((d) => ({
-            date: d,
-            blocks: [
-                mkBlock("morning", places?.[0]?.id, places?.[0]?.name ?? "Explore old town"),
-                mkBlock("afternoon", places?.[1]?.id, places?.[1]?.name ?? "Local market walk"),
-                mkBlock("evening", places?.[2]?.id, places?.[2]?.name ?? "Dinner & nightlife"),
-            ],
-        }));
-
-        // TODO: enhance with: is_open_for_slot(), slot_schedule(), build_legs_for_day(), fx_convert(), etc.
-
-        const resp = {
-            trip_summary: {
-                total_days: days.length,
-                est_total_cost: Math.round((input.budget_daily ?? 100) * days.length),
-                currency: input.currency ?? "USD",
-            },
-            days,
-            places: places ?? [],
+        // Lodging helpers
+        const lodgingFor = (date: string): Lodging | null => {
+            if (input.lodging_by_date && input.lodging_by_date[date]) return input.lodging_by_date[date];
+            if (input.lodging && typeof input.lodging.lat === "number" && typeof input.lodging.lng === "number") return input.lodging;
+            return null;
         };
 
-        return json(resp, 200);
+        // Budget split per slot (soft targets)
+        const dailyBudget = Number.isFinite(input.budget_daily) ? input.budget_daily : 100;
+        const slotBudgetShare = { morning: 0.35, afternoon: 0.35, evening: 0.30 } as const;
+
+        // Soft distance tunables (anchor & hops)
+        const softAnchorKm = input.soft_distance?.anchor_km ?? 12;
+        const hopPrefKm = input.soft_distance?.hop_km ?? (pace === "chill" ? 12 : pace === "packed" ? 18 : 15);
+
+        const chosen = new Set<string>();
+
+        for (let di = 0; di < days.length; di++) {
+            const date = days[di].date;
+            const dow = new Date(date + "T00:00:00").getDay();
+            const interestOfDay = rotatedInterests[di];
+            const L = lodgingFor(date);
+            const hasLodge = !!L;
+
+            // Day anchor: lodging (preferred) → destination anchor → none
+            const anchorLat = hasLodge ? L!.lat : (hasDestCoords ? destAnchor.lat! : null);
+            const anchorLng = hasLodge ? L!.lng : (hasDestCoords ? destAnchor.lng! : null);
+
+            // Target budgets per slot
+            const targetBySlot = {
+                morning: dailyBudget * slotBudgetShare.morning,
+                afternoon: dailyBudget * slotBudgetShare.afternoon,
+                evening: dailyBudget * slotBudgetShare.evening,
+            };
+
+            // Base scoring (slot-agnostic parts)
+            const baseScored = pool.map((p) => {
+                const nameLC = (p.name ?? "").toLowerCase();
+                const tags: string[] = Array.isArray(p.tags) ? p.tags.map((t: any) => String(t).toLowerCase()) : [];
+                const cat = (p.category ?? "").toLowerCase();
+                const pop = Number.isFinite(p.popularity) ? Number(p.popularity) : 50;
+                const cost = Number.isFinite(p.cost_typical) ? Number(p.cost_typical) : 10;
+
+                let interestScore = 0;
+                if (interestOfDay) {
+                    if (cat === interestOfDay) interestScore += 1.2;
+                    if (tags.includes(interestOfDay)) interestScore += 1.0;
+                    if (nameLC.includes(interestOfDay)) interestScore += 0.6;
+                }
+
+                let distKm = 5;
+                if (anchorLat != null && anchorLng != null && typeof p.lat === "number" && typeof p.lng === "number") {
+                    distKm = haversineKm(anchorLat, anchorLng, p.lat, p.lng);
+                }
+                const prox = Math.max(0, 1 - Math.min(distKm, 25) / 25);
+
+                // Open-hours soft bonus (morning by default for viability)
+                const openBonus = isOpenForSlot(hoursByPlace[p.id], dow, "morning") ? 0.4 : 0;
+
+                // Soft penalty for being far from anchor (kept gentle)
+                const farPenalty = Math.max(0, (distKm - softAnchorKm) / 20); // 0..~1
+                const softDistancePenalty = 0.3 * farPenalty;
+
+                const base = interestScore * 1.0 + prox * 0.9 + (pop / 100) * 0.5 + openBonus - softDistancePenalty;
+
+                return { ...p, _base: base, _cost: cost };
+            });
+
+            // Greedy choose 3 blocks with slot-aware budget penalty + short hops
+            const picks: any[] = [];
+            let last: any = hasLodge ? { lat: L!.lat, lng: L!.lng, id: null, name: L!.name } : null;
+
+            for (const slot of ["morning", "afternoon", "evening"] as const) {
+                const target = targetBySlot[slot];
+
+                const slotScored = baseScored
+                    .filter((p) => !chosen.has(p.id))
+                    .map((p) => {
+                        const hopKmFromLast = last ? hopKm(last, p) : 0;
+
+                        // Budget fit (soft): distance of price to target, normalized ~0..1
+                        const priceDelta = Math.abs((p._cost ?? 10) - target);
+                        const pricePenalty = Math.min(1, priceDelta / Math.max(10, target || 10));
+
+                        // Soft hop penalty to prefer short moves
+                        const hopPenalty = Math.max(0, (hopKmFromLast - hopPrefKm) / (2 * hopPrefKm));
+
+                        const jitter = Math.random() * 0.02;
+
+                        const total = p._base
+                            - 0.6 * pricePenalty
+                            - 0.3 * hopPenalty
+                            + jitter;
+
+                        return { ...p, _slotScore: total, _hopKm: hopKmFromLast };
+                    })
+                    .sort((a, b) => b._slotScore - a._slotScore);
+
+                const pick = slotScored[0] ?? null;
+                picks.push(pick);
+                if (pick) { chosen.add(pick.id); last = pick; }
+            }
+
+            // Build blocks + travel (lodging->first, between picks); calc return to lodging
+            const blocks: Block[] = [];
+            let dayCost = 0;
+
+            for (let bi = 0; bi < 3; bi++) {
+                const slot = (["morning", "afternoon", "evening"] as const)[bi];
+                const p = picks[bi];
+                let travelMin = 15;
+
+                if (hasLodge) {
+                    if (bi === 0 && p) {
+                        travelMin = Math.round((hopKm(L!, p) / kmph) * 60);
+                    } else if (bi > 0 && p && picks[bi - 1]) {
+                        travelMin = Math.round((hopKm(picks[bi - 1], p) / kmph) * 60);
+                    }
+                } else {
+                    if (bi > 0 && p && picks[bi - 1]) {
+                        travelMin = Math.round((hopKm(picks[bi - 1], p) / kmph) * 60);
+                    }
+                }
+
+                const estCost = Number.isFinite(p?._cost) ? Number(p._cost) : 10;
+                dayCost += estCost;
+
+                blocks.push({
+                    when: slot,
+                    place_id: p?.id ?? null,
+                    title: p?.name ?? (slot === "morning" ? "Explore" : slot === "afternoon" ? "Local walk" : "Dinner"),
+                    est_cost: estCost,
+                    duration_min: pace === "packed" ? 150 : pace === "chill" ? 90 : 120,
+                    travel_min_from_prev: travelMin,
+                    notes: p?.category ? `Category: ${p.category}` : undefined,
+                });
+            }
+
+            // End-of-day return time
+            let returnMin: number | null = null;
+            if (hasLodge) {
+                const lastPick = picks.filter(Boolean).at(-1);
+                if (lastPick) returnMin = Math.round((hopKm(lastPick, L!) / kmph) * 60);
+            }
+
+            days[di].blocks = blocks;
+            days[di].lodging = hasLodge ? { name: L!.name, lat: L!.lat, lng: L!.lng } : null;
+            days[di].return_to_lodging_min = returnMin;
+            days[di].est_day_cost = Math.round(dayCost);
+            days[di].budget_daily = dailyBudget;
+        }
+
+        const estTripCost = days.reduce((acc, d: any) => acc + (d.est_day_cost ?? dailyBudget), 0);
+
+        return j({
+            trip_summary: {
+                total_days: days.length,
+                est_total_cost: Math.round(estTripCost),
+                currency: input.currency ?? "USD",
+                inputs: {
+                    destinations: input.destinations.map((d) => ({ name: d.name, lat: d.lat, lng: d.lng })),
+                    interests,
+                    pace,
+                    mode,
+                    lodging: input.lodging ?? null,
+                    lodging_by_date: input.lodging_by_date ?? null,
+                    soft_distance: input.soft_distance ?? null,
+                },
+            },
+            days,
+            places: (pool ?? []).map(({ id, name, lat, lng, category, tags, popularity, cost_typical, cost_currency }) => ({
+                id, name, lat, lng, category, tags, popularity, cost_typical, cost_currency,
+            })),
+        });
     } catch (e) {
         console.error(e);
-        return json({ error: String(e?.message ?? e) }, 500);
+        return j({ error: String(e?.message ?? e) }, 500);
     }
 });
 
-function json(body: unknown, status = 200) {
-    return new Response(JSON.stringify(body), {
-        status,
+// ----------------- helpers -----------------
+function cors() {
+    return new Response(null, {
         headers: {
-            "content-type": "application/json",
             "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
         },
     });
 }
-
+function j(body: unknown, status = 200) {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
+}
 function buildDays(start: string, end: string): string[] {
     const out: string[] = [];
-    const s = new Date(start + "T00:00:00");
-    const e = new Date(end + "T00:00:00");
-    for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
-        out.push(d.toISOString().slice(0, 10));
-    }
+    const s = new Date(start + "T00:00:00"); const e = new Date(end + "T00:00:00");
+    for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) out.push(d.toISOString().slice(0, 10));
     return out;
 }
-
-function mkBlock(when: Block["when"], place_id?: string, title?: string): Block {
-    return {
-        when,
-        place_id: place_id ?? null,
-        title: title ?? "Free time",
-        est_cost: 10,
-        duration_min: 120,
-        travel_min_from_prev: 15,
-    };
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number) {
+    const R = 6371, toRad = (x: number) => x * Math.PI / 180;
+    const dLat = toRad(bLat - aLat), dLon = toRad(bLng - aLng);
+    const v = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(v));
+}
+function hopKm(a: any, b: any) {
+    if (!a || !b || a.lat == null || b.lat == null) return 3;
+    return haversineKm(a.lat, a.lng, b.lat, b.lng);
+}
+function isOpenForSlot(hours: Record<number, { open: number; close: number }> | undefined, dow: number, when: "morning" | "afternoon" | "evening") {
+    if (!hours) return false;
+    const slotMin = when === "morning" ? 9 * 60 : when === "afternoon" ? 14 * 60 : 19 * 60;
+    const h = hours[dow];
+    if (!h) return false;
+    return slotMin >= h.open && slotMin <= h.close;
 }

@@ -1,5 +1,2 @@
 [api]
 schemas = ["public", "storage", "graphql_public", "auth", "itinero"]
-[auth]
-jwt_type = "RS256"   # or "HS256"
-jwt_secret = "9lz7jPXLQ9UcaJmwKxWLXmw3ykiEu5WYnLDGvj2jaIt94jxjX+Kx9Yxim124JpSfuX+hKY9L7C2rl90HfzE3dg=="
