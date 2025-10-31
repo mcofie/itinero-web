@@ -16,7 +16,6 @@ type Input = {
     mode?: "walk" | "bike" | "car" | "transit";
     lodging?: Lodging; // single base
     lodging_by_date?: Record<string, Lodging>; // per-day base
-    // optional tunables (soft bias only)
     soft_distance?: { anchor_km?: number; hop_km?: number };
 };
 
@@ -40,6 +39,7 @@ serve(async (req) => {
         const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
         const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
         const auth = req.headers.get("Authorization") ?? "";
+
         const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             db: { schema: "itinero" },
             global: { headers: { Authorization: auth } },
@@ -61,11 +61,11 @@ serve(async (req) => {
             ? { latMin: destAnchor.lat! - delta, latMax: destAnchor.lat! + delta, lngMin: destAnchor.lng! - delta, lngMax: destAnchor.lng! + delta }
             : null;
 
-        // === Transport speed ===
+        // === Transport speed (fallback only; real routing will override) ===
         const { data: speedRow } = await client.from("transport_speeds").select("km_per_hour").eq("mode", mode).maybeSingle();
         const kmph = Number(speedRow?.km_per_hour ?? 4.5);
 
-        // === Candidate places (pull as much metadata as we might use; degrade gracefully if missing) ===
+        // === Candidate places ===
         let q = client.from("places").select("id,name,lat,lng,category,tags,popularity,cost_typical,cost_currency");
         if (bbox) q = q.gte("lat", bbox.latMin).lte("lat", bbox.latMax).gte("lng", bbox.lngMin).lte("lng", bbox.lngMax);
         const { data: places, error: pErr } = await q.limit(300);
@@ -170,7 +170,7 @@ serve(async (req) => {
                     .map((p) => {
                         const hopKmFromLast = last ? hopKm(last, p) : 0;
 
-                        // Budget fit (soft): distance of price to target, normalized ~0..1
+                        // Budget fit (soft): price-vs-target deviation ~0..1
                         const priceDelta = Math.abs((p._cost ?? 10) - target);
                         const pricePenalty = Math.min(1, priceDelta / Math.max(10, target || 10));
 
@@ -193,24 +193,96 @@ serve(async (req) => {
                 if (pick) { chosen.add(pick.id); last = pick; }
             }
 
-            // Build blocks + travel (lodging->first, between picks); calc return to lodging
+            // === NEW: call routing function to optimize order + durations ===
+            // Build input waypoints from the (non-null) picks
+            const waypoints = picks.filter(Boolean).map((p: any) => ({
+                id: p.id ?? null,
+                name: p.name,
+                lat: p.lat,
+                lng: p.lng,
+            }));
+
+            let orderedPicks = [...picks]; // default to greedy order
+            let legsDurMin: number[] | null = null;
+            let polyline: string | undefined;
+
+            if (waypoints.length >= 1 && (anchorLat != null && anchorLng != null || (L && L.lat && L.lng))) {
+                const routingPayload = {
+                    mode: mode === "walk" ? "walk" : mode === "bike" ? "bike" : "car" as "walk" | "bike" | "car",
+                    start: L
+                        ? { id: null, name: L.name, lat: L.lat, lng: L.lng }
+                        : { id: null, name: "Anchor", lat: anchorLat!, lng: anchorLng! },
+                    waypoints,
+                    roundtrip: true,
+                };
+
+                const r = await fetch(`${SUPABASE_URL}/functions/v1/build_legs_for_day`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": auth,
+                        "apikey": SUPABASE_ANON_KEY,
+                    },
+                    body: JSON.stringify(routingPayload),
+                });
+
+                if (r.ok) {
+                    const legsResp = await r.json();
+
+                    // Reorder picks according to ordered_points (ignoring the "start")
+                    const orderIds = (legsResp?.ordered_points ?? [])
+                        .filter((pt: any) => pt.type === "waypoint")
+                        .map((pt: any) => pt.id ?? null);
+
+                    // Build a lookup from pick.id to pick
+                    const pickById = new Map<string, any>();
+                    for (const p of picks) if (p?.id) pickById.set(p.id, p);
+
+                    const newOrder: any[] = [];
+                    for (const id of orderIds) {
+                        if (!id) continue;
+                        const found = pickById.get(id);
+                        if (found) newOrder.push(found);
+                    }
+                    // If for some reason we didn't reconstruct fully, fall back to original
+                    if (newOrder.length === waypoints.length) {
+                        // pad to length 3 with nulls
+                        while (newOrder.length < 3) newOrder.push(null);
+                        orderedPicks = newOrder;
+                    }
+
+                    // Map leg durations (start->p0, p0->p1, p1->p2) into minutes
+                    if (Array.isArray(legsResp?.legs)) {
+                        legsDurMin = legsResp.legs.map((l: any) => Math.max(1, Math.round((l?.duration_s ?? 0) / 60)));
+                    }
+                    polyline = legsResp?.polyline6 ?? legsResp?.polyline;
+                }
+            }
+
+            // Build blocks + travel; if routing succeeded, use legs; else fall back to haversine
             const blocks: Block[] = [];
             let dayCost = 0;
 
             for (let bi = 0; bi < 3; bi++) {
                 const slot = (["morning", "afternoon", "evening"] as const)[bi];
-                const p = picks[bi];
+                const p = orderedPicks[bi];
                 let travelMin = 15;
 
-                if (hasLodge) {
-                    if (bi === 0 && p) {
-                        travelMin = Math.round((hopKm(L!, p) / kmph) * 60);
-                    } else if (bi > 0 && p && picks[bi - 1]) {
-                        travelMin = Math.round((hopKm(picks[bi - 1], p) / kmph) * 60);
-                    }
+                if (legsDurMin && typeof legsDurMin[bi] === "number") {
+                    // from routing: 0 = start->first, 1 = first->second, 2 = second->third
+                    travelMin = legsDurMin[bi];
                 } else {
-                    if (bi > 0 && p && picks[bi - 1]) {
-                        travelMin = Math.round((hopKm(picks[bi - 1], p) / kmph) * 60);
+                    // fallback
+                    if (hasLodge) {
+                        if (bi === 0 && p) {
+                            travelMin = Math.round((hopKm(L!, p) / kmph) * 60);
+                        } else if (bi > 0 && p && orderedPicks[bi - 1]) {
+                            travelMin = Math.round((hopKm(orderedPicks[bi - 1], p) / kmph) * 60);
+                        }
+                    } else {
+                        if (bi > 0 && p && orderedPicks[bi - 1]) {
+                            travelMin = Math.round((hopKm(orderedPicks[bi - 1], p) / kmph) * 60);
+                        }
                     }
                 }
 
@@ -228,10 +300,10 @@ serve(async (req) => {
                 });
             }
 
-            // End-of-day return time
+            // End-of-day return to lodging (we keep it as soft/fallback; can add a 4th leg if you prefer)
             let returnMin: number | null = null;
             if (hasLodge) {
-                const lastPick = picks.filter(Boolean).at(-1);
+                const lastPick = orderedPicks.filter(Boolean).at(-1);
                 if (lastPick) returnMin = Math.round((hopKm(lastPick, L!) / kmph) * 60);
             }
 
@@ -240,6 +312,7 @@ serve(async (req) => {
             days[di].return_to_lodging_min = returnMin;
             days[di].est_day_cost = Math.round(dayCost);
             days[di].budget_daily = dailyBudget;
+            if (polyline) days[di].map_polyline = polyline;
         }
 
         const estTripCost = days.reduce((acc, d: any) => acc + (d.est_day_cost ?? dailyBudget), 0);
