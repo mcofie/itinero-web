@@ -2,13 +2,13 @@
 
 import * as React from "react";
 import {useEffect, useMemo, useState} from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import {cn} from "@/lib/utils";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
-import { createClientBrowser } from "@/lib/supabase/browser";
-import { motion, AnimatePresence } from "framer-motion";
+import {createClientBrowser} from "@/lib/supabase/browser";
+import {motion, AnimatePresence} from "framer-motion";
 import {
     CalendarDays,
     ChevronLeft,
@@ -20,7 +20,8 @@ import {
     Car,
     Footprints,
 } from "lucide-react";
-import { router } from "next/client";
+import {useRouter} from "next/navigation";
+
 
 /** ---------- types aligned to request body ---------- */
 type Destination = { id?: string; name: string; lat?: number; lng?: number };
@@ -55,33 +56,45 @@ const DEFAULT_INTERESTS = [
 ] as const;
 
 const STEPS = [
-    { key: "dest", label: "Destination", icon: MapPin },
-    { key: "dates", label: "Dates", icon: CalendarDays },
-    { key: "budget", label: "Budget", icon: Footprints },
-    { key: "interests", label: "Interests", icon: Sparkles },
-    { key: "pace", label: "Pace", icon: Footprints },
-    { key: "mode", label: "Transport", icon: Car },
-    { key: "lodging", label: "Lodging", icon: Users },
-    { key: "review", label: "Review", icon: Sparkles },
+    {key: "dest", label: "Destination", icon: MapPin},
+    {key: "dates", label: "Dates", icon: CalendarDays},
+    {key: "budget", label: "Budget", icon: Footprints},
+    {key: "interests", label: "Interests", icon: Sparkles},
+    {key: "pace", label: "Pace", icon: Footprints},
+    {key: "mode", label: "Transport", icon: Car},
+    {key: "lodging", label: "Lodging", icon: Users},
+    {key: "review", label: "Review", icon: Sparkles},
 ] as const;
 
 export default function TripWizard() {
     const sb = createClientBrowser();
-
+    const router = useRouter();
     const [step, setStep] = useState(0);
     const [busy, setBusy] = useState(false);
     const [authOpen, setAuthOpen] = useState(false);
 
     const [state, setState] = useState<RequestBody>({
-        destinations: [{ name: "" }],
+        destinations: [{name: ""}],
         start_date: "",
         end_date: "",
         budget_daily: "",
         interests: ["beach", "culture", "food", "nature"],
         pace: "balanced",
         mode: "car",
-        lodging: { name: "" },
+        lodging: {name: ""},
     });
+
+    useEffect(() => {
+        const {data: sub} = sb.auth.onAuthStateChange(async (evt) => {
+            if (evt === "SIGNED_IN") {
+                // small delay to let session propagate
+                await sb.auth.getSession();
+                router.replace("/preview");
+                router.refresh();
+            }
+        });
+        return () => sub.subscription.unsubscribe();
+    }, [sb, router]);
 
     const progress = ((step + 1) / STEPS.length) * 100;
 
@@ -109,15 +122,15 @@ export default function TripWizard() {
         setBusy(true);
         try {
             const payload = toPayload(state);
-            const { data, error } = await sb.functions.invoke("build_preview_itinerary", { body: payload });
+            const {data, error} = await sb.functions.invoke("build_preview_itinerary", {body: payload});
 
             // Save for the /preview page to pick up
             localStorage.setItem("itinero:latest_preview", JSON.stringify(data));
 
-            console.log({ payload, data, error });
+            console.log({payload, data, error});
             if (error) throw error;
             const {
-                data: { user },
+                data: {user},
             } = await sb.auth.getUser();
             if (!user) setAuthOpen(true);
         } catch (e) {
@@ -128,7 +141,7 @@ export default function TripWizard() {
     };
 
     function updateDest(value: string) {
-        setState((s) => ({ ...s, destinations: [{ name: value }] }));
+        setState((s) => ({...s, destinations: [{name: value}]}));
     }
 
     function toggleInterest(tag: string) {
@@ -136,14 +149,14 @@ export default function TripWizard() {
             const set = new Set(s.interests);
             if (set.has(tag)) set.delete(tag);
             else set.add(tag);
-            return { ...s, interests: Array.from(set) };
+            return {...s, interests: Array.from(set)};
         });
     }
 
     return (
         <div className="mx-auto w-full max-w-3xl">
             <HeaderProgress
-                steps={STEPS.map((s) => ({ label: s.label, icon: s.icon }))}
+                steps={STEPS.map((s) => ({label: s.label, icon: s.icon}))}
                 activeIndex={step}
                 onStepClick={jumpTo}
                 progress={progress}
@@ -154,10 +167,11 @@ export default function TripWizard() {
                     <AnimatePresence mode="wait">
                         {step === 0 && (
                             <Slide key="step-dest">
-                                <FieldBlock label="Destination" hint="Pick from our database or keep typing free text" icon={MapPin}>
+                                <FieldBlock label="Destination" hint="Pick from our database or keep typing free text"
+                                            icon={MapPin}>
                                     <DestinationField
-                                        value={state.destinations[0] ?? { name: "" }}
-                                        onChange={(dest) => setState((s) => ({ ...s, destinations: [dest] }))}
+                                        value={state.destinations[0] ?? {name: ""}}
+                                        onChange={(dest) => setState((s) => ({...s, destinations: [dest]}))}
                                     />
                                 </FieldBlock>
                             </Slide>
@@ -200,7 +214,8 @@ export default function TripWizard() {
 
                         {step === 2 && (
                             <Slide key="step-budget">
-                                <FieldBlock label="Daily budget" hint="Used to balance activity costs" icon={Footprints}>
+                                <FieldBlock label="Daily budget" hint="Used to balance activity costs"
+                                            icon={Footprints}>
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="number"
@@ -224,7 +239,7 @@ export default function TripWizard() {
                                                 size="sm"
                                                 variant="secondary"
                                                 className="rounded-full"
-                                                onClick={() => setState((s) => ({ ...s, budget_daily: v }))}
+                                                onClick={() => setState((s) => ({...s, budget_daily: v}))}
                                             >
                                                 ≈ {v}
                                             </Button>
@@ -234,7 +249,7 @@ export default function TripWizard() {
                                             size="sm"
                                             variant="ghost"
                                             className="rounded-full"
-                                            onClick={() => setState((s) => ({ ...s, budget_daily: "" }))}
+                                            onClick={() => setState((s) => ({...s, budget_daily: ""}))}
                                         >
                                             Skip
                                         </Button>
@@ -275,7 +290,7 @@ export default function TripWizard() {
                                                 size="sm"
                                                 variant={state.pace === opt ? "default" : "secondary"}
                                                 className="rounded-full"
-                                                onClick={() => setState((s) => ({ ...s, pace: opt }))}
+                                                onClick={() => setState((s) => ({...s, pace: opt}))}
                                             >
                                                 {opt}
                                             </Button>
@@ -287,7 +302,8 @@ export default function TripWizard() {
 
                         {step === 5 && (
                             <Slide key="step-mode">
-                                <FieldBlock label="Transport mode" hint="We’ll estimate travel time accordingly" icon={Car}>
+                                <FieldBlock label="Transport mode" hint="We’ll estimate travel time accordingly"
+                                            icon={Car}>
                                     <div className="flex flex-wrap gap-2">
                                         {(["walk", "bike", "car", "transit"] as const).map((opt) => (
                                             <Button
@@ -296,7 +312,7 @@ export default function TripWizard() {
                                                 size="sm"
                                                 variant={state.mode === opt ? "default" : "secondary"}
                                                 className="rounded-full"
-                                                onClick={() => setState((s) => ({ ...s, mode: opt }))}
+                                                onClick={() => setState((s) => ({...s, mode: opt}))}
                                             >
                                                 {opt}
                                             </Button>
@@ -308,14 +324,15 @@ export default function TripWizard() {
 
                         {step === 6 && (
                             <Slide key="step-lodging">
-                                <FieldBlock label="Lodging (optional)" hint="We’ll try to start/end days near here" icon={Users}>
+                                <FieldBlock label="Lodging (optional)" hint="We’ll try to start/end days near here"
+                                            icon={Users}>
                                     <Input
                                         placeholder="Hotel or address"
                                         value={state.lodging?.name || ""}
                                         onChange={(e) =>
                                             setState((s) => ({
                                                 ...s,
-                                                lodging: { name: e.target.value },
+                                                lodging: {name: e.target.value},
                                             }))
                                         }
                                     />
@@ -325,25 +342,25 @@ export default function TripWizard() {
 
                         {step === 7 && (
                             <Slide key="step-review">
-                                <ReviewCard data={toPayload(state)} onEditStep={jumpTo} onGenerate={goNext} />
+                                <ReviewCard data={toPayload(state)} onEditStep={jumpTo} onGenerate={goNext}/>
                             </Slide>
                         )}
                     </AnimatePresence>
 
                     <div className="mt-6 flex items-center justify-between">
                         <Button type="button" variant="ghost" onClick={goBack} disabled={step === 0 || busy}>
-                            <ChevronLeft className="mr-2 h-4 w-4" /> Back
+                            <ChevronLeft className="mr-2 h-4 w-4"/> Back
                         </Button>
                         <Button type="button" onClick={goNext} disabled={!isValid || busy}>
                             {busy ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Working…
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Working…
                                 </>
                             ) : step === STEPS.length - 1 ? (
                                 "Generate preview"
                             ) : (
                                 <>
-                                    Next <ChevronRight className="ml-1 h-4 w-4" />
+                                    Next <ChevronRight className="ml-1 h-4 w-4"/>
                                 </>
                             )}
                         </Button>
@@ -356,8 +373,7 @@ export default function TripWizard() {
                 onOpenChange={setAuthOpen}
                 title="Sign in to save & share your trip"
                 postLogin={() => {
-                    // Avoid unused var in .then
-                    router.push("/preview").then(() => {});
+
                 }}
             />
         </div>
@@ -389,12 +405,12 @@ function DestinationField({
             try {
                 // adjust table/schema/columns to yours
                 // expecting: id (uuid), name (text), lat (numeric), lng (numeric)
-                const { data, error } = await sb
+                const {data, error} = await sb
                     .schema("itinero")                  // 👈 use the correct schema
                     .from("destinations")
                     .select("id,name,lat,lng")
                     .ilike("name", `%${term}%`)
-                    .order("name", { ascending: true })
+                    .order("name", {ascending: true})
                     .limit(10);
 
                 if (!error && data) {
@@ -434,7 +450,7 @@ function DestinationField({
                     setQ(e.target.value);
                     setOpen(true);
                     // allow free text while typing; clear id if user edits
-                    onChange({ ...value, id: undefined, lat: undefined, lng: undefined, name: e.target.value });
+                    onChange({...value, id: undefined, lat: undefined, lng: undefined, name: e.target.value});
                 }}
                 onFocus={() => setOpen(true)}
                 onBlur={() => {
@@ -489,7 +505,7 @@ function toPayload(s: RequestBody) {
         interests: s.interests,
         pace: s.pace,
         mode: s.mode,
-        lodging: s.lodging?.name ? { name: s.lodging.name } : undefined,
+        lodging: s.lodging?.name ? {name: s.lodging.name} : undefined,
     } as const;
 }
 
@@ -530,13 +546,13 @@ function HeaderProgress({
               >
                 {i + 1}
               </span>
-                            <Icon className="h-4 w-4 opacity-80" /> {s.label}{" "}
+                            <Icon className="h-4 w-4 opacity-80"/> {s.label}{" "}
                         </button>
                     );
                 })}
             </div>
             <div className="h-1 w-full rounded-full bg-muted">
-                <div className="h-1 rounded-full bg-primary transition-[width]" style={{ width: `${progress}%` }} />
+                <div className="h-1 rounded-full bg-primary transition-[width]" style={{width: `${progress}%`}}/>
             </div>
         </div>
     );
@@ -558,7 +574,7 @@ function FieldBlock({
             <div className="flex items-start gap-3">
                 {Icon && (
                     <div className="mt-0.5 grid h-9 w-9 place-items-center rounded-xl bg-muted">
-                        <Icon className="h-4 w-4" />
+                        <Icon className="h-4 w-4"/>
                     </div>
                 )}
                 <div className="flex-1">
@@ -571,9 +587,10 @@ function FieldBlock({
     );
 }
 
-function Slide({ children, key: k }: { children: React.ReactNode; key?: string }) {
+function Slide({children, key: k}: { children: React.ReactNode; key?: string }) {
     return (
-        <motion.div key={k} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.18 }}>
+        <motion.div key={k} initial={{opacity: 0, y: 8}} animate={{opacity: 1, y: 0}} exit={{opacity: 0, y: -8}}
+                    transition={{duration: 0.18}}>
             {children}
         </motion.div>
     );
@@ -594,7 +611,8 @@ function ReviewCard({
         <div className="mx-auto max-w-2xl">
             <div className="relative overflow-hidden rounded-2xl border bg-card shadow-sm">
                 {/* soft gradient header */}
-                <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent" />
+                <div
+                    className="absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent"/>
 
                 <div className="relative p-6">
                     <div className="mb-4 flex items-center justify-between">
@@ -603,26 +621,28 @@ function ReviewCard({
                     </div>
 
                     {/* destination */}
-                    <SectionRow icon={<MapPin className="h-4 w-4" />} label="Destination" onEdit={() => onEditStep(0)}>
-            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-lg font-semibold text-transparent">
+                    <SectionRow icon={<MapPin className="h-4 w-4"/>} label="Destination" onEdit={() => onEditStep(0)}>
+            <span
+                className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-lg font-semibold text-transparent">
               {data.destinations?.[0]?.name || "—"}
             </span>
                     </SectionRow>
 
                     {/* dates */}
-                    <SectionRow icon={<CalendarDays className="h-4 w-4" />} label="Dates" onEdit={() => onEditStep(1)}>
+                    <SectionRow icon={<CalendarDays className="h-4 w-4"/>} label="Dates" onEdit={() => onEditStep(1)}>
                         <div className="text-base font-medium">{formatDateRange(data.start_date, data.end_date)}</div>
                     </SectionRow>
 
                     {/* budget */}
-                    <SectionRow icon={<Footprints className="h-4 w-4" />} label="Daily Budget" onEdit={() => onEditStep(2)}>
+                    <SectionRow icon={<Footprints className="h-4 w-4"/>} label="Daily Budget"
+                                onEdit={() => onEditStep(2)}>
                         <div className="text-base font-medium">
                             {data.budget_daily ? `$${data.budget_daily}/day` : "Not specified"}
                         </div>
                     </SectionRow>
 
                     {/* interests */}
-                    <SectionRow icon={<Sparkles className="h-4 w-4" />} label="Interests" onEdit={() => onEditStep(3)}>
+                    <SectionRow icon={<Sparkles className="h-4 w-4"/>} label="Interests" onEdit={() => onEditStep(3)}>
                         <div className="flex flex-wrap gap-2">
                             {chips.length ? (
                                 chips.map((t) => (
@@ -637,21 +657,26 @@ function ReviewCard({
                     </SectionRow>
 
                     {/* pace & mode */}
-                    <SectionRow icon={<Footprints className="h-4 w-4" />} label="Pace & Transport" onEdit={() => onEditStep(4)}>
+                    <SectionRow icon={<Footprints className="h-4 w-4"/>} label="Pace & Transport"
+                                onEdit={() => onEditStep(4)}>
                         <div className="flex flex-wrap gap-2">
-                            <span className="rounded-full bg-muted px-2.5 py-1 text-xs capitalize">Pace: {data.pace}</span>
-                            <span className="rounded-full bg-muted px-2.5 py-1 text-xs capitalize">Mode: {data.mode}</span>
+                            <span
+                                className="rounded-full bg-muted px-2.5 py-1 text-xs capitalize">Pace: {data.pace}</span>
+                            <span
+                                className="rounded-full bg-muted px-2.5 py-1 text-xs capitalize">Mode: {data.mode}</span>
                         </div>
                     </SectionRow>
 
                     {/* lodging */}
-                    <SectionRow icon={<Users className="h-4 w-4" />} label="Lodging" onEdit={() => onEditStep(6)}>
+                    <SectionRow icon={<Users className="h-4 w-4"/>} label="Lodging" onEdit={() => onEditStep(6)}>
                         <div className="text-base font-medium">{data.lodging?.name || "Not provided"}</div>
                     </SectionRow>
 
                     {/* footer actions */}
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-xs text-muted-foreground">We’ll use this to generate a smart preview itinerary.</div>
+                        <div className="text-xs text-muted-foreground">We’ll use this to generate a smart preview
+                            itinerary.
+                        </div>
                         <div className="flex gap-2">
                             <Button type="button" variant="secondary" onClick={() => onEditStep(0)}>
                                 Edit Trip
@@ -690,7 +715,7 @@ function SectionRow({
                     Edit
                 </button>
             ) : (
-                <span />
+                <span/>
             )}
         </div>
     );
@@ -700,7 +725,7 @@ function formatDateRange(start?: string, end?: string) {
     if (!start && !end) return "—";
     const s = start ? new Date(start + "T00:00:00") : null;
     const e = end ? new Date(end + "T00:00:00") : null;
-    const fmt = (d: Date) => d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+    const fmt = (d: Date) => d.toLocaleDateString(undefined, {day: "2-digit", month: "short", year: "numeric"});
     if (s && e) return `${fmt(s)} → ${fmt(e)}`;
     if (s) return fmt(s);
     if (e) return fmt(e);
