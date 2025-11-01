@@ -1,17 +1,30 @@
 {
   "pages": {
     "/page": [
-      "static/chunks/88fe7266203df3b5.js",
-      "static/chunks/54b8ede11cdc9ba3.js",
-      "static/chunks/aae373ce00161894.css",
-      "static/chunks/e571f5c9ca849a42.js",
-      "static/chunks/23b1827a6db57dc4.js",
-      "static/chunks/6e2f31e0ea4bd18b.js",
-      "static/chunks/92691f31b089236a.js",
-      "static/chunks/cf8c37ccc7fdf248.js",
-      "static/chunks/dbb5a021c723c095.js",
-      "static/chunks/2008ffcf9e5b170c.js",
-      "static/chunks/turbopack-33f5cbab46e52f5b.js"
+      "static/chunks/node_modules_next_dist_8db7fb1f._.js",
+      "static/chunks/src_app_favicon_ico_mjs_243aa161._.js",
+      "static/chunks/[root-of-the-server]__0f0ba101._.css",
+      "static/chunks/src_app_layout_tsx_0a548d63._.js",
+      "static/chunks/node_modules_next_dist_client_components_builtin_global-error_f8fdd2d5.js",
+      "static/chunks/node_modules_@supabase_node-fetch_browser_ebbd8575.js",
+      "static/chunks/src_b12389de._.js",
+      "static/chunks/node_modules_next_ec98a255._.js",
+      "static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_56b6fd65._.js",
+      "static/chunks/node_modules_@supabase_storage-js_dist_module_434fd12f._.js",
+      "static/chunks/node_modules_@supabase_auth-js_dist_module_e6c70351._.js",
+      "static/chunks/node_modules_motion-dom_dist_es_da948acf._.js",
+      "static/chunks/node_modules_framer-motion_dist_es_fdd5ade6._.js",
+      "static/chunks/node_modules_213546b6._.js",
+      "static/chunks/src_app_page_tsx_f8fdd2d5._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_57d40746._.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js",
+      "static/chunks/node_modules_next_dist_compiled_next-devtools_index_a9cb0712.js",
+      "static/chunks/node_modules_next_dist_compiled_5150ccfd._.js",
+      "static/chunks/node_modules_next_dist_client_cf1d9188._.js",
+      "static/chunks/node_modules_next_dist_b0daae9a._.js",
+      "static/chunks/node_modules_@swc_helpers_cjs_b3dc30d6._.js",
+      "static/chunks/_a0ff3932._.js",
+      "static/chunks/turbopack-_cdba956c._.js"
     ]
   }
 }

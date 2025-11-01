@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useMemo, useState } from "react";
+import {useEffect, useMemo, useState} from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +23,7 @@ import {
 import { router } from "next/client";
 
 /** ---------- types aligned to request body ---------- */
-type Destination = { name: string };
+type Destination = { id?: string; name: string; lat?: number; lng?: number };
 type Lodging = { name: string };
 
 type RequestBody = {
@@ -154,11 +154,10 @@ export default function TripWizard() {
                     <AnimatePresence mode="wait">
                         {step === 0 && (
                             <Slide key="step-dest">
-                                <FieldBlock label="Destination" hint="City, region, or country" icon={MapPin}>
-                                    <Input
-                                        placeholder="e.g., Accra"
-                                        value={state.destinations[0]?.name || ""}
-                                        onChange={(e) => updateDest(e.target.value)}
+                                <FieldBlock label="Destination" hint="Pick from our database or keep typing free text" icon={MapPin}>
+                                    <DestinationField
+                                        value={state.destinations[0] ?? { name: "" }}
+                                        onChange={(dest) => setState((s) => ({ ...s, destinations: [dest] }))}
                                     />
                                 </FieldBlock>
                             </Slide>
@@ -365,9 +364,125 @@ export default function TripWizard() {
     );
 }
 
+function DestinationField({
+                              value,
+                              onChange,
+                          }: {
+    value: Destination;
+    onChange: (d: Destination) => void;
+}) {
+    const sb = createClientBrowser();
+    const [q, setQ] = useState<string>(value.name ?? "");
+    const [rows, setRows] = useState<Destination[]>([]);
+    const [open, setOpen] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
+
+    // Debounced search
+    useEffect(() => {
+        const term = q.trim();
+        if (!term) {
+            setRows([]);
+            return;
+        }
+        setLoading(true);
+        const t = setTimeout(async () => {
+            try {
+                // adjust table/schema/columns to yours
+                // expecting: id (uuid), name (text), lat (numeric), lng (numeric)
+                const { data, error } = await sb
+                    .schema("itinero")                  // 👈 use the correct schema
+                    .from("destinations")
+                    .select("id,name,lat,lng")
+                    .ilike("name", `%${term}%`)
+                    .order("name", { ascending: true })
+                    .limit(10);
+
+                if (!error && data) {
+                    setRows(
+                        data.map((r) => ({
+                            id: String(r.id),
+                            name: r.name as string,
+                            lat: typeof r.lat === "number" ? r.lat : undefined,
+                            lng: typeof r.lng === "number" ? r.lng : undefined,
+                        }))
+                    );
+                }
+            } finally {
+                setLoading(false);
+            }
+        }, 250);
+        return () => clearTimeout(t);
+    }, [q, sb]);
+
+    // keep input text in sync when parent changes selection
+    useEffect(() => {
+        if (value?.name && value.name !== q) setQ(value.name);
+    }, [value?.name]);
+
+    const pick = (d: Destination) => {
+        onChange(d);
+        setQ(d.name);
+        setOpen(false);
+    };
+
+    return (
+        <div className="relative">
+            <Input
+                placeholder="e.g., Accra"
+                value={q}
+                onChange={(e) => {
+                    setQ(e.target.value);
+                    setOpen(true);
+                    // allow free text while typing; clear id if user edits
+                    onChange({ ...value, id: undefined, lat: undefined, lng: undefined, name: e.target.value });
+                }}
+                onFocus={() => setOpen(true)}
+                onBlur={() => {
+                    // close a tick later so click can register
+                    setTimeout(() => setOpen(false), 120);
+                }}
+            />
+
+            {/* dropdown */}
+            {open && (rows.length > 0 || loading) && (
+                <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-sm">
+                    {loading ? (
+                        <div className="p-3 text-sm text-muted-foreground">Searching…</div>
+                    ) : (
+                        <ul className="max-h-64 overflow-auto divide-y">
+                            {rows.map((r) => (
+                                <li
+                                    key={r.id ?? r.name}
+                                    className="cursor-pointer px-3 py-2 text-sm hover:bg-accent"
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={() => pick(r)}
+                                >
+                                    <div className="font-medium">{r.name}</div>
+                                    {typeof r.lat === "number" && typeof r.lng === "number" ? (
+                                        <div className="text-xs text-muted-foreground">
+                                            {r.lat.toFixed(3)}, {r.lng.toFixed(3)}
+                                        </div>
+                                    ) : null}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function toPayload(s: RequestBody) {
+    const d = s.destinations[0];
     return {
-        destinations: [{ name: s.destinations[0]?.name?.trim() || "" }],
+        destinations: [{
+            // include id if present; your server can use it to fetch details/coordinates
+            id: d?.id,
+            name: (d?.name ?? "").trim(),
+            lat: d?.lat,
+            lng: d?.lng,
+        },],
         start_date: s.start_date,
         end_date: s.end_date,
         budget_daily: s.budget_daily === "" ? 0 : Number(s.budget_daily),

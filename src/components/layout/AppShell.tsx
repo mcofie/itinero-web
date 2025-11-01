@@ -174,7 +174,7 @@ export default function AppShell({ children, userEmail }: Props) {
 
     async function logout() {
         await sb.auth.signOut();
-        router.replace("/login");
+        router.replace("/");
     }
 
     async function handleTopup() {
