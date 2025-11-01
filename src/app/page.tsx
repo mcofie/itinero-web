@@ -130,7 +130,7 @@ export default function LandingPage() {
             </header>
 
             {/* Hero + Wizard */}
-            <section className="mx-auto w-full max-w-6xl px-6 py-12 md:py-20">
+            <section className="mx-auto w-full max-w-8xl px-6 py-12 md:py-20">
                 <div className="mx-auto max-w-3xl text-center">
                     <h1 className="text-3xl md:text-5xl lg:text-6xl font-semibold tracking-tight">
                         Plan smarter trips in minutes — then share, tweak, and go.
@@ -140,18 +140,11 @@ export default function LandingPage() {
                         activities, lodging, transport, and a budget — personalized to your vibe.
                     </p>
 
-                    {/* Pricing note */}
-                    <div className="mt-6 inline-flex items-center gap-3 rounded-lg border bg-card px-4 py-2 text-sm">
-                        <span className="font-medium">Simple pricing:</span>
-                        <span className="text-muted-foreground">
-              Pay per trip (about the cost of a coffee) — or $5–$10/mo for frequent travelers.
-            </span>
-                    </div>
                 </div>
 
                 {/* Wizard */}
                 <div className="mt-10">
-                    <div className="mx-auto max-w-2xl rounded-xl  p-4 md:p-6">
+                    <div className="mx-auto max-w-3xl rounded-xl  p-4 md:p-6">
                         <TripWizard/>
                     </div>
                 </div>

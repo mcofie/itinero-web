@@ -1,5 +1,10 @@
 // supabase/functions/build_legs_for_day/index.ts
-import { serve } from "https://deno.land/std/http/server.ts";
+// @ts-nocheck
+// supabase/functions/build_legs_for_day/index.ts
+import {serve} from "https://deno.land/std@0.224.0/http/server.ts";
+
+// …rest of your function…
+import {serve} from "https://deno.land/std/http/server.ts";
 
 type Point = { id: string | null; name?: string; lat: number; lng: number };
 type Input = {
@@ -10,13 +15,13 @@ type Input = {
     roundtrip?: boolean;             // default true (return to start)
 };
 
-const PROFILE_MAP = { walk: "walking", bike: "cycling", car: "driving" } as const;
+const PROFILE_MAP = {walk: "walking", bike: "cycling", car: "driving"} as const;
 
 serve(async (req) => {
     if (req.method === "OPTIONS") return cors();
     try {
         const token = Deno.env.get("MAPBOX_TOKEN");
-        if (!token) return j({ error: "Missing MAPBOX_TOKEN" }, 500);
+        if (!token) return j({error: "Missing MAPBOX_TOKEN"}, 500);
 
         const input = (await req.json()) as Input;
         const profile = PROFILE_MAP[input.mode] ?? "walking";
@@ -25,13 +30,13 @@ serve(async (req) => {
         // Build coordinates list & annotations
         // Order: start + waypoints (+ end if one-way)
         const coords: { lat: number; lng: number }[] = [];
-        coords.push({ lat: input.start.lat, lng: input.start.lng });
-        for (const w of input.waypoints) coords.push({ lat: w.lat, lng: w.lng });
+        coords.push({lat: input.start.lat, lng: input.start.lng});
+        for (const w of input.waypoints) coords.push({lat: w.lat, lng: w.lng});
 
         // If explicit end is provided and not roundtrip, include it as the last coordinate
         // Mapbox Optimization can handle separate source/ destination using "source" & "destination" params.
         const hasExplicitEnd = !!input.end && !roundtrip;
-        if (hasExplicitEnd) coords.push({ lat: input.end!.lat, lng: input.end!.lng });
+        if (hasExplicitEnd) coords.push({lat: input.end!.lat, lng: input.end!.lng});
 
         // Build the Optimization API URL
         // Note: Optimization API expects lon,lat order
@@ -43,7 +48,7 @@ serve(async (req) => {
             annotations: "distance,duration",
             // If we want fixed start/end:
             // source=first, destination=last (when end is provided)
-            ...(hasExplicitEnd ? { source: "first", destination: "last" } : {}),
+            ...(hasExplicitEnd ? {source: "first", destination: "last"} : {}),
             // If roundtrip, we allow Mapbox to return to start: roundtrip=true (default)
             // If not roundtrip and no explicit end => set destination=last waypt? (we already push end when not roundtrip)
             roundtrip: String(roundtrip),
@@ -53,14 +58,14 @@ serve(async (req) => {
         const resp = await fetch(url);
         if (!resp.ok) {
             const txt = await resp.text();
-            return j({ error: "Mapbox error", status: resp.status, body: txt }, 502);
+            return j({error: "Mapbox error", status: resp.status, body: txt}, 502);
         }
         const data = await resp.json();
 
         // Shape of Optimization API response:
         // trips[0] has: distance, duration, geometry, legs[]
         // waypoints[] includes a "waypoint_index" & "trips_index", and an "waypoint_index" mapping to original order
-        if (!data?.trips?.length) return j({ error: "No trip found" }, 400);
+        if (!data?.trips?.length) return j({error: "No trip found"}, 400);
 
         const trip = data.trips[0];
         const polyline = trip.geometry; // polyline6
@@ -73,7 +78,14 @@ serve(async (req) => {
         // Mapbox waypoints array corresponds to coords list indices and provides "waypoint_index" (reordered position)
         // coords indices: 0 = start, 1..N = waypoints, (maybe last = end)
         // We produce "ordered_points" mirrored to start/waypoints/(end)
-        type OrderedPoint = { type: "start" | "waypoint" | "end"; source_index: number; lat: number; lng: number; id: string | null; name?: string };
+        type OrderedPoint = {
+            type: "start" | "waypoint" | "end";
+            source_index: number;
+            lat: number;
+            lng: number;
+            id: string | null;
+            name?: string
+        };
 
         const waypointsInfo: OrderedPoint[] = [];
         for (const wp of data.waypoints ?? []) {
@@ -88,11 +100,16 @@ serve(async (req) => {
             // Map original to input arrays
             let id: string | null = null;
             let name: string | undefined = undefined;
-            if (srcIdx === 0) { id = null; name = input.start.name; }
-            else if (hasExplicitEnd && srcIdx === coords.length - 1) { id = null; name = input.end?.name; }
-            else {
+            if (srcIdx === 0) {
+                id = null;
+                name = input.start.name;
+            } else if (hasExplicitEnd && srcIdx === coords.length - 1) {
+                id = null;
+                name = input.end?.name;
+            } else {
                 const orig = input.waypoints[srcIdx - 1];
-                id = orig?.id ?? null; name = orig?.name;
+                id = orig?.id ?? null;
+                name = orig?.name;
             }
 
             waypointsInfo.push({
@@ -119,19 +136,24 @@ serve(async (req) => {
         });
     } catch (e) {
         console.error(e);
-        return j({ error: String(e?.message ?? e) }, 500);
+        return j({error: String(e?.message ?? e)}, 500);
     }
 });
 
 function cors() {
-    return new Response(null, { headers: {
+    return new Response(null, {
+        headers: {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
             "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-        }});
+        }
+    });
 }
+
 function j(body: unknown, status = 200) {
-    return new Response(JSON.stringify(body), { status, headers: {
+    return new Response(JSON.stringify(body), {
+        status, headers: {
             "content-type": "application/json", "Access-Control-Allow-Origin": "*"
-        }});
+        }
+    });
 }
