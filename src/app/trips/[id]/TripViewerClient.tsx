@@ -8,43 +8,51 @@ import {Card, CardContent} from "@/components/ui/card";
 import {Badge} from "@/components/ui/badge";
 import {Tabs, TabsContent} from "@/components/ui/tabs";
 import {ScrollArea} from "@/components/ui/scroll-area";
-import {Input} from "@/components/ui/input";
-import {Textarea} from "@/components/ui/textarea";
 import {Button} from "@/components/ui/button";
-
-import {Loader2} from "lucide-react";
 import type {PreviewLike, Day, Place} from "./page";
 
 // Reuse the same Leaflet map used in Preview (dynamic to avoid SSR issues)
 const LeafletMap = dynamic(() => import("@/app/preview/_leaflet/LeafletMap"), {ssr: false});
 import "leaflet/dist/leaflet.css";
 
+
+/** ---------- helpers for safe inputs typing ---------- */
+type TripInputs = { interests?: string[] } | undefined;
+
+function hasInterests(v: unknown): v is { interests: string[] } {
+    if (!v || typeof v !== "object") return false;
+    const maybe = v as { interests?: unknown };
+    return Array.isArray(maybe.interests) &&
+        maybe.interests.every((t): t is string => typeof t === "string");
+}
+
 export default function TripViewerClient({data}: { data: PreviewLike }) {
     const [activeDayIdx, setActiveDayIdx] = useState(0);
-    const [edit] = useState(false); // read-only, but you can toggle if you want editing here
 
     const placesById = useMemo(() => new Map(data.places.map((p) => [p.id, p])), [data.places]);
 
     const totalDays = data.days.length;
     const progressPct = totalDays ? Math.min(100, Math.round(((activeDayIdx + 1) / totalDays) * 100)) : 0;
 
+    // Narrow inputs safely (no 'any')
+    const inputs: TripInputs = data.trip_summary.inputs as TripInputs;
+
     return (
         <Card className="overflow-hidden border">
             <CardContent className="space-y-6 py-6">
                 {/* Interests (if present on inputs) */}
-                {Array.isArray((data.trip_summary.inputs as any)?.interests) &&
-                    (data.trip_summary.inputs as any).interests.length > 0 && (
-                        <div>
-                            <div className="text-xs uppercase tracking-wider text-muted-foreground">Interests</div>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                                {(data.trip_summary.inputs as any).interests.map((t: string) => (
-                                    <Badge key={t} variant="outline" className="capitalize">
-                                        {emojiFor(t)} {t}
-                                    </Badge>
-                                ))}
-                            </div>
+                {hasInterests(inputs) && inputs.interests.length > 0 && (
+                    <div>
+                        <div className="text-xs uppercase tracking-wider text-muted-foreground">Interests</div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                            {inputs.interests.map((t) => (
+                                <Badge key={t} variant="outline" className="capitalize">
+                                    {emojiFor(t)} {t}
+                                </Badge>
+                            ))}
                         </div>
-                    )}
+                    </div>
+                )}
 
                 {/* Progress */}
                 <div className="mt-1">
@@ -171,8 +179,10 @@ function ReadOnlyDay({
                                                     <span className="font-medium text-foreground">{place.name}</span>
                                                     {place.category && <span> • {place.category}</span>}
                                                     {place.lat != null && place.lng != null && (
-                                                        <span
-                                                            className="ml-1"> • {place.lat.toFixed(3)}, {place.lng.toFixed(3)}</span>
+                                                        <span className="ml-1">
+                              {" "}
+                                                            • {place.lat.toFixed(3)}, {place.lng.toFixed(3)}
+                            </span>
                                                     )}
                                                 </div>
                                             )}

@@ -1,37 +1,25 @@
-"use client";
-import {useEffect} from "react";
-import {useRouter, useSearchParams} from "next/navigation";
-import {createClientBrowser} from "@/lib/supabase/browser";
+// app/auth/callback/page.tsx
+import {Suspense} from "react";
+import AuthCallbackClient from "../AuthCallbackClient";
+
+// This page depends on runtime URL params; don’t prerender it.
+export const dynamic = "force-dynamic";
+// (optional) if you use caching elsewhere, ensure this stays live:
+// export const revalidate = 0;
 
 export default function AuthCallback() {
-    const sb = createClientBrowser();
-    const router = useRouter();
-    const sp = useSearchParams();
-
-    useEffect(() => {
-        (async () => {
-            // If Supabase already exchanged, there will be *no* error/callback code and you’ll already be signed in.
-            // If there’s an error from Supabase, it comes in the URL — handle it for debugging:
-            const err = sp.get("error");
-            const desc = sp.get("error_description");
-
-            if (err) {
-                console.error("[auth-callback] error:", err, desc);
-                // optionally show a toast
-                router.replace("/login");
-                return;
+    return (
+        <Suspense
+            fallback={
+                <div className="mx-auto max-w-md p-8 text-center">
+                    <div className="text-lg font-semibold">Loading…</div>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                        Preparing your session.
+                    </p>
+                </div>
             }
-
-            // For SSR-safe exchange when Supabase sends code directly to your app:
-            await sb.auth.exchangeCodeForSession(window.location.href).catch(() => { /* already exchanged is fine */
-            });
-
-            router.replace("/preview");
-            router.refresh();
-        })();
-    }, [sb, router, sp]);
-
-    return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">
-        Signing you in…
-    </div>;
+        >
+            <AuthCallbackClient/>
+        </Suspense>
+    );
 }

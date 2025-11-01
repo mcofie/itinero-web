@@ -23,7 +23,8 @@ type TripRow = {
     end_date: string | null;
     est_total_cost: number | null;
     currency: string | null;
-    inputs?: {
+    inputs?:
+        | {
         destinations?: { name: string; lat?: number; lng?: number }[];
         start_date?: string;
         end_date?: string;
@@ -31,15 +32,16 @@ type TripRow = {
         pace?: "chill" | "balanced" | "packed";
         mode?: "walk" | "bike" | "car" | "transit";
         lodging?: { name: string; lat?: number; lng?: number } | null;
-    } | unknown;
+    }
+        | unknown;
     created_at?: string | null;
 };
 
 type ItemRow = {
     id: UUID;
     trip_id: UUID;
-    day_index: number;                  // still present in your items
-    date: string | null;                // yyyy-mm-dd
+    day_index: number; // still present in your items
+    date: string | null; // yyyy-mm-dd
     order_index: number;
     when: "morning" | "afternoon" | "evening";
     place_id: string | null;
@@ -64,7 +66,7 @@ type PlaceRow = {
 
 /** Optional helper table for polylines (if you created it) */
 type DayRouteRow = {
-    date: string | null;         // yyyy-mm-dd
+    date: string | null; // yyyy-mm-dd
     polyline6?: string | null;
     polyline?: string | null;
 };
@@ -111,6 +113,29 @@ export type PreviewLike = {
     days: Day[];
     places: Place[];
 };
+
+/* ---------- type-safe helpers to avoid `any` ---------- */
+type InputsWithLodging = {
+    lodging?: { name: string; lat?: number; lng?: number } | null;
+};
+
+function getValidLodging(
+    inputs: TripRow["inputs"]
+): { name: string; lat: number; lng: number } | null {
+    if (!inputs || typeof inputs !== "object") return null;
+    const maybe = inputs as InputsWithLodging;
+    const l = maybe.lodging;
+    if (
+        l &&
+        typeof l === "object" &&
+        typeof l.name === "string" &&
+        typeof l.lat === "number" &&
+        typeof l.lng === "number"
+    ) {
+        return { name: l.name, lat: l.lat, lng: l.lng };
+    }
+    return null;
+}
 
 export default async function TripIdPage({ params }: { params: { id: string } }) {
     const sb = await createClientServer();
@@ -229,12 +254,7 @@ export default async function TripIdPage({ params }: { params: { id: string } })
             notes: it.notes ?? undefined,
         })),
         map_polyline: g.date ? polyByDate.get(g.date) : undefined, // <-- inject polyline if available
-        lodging:
-            (trip.inputs as any)?.lodging &&
-            typeof (trip.inputs as any)?.lodging?.lat === "number" &&
-            typeof (trip.inputs as any)?.lodging?.lng === "number"
-                ? (trip.inputs as any).lodging
-                : null,
+        lodging: getValidLodging(trip.inputs),
     }));
 
     const previewLike: PreviewLike = {
@@ -330,7 +350,8 @@ function formatDateRange(start?: string, end?: string) {
     if (!start && !end) return "—";
     const s = start ? new Date(start + "T00:00:00") : null;
     const e = end ? new Date(end + "T00:00:00") : null;
-    const fmt = (d: Date) => d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+    const fmt = (d: Date) =>
+        d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
     if (s && e) return `${fmt(s)} → ${fmt(e)}`;
     if (s) return fmt(s);
     if (e) return fmt(e);
