@@ -12,7 +12,7 @@ export default function AuthCallbackClient() {
     useEffect(() => {
         const code = params.get("code");
         const error = params.get("error");
-        const next = params.get("next") || "/";
+        const next = params.get("next") || "/trips";
 
         const run = async () => {
             const sb = createClientBrowser();
