@@ -11,14 +11,9 @@ export default function AuthCallbackPage() {
 
     useEffect(() => {
         (async () => {
-            try {
-                await sb.auth.exchangeCodeForSession(window.location.href);
-            } catch {
-                // ignore; if it fails, we'll still try to proceed
-            } finally {
-                router.replace("/preview");
-                router.refresh();
-            }
+            await sb.auth.exchangeCodeForSession(window.location.href);
+            router.replace("/preview");
+            router.refresh();
         })();
     }, [sb, router]);
 

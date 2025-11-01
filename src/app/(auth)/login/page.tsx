@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClientBrowser } from "@/lib/supabase/browser";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { Loader2, Plane } from "lucide-react";
+import {useEffect, useState} from "react";
+import {useRouter} from "next/navigation";
+import {createClientBrowser} from "@/lib/supabase/browser";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import {toast} from "sonner";
+import {Loader2, Plane} from "lucide-react";
 
 export default function LoginPage() {
     const sb = createClientBrowser();
@@ -22,14 +22,14 @@ export default function LoginPage() {
     // If already signed-in, bounce to /preview
     useEffect(() => {
         (async () => {
-            const { data } = await sb.auth.getSession();
+            const {data} = await sb.auth.getSession();
             if (data.session) {
                 router.replace("/preview");
                 router.refresh();
             }
         })();
 
-        const { data: sub } = sb.auth.onAuthStateChange((evt) => {
+        const {data: sub} = sb.auth.onAuthStateChange((evt) => {
             if (evt === "SIGNED_IN") {
                 router.replace("/preview");
                 router.refresh();
@@ -43,8 +43,8 @@ export default function LoginPage() {
         try {
             const result =
                 mode === "login"
-                    ? await sb.auth.signInWithPassword({ email, password: pwd })
-                    : await sb.auth.signUp({ email, password: pwd });
+                    ? await sb.auth.signInWithPassword({email, password: pwd})
+                    : await sb.auth.signUp({email, password: pwd});
 
             if (result.error) throw result.error;
 
@@ -53,7 +53,7 @@ export default function LoginPage() {
             router.refresh();
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Authentication failed", { description: msg });
+            toast.error("Authentication failed", {description: msg});
         } finally {
             setBusy(false);
         }
@@ -62,15 +62,19 @@ export default function LoginPage() {
     async function handleGoogle() {
         setBusy(true);
         try {
-            const { error } = await sb.auth.signInWithOAuth({
+            const {error} = await sb.auth.signInWithOAuth({
                 provider: "google",
-                options: { redirectTo: `${window.location.origin}/auth/callback` },
+                options: {
+                    redirectTo: `${window.location.origin}/auth/callback`,
+                    queryParams: {prompt: "consent", access_type: "offline"}
+                },
+
             });
             if (error) throw error;
             // Redirect handled by OAuth; no-op here.
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Google sign-in failed", { description: msg });
+            toast.error("Google sign-in failed", {description: msg});
             setBusy(false);
         }
     }
@@ -79,7 +83,7 @@ export default function LoginPage() {
         <main className="grid min-h-screen place-items-center bg-background">
             <div className="w-full max-w-md rounded-2xl border bg-card p-6 shadow-sm">
                 <div className="mb-4 flex items-center gap-2">
-                    <Plane className="h-5 w-5" />
+                    <Plane className="h-5 w-5"/>
                     <h1 className="text-lg font-semibold">Sign in to Itinero</h1>
                 </div>
 
@@ -120,7 +124,7 @@ export default function LoginPage() {
                         <Button onClick={handleEmail} disabled={busy}>
                             {busy ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
                                     Working…
                                 </>
                             ) : mode === "login" ? (
