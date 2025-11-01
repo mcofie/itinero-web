@@ -2,16 +2,16 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { createClientBrowser } from "@/lib/supabase/browser";
-import { cn } from "@/lib/utils";
+import {usePathname, useRouter} from "next/navigation";
+import {createClientBrowser} from "@/lib/supabase/browser";
+import {cn} from "@/lib/utils";
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
+import {Badge} from "@/components/ui/badge";
+import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/components/ui/dialog";
+import {Input} from "@/components/ui/input";
 
-import { LogOut, User, Map, Calendar, Star, Plus } from "lucide-react";
+import {LogOut, User, Map, Calendar, Star, Plus} from "lucide-react";
 
 type Props = {
     children: React.ReactNode;
@@ -23,7 +23,7 @@ type LedgerSumRow = { sum: number | null };
 type LedgerRow = { delta: number | null };
 type ProfileRow = { points_balance: number | null; points: number | null };
 
-export default function AppShell({ children, userEmail }: Props) {
+export default function AppShell({children, userEmail}: Props) {
     const pathname = usePathname();
     const router = useRouter();
     const sb = createClientBrowser();
@@ -40,14 +40,14 @@ export default function AppShell({ children, userEmail }: Props) {
     // init: pick up session + first load
     React.useEffect(() => {
         (async () => {
-            const { data: auth } = await sb.auth.getUser();
+            const {data: auth} = await sb.auth.getUser();
             const userId = auth?.user?.id ?? null;
             setUid(userId);
             await refreshPoints(userId);
         })();
 
         // refresh on auth changes
-        const { data: sub } = sb.auth.onAuthStateChange(async (_evt, sess) => {
+        const {data: sub} = sb.auth.onAuthStateChange(async (_evt, sess) => {
             const userId = sess?.user?.id ?? null;
             setUid(userId);
             await refreshPoints(userId);
@@ -65,7 +65,7 @@ export default function AppShell({ children, userEmail }: Props) {
             .channel("points-ledger-live")
             .on(
                 "postgres_changes",
-                { event: "*", schema: "itinero", table: "points_ledger", filter: `user_id=eq.${uid}` },
+                {event: "*", schema: "itinero", table: "points_ledger", filter: `user_id=eq.${uid}`},
                 () => void refreshPoints(uid)
             )
             .subscribe();
@@ -74,7 +74,7 @@ export default function AppShell({ children, userEmail }: Props) {
             .channel("profiles-live")
             .on(
                 "postgres_changes",
-                { event: "*", schema: "public", table: "profiles", filter: `id=eq.${uid}` },
+                {event: "*", schema: "public", table: "profiles", filter: `id=eq.${uid}`},
                 () => void refreshPoints(uid)
             )
             .subscribe();
@@ -96,7 +96,7 @@ export default function AppShell({ children, userEmail }: Props) {
 
             // 1) Try secure RPC first (if you have one)
             try {
-                const { data: rpcBalance, error: rpcErr } = await sb.rpc("get_points_balance");
+                const {data: rpcBalance, error: rpcErr} = await sb.rpc("get_points_balance");
                 if (!rpcErr && typeof rpcBalance === "number") {
                     setPoints(rpcBalance);
                     return;
@@ -107,7 +107,7 @@ export default function AppShell({ children, userEmail }: Props) {
 
             // 2) Try aggregate on itinero.points_ledger (typed)
             try {
-                const { data, error } = await sb
+                const {data, error} = await sb
                     .schema("itinero")
                     .from("points_ledger")
                     .select("sum:sum(delta)")
@@ -127,7 +127,7 @@ export default function AppShell({ children, userEmail }: Props) {
 
             // 3) Fallback to client-side sum (typed)
             try {
-                const { data: rows, error } = await sb
+                const {data: rows, error} = await sb
                     .schema("itinero")
                     .from("points_ledger")
                     .select("delta")
@@ -145,7 +145,7 @@ export default function AppShell({ children, userEmail }: Props) {
 
             // 4) Final fallback: profiles.points_balance (or profiles.points)
             try {
-                const { data: prof, error: pErr } = await sb
+                const {data: prof, error: pErr} = await sb
                     .from("profiles")
                     .select("points_balance, points")
                     .eq("id", userId)
@@ -184,16 +184,14 @@ export default function AppShell({ children, userEmail }: Props) {
         setTopupBusy(true);
         try {
             // Insert credit row in ledger
-            const { error } = await sb
+            const {error} = await sb
                 .schema("itinero")
                 .from("points_ledger")
                 .insert({
                     user_id: uid,
                     delta: amount,
                     reason: "manual_topup",
-                    source: "ui",
                 });
-
             if (!error) {
                 await refreshPoints(uid);
                 setTopupOpen(false);
@@ -210,17 +208,30 @@ export default function AppShell({ children, userEmail }: Props) {
             <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
                 <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-3 md:px-6">
                     <Link href="/trips" className="flex items-center gap-2 text-sm font-semibold">
-                        <Map className="h-4 w-4" />
+                        <Map className="h-4 w-4"/>
                         Itinero
                     </Link>
 
                     <nav className="flex items-center gap-1">
                         <NavItem href="/trips" active={pathname?.startsWith("/trips")}>
-                            <Calendar className="mr-2 h-4 w-4" />
+                            <Calendar className="mr-2 h-4 w-4"/>
                             Trips
                         </NavItem>
+
+                        {/* New Trip button */}
+                        <Button
+                            size="sm"
+                            className="ml-1 gap-1"
+                            onClick={() => router.push("/trip-maker")}
+                            aria-label="Create new trip"
+                            title="Create new trip"
+                        >
+                            <Plus className="h-4 w-4"/>
+                            New Trip
+                        </Button>
+
                         <NavItem href="/profile" active={pathname === "/profile"}>
-                            <User className="mr-2 h-4 w-4" />
+                            <User className="mr-2 h-4 w-4"/>
                             Profile
                         </NavItem>
 
@@ -233,20 +244,20 @@ export default function AppShell({ children, userEmail }: Props) {
                                 onClick={() => router.push("/rewards")}
                                 title="View rewards"
                             >
-                                <Star className="h-4 w-4" />
+                                <Star className="h-4 w-4"/>
                                 <span className="tabular-nums">
                   {loadingPoints ? "…" : new Intl.NumberFormat().format(points)}
                 </span>
                                 <span className="hidden sm:inline"> pts</span>
                             </Button>
                             <Button variant="outline" size="sm" className="gap-1" onClick={() => setTopupOpen(true)}>
-                                <Plus className="h-4 w-4" />
+                                <Plus className="h-4 w-4"/>
                                 Top up
                             </Button>
                         </div>
 
                         <Button variant="outline" size="sm" className="ml-1" onClick={logout}>
-                            <LogOut className="mr-2 h-4 w-4" />
+                            <LogOut className="mr-2 h-4 w-4"/>
                             Logout
                         </Button>
                     </nav>
@@ -256,7 +267,7 @@ export default function AppShell({ children, userEmail }: Props) {
                             {userEmail}
                         </Badge>
                     ) : (
-                        <span />
+                        <span/>
                     )}
                 </div>
             </header>
@@ -293,7 +304,8 @@ export default function AppShell({ children, userEmail }: Props) {
                         <Button variant="ghost" onClick={() => setTopupOpen(false)} disabled={topupBusy}>
                             Cancel
                         </Button>
-                        <Button onClick={handleTopup} disabled={topupBusy || !Number(topupAmt) || Number(topupAmt) <= 0}>
+                        <Button onClick={handleTopup}
+                                disabled={topupBusy || !Number(topupAmt) || Number(topupAmt) <= 0}>
                             {topupBusy ? "Processing…" : "Confirm"}
                         </Button>
                     </DialogFooter>

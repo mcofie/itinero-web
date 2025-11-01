@@ -6,6 +6,7 @@ import {serve} from "https://deno.land/std@0.224.0/http/server.ts";
 // …rest of your function…
 import {serve} from "https://deno.land/std/http/server.ts";
 import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
+import {normalizeModeClient} from "../../../src/lib/utils/normalizeModeClient";
 
 type Lodging = { name: string; lat: number; lng: number; address?: string };
 
@@ -72,8 +73,10 @@ serve(async (req) => {
         if (!input.start_date || !input.end_date) return j({error: "start_date and end_date are required"}, 400);
 
         const interests = (input.interests ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean);
-        const mode = input.mode ?? "walk";
+        // const mode = input.mode ?? "walk";
         const pace = input.pace ?? "balanced";
+
+        const mode = normalizeModeClient(input.mode ?? "walking");
 
         // === Destination anchor & broad bbox for initial fetch ===
         const destAnchor = input.destinations[0];

@@ -126,13 +126,16 @@ export default function TripWizard() {
 
             // Save for the /preview page to pick up
             localStorage.setItem("itinero:latest_preview", JSON.stringify(data));
-
-            console.log({payload, data, error});
             if (error) throw error;
             const {
                 data: {user},
             } = await sb.auth.getUser();
-            if (!user) setAuthOpen(true);
+            if (!user) {
+                setAuthOpen(true)
+            } else {
+                router.replace("/preview");
+                router.refresh();
+            }
         } catch (e) {
             console.error(e);
         } finally {

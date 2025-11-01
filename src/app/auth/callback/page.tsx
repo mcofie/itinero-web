@@ -1,7 +1,7 @@
 "use client";
-import { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { createClientBrowser } from "@/lib/supabase/browser";
+import {useEffect} from "react";
+import {useRouter, useSearchParams} from "next/navigation";
+import {createClientBrowser} from "@/lib/supabase/browser";
 
 export default function AuthCallback() {
     const sb = createClientBrowser();
@@ -23,12 +23,15 @@ export default function AuthCallback() {
             }
 
             // For SSR-safe exchange when Supabase sends code directly to your app:
-            await sb.auth.exchangeCodeForSession(window.location.href).catch(() => { /* already exchanged is fine */ });
+            await sb.auth.exchangeCodeForSession(window.location.href).catch(() => { /* already exchanged is fine */
+            });
 
             router.replace("/preview");
             router.refresh();
         })();
     }, [sb, router, sp]);
 
-    return null;
+    return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">
+        Signing you in…
+    </div>;
 }

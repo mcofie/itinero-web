@@ -5,6 +5,7 @@ import {useEffect, useMemo, useState} from "react";
 import dynamic from "next/dynamic";
 import {useRouter} from "next/navigation";
 import {createClientBrowser} from "@/lib/supabase/browser";
+import {normalizeModeClient} from "@/lib/utils/normalizeModeClient";
 
 import {Button} from "@/components/ui/button";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
@@ -49,6 +50,7 @@ const REQUIRED_POINTS_TO_SAVE = 100;
 export default function PreviewPage() {
     const sb = createClientBrowser();
     const router = useRouter();
+
 
     // --- hooks first (fixed order) ---
     const [authed, setAuthed] = useState(false);
@@ -99,17 +101,14 @@ export default function PreviewPage() {
             setPointsBusy(true);
             try {
                 const {data, error} = await sb
-                    .from("itinero.points_ledger")
-                    .select("balance:delta.sum()")
+                    .schema("itinero")
+                    .from("points_ledger")
+                    .select("sum:sum(delta)")
                     .eq("user_id", userId)
-                    .single();
+                    .maybeSingle<{ sum: number | null }>();
 
-                if (!error) {
-                    const bal = Number((data as { balance: number } | null)?.balance ?? 0);
-                    setPoints(Number.isFinite(bal) ? bal : 0);
-                } else {
-                    setPoints(0);
-                }
+                const bal = !error ? Number(data?.sum ?? 0) : 0;
+                setPoints(Number.isFinite(bal) ? bal : 0);
             } finally {
                 setPointsBusy(false);
             }
@@ -335,7 +334,9 @@ export default function PreviewPage() {
 
                             {/* Action bar */}
                             <div className="flex shrink-0 flex-wrap gap-2">
-                                <Button onClick={() => saveDraft(sb, preview, setSaving)} disabled={saving}>
+                                <Button
+                                    onClick={() => saveDraftAsTrip(sb, preview as PreviewResponse, setSaving)}
+                                    disabled={saving}>
                                     {saving ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Saving…
@@ -653,7 +654,9 @@ function DayEditor({
         }
     }, []);
 
-    const tripMode: Mode = (tripInputs?.mode ?? "walk") as Mode;
+    const tripMode = normalizeModeClient(tripInputs?.mode ?? "walking");
+
+    // const tripMode: Mode = (tripInputs?.mode ?? "walk") as Mode;
     const tripLodging: LodgingLike = day.lodging ?? tripInputs?.lodging ?? null;
 
     // DnD reorder
@@ -1031,8 +1034,12 @@ function PlacePicker({
     async function search() {
         setLoading(true);
         try {
-            // Adjust table name/schema to your setup
-            let query = sb.from("places").select("id,name,lat,lng,category,popularity").limit(25);
+            let query = sb
+                .schema("itinero")
+                .from("places")
+                .select("id,name,lat,lng,category,popularity")
+                .limit(25);
+
             if (q.trim()) query = query.ilike("name", `%${q.trim()}%`);
             const {data} = await query;
             if (data) setRows(data as unknown as Place[]);
@@ -1122,6 +1129,109 @@ async function saveDraft(
     }
 }
 
+
+// Replace your old saveDraft with this:
+async function saveDraftAsTrip(
+    sb: ReturnType<typeof createClientBrowser>,
+    preview: PreviewResponse,
+    setSaving: (v: boolean) => void,
+) {
+    setSaving(true);
+    try {
+        // 0) auth
+        const {data: auth} = await sb.auth.getUser();
+        const userId: string | undefined = auth?.user?.id ?? undefined;
+        if (!userId) throw new Error("Not authenticated");
+
+        // 1) trip row (matches itinero.trips)
+        const inputs = preview.trip_summary?.inputs;
+        const title =
+            inputs?.destinations?.[0]?.name
+                ? `${inputs.destinations[0].name} Trip`
+                : "Trip";
+
+        const tripRow: {
+            user_id: string;
+            title: string | null;
+            start_date: string | null;
+            end_date: string | null;
+            est_total_cost: number | null;
+            currency: string | null;
+            inputs?: PreviewResponse["trip_summary"]["inputs"];
+        } = {
+            user_id: userId,
+            title,
+            start_date: inputs?.start_date ?? preview.trip_summary.start_date ?? null,
+            end_date: inputs?.end_date ?? preview.trip_summary.end_date ?? null,
+            est_total_cost:
+                typeof preview.trip_summary.est_total_cost === "number"
+                    ? preview.trip_summary.est_total_cost
+                    : null,
+            currency: preview.trip_summary.currency ?? null,
+            inputs, // keep provenance
+        };
+
+        const {data: tripInsert, error: tripErr} = await sb
+            .schema("itinero")
+            .from("trips")
+            .insert(tripRow)
+            .select("id")
+            .single();
+
+        if (tripErr) throw tripErr;
+        const tripId: string = (tripInsert as { id: string }).id;
+
+        // 2) itinerary items (matches itinero.itinerary_items)
+        type ItemInsert = {
+            trip_id: string;
+            day_index: number;
+            date: string | null;
+            order_index: number;
+            when: "morning" | "afternoon" | "evening";
+            place_id: string | null;                 // must be uuid if FK exists
+            title: string;
+            est_cost: number | null;
+            duration_min: number | null;
+            travel_min_from_prev: number | null;
+            notes: string | null;
+        };
+
+        const items: ItemInsert[] = [];
+        preview.days.forEach((day, dIdx) => {
+            day.blocks.forEach((b, iIdx) => {
+                items.push({
+                    trip_id: tripId,
+                    day_index: dIdx,
+                    date: day.date ?? null,
+                    order_index: iIdx,
+                    when: b.when,
+                    place_id: b.place_id, // ensure these ids are UUIDs that exist in itinero.places
+                    title: b.title,
+                    est_cost: typeof b.est_cost === "number" ? b.est_cost : null,
+                    duration_min:
+                        typeof b.duration_min === "number" ? b.duration_min : null,
+                    travel_min_from_prev:
+                        typeof b.travel_min_from_prev === "number"
+                            ? b.travel_min_from_prev
+                            : null,
+                    notes: b.notes ?? null,
+                });
+            });
+        });
+
+        if (items.length) {
+            const {error: itemsErr} = await sb
+                .schema("itinero")
+                .from("itinerary_items")
+                .insert(items);
+            if (itemsErr) throw itemsErr;
+        }
+    } finally {
+        setSaving(false);
+    }
+}
+
+
 function emojiFor(tag: string) {
     const t = tag.toLowerCase();
     if (t.includes("beach")) return "🌴";
@@ -1185,7 +1295,7 @@ export type PreviewResponse = {
         est_total_cost: number;
         currency?: string;
         inputs?: {
-            destinations?: { name: string; lat?: number; lng?: number }[];
+            destinations?: { id: string; name: string; lat?: number; lng?: number }[];
             start_date?: string;
             end_date?: string;
             interests?: string[];
