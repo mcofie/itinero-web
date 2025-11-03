@@ -9,6 +9,8 @@ import {cn} from "@/lib/utils";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import {createClientBrowser} from "@/lib/supabase/browser";
 import {motion, AnimatePresence} from "framer-motion";
+// at top of file (TripWizard.tsx)
+import type {DateRange} from "react-day-picker";
 import {
     CalendarDays,
     ChevronLeft,
@@ -21,7 +23,26 @@ import {
     Footprints,
 } from "lucide-react";
 import {useRouter} from "next/navigation";
+import {Calendar} from "@/components/ui/calendar";
 
+/** ---------- local helpers for date-only strings ---------- */
+type DateRangeValue = { from?: Date; to?: Date } | undefined;
+
+function toDateOnlyString(d: Date) {
+    // Convert to YYYY-MM-DD in local time
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function parseDateOnlyString(s?: string) {
+    if (!s) return undefined;
+    // Interpret as local midnight
+    const [y, m, d] = s.split("-").map(Number);
+    if (!y || !m || !d) return undefined;
+    return new Date(y, m - 1, d);
+}
 
 /** ---------- types aligned to request body ---------- */
 type Destination = { id?: string; name: string; lat?: number; lng?: number };
@@ -66,9 +87,54 @@ const STEPS = [
     {key: "review", label: "Review", icon: Sparkles},
 ] as const;
 
+/** ---------- tiny reusable range picker ---------- */
+function DateRangePicker({
+                             value,
+                             onChange,
+                             className = "",
+                             disablePast = true,
+                         }: {
+    value: DateRangeValue;
+    onChange: (range: DateRangeValue) => void;
+    className?: string;
+    disablePast?: boolean;
+}) {
+    // TripWizard.tsx
+    const disabled = disablePast ? [{ before: new Date() }] : undefined;
+    const selectedForCalendar: DateRange | undefined = value
+        ? { from: value.from!, to: value.to }
+        : undefined;
+
+    return (
+        <div className={className}>
+            <Calendar
+                mode="range"
+                numberOfMonths={2}
+                selected={selectedForCalendar}
+                onSelect={onChange}
+                disabled={disabled}
+                className="rounded-xl border bg-card p-3 md:p-4"
+                classNames={{
+                    months: "gap-3 md:gap-4",
+                    month: "space-y-3",
+                    head_cell: "text-xs font-medium text-muted-foreground",
+                    cell: "p-0 relative",
+                    day: "h-9 w-9 md:h-10 md:w-10 rounded-md aria-selected:opacity-100",
+                    day_selected: "bg-blue-600 text-white hover:bg-blue-600 hover:text-white",
+                    day_today: "bg-blue-600/10 text-blue-700 dark:text-blue-300",
+                    day_outside: "text-muted-foreground opacity-50",
+                    nav_button: "h-9 w-9 md:h-10 md:w-10",
+                }}
+            />
+        </div>
+    );
+}
+
 export default function TripWizard() {
     const sb = createClientBrowser();
     const router = useRouter();
+
+    // ✅ keep hooks INSIDE the component
     const [step, setStep] = useState(0);
     const [busy, setBusy] = useState(false);
     const [authOpen, setAuthOpen] = useState(false);
@@ -84,10 +150,12 @@ export default function TripWizard() {
         lodging: {name: ""},
     });
 
+    // ✅ calendar state lives here (not at top-level)
+    const [, setSelectedRange] = useState<DateRangeValue>(undefined);
+
     useEffect(() => {
         const {data: sub} = sb.auth.onAuthStateChange(async (evt) => {
             if (evt === "SIGNED_IN") {
-                // small delay to let session propagate
                 await sb.auth.getSession();
                 router.replace("/preview");
                 router.refresh();
@@ -124,7 +192,6 @@ export default function TripWizard() {
             const payload = toPayload(state);
             const {data, error} = await sb.functions.invoke("build_preview_itinerary", {body: payload});
 
-            // Save for the /preview page to pick up
             localStorage.setItem("itinero:latest_preview", JSON.stringify(data));
             if (error) throw error;
             const {
@@ -156,6 +223,40 @@ export default function TripWizard() {
         });
     }
 
+    /** map state <-> calendar */
+    const selectedRange: DateRangeValue = useMemo(() => {
+        const from = parseDateOnlyString(state.start_date);
+        const to = parseDateOnlyString(state.end_date);
+        return (from || to) ? {from: from, to: to} : undefined;
+    }, [state.start_date, state.end_date]);
+
+    const handleRangeChange = (range: DateRangeValue) => {
+        if (!range) {
+            setState((s) => ({...s, start_date: "", end_date: ""}));
+            return;
+        }
+        const from = range.from ? toDateOnlyString(range.from) : "";
+        const to = range.to ? toDateOnlyString(range.to) : "";
+        setState((s) => ({...s, start_date: from, end_date: to}));
+    };
+
+    // Helpers (put near the top of the file)
+    const fmtHuman = (s?: string) =>
+        s ? new Date(s + "T00:00:00").toLocaleDateString(undefined, {
+            day: "2-digit", month: "short", year: "numeric",
+        }) : "—";
+
+    const nightsBetween = (a?: string, b?: string) => {
+        if (!a || !b) return 0;
+        const d1 = new Date(a + "T00:00:00");
+        const d2 = new Date(b + "T00:00:00");
+        return Math.max(0, Math.round((d2.getTime() - d1.getTime()) / 86_400_000));
+    };
+
+    const selectedForCalendar: DateRange | undefined = selectedRange
+        ? {from: selectedRange.from, to: selectedRange.to}
+        : undefined;
+
     return (
         <div className="mx-auto w-full max-w-3xl">
             <HeaderProgress
@@ -183,32 +284,53 @@ export default function TripWizard() {
                         {step === 1 && (
                             <Slide key="step-dates">
                                 <FieldBlock label="Dates" hint="Select your travel window" icon={CalendarDays}>
-                                    <div className="grid gap-3 sm:grid-cols-2">
-                                        <div>
-                                            <Label className="text-sm">Start date</Label>
-                                            <Input
-                                                type="date"
-                                                value={state.start_date}
-                                                onChange={(e) =>
-                                                    setState((s) => ({
-                                                        ...s,
-                                                        start_date: e.target.value,
-                                                    }))
-                                                }
+                                    <div className="grid gap-4">
+                                        {/* Mobile: 1 month */}
+                                        <div className="sm:hidden">
+                                            <Calendar
+                                                mode="range"
+                                                numberOfMonths={1}
+                                                selected={selectedForCalendar}
+                                                onSelect={handleRangeChange}
+                                                disabled={[{before: new Date()}]}
+                                                className="rounded-xl border bg-card p-3"
                                             />
                                         </div>
-                                        <div>
-                                            <Label className="text-sm">End date</Label>
-                                            <Input
-                                                type="date"
-                                                value={state.end_date}
-                                                onChange={(e) =>
-                                                    setState((s) => ({
-                                                        ...s,
-                                                        end_date: e.target.value,
-                                                    }))
-                                                }
+
+                                        {/* ≥sm: 2 months side-by-side */}
+                                        <div className="hidden sm:block">
+                                            <Calendar
+                                                mode="range"
+                                                numberOfMonths={2}
+                                                selected={selectedForCalendar}
+                                                onSelect={handleRangeChange}
+                                                disabled={[{before: new Date()}]}
+                                                className="rounded-xl border bg-card p-3"
                                             />
+                                        </div>
+
+                                        {/* Selected summary */}
+                                        <div className="flex flex-wrap items-center gap-2 text-sm">
+      <span className="rounded-full border px-2.5 py-1">
+        Start: <span className="font-medium">{fmtHuman(state.start_date)}</span>
+      </span>
+                                            <span className="rounded-full border px-2.5 py-1">
+        End: <span className="font-medium">{fmtHuman(state.end_date)}</span>
+      </span>
+                                            <span className="rounded-full bg-muted px-2.5 py-1">
+        Nights: <span className="font-medium">{nightsBetween(state.start_date, state.end_date)}</span>
+      </span>
+
+                                            {/* Quick actions */}
+                                            {(state.start_date || state.end_date) && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRangeChange(undefined)}
+                                                    className="ml-1 text-primary underline-offset-2 hover:underline"
+                                                >
+                                                    Clear
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </FieldBlock>
@@ -376,7 +498,6 @@ export default function TripWizard() {
                 onOpenChange={setAuthOpen}
                 title="Sign in to save & share your trip"
                 postLogin={() => {
-
                 }}
             />
         </div>
@@ -406,10 +527,8 @@ function DestinationField({
         setLoading(true);
         const t = setTimeout(async () => {
             try {
-                // adjust table/schema/columns to yours
-                // expecting: id (uuid), name (text), lat (numeric), lng (numeric)
                 const {data, error} = await sb
-                    .schema("itinero")                  // 👈 use the correct schema
+                    .schema("itinero")
                     .from("destinations")
                     .select("id,name,lat,lng")
                     .ilike("name", `%${term}%`)
@@ -452,12 +571,10 @@ function DestinationField({
                 onChange={(e) => {
                     setQ(e.target.value);
                     setOpen(true);
-                    // allow free text while typing; clear id if user edits
                     onChange({...value, id: undefined, lat: undefined, lng: undefined, name: e.target.value});
                 }}
                 onFocus={() => setOpen(true)}
                 onBlur={() => {
-                    // close a tick later so click can register
                     setTimeout(() => setOpen(false), 120);
                 }}
             />
@@ -496,7 +613,6 @@ function toPayload(s: RequestBody) {
     const d = s.destinations[0];
     return {
         destinations: [{
-            // include id if present; your server can use it to fetch details/coordinates
             id: d?.id,
             name: (d?.name ?? "").trim(),
             lat: d?.lat,
