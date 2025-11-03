@@ -67,7 +67,7 @@ export default function LandingPage() {
                 <div className="mx-auto w-full max-w-6xl px-6 py-10">
                     <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
                         <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
-                            <Link href="/trip-maker">Start new itinerary</Link>
+                            <Link href="/#">Start new itinerary</Link>
                         </Button>
                         <Button asChild variant="outline" size="lg" className="border-slate-300 dark:border-slate-700">
                             <Link href="/pricing">See pricing</Link>
@@ -83,6 +83,7 @@ export default function LandingPage() {
                     <div>© {new Date().getFullYear()} Itinero</div>
                     <div className="flex gap-4">
                         <Link href="/pricing">Pricing</Link>
+                        <Link href="/rewards">Rewards</Link>
                         <Link href="/about">About</Link>
                         <Link href="/terms">Terms</Link>
                     </div>
