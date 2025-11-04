@@ -42,6 +42,7 @@ import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/
 /** Dynamically load the Leaflet map (avoids SSR "window is not defined") */
 const LeafletMap = dynamic(() => import("./_leaflet/LeafletMap"), {ssr: false});
 import "leaflet/dist/leaflet.css";
+import AppShell from "@/components/layout/AppShell";
 
 /** How many points are required to save a trip */
 const REQUIRED_POINTS_TO_SAVE = 100;
@@ -100,20 +101,21 @@ export default function PreviewPage() {
         (async () => {
             setPointsBusy(true);
             try {
-                const {data, error} = await sb
-                    .schema("itinero")
-                    .from("points_ledger")
-                    .select("sum:sum(delta)")
-                    .eq("user_id", userId)
-                    .maybeSingle<{ sum: number | null }>();
 
-                const bal = !error ? Number(data?.sum ?? 0) : 0;
-                setPoints(Number.isFinite(bal) ? bal : 0);
+                const {data: rpcBalance, error: rpcErr} = await sb.rpc("get_points_balance");
+                if (!rpcErr && typeof rpcBalance === "number") {
+                    console.error("points sum error", rpcBalance);
+
+                    setPoints(rpcBalance);
+                    return;
+                }
+
             } finally {
                 setPointsBusy(false);
             }
         })();
     }, [sb, userId]);
+
 
     // --- early returns (safe now) ---
     if (loading) {
@@ -148,10 +150,7 @@ export default function PreviewPage() {
     // --- authed shell below ---
     if (!preview) {
         return (
-            <AppShell userEmail={userEmail} onLogout={async () => {
-                await sb.auth.signOut();
-                router.replace("/login");
-            }}>
+            <AppShell userEmail={null}>
                 <div className="mx-auto mt-10 max-w-lg text-center">
                     <Card>
                         <CardHeader>
@@ -182,116 +181,196 @@ export default function PreviewPage() {
         return Math.min(100, Math.round(((activeDayIdx + 1) / totalDays) * 100));
     })();
 
-    async function handleSaveTrip() {
-        if (!userId || !preview) return;
-        if (pointsBusy) return;
+    // Replace your old saveDraft with this:
+    async function saveDraftAsTrip(
+        sb: ReturnType<typeof createClientBrowser>,
+        preview: PreviewResponse,
+        setSaving: (v: boolean) => void,
+    ) {
+        setSaving(true);
 
-        if (points < REQUIRED_POINTS_TO_SAVE) {
+        // how many points needed to save a trip
+        const COST = REQUIRED_POINTS_TO_SAVE ?? 100;
+
+        // if you maintain a local points state, keep your existing pre-check:
+        if (points < COST) {
+            console.error("TheP", points)
             setInsufficientOpen(true);
+            setSaving(false);
             return;
         }
 
-        setSavingTrip(true);
+        let userId: string | undefined;
+        let pointsSpent = false;
+
         try {
-            const ts = preview.trip_summary;        // ✅ narrows type
-            const inps = ts.inputs ?? inputs;
+            // ---- 0) auth ----
+            const {data: auth} = await sb.auth.getUser();
+            userId = auth?.user?.id ?? undefined;
+            if (!userId) throw new Error("Not authenticated");
 
-            // 1) Create trip
-            const title = inputs?.destinations?.[0]?.name ? `${inputs.destinations[0].name} Trip` : "Trip";
+            // ---- 1) SERVER GUARD: spend points (RPC preferred) ----
+            // If you’ve created a secure DB function: spend_points(p_cost int) returns boolean
+            //  - TRUE when debited
+            //  - FALSE (or error) when insufficient or denied
+            try {
+                const {data: ok, error: rpcErr} = await sb.rpc("spend_points", {p_cost: COST});
+                if (rpcErr) throw rpcErr;
+                if (ok !== true) {
+                    // not enough points or policy blocked it
+                    setInsufficientOpen(true);
+                    return;
+                }
+                pointsSpent = true;
+            } catch {
+                // Fallback path: write directly to the ledger (relies on your RLS allowing it)
+                const {error: debitErr} = await sb
+                    .schema("itinero")
+                    .from("points_ledger")
+                    .insert({
+                        user_id: userId,
+                        delta: -COST,
+                        reason: "save_trip",
+                        meta: {source: "web", at: new Date().toISOString()},
+                    });
 
-            const payloadTrip: {
+                if (debitErr) {
+                    // couldn’t spend; probably RLS or insufficient balance guard on the server
+                    setInsufficientOpen(true);
+                    return;
+                }
+                pointsSpent = true;
+            }
+
+            // ---- 2) Insert trip row ----
+            const inputs = preview.trip_summary?.inputs;
+            const title =
+                inputs?.destinations?.[0]?.name
+                    ? `${inputs.destinations[0].name} Trip`
+                    : "Trip";
+
+            const tripRow: {
                 user_id: string;
-                title: string;
+                title: string | null;
                 start_date: string | null;
                 end_date: string | null;
                 est_total_cost: number | null;
                 currency: string | null;
+                destination_id: string | null;
                 inputs?: PreviewResponse["trip_summary"]["inputs"];
             } = {
                 user_id: userId,
                 title,
                 start_date: inputs?.start_date ?? preview.trip_summary.start_date ?? null,
                 end_date: inputs?.end_date ?? preview.trip_summary.end_date ?? null,
-                est_total_cost: preview.trip_summary.est_total_cost ?? null,
+                est_total_cost:
+                    typeof preview.trip_summary.est_total_cost === "number"
+                        ? preview.trip_summary.est_total_cost
+                        : null,
                 currency: preview.trip_summary.currency ?? null,
-                inputs, // store raw inputs for provenance
+                destination_id: preview?.trip_summary?.inputs?.destinations?.[0]?.id ?? null,
+                inputs, // provenance
             };
 
-            const {
-                data: tripIns,
-                error: tripErr
-            } = await sb.from("itinero.trips").insert(payloadTrip).select("id").single();
+            const {data: tripInsert, error: tripErr} = await sb
+                .schema("itinero")
+                .from("trips")
+                .insert(tripRow)
+                .select("id")
+                .single();
 
             if (tripErr) throw tripErr;
-            const tripId = (tripIns as { id: string }).id;
+            const tripId: string = (tripInsert as { id: string }).id;
 
-            // 2) Create trip items
-            const itemsPayload: Array<{
+            // ---- 3) Insert itinerary items ----
+            type ItemInsert = {
                 trip_id: string;
                 day_index: number;
                 date: string | null;
                 order_index: number;
-                when: Day["blocks"][number]["when"];
+                when: "morning" | "afternoon" | "evening";
                 place_id: string | null;
                 title: string;
                 est_cost: number | null;
                 duration_min: number | null;
                 travel_min_from_prev: number | null;
                 notes: string | null;
-            }> = [];
+            };
 
-            for (let d = 0; d < preview.days.length; d++) {
-                const day = preview.days[d];
-                for (let i = 0; i < day.blocks.length; i++) {
-                    const b = day.blocks[i];
-                    itemsPayload.push({
+            const items: ItemInsert[] = [];
+            preview.days.forEach((day, dIdx) => {
+                day.blocks.forEach((b, iIdx) => {
+                    items.push({
                         trip_id: tripId,
-                        day_index: d,
+                        day_index: dIdx,
                         date: day.date ?? null,
-                        order_index: i,
+                        order_index: iIdx,
                         when: b.when,
-                        place_id: b.place_id,
+                        place_id: b.place_id ?? null, // ensure UUIDs if FK exists
                         title: b.title,
-                        est_cost: b.est_cost ?? null,
-                        duration_min: b.duration_min ?? null,
-                        travel_min_from_prev: b.travel_min_from_prev ?? null,
+                        est_cost: typeof b.est_cost === "number" ? b.est_cost : null,
+                        duration_min: typeof b.duration_min === "number" ? b.duration_min : null,
+                        travel_min_from_prev:
+                            typeof b.travel_min_from_prev === "number" ? b.travel_min_from_prev : null,
                         notes: b.notes ?? null,
                     });
-                }
-            }
+                });
+            });
 
-            if (itemsPayload.length) {
-                const {error: itemsErr} = await sb.from("itinero.trip_items").insert(itemsPayload);
+            if (items.length) {
+                const {error: itemsErr} = await sb
+                    .schema("itinero")
+                    .from("itinerary_items")
+                    .insert(items);
                 if (itemsErr) throw itemsErr;
             }
 
-            // 3) Deduct points
-            const {error: ledgerErr} = await sb.from("itinero.points_ledger").insert({
-                user_id: userId,
-                delta: -REQUIRED_POINTS_TO_SAVE,
-                reason: "save_trip",
-                source: "ui",
-            });
-            if (ledgerErr) throw ledgerErr;
-
-            // 4) Update local points & navigate
-            setPoints((p) => p - REQUIRED_POINTS_TO_SAVE);
-            router.push(`/trips`);
-        } catch (e) {
-            // optional: toast here
-            if (process.env.NODE_ENV !== "production") {
-                console.debug("[save_trip] failed", e);
+            // (optional) update local points UI right away
+            try {
+                // if you have a get_points_balance RPC, refresh UI points
+                const {data: newBal} = await sb.rpc("get_points_balance");
+                if (typeof newBal === "number") {
+                    // setPoints is whatever state hook you use in your shell
+                    setPoints?.(newBal);
+                }
+            } catch {
+                // ignore UI refresh failure
             }
+
+            // success: you can route to /trips/:id or show a toast
+            router.push(`/trips/${tripId}`);
+            tripId
+        } catch (err) {
+            // ---- Compensation: refund points if we already debited but failed later ----
+            if (pointsSpent && userId) {
+                // AFTER (✅ wrap the await)
+                try {
+                    const {error: refundErr} = await sb
+                        .schema("itinero")
+                        .from("points_ledger")
+                        .insert({
+                            user_id: userId,
+                            delta: COST,
+                            reason: "refund_save_trip_failed",
+                            meta: {source: "web", at: new Date().toISOString()},
+                        });
+
+                    // (optional) log if the API responded with an error
+                    if (refundErr) console.error("refund insert failed:", refundErr);
+                } catch (e) {
+                    // network/transport error
+                    console.error("refund insert threw:", e);
+                }
+            }
+            console.error("Save trip failed:", err);
+            // you can surface a toast/snackbar here
         } finally {
-            setSavingTrip(false);
+            setSaving(false);
         }
     }
 
     return (
-        <AppShell userEmail={userEmail} onLogout={async () => {
-            await sb.auth.signOut();
-            router.replace("/login");
-        }}>
+        <AppShell userEmail={null}>
             <div className="w-full">
                 {/* HERO */}
                 <section className="relative overflow-hidden">
@@ -348,7 +427,7 @@ export default function PreviewPage() {
 
                                 <Button
                                     variant="outline"
-                                    onClick={handleSaveTrip}
+                                    onClick={() => saveDraftAsTrip(sb, preview as PreviewResponse, setSaving)}
                                     disabled={savingTrip || pointsBusy}
                                     title={
                                         pointsBusy
@@ -538,46 +617,6 @@ export default function PreviewPage() {
     );
 }
 
-/** ---------- Shell (nav only when authed) ---------- */
-function AppShell({
-                      userEmail,
-                      onLogout,
-                      children,
-                  }: {
-    userEmail: string | null;
-    onLogout: () => Promise<void> | void;
-    children: React.ReactNode;
-}) {
-    const router = useRouter();
-    return (
-        <div className="flex min-h-screen flex-col">
-            <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
-                    <div className="flex cursor-pointer items-center gap-2" onClick={() => router.push("/")}
-                         title="Itinero">
-                        <Plane className="h-5 w-5"/>
-                        <span className="text-sm font-semibold">Itinero</span>
-                    </div>
-                    <nav className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => router.push("/trips")}>
-                            Trips
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => router.push("/profile")}>
-                            <User2 className="mr-1 h-4 w-4"/> Profile
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => onLogout()}>
-                            <LogOut className="mr-1 h-4 w-4"/> Logout
-                        </Button>
-                        {userEmail ?
-                            <Badge variant="outline" className="ml-2 hidden sm:inline-flex">{userEmail}</Badge> : null}
-                    </nav>
-                </div>
-            </header>
-
-            <main className="flex-1">{children}</main>
-        </div>
-    );
-}
 
 /** ---------- Local components ---------- */
 function StatCard({icon, label, value}: { icon: React.ReactNode; label: string; value: string }) {
@@ -1114,123 +1153,6 @@ function PlacePicker({
         </Dialog>
     );
 }
-
-async function saveDraft(
-    sb: ReturnType<typeof createClientBrowser>,
-    preview: PreviewResponse,
-    setSaving: (v: boolean) => void
-) {
-    try {
-        setSaving(true);
-        const {error} = await sb.from("draft_previews").insert({payload: preview});
-        if (error) throw error;
-    } finally {
-        setSaving(false);
-    }
-}
-
-
-// Replace your old saveDraft with this:
-async function saveDraftAsTrip(
-    sb: ReturnType<typeof createClientBrowser>,
-    preview: PreviewResponse,
-    setSaving: (v: boolean) => void,
-) {
-    setSaving(true);
-    try {
-        // 0) auth
-        const {data: auth} = await sb.auth.getUser();
-        const userId: string | undefined = auth?.user?.id ?? undefined;
-        if (!userId) throw new Error("Not authenticated");
-
-        // 1) trip row (matches itinero.trips)
-        const inputs = preview.trip_summary?.inputs;
-        const title =
-            inputs?.destinations?.[0]?.name
-                ? `${inputs.destinations[0].name} Trip`
-                : "Trip";
-
-        const tripRow: {
-            user_id: string;
-            title: string | null;
-            start_date: string | null;
-            end_date: string | null;
-            est_total_cost: number | null;
-            currency: string | null;
-            inputs?: PreviewResponse["trip_summary"]["inputs"];
-        } = {
-            user_id: userId,
-            title,
-            start_date: inputs?.start_date ?? preview.trip_summary.start_date ?? null,
-            end_date: inputs?.end_date ?? preview.trip_summary.end_date ?? null,
-            est_total_cost:
-                typeof preview.trip_summary.est_total_cost === "number"
-                    ? preview.trip_summary.est_total_cost
-                    : null,
-            currency: preview.trip_summary.currency ?? null,
-            inputs, // keep provenance
-        };
-
-        const {data: tripInsert, error: tripErr} = await sb
-            .schema("itinero")
-            .from("trips")
-            .insert(tripRow)
-            .select("id")
-            .single();
-
-        if (tripErr) throw tripErr;
-        const tripId: string = (tripInsert as { id: string }).id;
-
-        // 2) itinerary items (matches itinero.itinerary_items)
-        type ItemInsert = {
-            trip_id: string;
-            day_index: number;
-            date: string | null;
-            order_index: number;
-            when: "morning" | "afternoon" | "evening";
-            place_id: string | null;                 // must be uuid if FK exists
-            title: string;
-            est_cost: number | null;
-            duration_min: number | null;
-            travel_min_from_prev: number | null;
-            notes: string | null;
-        };
-
-        const items: ItemInsert[] = [];
-        preview.days.forEach((day, dIdx) => {
-            day.blocks.forEach((b, iIdx) => {
-                items.push({
-                    trip_id: tripId,
-                    day_index: dIdx,
-                    date: day.date ?? null,
-                    order_index: iIdx,
-                    when: b.when,
-                    place_id: b.place_id, // ensure these ids are UUIDs that exist in itinero.places
-                    title: b.title,
-                    est_cost: typeof b.est_cost === "number" ? b.est_cost : null,
-                    duration_min:
-                        typeof b.duration_min === "number" ? b.duration_min : null,
-                    travel_min_from_prev:
-                        typeof b.travel_min_from_prev === "number"
-                            ? b.travel_min_from_prev
-                            : null,
-                    notes: b.notes ?? null,
-                });
-            });
-        });
-
-        if (items.length) {
-            const {error: itemsErr} = await sb
-                .schema("itinero")
-                .from("itinerary_items")
-                .insert(items);
-            if (itemsErr) throw itemsErr;
-        }
-    } finally {
-        setSaving(false);
-    }
-}
-
 
 function emojiFor(tag: string) {
     const t = tag.toLowerCase();

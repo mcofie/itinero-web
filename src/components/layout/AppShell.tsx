@@ -8,10 +8,51 @@ import {cn} from "@/lib/utils";
 
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
 import {Input} from "@/components/ui/input";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+    Avatar,
+    AvatarFallback,
+    AvatarImage,
+} from "@/components/ui/avatar";
 
-import {LogOut, User, Map, Calendar, Star, Plus} from "lucide-react";
+import {
+    LogOut,
+    User,
+    Map,
+    Calendar,
+    Star,
+    Plus,
+    Menu,
+    Crown,
+} from "lucide-react";
 
 type Props = {
     children: React.ReactNode;
@@ -101,11 +142,10 @@ export default function AppShell({children, userEmail}: Props) {
                     setPoints(rpcBalance);
                     return;
                 }
-            } catch {
-                /* ignore */
+            } catch { /* ignore */
             }
 
-            // 2) Try aggregate on itinero.points_ledger (typed)
+            // 2) Aggregate on itinero.points_ledger (typed)
             try {
                 const {data, error} = await sb
                     .schema("itinero")
@@ -121,11 +161,10 @@ export default function AppShell({children, userEmail}: Props) {
                         return;
                     }
                 }
-            } catch {
-                /* ignore */
+            } catch { /* ignore */
             }
 
-            // 3) Fallback to client-side sum (typed)
+            // 3) Fallback: client-side sum
             try {
                 const {data: rows, error} = await sb
                     .schema("itinero")
@@ -139,8 +178,7 @@ export default function AppShell({children, userEmail}: Props) {
                     setPoints(total);
                     return;
                 }
-            } catch {
-                /* ignore */
+            } catch { /* ignore */
             }
 
             // 4) Final fallback: profiles.points_balance (or profiles.points)
@@ -161,11 +199,9 @@ export default function AppShell({children, userEmail}: Props) {
                     setPoints(bal);
                     return;
                 }
-            } catch {
-                /* ignore */
+            } catch { /* ignore */
             }
 
-            // If everything fails, show 0 (but UI still renders)
             setPoints(0);
         } finally {
             setLoadingPoints(false);
@@ -183,7 +219,6 @@ export default function AppShell({children, userEmail}: Props) {
 
         setTopupBusy(true);
         try {
-            // Insert credit row in ledger
             const {error} = await sb
                 .schema("itinero")
                 .from("points_ledger")
@@ -203,115 +238,216 @@ export default function AppShell({children, userEmail}: Props) {
     }
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
-            {/* Top bar */}
-            <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
-                <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-3 md:px-6">
-                    <Link href="/trips" className="flex items-center gap-2 text-sm font-semibold">
-                        <Map className="h-4 w-4"/>
-                        Itinero
-                    </Link>
+        <TooltipProvider>
+            <div
+                className="min-h-screen bg-gradient-to-b from-background via-background/70 to-background text-foreground">
+                {/* Top bar */}
+                <header
+                    className="sticky top-0 z-40 border-b bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
+                    <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center justify-between px-3 md:px-6">
+                        {/* Left: Brand + Mobile Menu */}
+                        <div className="flex items-center gap-2">
+                            <Sheet>
+                                <SheetTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="mr-1 md:hidden"
+                                        aria-label="Open menu"
+                                    >
+                                        <Menu className="h-5 w-5"/>
+                                    </Button>
+                                </SheetTrigger>
+                                <SheetContent side="left" className="w-72">
+                                    <SheetHeader>
+                                        <SheetTitle className="flex items-center gap-2">
+                                            <Map className="h-4 w-4"/>
+                                            Itinero
+                                        </SheetTitle>
+                                    </SheetHeader>
+                                    <nav className="mt-6 grid gap-1">
+                                        <MobileNavItem href="/trips" active={pathname?.startsWith("/trips")}>
+                                            <Calendar className="mr-2 h-4 w-4"/>
+                                            Trips
+                                        </MobileNavItem>
+                                        <MobileNavItem href="/profile" active={pathname === "/profile"}>
+                                            <User className="mr-2 h-4 w-4"/>
+                                            Profile
+                                        </MobileNavItem>
+                                        <MobileNavItem href="/rewards" active={pathname === "/rewards"}>
+                                            <Star className="mr-2 h-4 w-4"/>
+                                            Rewards
+                                        </MobileNavItem>
+                                    </nav>
+                                    <div className="mt-6">
+                                        <Button className="w-full gap-1" onClick={() => router.push("/trip-maker")}>
+                                            <Plus className="h-4 w-4"/>
+                                            New Trip
+                                        </Button>
+                                    </div>
+                                </SheetContent>
+                            </Sheet>
 
-                    <nav className="flex items-center gap-1">
-                        <NavItem href="/trips" active={pathname?.startsWith("/trips")}>
-                            <Calendar className="mr-2 h-4 w-4"/>
-                            Trips
-                        </NavItem>
+                            <Link
+                                href="/trips"
+                                className="group flex items-center gap-2 text-sm font-semibold"
+                            >
+                <span
+                    className="grid h-8 w-8 place-items-center rounded-md bg-primary/90 text-primary-foreground shadow-sm transition group-hover:scale-[1.02]">
+                  <Map className="h-4 w-4"/>
+                </span>
+                                <span
+                                    className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  Itinero
+                </span>
+                            </Link>
+                        </div>
 
-                        {/* New Trip button */}
-                        <Button
-                            size="sm"
-                            className="ml-1 gap-1"
-                            onClick={() => router.push("/trip-maker")}
-                            aria-label="Create new trip"
-                            title="Create new trip"
-                        >
-                            <Plus className="h-4 w-4"/>
-                            New Trip
-                        </Button>
+                        {/* Center: Desktop nav */}
+                        <nav className="hidden items-center gap-1 md:flex">
+                            <NavItem href="/trips" active={pathname?.startsWith("/trips")}>
+                                <Calendar className="mr-2 h-4 w-4"/>
+                                Trips
+                            </NavItem>
 
-                        <NavItem href="/profile" active={pathname === "/profile"}>
-                            <User className="mr-2 h-4 w-4"/>
-                            Profile
-                        </NavItem>
-
-                        {/* Points + Top up */}
-                        <div className="ml-1 flex items-center gap-1">
                             <Button
-                                variant="secondary"
+                                size="sm"
+                                className="ml-1 gap-1"
+                                onClick={() => router.push("/trip-maker")}
+                                aria-label="Create new trip"
+                                title="Create new trip"
+                            >
+                                <Plus className="h-4 w-4"/>
+                                New Trip
+                            </Button>
+
+                            <NavItem href="/profile" active={pathname === "/profile"}>
+                                <User className="mr-2 h-4 w-4"/>
+                                Profile
+                            </NavItem>
+                        </nav>
+
+                        {/* Right: Points, User */}
+                        <div className="flex items-center gap-1">
+                            {/* Points */}
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="gap-1"
+                                        onClick={() => router.push("/rewards")}
+                                        title="View rewards"
+                                    >
+                                        <Star className="h-4 w-4"/>
+                                        {loadingPoints ? (
+                                            <span className="inline-flex h-4 w-10 animate-pulse rounded-sm bg-muted"/>
+                                        ) : (
+                                            <span className="tabular-nums">
+                        {new Intl.NumberFormat().format(points)}
+                      </span>
+                                        )}
+                                        <span className="hidden sm:inline">pts</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">Your rewards balance</TooltipContent>
+                            </Tooltip>
+
+                            <Button
+                                variant="outline"
                                 size="sm"
                                 className="gap-1"
-                                onClick={() => router.push("/rewards")}
-                                title="View rewards"
+                                onClick={() => setTopupOpen(true)}
                             >
-                                <Star className="h-4 w-4"/>
-                                <span className="tabular-nums">
-                  {loadingPoints ? "…" : new Intl.NumberFormat().format(points)}
-                </span>
-                                <span className="hidden sm:inline"> pts</span>
-                            </Button>
-                            <Button variant="outline" size="sm" className="gap-1" onClick={() => setTopupOpen(true)}>
                                 <Plus className="h-4 w-4"/>
                                 Top up
                             </Button>
+
+                            {/* User menu */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="ml-1 px-2">
+                                        <Avatar className="h-7 w-7">
+                                            <AvatarImage alt={userEmail ?? "User"}/>
+                                            <AvatarFallback>
+                                                {(userEmail ?? "U").slice(0, 2).toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-60">
+                                    <DropdownMenuLabel className="flex items-center justify-between">
+                                        <span>{userEmail ?? "Signed in"}</span>
+                                        <Badge variant="secondary" className="gap-1">
+                                            <Crown className="h-3 w-3"/> {loadingPoints ? "…" : `${points}`}
+                                        </Badge>
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator/>
+                                    <DropdownMenuItem onClick={() => router.push("/profile")}>
+                                        <User className="mr-2 h-4 w-4"/>
+                                        Profile
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => router.push("/rewards")}>
+                                        <Star className="mr-2 h-4 w-4"/>
+                                        Rewards
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator/>
+                                    <DropdownMenuItem onClick={logout}>
+                                        <LogOut className="mr-2 h-4 w-4"/>
+                                        Logout
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
-
-                        <Button variant="outline" size="sm" className="ml-1" onClick={logout}>
-                            <LogOut className="mr-2 h-4 w-4"/>
-                            Logout
-                        </Button>
-                    </nav>
-
-                    {userEmail ? (
-                        <Badge variant="outline" className="hidden md:inline-flex">
-                            {userEmail}
-                        </Badge>
-                    ) : (
-                        <span/>
-                    )}
-                </div>
-            </header>
-
-            {/* Page content */}
-            <main className="mx-auto max-w-[1400px] px-0 md:px-0">{children}</main>
-
-            {/* Subtle footer */}
-            <footer className="border-t py-6 text-center text-xs text-muted-foreground">
-                © {new Date().getFullYear()} Itinero
-            </footer>
-
-            {/* Top up dialog */}
-            <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
-                <DialogContent className="sm:max-w-sm">
-                    <DialogHeader>
-                        <DialogTitle>Top up points</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-3">
-                        <label className="text-xs text-muted-foreground">Amount</label>
-                        <Input
-                            type="number"
-                            inputMode="decimal"
-                            min={1}
-                            placeholder="e.g., 100"
-                            value={topupAmt}
-                            onChange={(e) => setTopupAmt(e.target.value)}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                            This creates a credit row in <span className="font-medium">itinero.points_ledger</span>.
-                        </p>
                     </div>
-                    <DialogFooter>
-                        <Button variant="ghost" onClick={() => setTopupOpen(false)} disabled={topupBusy}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleTopup}
-                                disabled={topupBusy || !Number(topupAmt) || Number(topupAmt) <= 0}>
-                            {topupBusy ? "Processing…" : "Confirm"}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </div>
+                </header>
+
+                {/* Page content */}
+                <main className="mx-auto w-full max-w-[1400px] px-3 md:px-6">
+                    {children}
+                </main>
+
+                {/* Subtle footer */}
+                <footer className="border-t py-6 text-center text-xs text-muted-foreground">
+                    © {new Date().getFullYear()} Itinero
+                </footer>
+
+                {/* Top up dialog */}
+                <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
+                    <DialogContent className="sm:max-w-sm">
+                        <DialogHeader>
+                            <DialogTitle>Top up points</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-3">
+                            <label className="text-xs text-muted-foreground">Amount</label>
+                            <Input
+                                type="number"
+                                inputMode="decimal"
+                                min={1}
+                                placeholder="e.g., 100"
+                                value={topupAmt}
+                                onChange={(e) => setTopupAmt(e.target.value)}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                This creates a credit row in{" "}
+                                <span className="font-medium">itinero.points_ledger</span>.
+                            </p>
+                        </div>
+                        <DialogFooter>
+                            <Button variant="ghost" onClick={() => setTopupOpen(false)} disabled={topupBusy}>
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleTopup}
+                                disabled={topupBusy || !Number(topupAmt) || Number(topupAmt) <= 0}
+                            >
+                                {topupBusy ? "Processing…" : "Confirm"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+        </TooltipProvider>
     );
 }
 
@@ -328,8 +464,33 @@ function NavItem({
         <Link
             href={href}
             className={cn(
-                "inline-flex items-center rounded-md px-3 py-1.5 text-sm hover:bg-accent",
-                active ? "bg-accent text-foreground" : "text-muted-foreground"
+                "inline-flex items-center rounded-md px-3 py-1.5 text-sm transition",
+                "hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                active
+                    ? "bg-accent text-foreground shadow-sm"
+                    : "text-muted-foreground"
+            )}
+        >
+            {children}
+        </Link>
+    );
+}
+
+function MobileNavItem({
+                           href,
+                           active,
+                           children,
+                       }: {
+    href: string;
+    active?: boolean;
+    children: React.ReactNode;
+}) {
+    return (
+        <Link
+            href={href}
+            className={cn(
+                "inline-flex items-center rounded-md px-3 py-2 text-sm",
+                active ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent"
             )}
         >
             {children}

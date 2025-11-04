@@ -100,9 +100,9 @@ function DateRangePicker({
     disablePast?: boolean;
 }) {
     // TripWizard.tsx
-    const disabled = disablePast ? [{ before: new Date() }] : undefined;
+    const disabled = disablePast ? [{before: new Date()}] : undefined;
     const selectedForCalendar: DateRange | undefined = value
-        ? { from: value.from!, to: value.to }
+        ? {from: value.from!, to: value.to}
         : undefined;
 
     return (
@@ -140,7 +140,7 @@ export default function TripWizard() {
     const [authOpen, setAuthOpen] = useState(false);
 
     const [state, setState] = useState<RequestBody>({
-        destinations: [{name: ""}],
+        destinations: [{id: "", name: ""}],
         start_date: "",
         end_date: "",
         budget_daily: "",
@@ -191,6 +191,9 @@ export default function TripWizard() {
         try {
             const payload = toPayload(state);
             const {data, error} = await sb.functions.invoke("build_preview_itinerary", {body: payload});
+
+            console.log(data);
+            console.log(payload);
 
             localStorage.setItem("itinero:latest_preview", JSON.stringify(data));
             if (error) throw error;
