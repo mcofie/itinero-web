@@ -216,26 +216,43 @@ export default function AppShell({children, userEmail}: Props) {
     async function handleTopup() {
         const amount = Number(topupAmt);
         if (!Number.isFinite(amount) || amount <= 0 || !uid) return;
-
         setTopupBusy(true);
-        try {
-            const {error} = await sb
-                .schema("itinero")
-                .from("points_ledger")
-                .insert({
-                    user_id: uid,
-                    delta: amount,
-                    reason: "manual_topup",
-                });
-            if (!error) {
-                await refreshPoints(uid);
-                setTopupOpen(false);
-                setTopupAmt("");
-            }
-        } finally {
+        startTopup(amount);
+    }
+
+
+    async function startTopup(amountGhs: number) {
+        const sb = createClientBrowser();
+
+        // 1) Must have a signed-in user
+        const {data: {session}} = await sb.auth.getSession();
+        if (!session?.access_token) {
+            // show login or open your auth dialog
+            throw new Error("Please sign in to top up points.");
+        }
+
+        const r = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create_topup_session`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                // ✅ this is what your function expects
+                "Authorization": `Bearer ${session.access_token}`,
+                // Supabase routing helper
+                "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+            },
+            body: JSON.stringify({amount: amountGhs, currency: "GHS"})
+        });
+
+        const data = await r.json();
+        if (r.ok && data.authorization_url) {
             setTopupBusy(false);
+            window.location.href = data.authorization_url; // Send user to Paystack checkout
+        } else {
+            setTopupBusy(false);
+            console.error("Topup init failed", data);
         }
     }
+
 
     return (
         <TooltipProvider>
@@ -450,6 +467,7 @@ export default function AppShell({children, userEmail}: Props) {
         </TooltipProvider>
     );
 }
+
 
 function NavItem({
                      href,

@@ -131,14 +131,38 @@ type Palette = {
 // simple hash → palette picker for fun variety
 function pickPalette(seed: string): Palette {
     const palettes: Palette[] = [
-        { from: "from-pink-500/90", to: "to-orange-400/90", ring: "ring-pink-200", chip: "bg-pink-100 text-pink-900 border-pink-200", textOn: "text-white",
-            pattern: "#f472b6" },
-        { from: "from-blue-600/90", to: "to-cyan-400/90", ring: "ring-blue-200", chip: "bg-blue-100 text-blue-900 border-blue-200", textOn: "text-white",
-            pattern: "#60a5fa" },
-        { from: "from-emerald-600/90", to: "to-lime-400/90", ring: "ring-emerald-200", chip: "bg-emerald-100 text-emerald-900 border-emerald-200", textOn: "text-white",
-            pattern: "#34d399" },
-        { from: "from-violet-600/90", to: "to-fuchsia-400/90", ring: "ring-violet-200", chip: "bg-violet-100 text-violet-900 border-violet-200", textOn: "text-white",
-            pattern: "#a78bfa" },
+        {
+            from: "from-pink-500/90",
+            to: "to-orange-400/90",
+            ring: "ring-pink-200",
+            chip: "bg-pink-100 text-pink-900 border-pink-200",
+            textOn: "text-white",
+            pattern: "#f472b6"
+        },
+        {
+            from: "from-blue-600/90",
+            to: "to-cyan-400/90",
+            ring: "ring-blue-200",
+            chip: "bg-blue-100 text-blue-900 border-blue-200",
+            textOn: "text-white",
+            pattern: "#60a5fa"
+        },
+        {
+            from: "from-emerald-600/90",
+            to: "to-lime-400/90",
+            ring: "ring-emerald-200",
+            chip: "bg-emerald-100 text-emerald-900 border-emerald-200",
+            textOn: "text-white",
+            pattern: "#34d399"
+        },
+        {
+            from: "from-violet-600/90",
+            to: "to-fuchsia-400/90",
+            ring: "ring-violet-200",
+            chip: "bg-violet-100 text-violet-900 border-violet-200",
+            textOn: "text-white",
+            pattern: "#a78bfa"
+        },
     ];
     let h = 0;
     for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
@@ -168,12 +192,12 @@ function getDestinationBits(trip: TripRow) {
     const primary = inputs?.destinations?.[0];
     const name = primary?.name || trip.title || "Trip";
     const countryCode = primary?.country ?? null;
-    return { name, countryCode };
+    return {name, countryCode};
 }
 
 /** ---------- UI ---------- */
-export function TripCard({ trip }: { trip: TripRow }) {
-    const { name, countryCode } = getDestinationBits(trip);
+export function TripCard({trip}: { trip: TripRow }) {
+    const {name, countryCode} = getDestinationBits(trip);
     const title = (trip.title?.trim() || name || "Untitled Trip").trim();
     const date = formatDateRange(trip.start_date ?? undefined, trip.end_date ?? undefined);
     const amount =
@@ -196,23 +220,21 @@ export function TripCard({ trip }: { trip: TripRow }) {
         >
             {/* Colorful hero band */}
             <div
-                className={cn(
-                    "relative h-20 sm:h-24 w-full bg-gradient-to-br",
-                    palette.from,
-                    palette.to
-                )}
+                className="relative h-20 sm:h-24 w-full"
                 style={{
-                    backgroundImage:
-                        `linear-gradient(to bottom right, var(--tw-gradient-stops)), ${dotsPattern(palette.pattern)}`,
-                    backgroundSize: `auto, 64px 64px`,
+                    backgroundImage: `linear-gradient(to bottom right, ${palette.from}, ${palette.to}), ${dotsPattern(palette.pattern)}`,
+                    backgroundSize: "auto, 64px 64px",
+                    backgroundBlendMode: "overlay", // optional for nice mixing
                 }}
             >
                 {/* Stamp: flag + city emoji */}
                 <div className="absolute right-3 top-3 flex items-center gap-1">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
+          <span
+              className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
             {flag}
           </span>
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
+                    <span
+                        className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
             {cityEmoji}
           </span>
                 </div>
@@ -220,7 +242,8 @@ export function TripCard({ trip }: { trip: TripRow }) {
                 {/* Title on band for contrast */}
                 <div className="absolute left-4 bottom-2">
                     <div className={cn("text-sm opacity-90", palette.textOn)}>Destination</div>
-                    <div className={cn("mt-0.5 line-clamp-1 text-lg font-semibold tracking-tight drop-shadow-sm", palette.textOn)}>
+                    <div
+                        className={cn("mt-0.5 line-clamp-1 text-lg font-semibold tracking-tight drop-shadow-sm", palette.textOn)}>
                         {title}
                     </div>
                 </div>
@@ -233,7 +256,7 @@ export function TripCard({ trip }: { trip: TripRow }) {
                         variant="outline"
                         className={cn("flex items-center gap-1 border", palette.chip.split(" ").slice(-1)[0])}
                     >
-                        <CalendarDays className="h-3.5 w-3.5 opacity-70" />
+                        <CalendarDays className="h-3.5 w-3.5 opacity-70"/>
                         {date}
                     </Badge>
 
@@ -242,7 +265,7 @@ export function TripCard({ trip }: { trip: TripRow }) {
                             variant="secondary"
                             className={cn("flex items-center gap-1 border", palette.chip)}
                         >
-                            <DollarSign className="h-3.5 w-3.5 opacity-80" />
+                            <DollarSign className="h-3.5 w-3.5 opacity-80"/>
                             {amount}
                         </Badge>
                     )}
@@ -251,7 +274,7 @@ export function TripCard({ trip }: { trip: TripRow }) {
 
             <CardContent className="flex items-center justify-between border-t border-border/40 pt-3">
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" />
+                    <Clock className="h-3.5 w-3.5"/>
                     {created ? `Saved ${created}` : "Recently added"}
                 </div>
 
@@ -261,7 +284,7 @@ export function TripCard({ trip }: { trip: TripRow }) {
                     className="gap-1 ring-1 ring-transparent transition group-hover:ring-primary/30"
                 >
                     <Link href={`/trips/${trip.id}`}>
-                        <MapPin className="mr-1 h-4 w-4" />
+                        <MapPin className="mr-1 h-4 w-4"/>
                         Open
                     </Link>
                 </Button>

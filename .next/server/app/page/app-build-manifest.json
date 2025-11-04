@@ -1,22 +1,31 @@
 {
   "pages": {
     "/page": [
-      "static/chunks/ff1a16fafef87110.js",
-      "static/chunks/7dd66bdf8a7e5707.js",
-      "static/chunks/2473c16c0c2f6b5f.css",
-      "static/chunks/631722310353b575.css",
-      "static/chunks/d5cb1b664647a83b.js",
-      "static/chunks/7d5a6689c926e436.js",
-      "static/chunks/54ac9786e972bbc0.js",
-      "static/chunks/169849e7be1715e6.js",
-      "static/chunks/f2e10ad2cb823a52.js",
-      "static/chunks/04a0a39fa04956ef.js",
-      "static/chunks/4a65dffe7bced52f.js",
-      "static/chunks/5daf9879421e1556.js",
-      "static/chunks/d54b50666d053b37.js",
-      "static/chunks/677715b330f5ed7d.js",
-      "static/chunks/2008ffcf9e5b170c.js",
-      "static/chunks/turbopack-3ef4e21e08ed3ad1.js"
+      "static/chunks/node_modules_next_dist_8db7fb1f._.js",
+      "static/chunks/src_app_favicon_ico_mjs_243aa161._.js",
+      "static/chunks/[root-of-the-server]__0f0ba101._.css",
+      "static/chunks/src_app_layout_tsx_0a548d63._.js",
+      "static/chunks/node_modules_next_dist_client_components_builtin_global-error_f8fdd2d5.js",
+      "static/chunks/node_modules_@supabase_node-fetch_browser_ebbd8575.js",
+      "static/chunks/src_dca946dd._.js",
+      "static/chunks/node_modules_tailwind-merge_dist_bundle-mjs_mjs_56b6fd65._.js",
+      "static/chunks/node_modules_@supabase_storage-js_dist_module_434fd12f._.js",
+      "static/chunks/node_modules_@supabase_auth-js_dist_module_e6c70351._.js",
+      "static/chunks/node_modules_motion-dom_dist_es_da948acf._.js",
+      "static/chunks/node_modules_framer-motion_dist_es_fdd5ade6._.js",
+      "static/chunks/node_modules_date-fns_17b8311f._.js",
+      "static/chunks/node_modules_react-day-picker_dist_esm_3ee78fab._.js",
+      "static/chunks/node_modules_975cc940._.js",
+      "static/chunks/src_app_page_tsx_f8fdd2d5._.js",
+      "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_57d40746._.js",
+      "static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js",
+      "static/chunks/node_modules_next_dist_compiled_next-devtools_index_a9cb0712.js",
+      "static/chunks/node_modules_next_dist_compiled_5150ccfd._.js",
+      "static/chunks/node_modules_next_dist_client_cf1d9188._.js",
+      "static/chunks/node_modules_next_dist_b0daae9a._.js",
+      "static/chunks/node_modules_@swc_helpers_cjs_b3dc30d6._.js",
+      "static/chunks/_a0ff3932._.js",
+      "static/chunks/turbopack-_cdba956c._.js"
     ]
   }
 }

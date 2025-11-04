@@ -358,7 +358,7 @@ export default function ProfilePage() {
                         </CardHeader>
                         <CardContent>
                             <div className="rounded-xl border">
-                                <ScrollArea className="max-h-[420px] rounded-xl">
+                                <ScrollArea className="rounded-xl">
                                     <table className="min-w-full text-sm">
                                         <thead className="sticky top-0 bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
                                         <tr className="[&>th]:px-3 [&>th]:py-2 [&>th]:text-left">
