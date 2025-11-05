@@ -2,17 +2,18 @@
 "use client";
 
 import Link from "next/link";
-import {useMemo, useState} from "react";
+import { useMemo, useState } from "react";
 import {
     Card, CardHeader, CardTitle, CardContent, CardFooter,
 } from "@/components/ui/card";
-import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
-import {Progress} from "@/components/ui/progress";
-import {Separator} from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import {
     Plane, Award, ShieldCheck, MapPin, Camera, Edit3, Trash2, Users, Info,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 /* ================= Types & Data ================= */
 
@@ -158,10 +159,10 @@ const ACTIVITIES: Activity[] = [
 ];
 
 const TIERS = [
-    {key: "explorer", name: "Explorer", min: 0, perks: ["Starter badge", "Monthly challenges"]},
-    {key: "guide", name: "Guide", min: 500, perks: ["Profile flair", "Early feature access"]},
-    {key: "pathfinder", name: "Pathfinder", min: 2000, perks: ["Beta invites", "Priority reviews"]},
-    {key: "ambassador", name: "Ambassador", min: 6000, perks: ["Itinero merch", "Invite-only programs"]},
+    { key: "explorer", name: "Explorer", min: 0, perks: ["Starter badge", "Monthly challenges"] },
+    { key: "guide", name: "Guide", min: 500, perks: ["Profile flair", "Early feature access"] },
+    { key: "pathfinder", name: "Pathfinder", min: 2000, perks: ["Beta invites", "Priority reviews"] },
+    { key: "ambassador", name: "Ambassador", min: 6000, perks: ["Itinero merch", "Invite-only programs"] },
 ];
 
 // Demo points (wire this to user profile later)
@@ -195,63 +196,69 @@ export default function RewardsPage() {
         for (const a of ACTIVITIES) map.set(a.category, [...(map.get(a.category) ?? []), a]);
         return order
             .filter((k) => map.has(k))
-            .map((k) => ({category: k as Activity["category"], items: map.get(k)!}));
+            .map((k) => ({ category: k as Activity["category"], items: map.get(k)! }));
     }, []);
 
+    // Helpers for primary-styled buttons
+    const primaryBtn = "bg-primary hover:bg-primary/90 text-primary-foreground";
+    const outlineBtn = "border-border";
+
     return (
-        <main className="min-h-screen flex flex-col bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-50">
-            {/* ===== Header (match landing) ===== */}
-            <header
-                className="sticky top-0 z-30 w-full border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <main className="min-h-screen flex flex-col bg-background text-foreground">
+            {/* ===== Header (match landing tokens) ===== */}
+            <header className="sticky top-0 z-30 w-full border-b border-border bg-background/80 backdrop-blur-md">
                 <div className="mx-auto w-full max-w-6xl px-6 py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2 font-semibold text-lg tracking-tight">
-            <span className="grid h-8 w-8 place-items-center rounded-md bg-blue-600 text-white">
-              <Plane className="h-4 w-4"/>
+            <span className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">
+              <Plane className="h-4 w-4" />
             </span>
                         Itinero
                     </Link>
                     <nav className="flex items-center gap-2">
                         <Link href="/pricing" className="hidden sm:block">
-                            <Button variant="ghost">Pricing</Button>
+                            <Button variant="ghost" className="font-semibold">Pricing</Button>
                         </Link>
                         <Link href="/login">
                             <Button variant="ghost">Log in</Button>
                         </Link>
                         <Link href="/signup">
-                            <Button className="bg-blue-600 hover:bg-blue-700 text-white">Sign up</Button>
+                            <Button className={primaryBtn}>Sign up</Button>
                         </Link>
+                        <ThemeToggle />
                     </nav>
                 </div>
             </header>
 
-            {/* ===== Hero band (landing look & feel) ===== */}
-            <section className="bg-blue-50 dark:bg-slate-900 border-y border-blue-100 dark:border-slate-800">
+            {/* ===== Hero band (tokenized) ===== */}
+            <section className="border-y border-border bg-gradient-to-b from-primary/10 via-background to-background">
                 <div className="mx-auto w-full max-w-6xl px-6 py-14 md:py-20">
                     <div className="mx-auto max-w-3xl text-center">
                         <Badge variant="secondary" className="mb-3 gap-1">
-                            <Award className="h-3.5 w-3.5"/>
+                            <Award className="h-3.5 w-3.5" />
                             Itinero Rewards
                         </Badge>
-                        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05] text-blue-600 dark:text-white">
+                        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05] text-primary">
                             Earn points by improving travel for everyone.
                         </h1>
-                        <p className="mt-4 text-lg md:text-xl text-slate-700 dark:text-slate-300">
-                            Help keep places trusted & up-to-date. Contribute verified data, photos, and fixes — unlock
-                            perks as you go.
+                        <p className="mt-4 text-lg md:text-xl text-muted-foreground">
+                            Help keep places trusted & up-to-date. Contribute verified data, photos, and fixes — unlock perks as you go.
                         </p>
 
-                        <div
-                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border bg-white/70 dark:bg-slate-950/70 px-3 py-2 text-sm ring-4 ring-blue-100 dark:ring-slate-800">
-                            <Info className="h-4 w-4 text-slate-500 dark:text-slate-400"/>
+                        <div className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/70 px-3 py-2 text-sm ring-4 ring-primary/10">
+                            <Info className="h-4 w-4 text-muted-foreground" />
                             <span>Points are awarded after automated & human checks pass.</span>
                         </div>
 
                         <div className="mt-6 flex items-center justify-center gap-3">
-                            <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+                            <Button asChild size="lg" className={primaryBtn}>
                                 <Link href="/signup">Start contributing</Link>
                             </Button>
-                            <Button asChild variant="outline" size="lg"
-                                    className="border-slate-300 dark:border-slate-700">
+                            <Button
+                                asChild
+                                variant="outline"
+                                size="lg"
+                                className={`border ${outlineBtn}`}
+                            >
                                 <Link href="/about">See contributor guide</Link>
                             </Button>
                         </div>
@@ -262,32 +269,30 @@ export default function RewardsPage() {
             {/* ===== Tier summary ===== */}
             <section className="mx-auto w-full max-w-6xl px-6 py-10">
                 <div className="mb-10 grid gap-4 md:grid-cols-3">
-                    <Card className="md:col-span-2">
+                    <Card className="md:col-span-2 border-[color:var(--card-border, var(--border))]">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-base">Your progress</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-end justify-between">
                                 <div>
-                                    <div className="text-3xl font-semibold tabular-nums">{points.toLocaleString()} pts
-                                    </div>
-                                    <div className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                                    <div className="text-3xl font-semibold tabular-nums">{points.toLocaleString()} pts</div>
+                                    <div className="mt-1 text-sm text-muted-foreground">
                                         Tier: <span className="font-medium">{tier.name}</span>
                                     </div>
                                 </div>
-                                <div className="text-right text-sm text-slate-600 dark:text-slate-400">
+                                <div className="text-right text-sm text-muted-foreground">
                                     {nextTier ? (
                                         <>
                                             Next: <span className="font-medium">{nextTier.name}</span>{" "}
-                                            <span
-                                                className="ml-1">({(nextTier.min - points).toLocaleString()} pts left)</span>
+                                            <span className="ml-1">({(nextTier.min - points).toLocaleString()} pts left)</span>
                                         </>
                                     ) : (
                                         <>Top tier reached 🎉</>
                                     )}
                                 </div>
                             </div>
-                            <Progress value={progressPct} className="mt-3"/>
+                            <Progress value={progressPct} className="mt-3" />
                         </CardContent>
                         <CardFooter className="flex flex-wrap gap-2">
                             {TIERS.map((t) => (
@@ -302,24 +307,18 @@ export default function RewardsPage() {
                         </CardFooter>
                     </Card>
 
-                    <Card>
+                    <Card className="border-[color:var(--card-border, var(--border))]">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-base">How it works</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                            <div className="flex items-center gap-2"><MapPin className="h-4 w-4"/> Contribute reliable
-                                info.
-                            </div>
-                            <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4"/> We verify
-                                accuracy.
-                            </div>
-                            <div className="flex items-center gap-2"><Award className="h-4 w-4"/> Earn points & unlock
-                                perks.
-                            </div>
+                        <CardContent className="space-y-2 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /> Contribute reliable info.</div>
+                            <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> We verify accuracy.</div>
+                            <div className="flex items-center gap-2"><Award className="h-4 w-4 text-primary" /> Earn points & unlock perks.</div>
                         </CardContent>
                         <CardFooter className="flex gap-2">
-                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">Add a place</Button>
-                            <Button size="sm" variant="outline" className="border-slate-300 dark:border-slate-700">
+                            <Button size="sm" className={primaryBtn}>Add a place</Button>
+                            <Button size="sm" variant="outline" className={`border ${outlineBtn}`}>
                                 Verify updates
                             </Button>
                         </CardFooter>
@@ -330,14 +329,13 @@ export default function RewardsPage() {
             {/* ===== Ways to earn ===== */}
             <section className="mx-auto w-full max-w-6xl px-6">
                 <h2 className="text-2xl font-semibold tracking-tight">Ways to earn</h2>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                    Points are credited when contributions pass automated and human checks. Some items have daily caps
-                    to keep things fair.
+                <p className="mt-1 text-sm text-muted-foreground">
+                    Points are credited when contributions pass automated and human checks. Some items have daily caps to keep things fair.
                 </p>
 
                 <div className="mt-5 space-y-8">
-                    {grouped.map(({category, items}) => (
-                        <Card key={category} className="border-slate-200/70 dark:border-slate-800/70">
+                    {grouped.map(({ category, items }) => (
+                        <Card key={category} className="border-[color:var(--card-border, var(--border))]">
                             <CardHeader className="pb-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
@@ -349,22 +347,21 @@ export default function RewardsPage() {
                                     </Badge>
                                 </div>
                             </CardHeader>
-                            <CardContent className="divide-y">
+                            <CardContent className="divide-y divide-border">
                                 {items.map((a) => (
                                     <div key={a.id} className="grid gap-2 py-4 md:grid-cols-[1fr_auto] md:items-center">
                                         <div>
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <span className="font-medium">{a.label}</span>
                                                 {a.capPerDay ? (
-                                                    <Badge variant="secondary"
-                                                           className="h-5 rounded-full px-2 text-[10px]">
+                                                    <Badge variant="secondary" className="h-5 rounded-full px-2 text-[10px]">
                                                         max {a.capPerDay}/day
                                                     </Badge>
                                                 ) : null}
                                             </div>
-                                            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{a.desc}</p>
+                                            <p className="mt-1 text-sm text-muted-foreground">{a.desc}</p>
                                             {a.note && (
-                                                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400/80">{a.note}</p>
+                                                <p className="mt-1 text-xs text-muted-foreground/90">{a.note}</p>
                                             )}
                                         </div>
                                         <div className="text-right md:pl-6">
@@ -380,31 +377,29 @@ export default function RewardsPage() {
 
             {/* ===== Rules / Trust ===== */}
             <section className="mx-auto w-full max-w-6xl px-6 mt-10">
-                <Card className="border-slate-200/70 dark:border-slate-800/70">
+                <Card className="border-[color:var(--card-border, var(--border))]">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-base">Trust & fair use</CardTitle>
                     </CardHeader>
-                    <CardContent className="text-sm space-y-2 text-slate-600 dark:text-slate-400">
+                    <CardContent className="text-sm space-y-2 text-muted-foreground">
                         <div>
-                            <span className="font-medium text-slate-900 dark:text-slate-100">Verification: </span>
-                            We use duplicate detection, EXIF checks, temporal signals, and peer review. Points may be
-                            revoked for inaccurate or low-effort submissions.
+                            <span className="font-medium text-foreground">Verification: </span>
+                            We use duplicate detection, EXIF checks, temporal signals, and peer review. Points may be revoked for inaccurate or low-effort submissions.
                         </div>
                         <div>
-                            <span
-                                className="font-medium text-slate-900 dark:text-slate-100">Original media only: </span>
+                            <span className="font-medium text-foreground">Original media only: </span>
                             No AI/stock/borrowed content. We may request proof for edge cases.
                         </div>
                         <div>
-                            <span className="font-medium text-slate-900 dark:text-slate-100">Appeals: </span>
+                            <span className="font-medium text-foreground">Appeals: </span>
                             If you think a contribution was misjudged, you can appeal within 7 days.
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm" className="border-slate-300 dark:border-slate-700">
+                        <Button variant="outline" size="sm" className={`border ${outlineBtn}`}>
                             Read full policy
                         </Button>
-                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                        <Button size="sm" className={primaryBtn}>
                             Appeal a decision
                         </Button>
                     </CardFooter>
@@ -414,12 +409,17 @@ export default function RewardsPage() {
             {/* ===== Tiers & perks ===== */}
             <section className="mx-auto w-full max-w-6xl px-6 mt-10">
                 <h2 className="text-2xl font-semibold tracking-tight">Tiers & perks</h2>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                <p className="mt-1 text-sm text-muted-foreground">
                     Unlock more recognition and benefits as your impact grows.
                 </p>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {TIERS.map((t) => (
-                        <Card key={t.key} className={t.key === tier.key ? "border-blue-500/50" : ""}>
+                        <Card
+                            key={t.key}
+                            className={t.key === tier.key
+                                ? "border-[color:var(--card-border, var(--border))] ring-1 ring-primary/30"
+                                : "border-[color:var(--card-border, var(--border))]"}
+                        >
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-base flex items-center justify-between">
                                     {t.name}
@@ -428,7 +428,7 @@ export default function RewardsPage() {
                                     </Badge>
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                            <CardContent className="text-sm text-muted-foreground space-y-1">
                                 {t.perks.map((p, i) => (
                                     <div key={i}>• {p}</div>
                                 ))}
@@ -438,27 +438,26 @@ export default function RewardsPage() {
                 </div>
             </section>
 
-            <Separator className="my-10 mx-6 max-w-6xl self-center"/>
+            <Separator className="my-10 mx-6 max-w-6xl self-center" />
 
             {/* ===== CTA strip ===== */}
             <section className="mx-auto w-full max-w-6xl px-6 pb-16">
                 <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <p className="text-sm text-muted-foreground">
                         Ready to contribute? Start with a nearby place, or verify a recent update.
                     </p>
                     <div className="flex gap-2">
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white">Add a place</Button>
-                        <Button variant="outline" className="border-slate-300 dark:border-slate-700">
+                        <Button className={primaryBtn}>Add a place</Button>
+                        <Button variant="outline" className={`border ${outlineBtn}`}>
                             Verify updates
                         </Button>
                     </div>
                 </div>
             </section>
 
-            {/* ===== Footer (match landing) ===== */}
-            <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
-                <div
-                    className="mx-auto w-full max-w-6xl px-6 py-8 text-sm text-slate-600 dark:text-slate-400 flex items-center justify-between">
+            {/* ===== Footer ===== */}
+            <footer className="mt-auto border-t border-border bg-background">
+                <div className="mx-auto w-full max-w-6xl px-6 py-8 text-sm text-muted-foreground flex items-center justify-between">
                     <div>© {new Date().getFullYear()} Itinero</div>
                     <div className="flex gap-4">
                         <Link href="/pricing">Pricing</Link>
@@ -475,21 +474,21 @@ export default function RewardsPage() {
 /* ============== Small helpers ============== */
 
 function categoryIcon(cat: Activity["category"]) {
-    const cls = "h-4 w-4 text-blue-600 dark:text-blue-400";
+    const cls = "h-4 w-4 text-primary";
     switch (cat) {
         case "Places":
-            return <MapPin className={cls}/>;
+            return <MapPin className={cls} />;
         case "Verification":
-            return <ShieldCheck className={cls}/>;
+            return <ShieldCheck className={cls} />;
         case "Media":
-            return <Camera className={cls}/>;
+            return <Camera className={cls} />;
         case "Edits":
-            return <Edit3 className={cls}/>;
+            return <Edit3 className={cls} />;
         case "Cleanup":
-            return <Trash2 className={cls}/>;
+            return <Trash2 className={cls} />;
         case "Community":
-            return <Users className={cls}/>;
+            return <Users className={cls} />;
         default:
-            return <Award className={cls}/>;
+            return <Award className={cls} />;
     }
 }

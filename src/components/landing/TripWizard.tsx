@@ -2,14 +2,17 @@
 
 import * as React from "react";
 import {useEffect, useMemo, useState} from "react";
+import {useRouter} from "next/navigation";
+import {motion, AnimatePresence} from "framer-motion";
+
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
+import {Calendar} from "@/components/ui/calendar";
 import {cn} from "@/lib/utils";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import {createClientBrowser} from "@/lib/supabase/browser";
-import {motion, AnimatePresence} from "framer-motion";
-// at top of file (TripWizard.tsx)
+
 import type {DateRange} from "react-day-picker";
 import {
     CalendarDays,
@@ -22,14 +25,11 @@ import {
     Car,
     Footprints,
 } from "lucide-react";
-import {useRouter} from "next/navigation";
-import {Calendar} from "@/components/ui/calendar";
 
-/** ---------- local helpers for date-only strings ---------- */
+/* ---------------- date-only helpers ---------------- */
 type DateRangeValue = { from?: Date; to?: Date } | undefined;
 
 function toDateOnlyString(d: Date) {
-    // Convert to YYYY-MM-DD in local time
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
@@ -38,13 +38,12 @@ function toDateOnlyString(d: Date) {
 
 function parseDateOnlyString(s?: string) {
     if (!s) return undefined;
-    // Interpret as local midnight
     const [y, m, d] = s.split("-").map(Number);
     if (!y || !m || !d) return undefined;
     return new Date(y, m - 1, d);
 }
 
-/** ---------- types aligned to request body ---------- */
+/* ---------------- request types ---------------- */
 type Destination = { id?: string; name: string; lat?: number; lng?: number };
 type Lodging = { name: string };
 
@@ -87,7 +86,7 @@ const STEPS = [
     {key: "review", label: "Review", icon: Sparkles},
 ] as const;
 
-/** ---------- tiny reusable range picker ---------- */
+/* ================== DateRangePicker (theme-aware) ================== */
 function DateRangePicker({
                              value,
                              onChange,
@@ -99,7 +98,6 @@ function DateRangePicker({
     className?: string;
     disablePast?: boolean;
 }) {
-    // TripWizard.tsx
     const disabled = disablePast ? [{before: new Date()}] : undefined;
     const selectedForCalendar: DateRange | undefined = value
         ? {from: value.from!, to: value.to}
@@ -120,8 +118,9 @@ function DateRangePicker({
                     head_cell: "text-xs font-medium text-muted-foreground",
                     cell: "p-0 relative",
                     day: "h-9 w-9 md:h-10 md:w-10 rounded-md aria-selected:opacity-100",
-                    day_selected: "bg-blue-600 text-white hover:bg-blue-600 hover:text-white",
-                    day_today: "bg-blue-600/10 text-blue-700 dark:text-blue-300",
+                    day_selected:
+                        "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+                    day_today: "bg-primary/10 text-primary",
                     day_outside: "text-muted-foreground opacity-50",
                     nav_button: "h-9 w-9 md:h-10 md:w-10",
                 }}
@@ -130,11 +129,11 @@ function DateRangePicker({
     );
 }
 
+/* ================== Main Wizard ================== */
 export default function TripWizard() {
     const sb = createClientBrowser();
     const router = useRouter();
 
-    // ✅ keep hooks INSIDE the component
     const [step, setStep] = useState(0);
     const [busy, setBusy] = useState(false);
     const [authOpen, setAuthOpen] = useState(false);
@@ -150,7 +149,7 @@ export default function TripWizard() {
         lodging: {name: ""},
     });
 
-    // ✅ calendar state lives here (not at top-level)
+    // keep calendar selection local (not required externally)
     const [, setSelectedRange] = useState<DateRangeValue>(undefined);
 
     useEffect(() => {
@@ -192,16 +191,15 @@ export default function TripWizard() {
             const payload = toPayload(state);
             const {data, error} = await sb.functions.invoke("build_preview_itinerary", {body: payload});
 
-            console.log(data);
-            console.log(payload);
-
             localStorage.setItem("itinero:latest_preview", JSON.stringify(data));
             if (error) throw error;
+
             const {
                 data: {user},
             } = await sb.auth.getUser();
+
             if (!user) {
-                setAuthOpen(true)
+                setAuthOpen(true);
             } else {
                 router.replace("/preview");
                 router.refresh();
@@ -226,11 +224,11 @@ export default function TripWizard() {
         });
     }
 
-    /** map state <-> calendar */
+    /* map state <-> calendar */
     const selectedRange: DateRangeValue = useMemo(() => {
         const from = parseDateOnlyString(state.start_date);
         const to = parseDateOnlyString(state.end_date);
-        return (from || to) ? {from: from, to: to} : undefined;
+        return from || to ? {from, to} : undefined;
     }, [state.start_date, state.end_date]);
 
     const handleRangeChange = (range: DateRangeValue) => {
@@ -243,11 +241,15 @@ export default function TripWizard() {
         setState((s) => ({...s, start_date: from, end_date: to}));
     };
 
-    // Helpers (put near the top of the file)
+    // display helpers
     const fmtHuman = (s?: string) =>
-        s ? new Date(s + "T00:00:00").toLocaleDateString(undefined, {
-            day: "2-digit", month: "short", year: "numeric",
-        }) : "—";
+        s
+            ? new Date(s + "T00:00:00").toLocaleDateString(undefined, {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+            })
+            : "—";
 
     const nightsBetween = (a?: string, b?: string) => {
         if (!a || !b) return 0;
@@ -269,13 +271,17 @@ export default function TripWizard() {
                 progress={progress}
             />
 
-            <div className="relative mt-6  bg-white rounded-b-2xl">
+            {/* Theme-aware card wrapper */}
+            <div className="relative mt-6 rounded-b-2xl bg-card">
                 <div className="p-4 md:p-6">
                     <AnimatePresence mode="wait">
                         {step === 0 && (
                             <Slide key="step-dest">
-                                <FieldBlock label="Destination" hint="Pick from our database or keep typing free text"
-                                            icon={MapPin}>
+                                <FieldBlock
+                                    label="Destination"
+                                    hint="Pick from our database or keep typing free text"
+                                    icon={MapPin}
+                                >
                                     <DestinationField
                                         value={state.destinations[0] ?? {name: ""}}
                                         onChange={(dest) => setState((s) => ({...s, destinations: [dest]}))}
@@ -297,23 +303,66 @@ export default function TripWizard() {
                                                 onSelect={handleRangeChange}
                                                 disabled={[{before: new Date()}]}
                                                 className="rounded-xl border bg-card p-3"
+                                                classNames={{
+                                                    months: "gap-2",
+                                                    month: "space-y-2",
+                                                    head_cell: "text-xs font-medium text-muted-foreground",
+                                                    cell: "p-0",
+                                                    day: "h-9 w-9 rounded-md aria-selected:opacity-100",
+                                                    day_selected: "bg-primary text-primary-foreground hover:bg-primary",
+                                                    day_today: "bg-primary/10 text-primary dark:text-primary-foreground/80",
+                                                    nav_button: "h-9 w-9",
+                                                }}
                                             />
                                         </div>
 
-                                        {/* ≥sm: 2 months side-by-side */}
-                                        <div className="hidden sm:block">
+                                        {/* ≥sm & <lg: 2 months */}
+                                        <div className="hidden sm:block lg:hidden">
+                                            <Calendar
+                                                mode="range"
+                                                numberOfMonths={1}
+                                                selected={selectedForCalendar}
+                                                onSelect={handleRangeChange}
+                                                disabled={[{before: new Date()}]}
+                                                className="rounded-xl border bg-card p-3"
+                                                classNames={{
+                                                    months: "gap-3 md:gap-4",
+                                                    month: "space-y-3",
+                                                    head_cell: "text-xs font-medium text-muted-foreground",
+                                                    cell: "p-0",
+                                                    day: "h-9 w-9 md:h-10 md:w-10 rounded-md aria-selected:opacity-100",
+                                                    day_selected: "bg-primary text-primary-foreground hover:bg-primary",
+                                                    day_today: "bg-primary/10 text-primary dark:text-primary-foreground/80",
+                                                    nav_button: "h-9 w-9 md:h-10 md:w-10",
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* ≥lg: 3 months (nice for desktops) */}
+                                        <div className="hidden lg:block">
                                             <Calendar
                                                 mode="range"
                                                 numberOfMonths={2}
                                                 selected={selectedForCalendar}
                                                 onSelect={handleRangeChange}
                                                 disabled={[{before: new Date()}]}
-                                                className="rounded-xl border bg-card p-3"
+                                                className="rounded-xl border p-4"
+                                                classNames={{
+                                                    months: "gap-2 xl:gap-4",
+                                                    month: "space-y-3",
+                                                    head_cell: "text-xs font-medium text-muted-foreground",
+                                                    cell: "p-0",
+                                                    day: "h-10 w-10 xl:h-11 xl:w-11 rounded-md aria-selected:opacity-100",
+                                                    day_selected: "bg-primary text-primary-foreground hover:bg-primary",
+                                                    day_today: "bg-primary/10 text-primary dark:text-primary-foreground/80",
+                                                    nav_button: "h-10 w-10",
+                                                }}
                                             />
                                         </div>
 
                                         {/* Selected summary */}
-                                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                                        <div
+                                            className="grid gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-2 text-sm">
       <span className="rounded-full border px-2.5 py-1">
         Start: <span className="font-medium">{fmtHuman(state.start_date)}</span>
       </span>
@@ -324,12 +373,11 @@ export default function TripWizard() {
         Nights: <span className="font-medium">{nightsBetween(state.start_date, state.end_date)}</span>
       </span>
 
-                                            {/* Quick actions */}
                                             {(state.start_date || state.end_date) && (
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRangeChange(undefined)}
-                                                    className="ml-1 text-primary underline-offset-2 hover:underline"
+                                                    className="ml-0 sm:ml-1 text-primary underline-offset-2 hover:underline"
                                                 >
                                                     Clear
                                                 </button>
@@ -342,8 +390,11 @@ export default function TripWizard() {
 
                         {step === 2 && (
                             <Slide key="step-budget">
-                                <FieldBlock label="Daily budget" hint="Used to balance activity costs"
-                                            icon={Footprints}>
+                                <FieldBlock
+                                    label="Daily budget"
+                                    hint="Used to balance activity costs"
+                                    icon={Footprints}
+                                >
                                     <div className="flex items-center gap-2">
                                         <Input
                                             type="number"
@@ -396,7 +447,7 @@ export default function TripWizard() {
                                                 type="button"
                                                 size="sm"
                                                 variant={state.interests.includes(tag) ? "default" : "secondary"}
-                                                className="rounded-full"
+                                                className="rounded-full capitalize"
                                                 onClick={() => toggleInterest(tag)}
                                             >
                                                 {tag}
@@ -417,7 +468,7 @@ export default function TripWizard() {
                                                 type="button"
                                                 size="sm"
                                                 variant={state.pace === opt ? "default" : "secondary"}
-                                                className="rounded-full"
+                                                className="rounded-full capitalize"
                                                 onClick={() => setState((s) => ({...s, pace: opt}))}
                                             >
                                                 {opt}
@@ -430,8 +481,11 @@ export default function TripWizard() {
 
                         {step === 5 && (
                             <Slide key="step-mode">
-                                <FieldBlock label="Transport mode" hint="We’ll estimate travel time accordingly"
-                                            icon={Car}>
+                                <FieldBlock
+                                    label="Transport mode"
+                                    hint="We’ll estimate travel time accordingly"
+                                    icon={Car}
+                                >
                                     <div className="flex flex-wrap gap-2">
                                         {(["walk", "bike", "car", "transit"] as const).map((opt) => (
                                             <Button
@@ -439,7 +493,7 @@ export default function TripWizard() {
                                                 type="button"
                                                 size="sm"
                                                 variant={state.mode === opt ? "default" : "secondary"}
-                                                className="rounded-full"
+                                                className="rounded-full capitalize"
                                                 onClick={() => setState((s) => ({...s, mode: opt}))}
                                             >
                                                 {opt}
@@ -452,8 +506,11 @@ export default function TripWizard() {
 
                         {step === 6 && (
                             <Slide key="step-lodging">
-                                <FieldBlock label="Lodging (optional)" hint="We’ll try to start/end days near here"
-                                            icon={Users}>
+                                <FieldBlock
+                                    label="Lodging (optional)"
+                                    hint="We’ll try to start/end days near here"
+                                    icon={Users}
+                                >
                                     <Input
                                         placeholder="Hotel or address"
                                         value={state.lodging?.name || ""}
@@ -475,6 +532,7 @@ export default function TripWizard() {
                         )}
                     </AnimatePresence>
 
+                    {/* Footer nav */}
                     <div className="mt-6 flex items-center justify-between">
                         <Button type="button" variant="ghost" onClick={goBack} disabled={step === 0 || busy}>
                             <ChevronLeft className="mr-2 h-4 w-4"/> Back
@@ -507,6 +565,7 @@ export default function TripWizard() {
     );
 }
 
+/* ================== Destination search ================== */
 function DestinationField({
                               value,
                               onChange,
@@ -520,7 +579,6 @@ function DestinationField({
     const [open, setOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
 
-    // Debounced search
     useEffect(() => {
         const term = q.trim();
         if (!term) {
@@ -555,10 +613,9 @@ function DestinationField({
         return () => clearTimeout(t);
     }, [q, sb]);
 
-    // keep input text in sync when parent changes selection
     useEffect(() => {
         if (value?.name && value.name !== q) setQ(value.name);
-    }, [value?.name]);
+    }, [value?.name]); // keep input text in sync
 
     const pick = (d: Destination) => {
         onChange(d);
@@ -582,7 +639,6 @@ function DestinationField({
                 }}
             />
 
-            {/* dropdown */}
             {open && (rows.length > 0 || loading) && (
                 <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-sm">
                     {loading ? (
@@ -612,15 +668,18 @@ function DestinationField({
     );
 }
 
+/* ================== Utilities & UI bits ================== */
 function toPayload(s: RequestBody) {
     const d = s.destinations[0];
     return {
-        destinations: [{
-            id: d?.id,
-            name: (d?.name ?? "").trim(),
-            lat: d?.lat,
-            lng: d?.lng,
-        },],
+        destinations: [
+            {
+                id: d?.id,
+                name: (d?.name ?? "").trim(),
+                lat: d?.lat,
+                lng: d?.lng,
+            },
+        ],
         start_date: s.start_date,
         end_date: s.end_date,
         budget_daily: s.budget_daily === "" ? 0 : Number(s.budget_daily),
@@ -657,7 +716,9 @@ function HeaderProgress({
                             onClick={() => onStepClick?.(i)}
                             className={cn(
                                 "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition",
-                                active ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-muted hover:bg-accent"
+                                active
+                                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                    : "bg-muted hover:bg-accent"
                             )}
                         >
               <span
@@ -668,7 +729,7 @@ function HeaderProgress({
               >
                 {i + 1}
               </span>
-                            <Icon className="h-4 w-4 opacity-80"/> {s.label}{" "}
+                            <Icon className="h-4 w-4 opacity-80"/> {s.label}
                         </button>
                     );
                 })}
@@ -711,14 +772,19 @@ function FieldBlock({
 
 function Slide({children, key: k}: { children: React.ReactNode; key?: string }) {
     return (
-        <motion.div key={k} initial={{opacity: 0, y: 8}} animate={{opacity: 1, y: 0}} exit={{opacity: 0, y: -8}}
-                    transition={{duration: 0.18}}>
+        <motion.div
+            key={k}
+            initial={{opacity: 0, y: 8}}
+            animate={{opacity: 1, y: 0}}
+            exit={{opacity: 0, y: -8}}
+            transition={{duration: 0.18}}
+        >
             {children}
         </motion.div>
     );
 }
 
-/** ---------- Review Card ---------- */
+/* ---------------- Review Card ---------------- */
 function ReviewCard({
                         data,
                         onEditStep,
@@ -735,14 +801,12 @@ function ReviewCard({
                 {/* soft gradient header */}
                 <div
                     className="absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent"/>
-
                 <div className="relative p-6">
                     <div className="mb-4 flex items-center justify-between">
                         <h2 className="text-xl font-semibold tracking-tight">Your Journey at a Glance</h2>
                         <span className="text-xs text-muted-foreground">Review & confirm</span>
                     </div>
 
-                    {/* destination */}
                     <SectionRow icon={<MapPin className="h-4 w-4"/>} label="Destination" onEdit={() => onEditStep(0)}>
             <span
                 className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-lg font-semibold text-transparent">
@@ -750,12 +814,10 @@ function ReviewCard({
             </span>
                     </SectionRow>
 
-                    {/* dates */}
                     <SectionRow icon={<CalendarDays className="h-4 w-4"/>} label="Dates" onEdit={() => onEditStep(1)}>
                         <div className="text-base font-medium">{formatDateRange(data.start_date, data.end_date)}</div>
                     </SectionRow>
 
-                    {/* budget */}
                     <SectionRow icon={<Footprints className="h-4 w-4"/>} label="Daily Budget"
                                 onEdit={() => onEditStep(2)}>
                         <div className="text-base font-medium">
@@ -763,7 +825,6 @@ function ReviewCard({
                         </div>
                     </SectionRow>
 
-                    {/* interests */}
                     <SectionRow icon={<Sparkles className="h-4 w-4"/>} label="Interests" onEdit={() => onEditStep(3)}>
                         <div className="flex flex-wrap gap-2">
                             {chips.length ? (
@@ -778,7 +839,6 @@ function ReviewCard({
                         </div>
                     </SectionRow>
 
-                    {/* pace & mode */}
                     <SectionRow icon={<Footprints className="h-4 w-4"/>} label="Pace & Transport"
                                 onEdit={() => onEditStep(4)}>
                         <div className="flex flex-wrap gap-2">
@@ -789,12 +849,10 @@ function ReviewCard({
                         </div>
                     </SectionRow>
 
-                    {/* lodging */}
                     <SectionRow icon={<Users className="h-4 w-4"/>} label="Lodging" onEdit={() => onEditStep(6)}>
                         <div className="text-base font-medium">{data.lodging?.name || "Not provided"}</div>
                     </SectionRow>
 
-                    {/* footer actions */}
                     <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="text-xs text-muted-foreground">We’ll use this to generate a smart preview
                             itinerary.
@@ -843,11 +901,13 @@ function SectionRow({
     );
 }
 
+/* ---------------- small helpers ---------------- */
 function formatDateRange(start?: string, end?: string) {
     if (!start && !end) return "—";
     const s = start ? new Date(start + "T00:00:00") : null;
     const e = end ? new Date(end + "T00:00:00") : null;
-    const fmt = (d: Date) => d.toLocaleDateString(undefined, {day: "2-digit", month: "short", year: "numeric"});
+    const fmt = (d: Date) =>
+        d.toLocaleDateString(undefined, {day: "2-digit", month: "short", year: "numeric"});
     if (s && e) return `${fmt(s)} → ${fmt(e)}`;
     if (s) return fmt(s);
     if (e) return fmt(e);

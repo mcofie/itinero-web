@@ -1,16 +1,14 @@
-// app/trips/page.tsx (Server Component, schema-accurate)
-
+// app/trips/page.tsx
 import * as React from "react";
 import Link from "next/link";
-import {redirect} from "next/navigation";
-import {createClientServer} from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { createClientServer } from "@/lib/supabase/server";
 import AppShell from "@/components/layout/AppShell";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
-import {CalendarDays, DollarSign, Plane, MapPin, Clock} from "lucide-react";
-import {cn} from "@/lib/utils";
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { CalendarDays, DollarSign, Plane, MapPin, Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /** Match ONLY existing columns in itinero.trips */
 type TripRow = {
@@ -29,17 +27,17 @@ export default async function TripsPage() {
 
     // Auth (server-side)
     const {
-        data: {user},
+        data: { user },
     } = await sb.auth.getUser();
     if (!user) redirect("/login");
 
     // Fetch trips using only existing columns
-    const {data: trips, error} = await sb
+    const { data: trips, error } = await sb
         .schema("itinero")
         .from("trips")
         .select("id,user_id,title,start_date,end_date,est_total_cost,currency,created_at")
         .eq("user_id", user.id)
-        .order("created_at", {ascending: false});
+        .order("created_at", { ascending: false });
 
     if (error) {
         return (
@@ -47,7 +45,7 @@ export default async function TripsPage() {
                 <section className="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
                     <div className="mb-6">
                         <h1 className="flex items-center gap-2 text-2xl font-bold md:text-3xl">
-                            <Plane className="h-6 w-6"/>
+                            <Plane className="h-6 w-6" />
                             Saved itineraries
                         </h1>
                         <p className="mt-2 text-sm text-muted-foreground">
@@ -64,13 +62,15 @@ export default async function TripsPage() {
 
     return (
         <AppShell userEmail={user.email ?? null}>
-            <section className="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
+            <section className="mx-auto w-full max-w-6xl px-4 py-6 md:py-8 bg-background text-foreground">
                 {/* Header */}
                 <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <div className="mb-1 text-xs uppercase tracking-wider text-muted-foreground">Your Trips</div>
+                        <div className="mb-1 text-xs uppercase tracking-wider text-muted-foreground">
+                            Your Trips
+                        </div>
                         <h1 className="flex items-center gap-2 text-2xl font-bold md:text-3xl">
-                            <Plane className="h-6 w-6"/>
+                            <Plane className="h-6 w-6" />
                             Saved itineraries
                         </h1>
                         <div className="mt-1 text-sm text-muted-foreground">
@@ -88,11 +88,11 @@ export default async function TripsPage() {
                 {hasTrips ? (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {tripsSafe.map((t) => (
-                            <TripCard key={t.id} trip={t}/>
+                            <TripCard key={t.id} trip={t} />
                         ))}
                     </div>
                 ) : (
-                    <EmptyState/>
+                    <EmptyState />
                 )}
             </section>
         </AppShell>
@@ -101,14 +101,12 @@ export default async function TripsPage() {
 
 /** ---------- UI Parts ---------- */
 
-
-/** Utils: pick colors, emoji, and flag based on destination */
 function ccToFlag(cc?: string | null) {
     if (!cc) return "🗺️";
     const code = cc.trim().slice(0, 2).toUpperCase();
     if (!/^[A-Z]{2}$/.test(code)) return "🗺️";
     const A = 0x1f1e6;
-    return String.fromCodePoint(...[...code].map(c => A + (c.charCodeAt(0) - 65)));
+    return String.fromCodePoint(...[...code].map((c) => A + (c.charCodeAt(0) - 65)));
 }
 
 function guessEmoji(name: string) {
@@ -125,79 +123,52 @@ function guessEmoji(name: string) {
 }
 
 type Palette = {
-    from: string; to: string; ring: string; chip: string; textOn: string; pattern: string;
+    bgClass: string;     // solid band color
+    chip: string;        // badge bg/text/border
+    textOn: string;      // text color over the band
+    patternHex: string;  // tint for dots overlay
 };
 
-// simple hash → palette picker for fun variety
+const palettes: Palette[] = [
+    { bgClass: "bg-emerald-600", chip: "bg-emerald-100 text-emerald-900 border-emerald-200", textOn: "text-white", patternHex: "#059669" },
+    { bgClass: "bg-fuchsia-600", chip: "bg-fuchsia-100 text-fuchsia-900 border-fuchsia-200", textOn: "text-white", patternHex: "#c026d3" },
+    { bgClass: "bg-cyan-600",    chip: "bg-cyan-100 text-cyan-900 border-cyan-200",         textOn: "text-white", patternHex: "#0891b2" },
+    { bgClass: "bg-amber-500",   chip: "bg-amber-100 text-amber-900 border-amber-200",      textOn: "text-zinc-900", patternHex: "#f59e0b" },
+    { bgClass: "bg-violet-600",  chip: "bg-violet-100 text-violet-900 border-violet-200",   textOn: "text-white", patternHex: "#7c3aed" },
+    { bgClass: "bg-blue-600",    chip: "bg-blue-100 text-blue-900 border-blue-200",         textOn: "text-white", patternHex: "#2563eb" },
+];
+
+// deterministic “random”
 function pickPalette(seed: string): Palette {
-    const palettes: Palette[] = [
-        {
-            from: "from-pink-500/90",
-            to: "to-orange-400/90",
-            ring: "ring-pink-200",
-            chip: "bg-pink-100 text-pink-900 border-pink-200",
-            textOn: "text-white",
-            pattern: "#f472b6"
-        },
-        {
-            from: "from-blue-600/90",
-            to: "to-cyan-400/90",
-            ring: "ring-blue-200",
-            chip: "bg-blue-100 text-blue-900 border-blue-200",
-            textOn: "text-white",
-            pattern: "#60a5fa"
-        },
-        {
-            from: "from-emerald-600/90",
-            to: "to-lime-400/90",
-            ring: "ring-emerald-200",
-            chip: "bg-emerald-100 text-emerald-900 border-emerald-200",
-            textOn: "text-white",
-            pattern: "#34d399"
-        },
-        {
-            from: "from-violet-600/90",
-            to: "to-fuchsia-400/90",
-            ring: "ring-violet-200",
-            chip: "bg-violet-100 text-violet-900 border-violet-200",
-            textOn: "text-white",
-            pattern: "#a78bfa"
-        },
-    ];
     let h = 0;
     for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
     return palettes[h % palettes.length];
 }
 
-// tiny SVG dots pattern (data URI) tinted by palette.pattern
+// subtle dot texture that works in light/dark
 function dotsPattern(fillHex: string) {
-    const svg =
-        `<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 32 32'>
-      <g fill='${fillHex}' fill-opacity='0.12'>
-        <circle cx='2' cy='2' r='2'/>
-        <circle cx='18' cy='10' r='1.5'/>
-        <circle cx='6' cy='22' r='1.5'/>
-        <circle cx='28' cy='26' r='1.2'/>
-      </g>
-    </svg>`;
+    const svg = `
+  <svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 32 32'>
+    <g fill='${fillHex}' fill-opacity='0.14'>
+      <circle cx='2' cy='2' r='2'/>
+      <circle cx='18' cy='10' r='1.5'/>
+      <circle cx='6' cy='22' r='1.5'/>
+      <circle cx='28' cy='26' r='1.2'/>
+    </g>
+  </svg>`;
     return `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
 }
 
 function getDestinationBits(trip: TripRow) {
-    // Try to read from saved inputs if present
-    const inputs = (trip as any)?.inputs as {
-        destinations?: { id?: string | null; name?: string; country?: string | null }[];
-    } | undefined;
-
-    const primary = inputs?.destinations?.[0];
-    const name = primary?.name || trip.title || "Trip";
-    const countryCode = primary?.country ?? null;
-    return {name, countryCode};
+    // We didn’t select inputs; keep a safe fallback using title
+    const name = trip.title || "Trip";
+    const countryCode = null as string | null;
+    return { name, countryCode };
 }
 
-/** ---------- UI ---------- */
-export function TripCard({trip}: { trip: TripRow }) {
-    const {name, countryCode} = getDestinationBits(trip);
+/** ---------- Card ---------- */
+export function TripCard({ trip }: { trip: TripRow }) {
+    const { name, countryCode } = getDestinationBits(trip);
     const title = (trip.title?.trim() || name || "Untitled Trip").trim();
     const date = formatDateRange(trip.start_date ?? undefined, trip.end_date ?? undefined);
     const amount =
@@ -206,7 +177,7 @@ export function TripCard({trip}: { trip: TripRow }) {
             : null;
     const created = trip.created_at ? new Date(trip.created_at).toLocaleDateString() : null;
 
-    const seed = `${name}-${countryCode ?? ""}`;
+    const seed = `${trip.id}-${name}`;
     const palette = pickPalette(seed);
     const flag = ccToFlag(countryCode || "");
     const cityEmoji = guessEmoji(name);
@@ -214,58 +185,44 @@ export function TripCard({trip}: { trip: TripRow }) {
     return (
         <Card
             className={cn(
-                "group relative overflow-hidden border border-border/50 bg-card/70 shadow-sm",
-                "hover:shadow-md transition-all hover:translate-y-[-2px]"
+                "group relative overflow-hidden border border-border/50 bg-card text-card-foreground",
+                "transition-all hover:-translate-y-0.5 hover:shadow-md"
             )}
         >
-            {/* Colorful hero band */}
-            <div
-                className="relative h-20 sm:h-24 w-full"
-                style={{
-                    backgroundImage: `linear-gradient(to bottom right, ${palette.from}, ${palette.to}), ${dotsPattern(palette.pattern)}`,
-                    backgroundSize: "auto, 64px 64px",
-                    backgroundBlendMode: "overlay", // optional for nice mixing
-                }}
-            >
-                {/* Stamp: flag + city emoji */}
+            {/* Color band – theme aware via semantic text classes + overlay pattern */}
+            <div className={cn("relative w-full h-24 sm:h-28", palette.bgClass)}>
+                {/* dots overlay (respects dark via lower opacity) */}
+                <div
+                    className="pointer-events-none absolute inset-0 opacity-30 dark:opacity-20"
+                    style={{ backgroundImage: dotsPattern(palette.patternHex), backgroundSize: "64px 64px" }}
+                />
+                {/* Stamp */}
                 <div className="absolute right-3 top-3 flex items-center gap-1">
-          <span
-              className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
+          <span className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
             {flag}
           </span>
-                    <span
-                        className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
+                    <span className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
             {cityEmoji}
           </span>
                 </div>
-
-                {/* Title on band for contrast */}
+                {/* Title */}
                 <div className="absolute left-4 bottom-2">
-                    <div className={cn("text-sm opacity-90", palette.textOn)}>Destination</div>
-                    <div
-                        className={cn("mt-0.5 line-clamp-1 text-lg font-semibold tracking-tight drop-shadow-sm", palette.textOn)}>
+                    <div className={cn("text-xs opacity-90", palette.textOn)}>Destination</div>
+                    <div className={cn("mt-0.5 line-clamp-1 text-lg font-semibold tracking-tight drop-shadow-sm", palette.textOn)}>
                         {title}
                     </div>
                 </div>
             </div>
 
             <CardHeader className="space-y-2 pb-2 pt-3">
-                {/* Meta badges */}
                 <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <Badge
-                        variant="outline"
-                        className={cn("flex items-center gap-1 border", palette.chip.split(" ").slice(-1)[0])}
-                    >
-                        <CalendarDays className="h-3.5 w-3.5 opacity-70"/>
+                    <Badge variant="outline" className={cn("flex items-center gap-1 border", palette.chip)}>
+                        <CalendarDays className="h-3.5 w-3.5 opacity-70" />
                         {date}
                     </Badge>
-
                     {amount && (
-                        <Badge
-                            variant="secondary"
-                            className={cn("flex items-center gap-1 border", palette.chip)}
-                        >
-                            <DollarSign className="h-3.5 w-3.5 opacity-80"/>
+                        <Badge variant="secondary" className={cn("flex items-center gap-1 border", palette.chip)}>
+                            <DollarSign className="h-3.5 w-3.5 opacity-80" />
                             {amount}
                         </Badge>
                     )}
@@ -274,17 +231,13 @@ export function TripCard({trip}: { trip: TripRow }) {
 
             <CardContent className="flex items-center justify-between border-t border-border/40 pt-3">
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5"/>
+                    <Clock className="h-3.5 w-3.5" />
                     {created ? `Saved ${created}` : "Recently added"}
                 </div>
 
-                <Button
-                    asChild
-                    size="sm"
-                    className="gap-1 ring-1 ring-transparent transition group-hover:ring-primary/30"
-                >
+                <Button asChild size="sm" className="gap-1">
                     <Link href={`/trips/${trip.id}`}>
-                        <MapPin className="mr-1 h-4 w-4"/>
+                        <MapPin className="mr-1 h-4 w-4" />
                         Open
                     </Link>
                 </Button>
@@ -295,7 +248,7 @@ export function TripCard({trip}: { trip: TripRow }) {
 
 function EmptyState() {
     return (
-        <div className="grid place-items-center rounded-2xl border py-16 text-center">
+        <div className="grid place-items-center rounded-2xl border bg-card text-card-foreground py-16 text-center">
             <div className="mx-auto max-w-sm space-y-3 px-6">
                 <div className="text-2xl">No trips yet</div>
                 <p className="text-sm text-muted-foreground">
@@ -316,8 +269,7 @@ function formatDateRange(start?: string, end?: string) {
     if (!start && !end) return "—";
     const s = start ? new Date(start + "T00:00:00") : null;
     const e = end ? new Date(end + "T00:00:00") : null;
-    const fmt = (d: Date) =>
-        d.toLocaleDateString(undefined, {day: "2-digit", month: "short", year: "numeric"});
+    const fmt = (d: Date) => d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
     if (s && e) return `${fmt(s)} → ${fmt(e)}`;
     if (s) return fmt(s);
     if (e) return fmt(e);

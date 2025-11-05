@@ -301,40 +301,80 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
             <div className="mx-auto w-full max-w-6xl px-4 py-6">
                 {/* Back */}
                 <div className="mb-4 flex items-center justify-between">
-                    <Button asChild variant="ghost">
+                    <Button asChild variant="ghost" size="sm" className="rounded-full">
                         <Link href="/trips">
                             <ArrowLeft className="mr-2 h-4 w-4"/> Back
                         </Link>
                     </Button>
                 </div>
 
-                {/* Header */}
-                <Card className="mb-4 overflow-hidden">
-                    <CardHeader>
-                        <div className="mb-1 text-xs uppercase tracking-wider text-muted-foreground">Saved Itinerary
+                {/* Hero Header */}
+                <Card className="mb-6 overflow-hidden border-0 shadow-sm">
+                    {/* banner */}
+                    <div
+                        className="relative h-28 w-full bg-gradient-to-br from-indigo-500/25 via-sky-400/20 to-emerald-400/20"
+                        style={{
+                            backgroundImage:
+                                "linear-gradient(to bottom right,var(--tw-gradient-stops)),radial-gradient(64px 64px at 20% 10%,rgba(99,102,241,.35) 0 50%,transparent 51%),radial-gradient(80px 80px at 80% 40%,rgba(56,189,248,.35) 0 45%,transparent 46%)",
+                            backgroundSize: "auto, 128px 128px, 160px 160px",
+                        }}
+                    >
+                        <div
+                            className="absolute inset-0 pointer-events-none [mask-image:linear-gradient(to_bottom,black,transparent_94%)]"/>
+                    </div>
+
+                    <CardHeader className="pb-2">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <div className="mb-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+                                    Saved Itinerary
+                                </div>
+                                <CardTitle className="text-2xl leading-tight">
+                                    {trip.title ?? "Untitled Trip"}
+                                </CardTitle>
+                            </div>
+
+                            {/* quick stats */}
+                            <div className="hidden sm:flex items-center gap-2">
+                                <div className="rounded-xl border bg-card/60 px-3 py-2 text-xs">
+                                    <div className="text-muted-foreground">Days</div>
+                                    <div className="text-sm font-semibold text-foreground">
+                                        {days.length}
+                                    </div>
+                                </div>
+                                <div className="rounded-xl border bg-card/60 px-3 py-2 text-xs">
+                                    <div className="text-muted-foreground">Est. Cost</div>
+                                    <div className="text-sm font-semibold text-foreground">
+                                        {typeof trip.est_total_cost === "number"
+                                            ? `${trip.currency ?? "USD"} ${Math.round(trip.est_total_cost)}`
+                                            : "—"}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <CardTitle className="text-2xl">{trip.title ?? "Untitled Trip"}</CardTitle>
                     </CardHeader>
-                    <CardContent>
+
+                    <CardContent className="pt-0">
+                        {/* meta chips */}
                         <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                            <Badge variant="outline" className="gap-1">
+                            <Badge variant="outline" className="gap-1 rounded-full">
                                 <CalendarDays className="h-3.5 w-3.5"/>
                                 {dateRange}
                             </Badge>
                             {typeof trip.est_total_cost === "number" && (
-                                <Badge variant="secondary" className="gap-1">
+                                <Badge variant="secondary" className="gap-1 rounded-full">
                                     <DollarSign className="h-3.5 w-3.5"/>
                                     est. {trip.currency ?? "USD"} {Math.round(trip.est_total_cost)}
                                 </Badge>
                             )}
-                            <Badge variant="outline" className="gap-1">
+                            <Badge variant="outline" className="gap-1 rounded-full">
                                 <MapPin className="h-3.5 w-3.5"/>
                                 {extractDestName(trip.inputs)}
                             </Badge>
                         </div>
 
-                        {/* Actions */}
-                        <div className="mt-4">
+                        {/* action row */}
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
                             <TripActionsClient
                                 tripId={trip.id}
                                 tripTitle={trip.title ?? "Trip"}
@@ -344,21 +384,17 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                                 places={clientPlaces}
                             />
                         </div>
+
+                        {/* soft divider + progress line */}
+                        <div className="mt-4 border-t"/>
+                        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
+                            <div className="h-full w-[42%] rounded-full bg-primary/70 transition-all"/>
+                        </div>
                     </CardContent>
                 </Card>
 
                 {/* Viewer */}
-                <TripViewerClient
-                    tripId={trip.id}                         // ✅ pass id (strings are fine)
-                    data={previewLike}
-                />
-
-                {/* Inline editor */}
-                {/*<div className="mt-6">*/}
-                {/*    <TripEditorClient*/}
-                {/*        itemsByDate={itemsByDate}*/}
-                {/*    />*/}
-                {/*</div>*/}
+                <TripViewerClient tripId={trip.id} data={previewLike}/>
             </div>
         </AppShell>
     );

@@ -1,2 +1,4 @@
 [api]
 schemas = ["public", "storage", "graphql_public", "auth", "itinero"]
+[functions.paystack_webhook]
+verify_jwt = false
