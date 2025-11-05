@@ -59,16 +59,6 @@ export default function TripActionsClient({tripId, tripTitle, startDate, endDate
     }
 
 
-    async function handleEditTitle(newTitle: string) {
-        // ... update supabase ...
-        router.refresh(); // ✅ self-refresh after mutation
-    }
-
-    async function handleAddItem(dayKey: string, payload: any) {
-        // ... insert item ...
-        router.refresh(); // ✅
-    }
-
     /* ====================== CALENDAR (.ics) ====================== */
     function downloadICS() {
         const lines: string[] = [

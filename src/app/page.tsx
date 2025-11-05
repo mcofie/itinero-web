@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import {motion, MotionProps, Transition} from "framer-motion";
 import { Button } from "@/components/ui/button";
 import TripWizard from "@/components/landing/TripWizard";
 import {
@@ -14,11 +14,14 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 export const dynamic = "force-dynamic";
 
 /* ---------- motion helpers ---------- */
-const fadeUp = (delay = 0) => ({
+// A nice "easeOut" curve
+const easeOutCurve: NonNullable<Transition["ease"]> = [0.16, 1, 0.3, 1];
+
+const fadeUp = (delay = 0): MotionProps => ({
     initial: { opacity: 0, y: 24 },
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true, amount: 0.3 },
-    transition: { duration: 0.6, ease: "easeOut", delay }
+    transition: { duration: 0.6, ease: easeOutCurve, delay },
 });
 
 const staggerParent = {

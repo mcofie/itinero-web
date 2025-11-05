@@ -54,11 +54,20 @@ export default function TripEditorClient({
         setDraft(item);
     }
 
+    type ItemUpdate = {
+        when?: Item["when"];
+        title?: string;
+        est_cost?: number | null;
+        duration_min?: number | null;
+        travel_min_from_prev?: number | null;
+        notes?: string | null;
+    };
+
     async function saveEdit() {
         if (!editingId) return;
         setBusy(true);
         try {
-            const patch: any = {
+            const patch: ItemUpdate = {
                 when: draft.when,
                 title: draft.title,
                 est_cost: draft.est_cost ?? null,
@@ -66,7 +75,11 @@ export default function TripEditorClient({
                 travel_min_from_prev: draft.travel_min_from_prev ?? null,
                 notes: draft.notes ?? null,
             };
-            const {error} = await sb.schema("itinero").from("itinerary_items").update(patch).eq("id", editingId);
+            const { error } = await sb
+                .schema("itinero")
+                .from("itinerary_items")
+                .update(patch)
+                .eq("id", editingId);
             if (error) throw error;
             setEditingId(null);
         } finally {
@@ -113,7 +126,7 @@ export default function TripEditorClient({
                                                     value={draft.when ?? it.when}
                                                     onChange={(e) => setDraft((d) => ({
                                                         ...d,
-                                                        when: e.target.value as any
+                                                        when: e.target.value as Item["when"]
                                                     }))}
                                                 >
                                                     <option value="morning">Morning</option>
