@@ -51,7 +51,7 @@ export default function PublicToggle({
     return (
         <div
             className={cn(
-                "rounded-2xl border border-border bg-card p-4",
+                "rounded-2xl backdrop-blur-sm p-4",
                 className
             )}
         >
@@ -68,7 +68,7 @@ export default function PublicToggle({
                             Private
                         </Badge>
                     )}
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-sm text-gray-300 dark:text-muted-foreground">
                         {isPublic
                             ? "Anyone with the link can view this trip."
                             : "Only you can view this trip."}
@@ -95,7 +95,7 @@ export default function PublicToggle({
                         Share link
                     </Label>
                     <div className="flex items-center gap-2">
-                        <Input id="public-link" className={"light: text-gray-500"} readOnly value={shareUrl}/>
+                        <Input id="public-link" className={"light: text-gray-300 border-dashed border-gray-400"} readOnly value={shareUrl}/>
                         <Button type="button" variant="secondary" onClick={copy} className="gap-1">
                             <LinkIcon className="h-4 w-4"/>
                             Copy

@@ -3,20 +3,20 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { JSX, useMemo, useState } from "react";
-import { useTheme } from "next-themes";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import type { PreviewLike, Day, Place } from "./page";
+import {JSX, useMemo, useState} from "react";
+import {useTheme} from "next-themes";
+import {Card, CardContent} from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import {ScrollArea} from "@/components/ui/scroll-area";
+import {Button} from "@/components/ui/button";
+import type {PreviewLike, Day, Place} from "./page";
 
-const LeafletMap = dynamic(() => import("@/app/preview/_leaflet/LeafletMap"), { ssr: false });
+const LeafletMap = dynamic(() => import("@/app/preview/_leaflet/LeafletMap"), {ssr: false});
 import "leaflet/dist/leaflet.css";
 
-import { BlockActions, ItemRowLite } from "@/app/trips/BlockEditControls";
-import { cn } from "@/lib/utils";
+import {BlockActions, ItemRowLite} from "@/app/trips/BlockEditControls";
+import {cn} from "@/lib/utils";
 import {
     Cloud,
     DollarSign,
@@ -30,8 +30,8 @@ import {
     Plug,
     Languages as LanguagesIcon,
 } from "lucide-react";
-import { AddItemUnderDay } from "@/app/trips/AddItemUnderDay";
-import { DestinationMeta, TripConfig } from "@/app/trips/TripActionsClient";
+import {AddItemUnderDay} from "@/app/trips/AddItemUnderDay";
+import {DestinationMeta, TripConfig} from "@/app/trips/TripActionsClient";
 
 /** ---------- helpers for safe inputs typing ---------- */
 type TripInputs = { interests?: string[] } | undefined;
@@ -51,7 +51,7 @@ export default function TripViewerClient({
     data: PreviewLike;
     startDate?: string;
 }) {
-    const { resolvedTheme } = useTheme();
+    const {resolvedTheme} = useTheme();
     const dark = resolvedTheme === "dark";
 
     const [activeDayIdx, setActiveDayIdx] = useState(0);
@@ -160,7 +160,8 @@ export default function TripViewerClient({
             </span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full border-border border bg-muted/40">
-                        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
+                        <div className="h-full rounded-full bg-primary transition-all"
+                             style={{width: `${progressPct}%`}}/>
                     </div>
                 </div>
 
@@ -178,7 +179,9 @@ export default function TripViewerClient({
                             <div className="space-y-4">
                                 <div className="space-y-4 rounded-2xl border-border border bg-card p-4">
                                     <div className="space-y-1">
-                                        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Destination</div>
+                                        <div
+                                            className="text-[11px] uppercase tracking-wider text-muted-foreground">Destination
+                                        </div>
                                         <div className="text-xl font-semibold">
                                             {primaryDestination?.name ?? destinationMeta?.city ?? "Destination"}{" "}
                                         </div>
@@ -190,17 +193,21 @@ export default function TripViewerClient({
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                                        <Metric label="Dates" value={`${formatISODate(startDate)} → ${formatISODate(data.days.at(-1)?.date)}`} />
-                                        <Metric label="Trip length" value={`${totalDays} day${totalDays === 1 ? "" : "s"}`} />
-                                        <Metric label="Places" value={data.places.length} />
-                                        <Metric label="Est. total cost" value={`$${totals.estCost}`} />
-                                        <Metric label="Planned duration" value={`${totals.durationMin}m`} />
-                                        <Metric label="Est. travel time" value={`${totals.travelMin}m`} />
+                                        <Metric label="Dates"
+                                                value={`${formatISODate(startDate)} → ${formatISODate(data.days.at(-1)?.date)}`}/>
+                                        <Metric label="Trip length"
+                                                value={`${totalDays} day${totalDays === 1 ? "" : "s"}`}/>
+                                        <Metric label="Places" value={data.places.length}/>
+                                        <Metric label="Est. total cost" value={`$${totals.estCost}`}/>
+                                        <Metric label="Planned duration" value={`${totals.durationMin}m`}/>
+                                        <Metric label="Est. travel time" value={`${totals.travelMin}m`}/>
                                     </div>
 
                                     {hasInterests(inputs) && inputs.interests.length > 0 && (
                                         <div>
-                                            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Focus</div>
+                                            <div
+                                                className="text-[11px] uppercase tracking-wider text-muted-foreground">Focus
+                                            </div>
                                             <div className="mt-2 flex flex-wrap gap-2">
                                                 {inputs.interests.map((t) => (
                                                     <Badge key={`ov-${t}`} variant="secondary" className="capitalize">
@@ -218,7 +225,8 @@ export default function TripViewerClient({
                                         <p className="text-sm leading-relaxed text-muted-foreground">{destinationMeta.description}</p>
                                     ) : (
                                         <p className="text-sm text-muted-foreground">
-                                            No description yet. Add a short overview of the destination—vibe, highlights, seasons, and must-knows.
+                                            No description yet. Add a short overview of the destination—vibe,
+                                            highlights, seasons, and must-knows.
                                         </p>
                                     )}
                                 </div>
@@ -229,7 +237,8 @@ export default function TripViewerClient({
                                         <p className="text-sm leading-relaxed text-muted-foreground">{destinationMeta.history}</p>
                                     ) : (
                                         <p className="text-sm text-muted-foreground">
-                                            No history added yet. Summarize key historical periods, influences, and notable events.
+                                            No history added yet. Summarize key historical periods, influences, and
+                                            notable events.
                                         </p>
                                     )}
                                 </div>
@@ -241,7 +250,7 @@ export default function TripViewerClient({
                                     <ul className="mt-2 space-y-2 text-sm">
                                         {(destinationMeta?.currency_code || destinationMeta?.fx_rate) && (
                                             <li className="flex items-start gap-2">
-                                                <DollarSign className="mt-0.5 h-4 w-4" />
+                                                <DollarSign className="mt-0.5 h-4 w-4"/>
                                                 <div>
                                                     <div className="font-medium">Currency</div>
                                                     <div className="text-muted-foreground">
@@ -251,7 +260,8 @@ export default function TripViewerClient({
                                                             : null}
                                                     </div>
                                                     {destinationMeta?.money_tools?.length ? (
-                                                        <div className="text-muted-foreground">Helpful: {destinationMeta.money_tools.join(", ")}</div>
+                                                        <div
+                                                            className="text-muted-foreground">Helpful: {destinationMeta.money_tools.join(", ")}</div>
                                                     ) : null}
                                                 </div>
                                             </li>
@@ -259,33 +269,35 @@ export default function TripViewerClient({
 
                                         {destinationMeta?.plugs?.length ? (
                                             <li className="flex items-start gap-2">
-                                                <Plug className="mt-0.5 h-4 w-4" />
+                                                <Plug className="mt-0.5 h-4 w-4"/>
                                                 <div>
                                                     <div className="font-medium">Plugs</div>
-                                                    <div className="text-muted-foreground">{destinationMeta.plugs.join(", ")}</div>
+                                                    <div
+                                                        className="text-muted-foreground">{destinationMeta.plugs.join(", ")}</div>
                                                 </div>
                                             </li>
                                         ) : null}
 
                                         {destinationMeta?.languages?.length ? (
                                             <li className="flex items-start gap-2">
-                                                <LanguagesIcon className="mt-0.5 h-4 w-4" />
+                                                <LanguagesIcon className="mt-0.5 h-4 w-4"/>
                                                 <div>
                                                     <div className="font-medium">Languages</div>
-                                                    <div className="text-muted-foreground">{destinationMeta.languages.join(", ")}</div>
+                                                    <div
+                                                        className="text-muted-foreground">{destinationMeta.languages.join(", ")}</div>
                                                 </div>
                                             </li>
                                         ) : null}
 
                                         {destinationMeta?.weather_temp_c != null || destinationMeta?.weather_desc ? (
                                             <li className="flex items-start gap-2">
-                                                <Thermometer className="mt-0.5 h-4 w-4" />
+                                                <Thermometer className="mt-0.5 h-4 w-4"/>
                                                 <div>
                                                     <div className="font-medium">Weather</div>
                                                     <div className="text-muted-foreground flex items-center gap-2">
                                                         {destinationMeta?.weather_desc ? (
                                                             <>
-                                                                <Cloud className="h-4 w-4" />
+                                                                <Cloud className="h-4 w-4"/>
                                                                 <span>{destinationMeta.weather_desc}</span>
                                                             </>
                                                         ) : null}
@@ -299,27 +311,29 @@ export default function TripViewerClient({
 
                                         {destinationMeta?.transport?.length ? (
                                             <li className="flex items-start gap-2">
-                                                <TrainFront className="mt-0.5 h-4 w-4" />
+                                                <TrainFront className="mt-0.5 h-4 w-4"/>
                                                 <div>
                                                     <div className="font-medium">Getting around</div>
-                                                    <div className="text-muted-foreground">{destinationMeta.transport.join(", ")}</div>
+                                                    <div
+                                                        className="text-muted-foreground">{destinationMeta.transport.join(", ")}</div>
                                                 </div>
                                             </li>
                                         ) : null}
 
                                         {destinationMeta?.esim_provider ? (
                                             <li className="flex items-start gap-2">
-                                                <SmartphoneNfc className="mt-0.5 h-4 w-4" />
+                                                <SmartphoneNfc className="mt-0.5 h-4 w-4"/>
                                                 <div>
                                                     <div className="font-medium">eSIM</div>
-                                                    <div className="text-muted-foreground">{destinationMeta.esim_provider}</div>
+                                                    <div
+                                                        className="text-muted-foreground">{destinationMeta.esim_provider}</div>
                                                 </div>
                                             </li>
                                         ) : null}
 
                                         {(destinationMeta?.city || primaryDestination?.name) && (
                                             <li className="flex items-start gap-2">
-                                                <Globe className="mt-0.5 h-4 w-4" />
+                                                <Globe className="mt-0.5 h-4 w-4"/>
                                                 <div>
                                                     <div className="font-medium">Primary city</div>
                                                     <div className="text-muted-foreground">
@@ -358,7 +372,8 @@ export default function TripViewerClient({
                         {/* Two-pane layout with matched heights */}
                         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[minmax(480px,1fr)_minmax(540px,1fr)]">
                             {/* LEFT: Days pane — same height as map, scrolls internally */}
-                            <div className="rounded-2xl border-border border bg-card md:h-[calc(100vh-160px)] overflow-hidden">
+                            <div
+                                className="rounded-2xl border-border border bg-card md:h-[calc(100vh-160px)] overflow-hidden">
                                 <ScrollArea className="h-full">
                                     <div className="p-2 md:p-3">
                                         <EditableDay
@@ -377,9 +392,11 @@ export default function TripViewerClient({
 
                             {/* RIGHT: Map pane — same height */}
                             <aside className="md:sticky md:top-20 md:self-start">
-                                <div className="overflow-hidden rounded-2xl border-border border md:h-[calc(100vh-160px)]">
+                                <div
+                                    className="overflow-hidden rounded-2xl border-border border md:h-[calc(100vh-160px)]">
                                     {/* Optionally pass hint to choose dark tiles */}
-                                    <LeafletMap day={activeDay} placesById={placesById}  theme={resolvedTheme ?? "light"} // pass theme down
+                                    <LeafletMap day={activeDay} placesById={placesById}
+                                                theme={resolvedTheme ?? "light"} // pass theme down
                                     />
                                 </div>
                             </aside>
@@ -388,7 +405,7 @@ export default function TripViewerClient({
 
                     <TabsContent value="places" className="mt-0">
                         <div className="rounded-2xl border-border border p-4">
-                            <PlacesList places={data.places} />
+                            <PlacesList places={data.places}/>
                         </div>
                     </TabsContent>
 
@@ -438,7 +455,8 @@ function EditableDay({
                     <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Day {dayIdx + 1}</div>
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="text-lg font-semibold">{formatISODate(day.date)}</span>
-                        <span className="inline-flex items-center gap-1 rounded-full border-border border px-2 py-0.5 text-xs text-muted-foreground">
+                        <span
+                            className="inline-flex items-center gap-1 rounded-full border-border border px-2 py-0.5 text-xs text-muted-foreground">
               est. day cost <span className="font-medium text-foreground">${dayCost}</span>
             </span>
                     </div>
@@ -459,15 +477,17 @@ function EditableDay({
             </div>
 
             {!hasRealIds && (
-                <div className="rounded-md border-border border border-border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900 dark:border-border border-amber-900/30 dark:bg-amber-900/20 dark:text-amber-200">
-                    Heads up: these items don’t include IDs. Save/load the trip from the database (not preview) to enable editing.
+                <div
+                    className="rounded-md border-border border border-border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900 dark:border-border border-amber-900/30 dark:bg-amber-900/20 dark:text-amber-200">
+                    Heads up: these items don’t include IDs. Save/load the trip from the database (not preview) to
+                    enable editing.
                 </div>
             )}
 
             {/* ---- Timeline (prettier stepwise) ---- */}
             <div className="relative">
                 {/* Vertical rail */}
-                <div className="pointer-events-none absolute left-4 top-0 bottom-0 w-px bg-border-border border" />
+                <div className="pointer-events-none absolute left-4 top-0 bottom-0 w-px bg-border-border border"/>
 
                 <ol role="list" className="space-y-3">
                     {day.blocks.map((b, i) => {
@@ -482,7 +502,8 @@ function EditableDay({
                                 <div className="absolute left-4 top-6 -translate-x-1/2">
                                     <div className="relative grid place-items-center">
                                         {/* Connector tail (hidden on last) */}
-                                        {!isLast && <span className="absolute left-1/2 top-6 h-[calc(100%+12px)] w-px -translate-x-1/2 bg-border-border border" />}
+                                        {!isLast && <span
+                                            className="absolute left-1/2 top-6 h-[calc(100%+12px)] w-px -translate-x-1/2 bg-border-border border"/>}
 
                                         {/* Numbered node */}
                                         <span
@@ -499,7 +520,8 @@ function EditableDay({
                                 </div>
 
                                 {/* Card */}
-                                <div className="group rounded-2xl border-border border p-4 transition hover:shadow-md focus-within:shadow-md">
+                                <div
+                                    className="group rounded-2xl border-border border p-4 transition hover:shadow-md focus-within:shadow-md">
                                     {/* Header */}
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div className="flex items-center gap-2">
@@ -514,14 +536,15 @@ function EditableDay({
                       </span>
                                             <div className="text-base font-semibold leading-tight">{b.title}</div>
                                         </div>
-                                        <BlockActions item={forControls} />
+                                        <BlockActions item={forControls}/>
                                     </div>
 
                                     {/* Meta */}
                                     <div className="mt-3 space-y-2">
                                         {place ? (
-                                            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                                                <PlaceChip place={place} />
+                                            <div
+                                                className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                                <PlaceChip place={place}/>
                                                 {place.lat != null && place.lng != null && (
                                                     <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs">
                             {place.lat.toFixed(3)}, {place.lng.toFixed(3)}
@@ -538,10 +561,23 @@ function EditableDay({
                                     </div>
 
                                     {/* Footer */}
-                                    <div className="mt-4 grid grid-cols-3 items-center gap-2 border-border border-t pt-3 text-xs sm:flex sm:flex-wrap sm:justify-between">
-                                        <StatChip variant="cost" label="Est. cost" value={`$${b.est_cost ?? 0}`} />
-                                        <StatChip variant="duration" label="Duration" value={`${b.duration_min ?? 0}m`} />
-                                        <StatChip variant="travel" label="Travel" value={`${b.travel_min_from_prev ?? 0}m`} />
+                                    <div
+                                        className="mt-4 flex flex-wrap items-center justify-between border-t border-border pt-3 text-xs">
+                                        <StatChip
+                                            variant="cost"
+                                            label="Est. cost"
+                                            value={`$${b.est_cost ?? 0}`}
+                                        />
+                                        <StatChip
+                                            variant="duration"
+                                            label="Duration"
+                                            value={`${b.duration_min ?? 0}m`}
+                                        />
+                                        <StatChip
+                                            variant="travel"
+                                            label="Travel"
+                                            value={`${b.travel_min_from_prev ?? 0}m`}
+                                        />
                                     </div>
                                 </div>
                             </li>
@@ -583,19 +619,19 @@ function StatChip({
             wrap:
                 "bg-amber-50 text-amber-900 border-border border border-border border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-border border-amber-900/30",
             dot: "bg-amber-400 dark:bg-amber-300",
-            icon: <DollarSign className="h-3.5 w-3.5" />,
+            icon: <DollarSign className="h-3.5 w-3.5"/>,
         },
         duration: {
             wrap:
                 "bg-blue-50 text-blue-900 border-border border border-border border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-border border-blue-900/30",
             dot: "bg-blue-400 dark:bg-blue-300",
-            icon: <Hourglass className="h-3.5 w-3.5" />,
+            icon: <Hourglass className="h-3.5 w-3.5"/>,
         },
         travel: {
             wrap:
                 "bg-violet-50 text-violet-900 border-border border border-border border-violet-200 dark:bg-violet-900/20 dark:text-violet-200 dark:border-border border-violet-900/30",
             dot: "bg-violet-400 dark:bg-violet-300",
-            icon: <MoveRight className="h-3.5 w-3.5" />,
+            icon: <MoveRight className="h-3.5 w-3.5"/>,
         },
     };
 
@@ -606,7 +642,7 @@ function StatChip({
             className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium", s.wrap)}
             aria-label={`${label}: ${value}`}
         >
-            <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />
+            <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)}/>
             {s.icon}
             <span className="opacity-80">{label}:</span>
             <span className="text-foreground/90">{value}</span>
@@ -614,9 +650,10 @@ function StatChip({
     );
 }
 
-function PlaceChip({ place }: { place: Place }) {
+function PlaceChip({place}: { place: Place }) {
     return (
-        <span className="inline-flex items-center gap-1 rounded-md border-border border bg-background px-2 py-0.5 text-xs">
+        <span
+            className="inline-flex items-center gap-1 rounded-md border-border border bg-background px-2 py-0.5 text-xs">
       <span className="font-medium text-foreground">{place.name}</span>
             {place.category ? <span className="text-muted-foreground">• {place.category}</span> : null}
     </span>
@@ -646,7 +683,7 @@ function getWhenUi(
 
 /* ---------- Places list ---------- */
 
-function PlacesList({ places }: { places: Place[] }) {
+function PlacesList({places}: { places: Place[] }) {
     if (!places?.length) return <div className="text-sm text-muted-foreground">No places included.</div>;
     return (
         <div className="grid gap-3 md:grid-cols-2">
@@ -663,7 +700,7 @@ function PlacesList({ places }: { places: Place[] }) {
     );
 }
 
-function Metric({ label, value }: { label: string; value: string | number }) {
+function Metric({label, value}: { label: string; value: string | number }) {
     return (
         <div className="rounded-md border-border border bg-background p-2">
             <div className="text-[11px] text-muted-foreground">{label}</div>
