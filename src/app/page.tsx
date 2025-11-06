@@ -42,7 +42,7 @@ const SUPPORTED = [
     { flag: "🇷🇼", name: "Rwanda" },
     { flag: "🇹🇭", name: "Thailand" },
     { flag: "🇦🇪", name: "Dubai" },
-    { flag: "🇹🇷", name: "Istanbul" },
+    { flag: "🇹🇷", name: "Turkey" },
     { flag: "🇫🇷", name: "France" },
     { flag: "🇸🇬", name: "Singapore" },
     { flag: "🇮🇹", name: "Italy" },

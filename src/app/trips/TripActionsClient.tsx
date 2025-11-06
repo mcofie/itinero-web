@@ -1,14 +1,13 @@
 "use client";
 
 import * as React from "react";
-import {useState, useMemo} from "react";
+import {useState, useMemo, useEffect} from "react";
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/components/ui/dialog";
 import {createClientBrowser} from "@/lib/supabase/browser";
 import {CalendarPlus, FileDown, Link as LinkIcon, Pencil, Plus, Share2, Trash2, Save, X} from "lucide-react";
 import {useRouter} from "next/navigation";
-
 
 type UUID = string;
 
@@ -31,17 +30,70 @@ type Props = {
     endDate?: string;
     days: Day[];
     places: Place[];
+    useInputs: TripConfig | null;
 };
 
-export default function TripActionsClient({tripId, tripTitle, startDate, endDate, days, places}: Props) {
+export type DestinationMeta = {
+    currency_code?: string;
+    fx_base?: string;
+    fx_rate?: number;
+    money_tools?: string[];
+    city?: string;
+    timezone?: string;
+    plugs?: string[];
+    languages?: string[];
+    weather_desc?: string;
+    weather_temp_c?: number;
+    transport?: string[];
+    esim_provider?: string;
+    description?: string;
+    history?: string;
+};
+
+
+export type TripConfig = {
+    mode: "driving" | "walking" | "transit" | "biking" | string;
+    pace: "balanced" | "fast" | "slow" | string;
+    lodging: string | null;
+    interests: string[];
+    destinations: {
+        id: string;
+        lat: number;
+        lng: number;
+        name: string;
+        country: string;
+    }[];
+    soft_distance: number | null;
+    lodging_by_date: Record<string, string> | null;
+    destination_meta?: DestinationMeta; // ⬅️ add this optional field
+};
+
+export default function TripActionsClient({
+                                              tripId,
+                                              tripTitle,
+                                              startDate,
+                                              endDate,
+                                              days,
+                                              places,
+                                              useInputs: TripConfig
+                                          }: Props) {
     const sb = createClientBrowser();
-    const [editing, setEditing] = useState(false);
-    const [addingForDate, setAddingForDate] = useState<string | null>(null);
-    const [newTitle, setNewTitle] = useState(tripTitle || "");
-    const [newBlock, setNewBlock] = useState<Partial<DayBlock>>({when: "morning"});
-    const [busy, setBusy] = useState(false);
     const router = useRouter();
 
+    // keep a display title and an editable draft
+    const [title, setTitle] = useState(tripTitle);
+    const [newTitle, setNewTitle] = useState(tripTitle || "");
+
+    // if the prop changes (e.g., server refresh), sync local state
+    useEffect(() => {
+        setTitle(tripTitle);
+        setNewTitle(tripTitle || "");
+    }, [tripTitle]);
+
+    const [editing, setEditing] = useState(false);
+    const [addingForDate, setAddingForDate] = useState<string | null>(null);
+    const [newBlock, setNewBlock] = useState<Partial<DayBlock>>({when: "morning"});
+    const [busy, setBusy] = useState(false);
 
     const shareUrl = useMemo(() => (typeof window !== "undefined" ? window.location.href : ""), []);
 
@@ -49,8 +101,9 @@ export default function TripActionsClient({tripId, tripTitle, startDate, endDate
     async function share() {
         if (navigator.share) {
             try {
-                await navigator.share({title: tripTitle || "Trip", url: shareUrl});
-            } catch {/* cancelled */
+                await navigator.share({title: title || "Trip", url: shareUrl});
+            } catch {
+                /* cancelled */
             }
         } else {
             await navigator.clipboard.writeText(shareUrl);
@@ -58,21 +111,17 @@ export default function TripActionsClient({tripId, tripTitle, startDate, endDate
         }
     }
 
-
     /* ====================== CALENDAR (.ics) ====================== */
     function downloadICS() {
-        const lines: string[] = [
-            "BEGIN:VCALENDAR",
-            "VERSION:2.0",
-            "PRODID:-//Itinero//Trip Export//EN",
-        ];
+        const lines: string[] = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Itinero//Trip Export//EN"];
 
         const toDT = (d: string, h = 9) => {
             const dt = new Date(d + "T00:00:00");
             dt.setHours(h, 0, 0, 0);
-            // Use local time as "floating" (no Z) so user’s calendar adopts TZ
             const pad = (n: number) => String(n).padStart(2, "0");
-            return `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}${pad(dt.getSeconds())}`;
+            return `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(
+                dt.getMinutes()
+            )}${pad(dt.getSeconds())}`;
         };
 
         for (const day of days) {
@@ -82,11 +131,11 @@ export default function TripActionsClient({tripId, tripTitle, startDate, endDate
             lines.push(`DTSTAMP:${toDT(day.date, 8)}`);
             lines.push(`DTSTART:${toDT(day.date, 8)}`);
             lines.push(`DTEND:${toDT(day.date, 20)}`);
-            lines.push(`SUMMARY:${escapeICS(tripTitle || "Trip")} — ${day.date}`);
+            lines.push(`SUMMARY:${escapeICS(title || "Trip")} — ${day.date}`);
             lines.push(`DESCRIPTION:${escapeICS("Exported from Itinero")}`);
             lines.push("END:VEVENT");
 
-            // Block items (rough timing by slot)
+            // Block items
             const slotHour: Record<DayBlock["when"], number> = {morning: 9, afternoon: 14, evening: 19};
             for (const b of day.blocks) {
                 const start = toDT(day.date, slotHour[b.when] || 9);
@@ -106,14 +155,13 @@ export default function TripActionsClient({tripId, tripTitle, startDate, endDate
         const blob = new Blob([lines.join("\r\n")], {type: "text/calendar;charset=utf-8"});
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = `${(tripTitle || "trip").replace(/\s+/g, "_")}.ics`;
+        a.download = `${(title || "trip").replace(/\s+/g, "_")}.ics`;
         a.click();
         URL.revokeObjectURL(a.href);
     }
 
     /* ====================== PDF (print-to-PDF) ====================== */
     function printToPDF() {
-        // Leverages browser print → “Save as PDF”. Make sure the page has a print stylesheet if needed.
         window.print();
     }
 
@@ -123,7 +171,15 @@ export default function TripActionsClient({tripId, tripTitle, startDate, endDate
         try {
             const {error} = await sb.schema("itinero").from("trips").update({title: newTitle || null}).eq("id", tripId);
             if (error) throw error;
+
+            // optimistic UI + keep draft in sync
+            setTitle(newTitle);
             setEditing(false);
+
+            // revalidate server components using this trip (optional but recommended)
+            router.refresh();
+        } catch (err) {
+            console.error("Failed to save title:", err);
         } finally {
             setBusy(false);
         }
@@ -137,7 +193,7 @@ export default function TripActionsClient({tripId, tripTitle, startDate, endDate
             est_cost: 0,
             duration_min: 90,
             travel_min_from_prev: 0,
-            place_id: null
+            place_id: null,
         });
     }
 
@@ -148,7 +204,6 @@ export default function TripActionsClient({tripId, tripTitle, startDate, endDate
         }
         setBusy(true);
         try {
-            // Compute order_index = last + 1 for that day
             const {data: last} = await sb
                 .schema("itinero")
                 .from("itinerary_items")
@@ -162,46 +217,34 @@ export default function TripActionsClient({tripId, tripTitle, startDate, endDate
             const order_index = (last?.order_index ?? -1) + 1;
             const when = (newBlock.when ?? "morning") as DayBlock["when"];
 
-            const {error} = await sb
-                .schema("itinero")
-                .from("itinerary_items")
-                .insert({
-                    trip_id: tripId,
-                    day_index: 0, // optional if you still use it; can compute server-side
-                    date: addingForDate,
-                    order_index,
-                    when,
-                    place_id: newBlock.place_id ?? null,
-                    title: newBlock.title!,
-                    est_cost: Number(newBlock.est_cost ?? 0),
-                    duration_min: Number(newBlock.duration_min ?? 90),
-                    travel_min_from_prev: Number(newBlock.travel_min_from_prev ?? 0),
-                    notes: newBlock.notes ?? null,
-                });
+            const {error} = await sb.schema("itinero").from("itinerary_items").insert({
+                trip_id: tripId,
+                day_index: 0,
+                date: addingForDate,
+                order_index,
+                when,
+                place_id: newBlock.place_id ?? null,
+                title: newBlock.title!,
+                est_cost: Number(newBlock.est_cost ?? 0),
+                duration_min: Number(newBlock.duration_min ?? 90),
+                travel_min_from_prev: Number(newBlock.travel_min_from_prev ?? 0),
+                notes: newBlock.notes ?? null,
+            });
             if (error) throw error;
 
             setAddingForDate(null);
+            router.refresh();
         } finally {
             setBusy(false);
         }
     }
 
-    async function deleteItem(itemId: string) {
-        if (!confirm("Delete this item?")) return;
-        setBusy(true);
-        try {
-            const {error} = await sb.schema("itinero").from("itinerary_items").delete().eq("id", itemId);
-            if (error) throw error;
-        } finally {
-            setBusy(false);
-        }
-    }
 
     return (
         <div className="flex flex-wrap items-center gap-2">
             {/* Edit trip title */}
             {!editing ? (
-                <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                <Button size="sm" variant="secondary" onClick={() => setEditing(true)}>
                     <Pencil className="mr-2 h-4 w-4"/> Edit
                 </Button>
             ) : (
@@ -215,7 +258,17 @@ export default function TripActionsClient({tripId, tripTitle, startDate, endDate
                     <Button size="sm" onClick={saveTitle} disabled={busy}>
                         <Save className="mr-2 h-4 w-4"/> Save
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setEditing(false)} disabled={busy}>
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                            setNewTitle(title);
+                            {/* reset draft to current title */
+                            }
+                            setEditing(false);
+                        }}
+                        disabled={busy}
+                    >
                         <X className="mr-2 h-4 w-4"/> Cancel
                     </Button>
                 </div>
@@ -224,17 +277,17 @@ export default function TripActionsClient({tripId, tripTitle, startDate, endDate
             {/* Add item (opens per-day dialog) */}
             {days.length > 0 && (
                 <div className="relative">
-                    <Button size="sm" variant="outline" onClick={() => openAddItem(days[0].date)}>
+                    <Button size="sm" variant="secondary" onClick={() => openAddItem(days[0].date)}>
                         <Plus className="mr-2 h-4 w-4"/> Add item
                     </Button>
                 </div>
             )}
 
             {/* Export / Share */}
-            <Button size="sm" variant="outline" onClick={downloadICS}>
+            <Button size="sm" variant="secondary" onClick={downloadICS}>
                 <CalendarPlus className="mr-2 h-4 w-4"/> Calendar
             </Button>
-            <Button size="sm" variant="outline" onClick={printToPDF}>
+            <Button size="sm" variant="secondary" onClick={printToPDF}>
                 <FileDown className="mr-2 h-4 w-4"/> PDF
             </Button>
             <Button size="sm" onClick={share}>

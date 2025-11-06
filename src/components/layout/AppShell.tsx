@@ -37,11 +37,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from "@/components/ui/avatar";
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 
 import {
     LogOut,
@@ -59,7 +55,7 @@ type Props = {
     userEmail?: string | null;
 };
 
-// Shapes used for typed Supabase responses
+// Typed rows
 type LedgerSumRow = { sum: number | null };
 type LedgerRow = { delta: number | null };
 type ProfileRow = { points_balance: number | null; points: number | null };
@@ -67,10 +63,9 @@ type ProfileRow = { points_balance: number | null; points: number | null };
 export default function AppShell({children, userEmail}: Props) {
     const pathname = usePathname();
     const router = useRouter();
-    const sb = createClientBrowser();
+    const sb = React.useMemo(() => createClientBrowser(), []);
 
     const [uid, setUid] = React.useState<string | null>(null);
-
     const [points, setPoints] = React.useState<number>(0);
     const [loadingPoints, setLoadingPoints] = React.useState<boolean>(true);
 
@@ -78,27 +73,38 @@ export default function AppShell({children, userEmail}: Props) {
     const [topupAmt, setTopupAmt] = React.useState<string>("");
     const [topupBusy, setTopupBusy] = React.useState(false);
 
-    // init: pick up session + first load
+    // number helpers
+    const fmtInt = React.useCallback(
+        (n: number) => new Intl.NumberFormat(undefined, {maximumFractionDigits: 0}).format(n),
+        []
+    );
+
+    // init: session + first load, and listen to auth changes
     React.useEffect(() => {
+        let mounted = true;
+
         (async () => {
             const {data: auth} = await sb.auth.getUser();
             const userId = auth?.user?.id ?? null;
+            if (!mounted) return;
             setUid(userId);
             await refreshPoints(userId);
         })();
 
-        // refresh on auth changes
         const {data: sub} = sb.auth.onAuthStateChange(async (_evt, sess) => {
             const userId = sess?.user?.id ?? null;
             setUid(userId);
             await refreshPoints(userId);
         });
 
-        return () => sub?.subscription?.unsubscribe();
+        return () => {
+            mounted = false;
+            sub?.subscription?.unsubscribe();
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [sb]);
 
-    // live update when ledger OR profiles changes
+    // live updates when ledger OR profiles change
     React.useEffect(() => {
         if (!uid) return;
 
@@ -125,134 +131,147 @@ export default function AppShell({children, userEmail}: Props) {
             void sb.removeChannel(ch2);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [uid]);
+    }, [uid, sb]);
 
-    async function refreshPoints(userId: string | null) {
-        setLoadingPoints(true);
-        try {
-            if (!userId) {
-                setPoints(0);
-                return;
-            }
-
-            // 1) Try secure RPC first (if you have one)
+    const refreshPoints = React.useCallback(
+        async (userId: string | null) => {
+            setLoadingPoints(true);
             try {
-                const {data: rpcBalance, error: rpcErr} = await sb.rpc("get_points_balance");
-                if (!rpcErr && typeof rpcBalance === "number") {
-                    setPoints(rpcBalance);
+                if (!userId) {
+                    setPoints(0);
                     return;
                 }
-            } catch { /* ignore */
-            }
 
-            // 2) Aggregate on itinero.points_ledger (typed)
-            try {
-                const {data, error} = await sb
-                    .schema("itinero")
-                    .from("points_ledger")
-                    .select("sum:sum(delta)")
-                    .eq("user_id", userId)
-                    .maybeSingle<LedgerSumRow>();
-
-                if (!error && data) {
-                    const agg = Number(data.sum ?? 0);
-                    if (Number.isFinite(agg)) {
-                        setPoints(agg);
+                // 1) Preferred: secure RPC
+                try {
+                    const {data: rpcBalance, error: rpcErr} = await sb.rpc("get_points_balance");
+                    if (!rpcErr && typeof rpcBalance === "number") {
+                        setPoints(rpcBalance);
                         return;
                     }
+                } catch {
+                    /* ignore */
                 }
-            } catch { /* ignore */
-            }
 
-            // 3) Fallback: client-side sum
-            try {
-                const {data: rows, error} = await sb
-                    .schema("itinero")
-                    .from("points_ledger")
-                    .select("delta")
-                    .eq("user_id", userId);
+                // 2) Aggregate on ledger
+                try {
+                    const {data, error} = await sb
+                        .schema("itinero")
+                        .from("points_ledger")
+                        .select("sum:sum(delta)")
+                        .eq("user_id", userId)
+                        .maybeSingle<LedgerSumRow>();
 
-                if (!error && Array.isArray(rows)) {
-                    const typedRows = rows as LedgerRow[];
-                    const total = typedRows.reduce<number>((acc, r) => acc + (Number(r.delta ?? 0) || 0), 0);
-                    setPoints(total);
-                    return;
+                    if (!error && data) {
+                        const agg = Number(data.sum ?? 0);
+                        if (Number.isFinite(agg)) {
+                            setPoints(agg);
+                            return;
+                        }
+                    }
+                } catch {
+                    /* ignore */
                 }
-            } catch { /* ignore */
-            }
 
-            // 4) Final fallback: profiles.points_balance (or profiles.points)
-            try {
-                const {data: prof, error: pErr} = await sb
-                    .from("profiles")
-                    .select("points_balance, points")
-                    .eq("id", userId)
-                    .maybeSingle<ProfileRow>();
+                // 3) Client-side sum fallback
+                try {
+                    const {data: rows, error} = await sb
+                        .schema("itinero")
+                        .from("points_ledger")
+                        .select("delta")
+                        .eq("user_id", userId);
 
-                if (!pErr && prof) {
-                    const bal =
-                        typeof prof.points_balance === "number"
-                            ? prof.points_balance
-                            : typeof prof.points === "number"
-                                ? prof.points
-                                : 0;
-                    setPoints(bal);
-                    return;
+                    if (!error && Array.isArray(rows)) {
+                        const typedRows = rows as LedgerRow[];
+                        const total = typedRows.reduce<number>((acc, r) => acc + (Number(r.delta ?? 0) || 0), 0);
+                        setPoints(total);
+                        return;
+                    }
+                } catch {
+                    /* ignore */
                 }
-            } catch { /* ignore */
-            }
 
-            setPoints(0);
+                // 4) Final fallback: profiles
+                try {
+                    const {data: prof, error: pErr} = await sb
+                        .from("profiles")
+                        .select("points_balance, points")
+                        .eq("id", userId)
+                        .maybeSingle<ProfileRow>();
+
+                    if (!pErr && prof) {
+                        const bal =
+                            typeof prof.points_balance === "number"
+                                ? prof.points_balance
+                                : typeof prof.points === "number"
+                                    ? prof.points
+                                    : 0;
+                        setPoints(bal);
+                        return;
+                    }
+                } catch {
+                    /* ignore */
+                }
+
+                setPoints(0);
+            } finally {
+                setLoadingPoints(false);
+            }
+        },
+        [sb]
+    );
+
+    const logout = React.useCallback(async () => {
+        try {
+            await sb.auth.signOut();
         } finally {
-            setLoadingPoints(false);
+            router.replace("/");
         }
-    }
+    }, [router, sb]);
 
-    async function logout() {
-        await sb.auth.signOut();
-        router.replace("/");
-    }
-
-    async function handleTopup() {
+    const handleTopup = React.useCallback(async () => {
         const amount = Number(topupAmt);
-        if (!Number.isFinite(amount) || amount <= 0 || !uid) return;
+        if (!Number.isFinite(amount) || amount <= 0 || !uid || topupBusy) return;
+
         setTopupBusy(true);
-        startTopup(amount);
-    }
+        try {
+            const {data: {session}} = await sb.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error("Please sign in to top up points.");
+            }
 
+            const r = await fetch(
+                `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create_topup_session`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${session.access_token}`,
+                        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
+                    },
+                    body: JSON.stringify({amount, currency: "GHS"}),
+                }
+            );
 
-    async function startTopup(amountGhs: number) {
-        const sb = createClientBrowser();
-
-        // 1) Must have a signed-in user
-        const {data: {session}} = await sb.auth.getSession();
-        if (!session?.access_token) {
-            // show login or open your auth dialog
-            throw new Error("Please sign in to top up points.");
-        }
-
-        const r = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create_topup_session`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                // ✅ this is what your function expects
-                "Authorization": `Bearer ${session.access_token}`,
-                // Supabase routing helper
-                "apikey": process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-            },
-            body: JSON.stringify({amount: amountGhs, currency: "GHS"})
-        });
-
-        const data = await r.json();
-        if (r.ok && data.authorization_url) {
+            const data = await r.json();
+            if (r.ok && data.authorization_url) {
+                window.location.href = data.authorization_url; // redirect to checkout
+            } else {
+                console.error("Topup init failed", data);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
             setTopupBusy(false);
-            window.location.href = data.authorization_url; // Send user to Paystack checkout
-        } else {
-            setTopupBusy(false);
-            console.error("Topup init failed", data);
         }
-    }
+    }, [sb, topupAmt, uid, topupBusy]);
 
+    const onTopupKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            void handleTopup();
+        }
+    };
 
     return (
         <TooltipProvider>
@@ -260,7 +279,7 @@ export default function AppShell({children, userEmail}: Props) {
                 className="min-h-screen bg-gradient-to-b from-background via-background/70 to-background text-foreground">
                 {/* Top bar */}
                 <header
-                    className="sticky top-0 z-40 border-b bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
+                    className="sticky top-0 z-40 border-b border-gray-200 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
                     <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center justify-between px-3 md:px-6">
                         {/* Left: Brand + Mobile Menu */}
                         <div className="flex items-center gap-2">
@@ -305,10 +324,7 @@ export default function AppShell({children, userEmail}: Props) {
                                 </SheetContent>
                             </Sheet>
 
-                            <Link
-                                href="/trips"
-                                className="group flex items-center gap-2 text-sm font-semibold"
-                            >
+                            <Link href="/trips" className="group flex items-center gap-2 text-sm font-semibold">
                 <span
                     className="grid h-8 w-8 place-items-center rounded-md bg-primary/90 text-primary-foreground shadow-sm transition group-hover:scale-[1.02]">
                   <Map className="h-4 w-4"/>
@@ -355,14 +371,13 @@ export default function AppShell({children, userEmail}: Props) {
                                         className="gap-1"
                                         onClick={() => router.push("/rewards")}
                                         title="View rewards"
+                                        aria-label="View rewards"
                                     >
                                         <Star className="h-4 w-4"/>
                                         {loadingPoints ? (
                                             <span className="inline-flex h-4 w-10 animate-pulse rounded-sm bg-muted"/>
                                         ) : (
-                                            <span className="tabular-nums">
-                        {new Intl.NumberFormat().format(points)}
-                      </span>
+                                            <span className="tabular-nums">{fmtInt(points)}</span>
                                         )}
                                         <span className="hidden sm:inline">pts</span>
                                     </Button>
@@ -375,6 +390,7 @@ export default function AppShell({children, userEmail}: Props) {
                                 size="sm"
                                 className="gap-1"
                                 onClick={() => setTopupOpen(true)}
+                                aria-label="Top up points"
                             >
                                 <Plus className="h-4 w-4"/>
                                 Top up
@@ -383,20 +399,18 @@ export default function AppShell({children, userEmail}: Props) {
                             {/* User menu */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="ml-1 px-2">
+                                    <Button variant="ghost" size="sm" className="ml-1 px-2" aria-label="Open user menu">
                                         <Avatar className="h-7 w-7">
                                             <AvatarImage alt={userEmail ?? "User"}/>
-                                            <AvatarFallback>
-                                                {(userEmail ?? "U").slice(0, 2).toUpperCase()}
-                                            </AvatarFallback>
+                                            <AvatarFallback>{(userEmail ?? "U").slice(0, 2).toUpperCase()}</AvatarFallback>
                                         </Avatar>
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-60">
                                     <DropdownMenuLabel className="flex items-center justify-between">
-                                        <span>{userEmail ?? "Signed in"}</span>
+                                        <span className="truncate">{userEmail ?? "Signed in"}</span>
                                         <Badge variant="secondary" className="gap-1">
-                                            <Crown className="h-3 w-3"/> {loadingPoints ? "…" : `${points}`}
+                                            <Crown className="h-3 w-3"/> {loadingPoints ? "…" : fmtInt(points)}
                                         </Badge>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator/>
@@ -420,12 +434,10 @@ export default function AppShell({children, userEmail}: Props) {
                 </header>
 
                 {/* Page content */}
-                <main className="mx-auto w-full max-w-[1400px] px-3 md:px-6">
-                    {children}
-                </main>
+                <main className="mx-auto w-full max-w-[1400px] px-3 md:px-6">{children}</main>
 
                 {/* Subtle footer */}
-                <footer className="border-t py-6 text-center text-xs text-muted-foreground">
+                <footer className="border-t border-gray-200 py-6 text-center text-xs text-muted-foreground">
                     © {new Date().getFullYear()} Itinero
                 </footer>
 
@@ -436,18 +448,22 @@ export default function AppShell({children, userEmail}: Props) {
                             <DialogTitle>Top up points</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-3">
-                            <label className="text-xs text-muted-foreground">Amount</label>
+                            <label htmlFor="topup-amount" className="text-xs text-muted-foreground">
+                                Amount (GHS)
+                            </label>
                             <Input
+                                id="topup-amount"
                                 type="number"
                                 inputMode="decimal"
                                 min={1}
                                 placeholder="e.g., 100"
                                 value={topupAmt}
                                 onChange={(e) => setTopupAmt(e.target.value)}
+                                onKeyDown={onTopupKeyDown}
+                                aria-label="Top up amount in Ghana cedis"
                             />
                             <p className="text-xs text-muted-foreground">
-                                This creates a credit row in{" "}
-                                <span className="font-medium">itinero.points_ledger</span>.
+                                This creates a credit row in <span className="font-medium">itinero.points_ledger</span>.
                             </p>
                         </div>
                         <DialogFooter>
@@ -468,6 +484,7 @@ export default function AppShell({children, userEmail}: Props) {
     );
 }
 
+/* ---------- Nav items ---------- */
 
 function NavItem({
                      href,
@@ -484,10 +501,9 @@ function NavItem({
             className={cn(
                 "inline-flex items-center rounded-md px-3 py-1.5 text-sm transition",
                 "hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                active
-                    ? "bg-accent text-foreground shadow-sm"
-                    : "text-muted-foreground"
+                active ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground"
             )}
+            aria-current={active ? "page" : undefined}
         >
             {children}
         </Link>
@@ -510,6 +526,7 @@ function MobileNavItem({
                 "inline-flex items-center rounded-md px-3 py-2 text-sm",
                 active ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent"
             )}
+            aria-current={active ? "page" : undefined}
         >
             {children}
         </Link>

@@ -41,12 +41,13 @@
     --foreground: oklch(0.147 0.004 49.25);
 
     /* Primary — vivid blue theme */
-    --primary: oklch(0.61 0.2 254.7);               /* ≈ blue-600 */
+    --primary: oklch(0.61 0.2 254.7); /* ≈ blue-600 */
     --primary-foreground: oklch(0.985 0.001 106.423);
 
     /* UI elements */
     --card: oklch(1 0 0);
     --card-foreground: var(--foreground);
+    --card-muted: var(--border);
     --popover: oklch(1 0 0);
     --popover-foreground: var(--foreground);
 
@@ -90,12 +91,11 @@
     --foreground: oklch(0.985 0.001 106.423);
 
     /* Blue primary in dark mode */
-    --primary: oklch(0.53 0.2 254.7);              /* ≈ blue-500 */
+    --primary: oklch(0.53 0.2 254.7); /* ≈ blue-500 */
     --primary-foreground: oklch(0.985 0.001 106.423);
 
     --card: oklch(0.2 0.01 250);
     --card-foreground: var(--foreground);
-
 
 
     --popover: oklch(0.2 0.01 250);

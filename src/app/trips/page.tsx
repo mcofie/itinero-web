@@ -130,11 +130,11 @@ type Palette = {
 };
 
 const palettes: Palette[] = [
-    { bgClass: "bg-emerald-600", chip: "bg-emerald-100 text-emerald-900 border-emerald-200", textOn: "text-white", patternHex: "#059669" },
     { bgClass: "bg-fuchsia-600", chip: "bg-fuchsia-100 text-fuchsia-900 border-fuchsia-200", textOn: "text-white", patternHex: "#c026d3" },
     { bgClass: "bg-cyan-600",    chip: "bg-cyan-100 text-cyan-900 border-cyan-200",         textOn: "text-white", patternHex: "#0891b2" },
     { bgClass: "bg-amber-500",   chip: "bg-amber-100 text-amber-900 border-amber-200",      textOn: "text-zinc-900", patternHex: "#f59e0b" },
     { bgClass: "bg-violet-600",  chip: "bg-violet-100 text-violet-900 border-violet-200",   textOn: "text-white", patternHex: "#7c3aed" },
+    { bgClass: "bg-emerald-600", chip: "bg-emerald-100 text-emerald-900 border-emerald-200", textOn: "text-white", patternHex: "#059669" },
     { bgClass: "bg-blue-600",    chip: "bg-blue-100 text-blue-900 border-blue-200",         textOn: "text-white", patternHex: "#2563eb" },
 ];
 
@@ -185,7 +185,7 @@ export function TripCard({ trip }: { trip: TripRow }) {
     return (
         <Card
             className={cn(
-                "group relative overflow-hidden border border-border/50 bg-card text-card-foreground",
+                "group py-0 pb-3 relative overflow-hidden border border-border/50 bg-card text-card-foreground",
                 "transition-all hover:-translate-y-0.5 hover:shadow-md"
             )}
         >

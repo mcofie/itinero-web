@@ -12,7 +12,7 @@ import {CalendarDays, DollarSign, MapPin, ArrowLeft} from "lucide-react";
 
 import TripViewerClient from "./TripViewerClient";
 
-import TripActionsClient from "@/app/trips/TripActionsClient";
+import TripActionsClient, {TripConfig} from "@/app/trips/TripActionsClient";
 import TripEditorClient from "@/app/trips/TripEditorClient";
 
 type UUID = string;
@@ -309,92 +309,98 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                 </div>
 
                 {/* Hero Header */}
-                <Card className="mb-6 overflow-hidden border-0 shadow-sm">
-                    {/* banner */}
+                <Card className="mb-6 overflow-hidden border-0 shadow-sm relative">
+                    {/* Full background image */}
                     <div
-                        className="relative h-28 w-full bg-gradient-to-br from-indigo-500/25 via-sky-400/20 to-emerald-400/20"
+                        className="absolute inset-0 bg-cover bg-center bg-slate-900"
                         style={{
-                            backgroundImage:
-                                "linear-gradient(to bottom right,var(--tw-gradient-stops)),radial-gradient(64px 64px at 20% 10%,rgba(99,102,241,.35) 0 50%,transparent 51%),radial-gradient(80px 80px at 80% 40%,rgba(56,189,248,.35) 0 45%,transparent 46%)",
-                            backgroundSize: "auto, 128px 128px, 160px 160px",
+                            backgroundImage: `url('https://images.unsplash.com/photo-1589556045897-c444ffa0a6ff?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2874')`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
                         }}
-                    >
-                        <div
-                            className="absolute inset-0 pointer-events-none [mask-image:linear-gradient(to_bottom,black,transparent_94%)]"/>
-                    </div>
+                    />
 
-                    <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between gap-3">
-                            <div>
-                                <div className="mb-1 text-[11px] uppercase tracking-wider text-muted-foreground">
-                                    Saved Itinerary
+                    {/* Tint overlay */}
+                    <div className="absolute inset-0 bg-black/40 backdrop-brightness-75"/>
+
+                    {/* Content */}
+                    <div className="relative z-10">
+                        <CardHeader className="pb-2 text-white">
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <div className="mb-1 text-[11px] uppercase tracking-wider opacity-90">
+                                        Saved Itinerary
+                                    </div>
+                                    <CardTitle className="text-2xl leading-tight">
+                                        {trip.title ?? "Untitled Trip"}
+                                    </CardTitle>
                                 </div>
-                                <CardTitle className="text-2xl leading-tight">
-                                    {trip.title ?? "Untitled Trip"}
-                                </CardTitle>
-                            </div>
 
-                            {/* quick stats */}
-                            <div className="hidden sm:flex items-center gap-2">
-                                <div className="rounded-xl border bg-card/60 px-3 py-2 text-xs">
-                                    <div className="text-muted-foreground">Days</div>
-                                    <div className="text-sm font-semibold text-foreground">
-                                        {days.length}
+                                {/* Quick stats */}
+                                <div className="hidden sm:flex items-center gap-2">
+                                    <div className="rounded-xl border border-white/30 bg-white/10 px-3 py-2 text-xs">
+                                        <div className="opacity-80">Days</div>
+                                        <div className="text-sm font-semibold">
+                                            {days.length}
+                                        </div>
+                                    </div>
+                                    <div className="rounded-xl border border-white/30 bg-white/10 px-3 py-2 text-xs">
+                                        <div className="opacity-80">Est. Cost</div>
+                                        <div className="text-sm font-semibold">
+                                            {typeof trip.est_total_cost === "number"
+                                                ? `${trip.currency ?? "USD"} ${Math.round(trip.est_total_cost)}`
+                                                : "—"}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="rounded-xl border bg-card/60 px-3 py-2 text-xs">
-                                    <div className="text-muted-foreground">Est. Cost</div>
-                                    <div className="text-sm font-semibold text-foreground">
-                                        {typeof trip.est_total_cost === "number"
-                                            ? `${trip.currency ?? "USD"} ${Math.round(trip.est_total_cost)}`
-                                            : "—"}
-                                    </div>
-                                </div>
                             </div>
-                        </div>
-                    </CardHeader>
+                        </CardHeader>
 
-                    <CardContent className="pt-0">
-                        {/* meta chips */}
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                            <Badge variant="outline" className="gap-1 rounded-full">
-                                <CalendarDays className="h-3.5 w-3.5"/>
-                                {dateRange}
-                            </Badge>
-                            {typeof trip.est_total_cost === "number" && (
-                                <Badge variant="secondary" className="gap-1 rounded-full">
-                                    <DollarSign className="h-3.5 w-3.5"/>
-                                    est. {trip.currency ?? "USD"} {Math.round(trip.est_total_cost)}
+                        <CardContent className="pt-0 text-white">
+                            {/* Meta chips */}
+                            <div className="flex flex-wrap items-center gap-2 text-sm">
+                                <Badge variant="outline" className="gap-1 rounded-full border-white/40 text-white">
+                                    <CalendarDays className="h-3.5 w-3.5"/>
+                                    {dateRange}
                                 </Badge>
-                            )}
-                            <Badge variant="outline" className="gap-1 rounded-full">
-                                <MapPin className="h-3.5 w-3.5"/>
-                                {extractDestName(trip.inputs)}
-                            </Badge>
-                        </div>
 
-                        {/* action row */}
-                        <div className="mt-4 flex flex-wrap items-center gap-2">
-                            <TripActionsClient
-                                tripId={trip.id}
-                                tripTitle={trip.title ?? "Trip"}
-                                startDate={trip.start_date ?? undefined}
-                                endDate={trip.end_date ?? undefined}
-                                days={days}
-                                places={clientPlaces}
-                            />
-                        </div>
+                                {typeof trip.est_total_cost === "number" && (
+                                    <Badge variant="secondary" className="gap-1 rounded-full bg-white/20 text-white">
+                                        <DollarSign className="h-3.5 w-3.5"/>
+                                        est. {trip.currency ?? "USD"} {Math.round(trip.est_total_cost)}
+                                    </Badge>
+                                )}
 
-                        {/* soft divider + progress line */}
-                        <div className="mt-4 border-t"/>
-                        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted/60">
-                            <div className="h-full w-[42%] rounded-full bg-primary/70 transition-all"/>
-                        </div>
-                    </CardContent>
+                                <Badge variant="outline" className="gap-1 rounded-full border-white/40 text-white">
+                                    <MapPin className="h-3.5 w-3.5"/>
+                                    {extractDestName(trip.inputs)}
+                                </Badge>
+                            </div>
+
+                            {/* Action row */}
+                            <div className="mt-4 flex flex-wrap items-center gap-2">
+                                <TripActionsClient
+                                    tripId={trip.id}
+                                    tripTitle={trip.title ?? "Trip"}
+                                    startDate={trip.start_date ?? undefined}
+                                    endDate={trip.end_date ?? undefined}
+                                    days={days}
+                                    useInputs={
+                                        (previewLike.trip_summary.inputs
+                                            ? typeof previewLike.trip_summary.inputs === "string"
+                                                ? JSON.parse(previewLike.trip_summary.inputs)
+                                                : previewLike.trip_summary.inputs
+                                            : null) as TripConfig | null
+                                    }
+                                    places={clientPlaces}
+                                />
+                            </div>
+                        </CardContent>
+                    </div>
                 </Card>
 
                 {/* Viewer */}
-                <TripViewerClient tripId={trip.id} data={previewLike}/>
+                <TripViewerClient tripId={trip.id} data={previewLike} startDate={previewLike.trip_summary.start_date}/>
             </div>
         </AppShell>
     );

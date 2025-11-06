@@ -1,17 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { createClientBrowser } from "@/lib/supabase/browser";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import {useState, useMemo} from "react";
+import {useRouter} from "next/navigation";
+import {createClientBrowser} from "@/lib/supabase/browser";
+import {Button} from "@/components/ui/button";
+import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/components/ui/dialog";
+import {Input} from "@/components/ui/input";
+import {Textarea} from "@/components/ui/textarea";
+import {Label} from "@/components/ui/label";
+import {Select, SelectTrigger, SelectValue, SelectContent, SelectItem} from "@/components/ui/select";
+import {Separator} from "@/components/ui/separator";
+import {Pencil, Trash2, Plus} from "lucide-react";
+import {ConfirmDialog} from "@/app/trips/ConfirmDialog";
 
 type UUID = string;
 
@@ -41,7 +42,7 @@ function WhenSelect({
     return (
         <Select value={value} onValueChange={(v) => onValueChange(v as When)}>
             <SelectTrigger className="w-full">
-                <SelectValue placeholder="When" />
+                <SelectValue placeholder="When"/>
             </SelectTrigger>
             <SelectContent>
                 <SelectItem value="morning">Morning</SelectItem>
@@ -64,6 +65,7 @@ export function BlockActions({
     const sb = createClientBrowser();
 
     const [open, setOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
     const [busy, setBusy] = useState(false);
 
     const [title, setTitle] = useState(item.title);
@@ -75,7 +77,7 @@ export function BlockActions({
     async function onSave() {
         setBusy(true);
         try {
-            const { error } = await sb
+            const {error} = await sb
                 .schema("itinero")
                 .from("itinerary_items")
                 .update({
@@ -96,16 +98,16 @@ export function BlockActions({
     }
 
     async function onDelete() {
-        if (!confirm("Delete this item?")) return;
         setBusy(true);
         try {
-            const { error } = await sb
+            const {error} = await sb
                 .schema("itinero")
                 .from("itinerary_items")
                 .delete()
                 .eq("id", item.id);
 
             if (error) throw error;
+            setBusy(false);
             router.refresh();
         } finally {
             setBusy(false);
@@ -115,11 +117,23 @@ export function BlockActions({
     return (
         <div className="mt-2 flex items-center gap-2">
             <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
-                <Pencil className="mr-2 h-4 w-4" /> Edit
+                <Pencil className="mr-2 h-4 w-4"/>
             </Button>
-            <Button size="sm" variant="outline" onClick={onDelete}>
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setDeleteOpen(true)}>
+                <Trash2 className="mr-2 h-4 w-4"/></Button>
+
+            <ConfirmDialog
+                open={deleteOpen}
+                onOpenChange={setDeleteOpen}
+                loading={busy}
+                title="Delete this item?"
+                description={
+                    "This item will be permanently removed from your itinerary. This action cannot be undone."
+                }
+                confirmText="Delete"
+                cancelText="Cancel"
+                onConfirm={onDelete}
+            />
 
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent className="sm:max-w-md">
@@ -130,13 +144,13 @@ export function BlockActions({
                     <div className="grid gap-3">
                         <div className="grid gap-1.5">
                             <Label>Title</Label>
-                            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+                            <Input value={title} onChange={(e) => setTitle(e.target.value)}/>
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-1.5">
                                 <Label>When</Label>
-                                <WhenSelect value={when} onValueChange={setWhen} />
+                                <WhenSelect value={when} onValueChange={setWhen}/>
                             </div>
                             <div className="grid gap-1.5">
                                 <Label>Estimated cost</Label>
@@ -186,135 +200,3 @@ export function BlockActions({
     );
 }
 
-/* =========================
-   Add-item under a day
-   ========================= */
-export function AddItemUnderDay({
-                                    tripId,
-                                    date,                // yyyy-mm-dd (or null -> falls back to day_index ordering)
-                                    nextOrderIndex,       // pass the next index to append at end
-                                    defaultWhen = "afternoon",
-                                }: {
-    tripId: UUID;
-    date: string | null;
-    nextOrderIndex: number;
-    defaultWhen?: When;
-}) {
-    const router = useRouter();
-    const sb = createClientBrowser();
-
-    const [open, setOpen] = useState(false);
-    const [busy, setBusy] = useState(false);
-
-    const [title, setTitle] = useState("");
-    const [when, setWhen] = useState<When>(defaultWhen);
-    const [estCost, setEstCost] = useState<string>("");
-    const [durationMin, setDurationMin] = useState<string>("");
-    const [notes, setNotes] = useState<string>("");
-
-    async function onCreate() {
-        setBusy(true);
-        try {
-            const { error } = await sb
-                .schema("itinero")
-                .from("itinerary_items")
-                .insert({
-                    trip_id: tripId,
-                    date: date,
-                    order_index: nextOrderIndex,
-                    when,
-                    place_id: null,
-                    title: title.trim() || "New item",
-                    est_cost: estCost === "" ? null : Number(estCost),
-                    duration_min: durationMin === "" ? null : Number(durationMin),
-                    travel_min_from_prev: null,
-                    notes: notes.trim() || null,
-                });
-
-            if (error) throw error;
-            setOpen(false);
-            setTitle("");
-            setEstCost("");
-            setDurationMin("");
-            setNotes("");
-            router.refresh();
-        } finally {
-            setBusy(false);
-        }
-    }
-
-    return (
-        <>
-            <Separator className="my-3" />
-            <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Add item
-            </Button>
-
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Add itinerary item</DialogTitle>
-                    </DialogHeader>
-
-                    <div className="grid gap-3">
-                        <div className="grid gap-1.5">
-                            <Label>Title</Label>
-                            <Input
-                                placeholder="e.g. Jamestown walking tour"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="grid gap-1.5">
-                                <Label>When</Label>
-                                <WhenSelect value={when} onValueChange={setWhen} />
-                            </div>
-                            <div className="grid gap-1.5">
-                                <Label>Estimated cost</Label>
-                                <Input
-                                    type="number"
-                                    inputMode="decimal"
-                                    placeholder="e.g. 10"
-                                    value={estCost}
-                                    onChange={(e) => setEstCost(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid gap-1.5">
-                            <Label>Duration (min)</Label>
-                            <Input
-                                type="number"
-                                inputMode="numeric"
-                                placeholder="e.g. 90"
-                                value={durationMin}
-                                onChange={(e) => setDurationMin(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="grid gap-1.5">
-                            <Label>Notes</Label>
-                            <Textarea
-                                rows={3}
-                                placeholder="Optional notes"
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <DialogFooter className="gap-2">
-                        <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>
-                            Cancel
-                        </Button>
-                        <Button onClick={onCreate} disabled={busy}>
-                            {busy ? "Adding…" : "Add item"}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </>
-    );
-}
