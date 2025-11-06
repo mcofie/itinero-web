@@ -1,15 +1,37 @@
 // app/t/[publicId]/page.tsx
 import * as React from "react";
-import type { Metadata, ResolvingMetadata } from "next";
+import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClientServer } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
 import PublicTripClient from "./public-trip-client";
 
-// --- Types kept flexible (schema-safe) ---
-type Json = Record<string, any> | null;
+/* ---------------- Types (loose but explicit) ---------------- */
 
+type TripSummary = Record<string, unknown> | null;
+
+type DayBlock = {
+    when?: string | null;
+    title?: string | null;
+    notes?: string | null;
+    est_cost?: number | null;
+    duration_min?: number | null;
+    travel_min_from_prev?: number | null;
+    place_id?: string | null;
+};
+
+export type Day = {
+    date?: string | null;
+    blocks: DayBlock[];
+};
+
+export type PlaceLite = {
+    id: string;
+    name: string;
+    category?: string | null;
+};
+
+/** Shape of the DB row we read (keep fields optional & nullable) */
 type TripRowLoose = {
     id: string;
     public_id?: string | null;
@@ -19,21 +41,71 @@ type TripRowLoose = {
     est_total_cost?: number | null;
     currency?: string | null;
     created_at?: string | null;
-    // Optional JSON blobs (if your schema has them)
-    inputs?: Json;
-    trip_summary?: Json;
-    days?: any[] | null;
-    places?: any[] | null;
+    inputs?: unknown;
+    trip_summary?: unknown;
+    days?: unknown;
+    places?: unknown;
     cover_url?: string | null;
 } | null;
 
+/* ---------------- Runtime coercion helpers ---------------- */
+
+function asBlockArray(u: unknown): DayBlock[] {
+    if (!Array.isArray(u)) return [];
+    return u.map((b) => {
+        const obj = (b ?? {}) as Record<string, unknown>;
+        const num = (x: unknown): number | null => {
+            const v = Number(x);
+            return Number.isFinite(v) ? v : null;
+        };
+        return {
+            when: typeof obj.when === "string" ? obj.when : null,
+            title: typeof obj.title === "string" ? obj.title : null,
+            notes: typeof obj.notes === "string" ? obj.notes : null,
+            est_cost: num(obj.est_cost),
+            duration_min: num(obj.duration_min),
+            travel_min_from_prev: num(obj.travel_min_from_prev),
+            place_id: typeof obj.place_id === "string" ? obj.place_id : null,
+        };
+    });
+}
+
+function asDayArray(u: unknown): Day[] {
+    if (!Array.isArray(u)) return [];
+    return u.map((d) => {
+        const obj = (d ?? {}) as Record<string, unknown>;
+        return {
+            date: typeof obj.date === "string" ? obj.date : null,
+            blocks: asBlockArray((obj as { blocks?: unknown }).blocks),
+        };
+    });
+}
+
+function asPlaceArray(u: unknown): PlaceLite[] {
+    if (!Array.isArray(u)) return [];
+    return u
+        .map((p) => {
+            const obj = (p ?? {}) as Record<string, unknown>;
+            const id = typeof obj.id === "string" ? obj.id : null;
+            const name = typeof obj.name === "string" ? obj.name : null;
+            if (!id || !name) return null;
+            return {
+                id,
+                name,
+                category: typeof obj.category === "string" ? obj.category : null,
+            };
+        })
+        .filter(Boolean) as PlaceLite[];
+}
+
+/* ---------------- Metadata (SEO) ---------------- */
+
 export async function generateMetadata(
-    { params }: { params: { publicId: string } },
-    _parent: ResolvingMetadata
+    { params }: { params: { publicId: string } }
 ): Promise<Metadata> {
     const sb = await createClientServer();
 
-    // Fetch only what we need for SEO. If it fails, it's fine—fallback metadata below.
+    // Fetch only minimal fields needed for SEO. It’s okay if this fails.
     const { data } = await sb
         .schema("itinero")
         .from("trips")
@@ -42,9 +114,13 @@ export async function generateMetadata(
         .maybeSingle();
 
     const title = data?.title ? `${data.title} • Itinero` : "Shared Trip • Itinero";
-    const description = data?.start_date || data?.end_date
-        ? `Travel dates: ${formatDateRange(data?.start_date ?? undefined, data?.end_date ?? undefined)}`
-        : "View this shared itinerary on Itinero.";
+    const description =
+        data?.start_date || data?.end_date
+            ? `Travel dates: ${formatDateRange(
+                data?.start_date ?? undefined,
+                data?.end_date ?? undefined
+            )}`
+            : "View this shared itinerary on Itinero.";
 
     const ogImage =
         data?.cover_url ||
@@ -67,6 +143,8 @@ export async function generateMetadata(
     };
 }
 
+/* ---------------- Page ---------------- */
+
 export default async function PublicTripPage({
                                                  params,
                                              }: {
@@ -74,7 +152,7 @@ export default async function PublicTripPage({
 }) {
     const sb = await createClientServer();
 
-    // Try to fetch the trip via public_id (read-only)
+    // Read the shared trip by public_id (RLS should allow a public view)
     const { data, error } = await sb
         .schema("itinero")
         .from("trips")
@@ -86,7 +164,6 @@ export default async function PublicTripPage({
         notFound();
     }
 
-    // Build a minimal “preview-like” shape without relying on strict columns.
     const title = (data.title ?? "Shared Trip").trim();
     const dateRange = formatDateRange(
         data.start_date ?? undefined,
@@ -94,27 +171,19 @@ export default async function PublicTripPage({
     );
     const cover =
         data.cover_url ||
-        // nice generic travel shot fallback
         "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1600&auto=format&fit=crop";
 
-    // Trip content (tolerant of missing fields)
-    const tripSummary = (data.trip_summary ?? null) as Json;
-    const days = Array.isArray(data.days) ? data.days : [];
-    const places = Array.isArray(data.places) ? data.places : [];
+    // Tolerant parsing for trip content
+    const tripSummary: TripSummary = (data.trip_summary as TripSummary) ?? null;
+    const days = asDayArray(data.days);
+    const places = asPlaceArray(data.places);
 
     return (
         <div className="min-h-dvh bg-background text-foreground">
             {/* HERO — full-bleed cover with tint, distinct from internal page */}
             <section className="relative h-[44svh] w-full overflow-hidden">
-                {/* bg image */}
-                <Image
-                    src={cover}
-                    alt={title}
-                    priority
-                    fill
-                    className="object-cover"
-                    sizes="100vw"
-                />
+                {/* background image */}
+                <Image src={cover} alt={title} priority fill className="object-cover" sizes="100vw" />
                 {/* tint */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/60" />
                 {/* title block */}
@@ -133,7 +202,6 @@ export default async function PublicTripPage({
 
             {/* BODY */}
             <main className="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
-                {/* Share + quick stats */}
                 <PublicTripClient
                     tripId={data.id}
                     publicId={params.publicId}
@@ -145,7 +213,7 @@ export default async function PublicTripPage({
                 />
             </main>
 
-            {/* Lightweight footer (distinct) */}
+            {/* Lightweight footer */}
             <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
                 Shared via Itinero — plan smarter, wander farther.
             </footer>
@@ -153,7 +221,7 @@ export default async function PublicTripPage({
     );
 }
 
-/* ---------- helpers (server) ---------- */
+/* ---------------- Server helpers ---------------- */
 
 function formatDateRange(start?: string, end?: string) {
     if (!start && !end) return "—";

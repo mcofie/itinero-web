@@ -12,7 +12,6 @@ import {ScrollArea} from "@/components/ui/scroll-area";
 import {Button} from "@/components/ui/button";
 import type {PreviewLike, Day, Place} from "./page";
 
-const LeafletMap = dynamic(() => import("@/app/preview/_leaflet/LeafletMap"), {ssr: false});
 import "leaflet/dist/leaflet.css";
 
 import {BlockActions, ItemRowLite} from "@/app/trips/BlockEditControls";
@@ -33,6 +32,18 @@ import {
 import {AddItemUnderDay} from "@/app/trips/AddItemUnderDay";
 import {DestinationMeta, TripConfig} from "@/app/trips/TripActionsClient";
 
+type LeafletMapProps = {
+    theme?: "light" | "dark";
+    day: Day;
+    placesById: Map<string, Place>;
+};
+
+const LeafletMap = dynamic<LeafletMapProps>(
+    () => import("@/app/preview/_leaflet/LeafletMap"),
+    { ssr: false }
+);
+
+
 /** ---------- helpers for safe inputs typing ---------- */
 type TripInputs = { interests?: string[] } | undefined;
 
@@ -52,11 +63,15 @@ export default function TripViewerClient({
     startDate?: string;
 }) {
     const {resolvedTheme} = useTheme();
-    const dark = resolvedTheme === "dark";
+    const theme: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light";
 
     const [activeDayIdx, setActiveDayIdx] = useState(0);
 
-    const placesById = useMemo(() => new Map(data.places.map((p) => [p.id, p])), [data.places]);
+// placesById: lock the Map type
+    const placesById = useMemo<Map<string, Place>>(
+        () => new Map(data.places.map((p) => [p.id, p])),
+        [data.places]
+    );
 
     const totalDays = data.days.length;
     const progressPct = totalDays ? Math.min(100, Math.round(((activeDayIdx + 1) / totalDays) * 100)) : 0;
@@ -136,6 +151,7 @@ export default function TripViewerClient({
         };
     }, [data.days]);
 
+
     return (
         <Card className="overflow-hidden border-border border shadow-sm">
             <CardContent className="space-y-6 py-6">
@@ -144,7 +160,7 @@ export default function TripViewerClient({
                         <div className="text-xs uppercase tracking-wider text-muted-foreground">Interests</div>
                         <div className="mt-2 flex flex-wrap gap-2">
                             {inputs.interests.map((t) => (
-                                <Badge key={t} variant="outline" className="capitalize">
+                                <Badge key={t} variant="outline" className="capitalize border border-border">
                                     {emojiFor(t)} {t}
                                 </Badge>
                             ))}
@@ -395,8 +411,10 @@ export default function TripViewerClient({
                                 <div
                                     className="overflow-hidden rounded-2xl border-border border md:h-[calc(100vh-160px)]">
                                     {/* Optionally pass hint to choose dark tiles */}
-                                    <LeafletMap day={activeDay} placesById={placesById}
-                                                theme={resolvedTheme ?? "light"} // pass theme down
+                                    <LeafletMap
+                                        day={activeDay}
+                                        placesById={placesById}
+                                        theme={theme}
                                     />
                                 </div>
                             </aside>

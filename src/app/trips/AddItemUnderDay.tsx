@@ -1,16 +1,17 @@
+// app/trips/AddItemUnderDay.tsx
 "use client";
 
 import * as React from "react";
-import {useState, useEffect, useRef} from "react";
-import {useRouter} from "next/navigation";
-import {Plus, MapPin, Loader2} from "lucide-react";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Textarea} from "@/components/ui/textarea";
-import {Separator} from "@/components/ui/separator";
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/components/ui/dialog";
-import {createClientBrowser} from "@/lib/supabase/browser";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Plus, MapPin, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { createClientBrowser } from "@/lib/supabase/browser";
 
 type UUID = string;
 type When = "morning" | "afternoon" | "evening";
@@ -26,28 +27,43 @@ type PlaceLite = {
     tags?: string[] | null;
 };
 
+/** Insert shape for itinero.itinerary_items (adjust to your table) */
+type NewItineraryItem = {
+    trip_id: UUID;
+    date: string | null;
+    day_index: number;
+    order_index: number;
+    when: When;
+    place_id: string | null;
+    title: string;
+    est_cost: number | null;
+    duration_min: number | null;
+    travel_min_from_prev: number | null;
+    notes: string | null;
+};
+
 export function AddItemUnderDay({
                                     tripId,
-                                    date,                 // yyyy-mm-dd (or null -> fallback ordering)
-                                    nextOrderIndex,        // pass the next index to append at end
+                                    date, // yyyy-mm-dd (or null -> fallback ordering)
+                                    nextOrderIndex, // pass the next index to append at end
                                     defaultWhen = "afternoon",
-                                    destinationLat,      // 👈 renamed
+                                    destinationLat,
                                     destinationLng,
                                     radiusKm = 50,
                                     tripStartDate,
-                                    preferenceTags,        // e.g. ["food","culture"]
-                                    dayIndex,              // include if your table requires NOT NULL day_index
+                                    preferenceTags, // e.g. ["food","culture"]
+                                    dayIndex, // include if your table requires NOT NULL day_index
                                 }: {
     tripId: UUID;
     date: string | null;
     nextOrderIndex: number;
-    tripStartDate?: string;         // e.g. "2025-07-20"
+    tripStartDate?: string; // e.g. "2025-07-20"
     defaultWhen?: When;
     destinationLat?: number;
     destinationLng?: number;
     radiusKm?: number;
     preferenceTags?: string[];
-    dayIndex: number;     // <-- optional, only used if provided
+    dayIndex: number;
 }) {
     const router = useRouter();
     const sb = createClientBrowser();
@@ -110,16 +126,16 @@ export function AddItemUnderDay({
                 const q = placeQuery.trim();
                 let results: PlaceLite[] | null = null;
 
-
                 // Try RPC first when we have a location
                 if (typeof destinationLat === "number" && typeof destinationLng === "number") {
-                    const {data, error} = await sb
-                        .schema('itinero').rpc("find_places_near", {
+                    const { data, error } = await sb
+                        .schema("itinero")
+                        .rpc("find_places_near", {
                             lat: destinationLat,
                             lng: destinationLng,
                             q: q || null,
                             radius_km: radiusKm,
-                            limit_count: 12,                 // <-- fix from `limit` to `limit_count`
+                            limit_count: 12, // <-- fix from `limit` to `limit_count`
                             tags: preferenceTags ?? null,
                         })
                         .abortSignal(ctrl.signal);
@@ -142,16 +158,16 @@ export function AddItemUnderDay({
                         query = query.overlaps("tags", preferenceTags);
                     }
 
-                    const {data, error} = await query;
+                    const { data, error } = await query;
                     if (!error && Array.isArray(data)) {
                         results = data as PlaceLite[];
                     }
                 }
 
                 setPlaceResults(results ?? []);
-            } catch (e: any) {
-                if (e?.name !== "AbortError") {
-                    // optional: toast error
+            } catch (e: unknown) {
+                // ignore aborts, log others if you wish
+                if (errorName(e) !== "AbortError") {
                     // console.error(e);
                 }
             } finally {
@@ -165,7 +181,6 @@ export function AddItemUnderDay({
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [placeQuery, destinationLat, destinationLng, radiusKm, JSON.stringify(preferenceTags), open]);
-
 
     // Optional: defensive fallback if parent didn’t pass dayIndex
     function deriveDayIndex(): number {
@@ -184,26 +199,26 @@ export function AddItemUnderDay({
     async function onCreate() {
         setBusy(true);
         try {
-            const payload: any = {
+            const payload: NewItineraryItem = {
                 trip_id: tripId,
                 date,
-                day_index: deriveDayIndex(),         // 👈 ensure the specific day is captured
+                day_index: deriveDayIndex(),
                 order_index: nextOrderIndex,
                 when,
                 place_id: selectedPlace ? selectedPlace.id : null,
                 title: (title || selectedPlace?.name || "New item").trim(),
                 est_cost: estCost === "" ? null : Number(estCost),
                 duration_min: durationMin === "" ? null : Number(durationMin),
-                travel_min_from_prev: null as number | null,
+                travel_min_from_prev: null,
                 notes: notes.trim() || null,
             };
 
-            console.error(JSON.stringify(payload, null, 2));
+            // include explicit day_index override if parent passed it (optional)
+            if (typeof dayIndex === "number") {
+                payload.day_index = dayIndex;
+            }
 
-            // include day_index if your schema requires it (NOT NULL)
-            if (typeof dayIndex === "number") payload.day_index = dayIndex;
-
-            const {error} = await sb.schema("itinero").from("itinerary_items").insert(payload);
+            const { error } = await sb.schema("itinero").from("itinerary_items").insert(payload);
             if (error) throw error;
 
             setOpen(false);
@@ -215,9 +230,9 @@ export function AddItemUnderDay({
 
     return (
         <>
-            <Separator className="my-3"/>
+            <Separator className="my-3" />
             <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
-                <Plus className="mr-2 h-4 w-4"/>
+                <Plus className="mr-2 h-4 w-4" />
                 Add item
             </Button>
 
@@ -252,7 +267,7 @@ export function AddItemUnderDay({
                             <div className="rounded-md border bg-background">
                                 {placeLoading ? (
                                     <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-                                        <Loader2 className="h-4 w-4 animate-spin"/>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
                                         Searching…
                                     </div>
                                 ) : placeResults.length > 0 ? (
@@ -263,7 +278,9 @@ export function AddItemUnderDay({
                                                 <li key={p.id}>
                                                     <button
                                                         type="button"
-                                                        className={`flex w-full items-start gap-2 px-3 py-2 text-left hover:bg-muted/60 ${active ? "bg-muted" : ""}`}
+                                                        className={`flex w-full items-start gap-2 px-3 py-2 text-left hover:bg-muted/60 ${
+                                                            active ? "bg-muted" : ""
+                                                        }`}
                                                         onClick={() => {
                                                             setSelectedPlace(p);
                                                             setTitle(p.name || "");
@@ -271,11 +288,11 @@ export function AddItemUnderDay({
                                                         }}
                                                     >
                             <span className="mt-0.5 rounded-sm bg-primary/10 p-1 text-primary">
-                              <MapPin className="h-3.5 w-3.5"/>
+                              <MapPin className="h-3.5 w-3.5" />
                             </span>
                                                         <span className="flex-1">
                               <span className="block text-sm font-medium">{p.name}</span>
-                                                            {(p.city || p.country || typeof p.distance_km === "number") ? (
+                                                            {p.city || p.country || typeof p.distance_km === "number" ? (
                                                                 <span className="block text-xs text-muted-foreground">
                                   {[p.city, p.country].filter(Boolean).join(", ")}
                                                                     {typeof p.distance_km === "number" ? ` • ${p.distance_km.toFixed(1)} km` : ""}
@@ -288,8 +305,7 @@ export function AddItemUnderDay({
                                         })}
                                     </ul>
                                 ) : placeQuery ? (
-                                    <div className="px-3 py-2 text-sm text-muted-foreground">No matches. Keep
-                                        typing…</div>
+                                    <div className="px-3 py-2 text-sm text-muted-foreground">No matches. Keep typing…</div>
                                 ) : (
                                     <div className="px-3 py-2 text-sm text-muted-foreground">
                                         {typeof destinationLat === "number" && typeof destinationLng === "number"
@@ -314,7 +330,7 @@ export function AddItemUnderDay({
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-1.5">
                                 <Label>When</Label>
-                                <WhenSelect value={when} onValueChange={setWhen}/>
+                                <WhenSelect value={when} onValueChange={setWhen} />
                             </div>
                             <div className="grid gap-1.5">
                                 <Label>Estimated cost</Label>
@@ -343,12 +359,7 @@ export function AddItemUnderDay({
                         {/* Notes */}
                         <div className="grid gap-1.5">
                             <Label>Notes</Label>
-                            <Textarea
-                                rows={3}
-                                placeholder="Optional notes"
-                                value={notes}
-                                onChange={(e) => setNotes(e.target.value)}
-                            />
+                            <Textarea rows={3} placeholder="Optional notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
                         </div>
                     </div>
 
@@ -367,6 +378,7 @@ export function AddItemUnderDay({
 }
 
 /* ----- small helper ----- */
+
 function WhenSelect({
                         value,
                         onValueChange,
@@ -385,4 +397,13 @@ function WhenSelect({
             <option value="evening">Evening</option>
         </select>
     );
+}
+
+/** Safely read an Error-like name without using `any` */
+function errorName(e: unknown): string | undefined {
+    if (typeof e === "object" && e !== null && "name" in e) {
+        const n = (e as { name?: unknown }).name;
+        if (typeof n === "string") return n;
+    }
+    return undefined;
 }

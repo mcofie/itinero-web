@@ -3,12 +3,12 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { useTheme } from "next-themes";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {useTheme} from "next-themes";
+import {cn} from "@/lib/utils";
+import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
+import {Card} from "@/components/ui/card";
+import {ScrollArea} from "@/components/ui/scroll-area";
 import {
     CalendarDays,
     DollarSign,
@@ -17,9 +17,61 @@ import {
     MapPin,
 } from "lucide-react";
 
-const LeafletMap = dynamic(
-    () => import("@/app/preview/_leaflet/LeafletMap"),
-    { ssr: false }
+/* ---------------- Types (loose but explicit) ---------------- */
+
+type When = "morning" | "afternoon" | "evening" | string;
+
+type Block = {
+    when?: When | null;
+    title?: string | null;
+    notes?: string | null;
+    est_cost?: number | null;
+    duration_min?: number | null;
+    travel_min_from_prev?: number | null;
+    place_id?: string | null;
+};
+
+type PublicDay = {
+    date?: string | null;
+    blocks: Block[];
+};
+
+type PlaceLite = {
+    id: string;
+    name: string;
+    category?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+};
+
+type TripSummaryLoose = {
+    start_date?: string | null;
+    end_date?: string | null;
+    destinations?: Array<{ name?: string; country_code?: string }>;
+} | null;
+
+/** Minimal props that LeafletMap actually needs */
+type LeafletDayProp = { date: string; blocks: Block[] };
+type LeafletPlaceProp = {
+    id: string;
+    name?: string;
+    category?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+};
+
+type LeafletMapProps = {
+    theme?: "light" | "dark";
+    day: LeafletDayProp;
+    placesById: Map<string, LeafletPlaceProp>;
+};
+
+const LeafletMap = dynamic<LeafletMapProps>(
+    () =>
+        import("@/app/preview/_leaflet/LeafletMap").then(
+            (m) => m.default as React.ComponentType<LeafletMapProps>
+        ),
+    {ssr: false}
 );
 
 type Props = {
@@ -27,10 +79,37 @@ type Props = {
     publicId: string;
     currency: string;
     estTotalCost: number | null;
-    tripSummary: Record<string, any> | null;
-    days: any[];
-    places: any[];
+    tripSummary: TripSummaryLoose;
+    days: PublicDay[];
+    places: PlaceLite[];
 };
+
+/* ---------------- Adapters ---------------- */
+
+function toLeafletDay(d?: PublicDay): LeafletDayProp {
+    // Guarantee a non-empty string date for LeafletMap
+    const safeDate = (d?.date ?? "1970-01-01") || "1970-01-01";
+    return {
+        date: safeDate,
+        blocks: Array.isArray(d?.blocks) ? d!.blocks : [],
+    };
+}
+
+function toPlacesMap(src: PlaceLite[]): Map<string, LeafletPlaceProp> {
+    const map = new Map<string, LeafletPlaceProp>();
+    for (const p of Array.isArray(src) ? src : []) {
+        if (p && typeof p.id === "string") {
+            map.set(p.id, {
+                id: p.id,
+                name: p.name,
+                category: p.category ?? null,
+                lat: typeof p.lat === "number" ? p.lat : null,
+                lng: typeof p.lng === "number" ? p.lng : null,
+            });
+        }
+    }
+    return map;
+}
 
 export default function PublicTripClient({
                                              publicId,
@@ -40,24 +119,26 @@ export default function PublicTripClient({
                                              days,
                                              places,
                                          }: Props) {
-    const { resolvedTheme } = useTheme();
+    const {resolvedTheme} = useTheme();
+    const theme: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light";
+
     const [activeDay, setActiveDay] = React.useState(0);
 
-    // compute a very light preview center
-    const placesById = React.useMemo(() => {
-        const map = new Map<string, any>();
-        for (const p of Array.isArray(places) ? places : []) {
-            if (p?.id) map.set(p.id, p);
-        }
-        return map;
-    }, [places]);
+    // Map place.id -> place (typed for LeafletMap)
+    const placesById = React.useMemo<Map<string, LeafletPlaceProp>>(
+        () => toPlacesMap(places),
+        [places]
+    );
 
     const summary = tripSummary ?? {};
     const dest = (summary?.destinations?.[0] ?? null) as
         | { name?: string; country_code?: string }
         | null;
 
-    const dateRange = formatDateRange(summary?.start_date, summary?.end_date);
+    const dateRange = formatDateRange(
+        summary?.start_date ?? undefined,
+        summary?.end_date ?? undefined
+    );
 
     return (
         <div className="space-y-6">
@@ -65,25 +146,25 @@ export default function PublicTripClient({
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                     <Badge variant="secondary" className="gap-1 rounded-full">
-                        <CalendarDays className="h-3.5 w-3.5" />
+                        <CalendarDays className="h-3.5 w-3.5"/>
                         {dateRange ?? "Flexible dates"}
                     </Badge>
                     {typeof estTotalCost === "number" && (
                         <Badge variant="outline" className="gap-1 rounded-full">
-                            <DollarSign className="h-3.5 w-3.5" />
+                            <DollarSign className="h-3.5 w-3.5"/>
                             est. {currency} {Math.round(estTotalCost)}
                         </Badge>
                     )}
                     {dest?.name && (
                         <Badge variant="outline" className="gap-1 rounded-full">
-                            <MapPin className="h-3.5 w-3.5" />
+                            <MapPin className="h-3.5 w-3.5"/>
                             {dest.name}
                         </Badge>
                     )}
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => openSelf()}>
-                        <ExternalLink className="mr-1 h-4 w-4" />
+                        <ExternalLink className="mr-1 h-4 w-4"/>
                         Open in new tab
                     </Button>
                     <Button
@@ -92,7 +173,7 @@ export default function PublicTripClient({
                         onClick={() => copyShareUrl(publicId)}
                         title="Copy share link"
                     >
-                        <LinkIcon className="h-4 w-4" />
+                        <LinkIcon className="h-4 w-4"/>
                         Copy link
                     </Button>
                 </div>
@@ -123,12 +204,13 @@ export default function PublicTripClient({
 
                     <ScrollArea className="h-[calc(70svh-44px)]">
                         <ol className="space-y-3 p-3">
-                            {(days?.[activeDay]?.blocks ?? []).map((b: any, idx: number) => {
+                            {(days?.[activeDay]?.blocks ?? []).map((b: Block, idx: number) => {
                                 const place = b?.place_id ? placesById.get(b.place_id) : null;
                                 return (
                                     <li key={idx} className="relative">
                                         <div className="flex items-start gap-3 rounded-xl border p-4">
-                                            <div className="grid h-7 w-7 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-1 ring-primary/20">
+                                            <div
+                                                className="grid h-7 w-7 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-1 ring-primary/20">
                                                 {idx + 1}
                                             </div>
                                             <div className="min-w-0 flex-1">
@@ -154,9 +236,9 @@ export default function PublicTripClient({
                                                     </p>
                                                 ) : null}
                                                 <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-                                                    <Chip label="Est. cost" value={fmtMoney(b?.est_cost)} />
-                                                    <Chip label="Duration" value={fmtMin(b?.duration_min)} />
-                                                    <Chip label="Travel" value={fmtMin(b?.travel_min_from_prev)} />
+                                                    <Chip label="Est. cost" value={fmtMoney(b?.est_cost)}/>
+                                                    <Chip label="Duration" value={fmtMin(b?.duration_min)}/>
+                                                    <Chip label="Travel" value={fmtMin(b?.travel_min_from_prev)}/>
                                                 </div>
                                             </div>
                                         </div>
@@ -175,10 +257,9 @@ export default function PublicTripClient({
                 {/* RIGHT: map */}
                 <Card className="overflow-hidden border md:h-[70svh]">
                     <LeafletMap
-                        key={resolvedTheme} // force remount on theme change
-                        theme={(resolvedTheme as "light" | "dark") ?? "light"}
-                        // The public LeafletMap in your project expects: day + placesById.
-                        day={days?.[activeDay] ?? { blocks: [] }}
+                        key={theme} // force remount on theme change
+                        theme={theme}
+                        day={toLeafletDay(days?.[activeDay])}
                         placesById={placesById}
                     />
                 </Card>
@@ -187,7 +268,7 @@ export default function PublicTripClient({
     );
 }
 
-/* ---------- tiny bits ---------- */
+/* ---------------- tiny bits ---------------- */
 
 function openSelf() {
     if (typeof window === "undefined") return;
@@ -201,7 +282,7 @@ async function copyShareUrl(publicId: string) {
             : `/t/${publicId}`;
     try {
         if (navigator.share) {
-            await navigator.share({ url, title: "Shared Trip • Itinero" });
+            await navigator.share({url, title: "Shared Trip • Itinero"});
             return;
         }
     } catch {
@@ -214,7 +295,7 @@ async function copyShareUrl(publicId: string) {
     }
 }
 
-function Chip({ label, value }: { label: string; value: string }) {
+function Chip({label, value}: { label: string; value: string }) {
     return (
         <span className="inline-flex items-center gap-1 rounded-md border px-2 py-1">
       <span className="opacity-70">{label}:</span>
@@ -223,13 +304,13 @@ function Chip({ label, value }: { label: string; value: string }) {
     );
 }
 
-function fmtMin(n: any) {
-    const v = Number(n);
+function fmtMin(n: unknown): string {
+    const v = typeof n === "number" ? n : Number(n);
     return Number.isFinite(v) ? `${v}m` : "—";
 }
 
-function fmtMoney(n: any) {
-    const v = Number(n);
+function fmtMoney(n: unknown): string {
+    const v = typeof n === "number" ? n : Number(n);
     return Number.isFinite(v) ? `$${v}` : "—";
 }
 
