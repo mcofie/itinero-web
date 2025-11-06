@@ -49,6 +49,7 @@ import {
     Menu,
     Crown,
 } from "lucide-react";
+import {ThemeToggle} from "@/components/ThemeToggle";
 
 type Props = {
     children: React.ReactNode;
@@ -75,7 +76,8 @@ export default function AppShell({children, userEmail}: Props) {
 
     // number helpers
     const fmtInt = React.useCallback(
-        (n: number) => new Intl.NumberFormat(undefined, {maximumFractionDigits: 0}).format(n),
+        (n: number) =>
+            new Intl.NumberFormat(undefined, {maximumFractionDigits: 0}).format(n),
         []
     );
 
@@ -101,7 +103,6 @@ export default function AppShell({children, userEmail}: Props) {
             mounted = false;
             sub?.subscription?.unsubscribe();
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sb]);
 
     // live updates when ledger OR profiles change
@@ -112,7 +113,12 @@ export default function AppShell({children, userEmail}: Props) {
             .channel("points-ledger-live")
             .on(
                 "postgres_changes",
-                {event: "*", schema: "itinero", table: "points_ledger", filter: `user_id=eq.${uid}`},
+                {
+                    event: "*",
+                    schema: "itinero",
+                    table: "points_ledger",
+                    filter: `user_id=eq.${uid}`,
+                },
                 () => void refreshPoints(uid)
             )
             .subscribe();
@@ -120,8 +126,8 @@ export default function AppShell({children, userEmail}: Props) {
         const ch2 = sb
             .channel("profiles-live")
             .on(
-                "postgres_changes",
-                {event: "*", schema: "public", table: "profiles", filter: `id=eq.${uid}`},
+                "postgres_changes",                           // ← you were missing this
+                { event: "*", schema: "public", table: "profiles", filter: `id=eq.${uid}` },
                 () => void refreshPoints(uid)
             )
             .subscribe();
@@ -130,7 +136,6 @@ export default function AppShell({children, userEmail}: Props) {
             void sb.removeChannel(ch1);
             void sb.removeChannel(ch2);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uid, sb]);
 
     const refreshPoints = React.useCallback(
@@ -144,7 +149,9 @@ export default function AppShell({children, userEmail}: Props) {
 
                 // 1) Preferred: secure RPC
                 try {
-                    const {data: rpcBalance, error: rpcErr} = await sb.rpc("get_points_balance");
+                    const {data: rpcBalance, error: rpcErr} = await sb.rpc(
+                        "get_points_balance"
+                    );
                     if (!rpcErr && typeof rpcBalance === "number") {
                         setPoints(rpcBalance);
                         return;
@@ -183,7 +190,10 @@ export default function AppShell({children, userEmail}: Props) {
 
                     if (!error && Array.isArray(rows)) {
                         const typedRows = rows as LedgerRow[];
-                        const total = typedRows.reduce<number>((acc, r) => acc + (Number(r.delta ?? 0) || 0), 0);
+                        const total = typedRows.reduce<number>(
+                            (acc, r) => acc + (Number(r.delta ?? 0) || 0),
+                            0
+                        );
                         setPoints(total);
                         return;
                     }
@@ -235,7 +245,9 @@ export default function AppShell({children, userEmail}: Props) {
 
         setTopupBusy(true);
         try {
-            const {data: {session}} = await sb.auth.getSession();
+            const {
+                data: {session},
+            } = await sb.auth.getSession();
             if (!session?.access_token) {
                 throw new Error("Please sign in to top up points.");
             }
@@ -255,7 +267,7 @@ export default function AppShell({children, userEmail}: Props) {
 
             const data = await r.json();
             if (r.ok && data.authorization_url) {
-                window.location.href = data.authorization_url; // redirect to checkout
+                window.location.href = data.authorization_url;
             } else {
                 console.error("Topup init failed", data);
             }
@@ -275,11 +287,12 @@ export default function AppShell({children, userEmail}: Props) {
 
     return (
         <TooltipProvider>
+            {/* Wrapper now flexes vertically to keep footer at bottom */}
             <div
-                className="min-h-screen bg-gradient-to-b from-background via-background/70 to-background text-foreground">
-                {/* Top bar */}
+                className="min-h-dvh min-h-screen flex flex-col bg-gradient-to-b from-background via-background/70 to-background text-foreground">
+                {/* Header */}
                 <header
-                    className="sticky top-0 z-40 border-b border-gray-200 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
+                    className="sticky top-0 z-40 border-b border-border bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
                     <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center justify-between px-3 md:px-6">
                         {/* Left: Brand + Mobile Menu */}
                         <div className="flex items-center gap-2">
@@ -302,7 +315,10 @@ export default function AppShell({children, userEmail}: Props) {
                                         </SheetTitle>
                                     </SheetHeader>
                                     <nav className="mt-6 grid gap-1">
-                                        <MobileNavItem href="/trips" active={pathname?.startsWith("/trips")}>
+                                        <MobileNavItem
+                                            href="/trips"
+                                            active={pathname?.startsWith("/trips")}
+                                        >
                                             <Calendar className="mr-2 h-4 w-4"/>
                                             Trips
                                         </MobileNavItem>
@@ -316,7 +332,10 @@ export default function AppShell({children, userEmail}: Props) {
                                         </MobileNavItem>
                                     </nav>
                                     <div className="mt-6">
-                                        <Button className="w-full gap-1" onClick={() => router.push("/trip-maker")}>
+                                        <Button
+                                            className="w-full gap-1"
+                                            onClick={() => router.push("/trip-maker")}
+                                        >
                                             <Plus className="h-4 w-4"/>
                                             New Trip
                                         </Button>
@@ -324,7 +343,10 @@ export default function AppShell({children, userEmail}: Props) {
                                 </SheetContent>
                             </Sheet>
 
-                            <Link href="/trips" className="group flex items-center gap-2 text-sm font-semibold">
+                            <Link
+                                href="/trips"
+                                className="group flex items-center gap-2 text-sm font-semibold"
+                            >
                 <span
                     className="grid h-8 w-8 place-items-center rounded-md bg-primary/90 text-primary-foreground shadow-sm transition group-hover:scale-[1.02]">
                   <Map className="h-4 w-4"/>
@@ -360,9 +382,10 @@ export default function AppShell({children, userEmail}: Props) {
                             </NavItem>
                         </nav>
 
-                        {/* Right: Points, User */}
+                        {/* Right: Theme toggle + points + user */}
                         <div className="flex items-center gap-1">
-                            {/* Points */}
+                            <ThemeToggle/>
+
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
@@ -399,10 +422,17 @@ export default function AppShell({children, userEmail}: Props) {
                             {/* User menu */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="ml-1 px-2" aria-label="Open user menu">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="ml-1 px-2"
+                                        aria-label="Open user menu"
+                                    >
                                         <Avatar className="h-7 w-7">
                                             <AvatarImage alt={userEmail ?? "User"}/>
-                                            <AvatarFallback>{(userEmail ?? "U").slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            <AvatarFallback>
+                                                {(userEmail ?? "U").slice(0, 2).toUpperCase()}
+                                            </AvatarFallback>
                                         </Avatar>
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -410,7 +440,8 @@ export default function AppShell({children, userEmail}: Props) {
                                     <DropdownMenuLabel className="flex items-center justify-between">
                                         <span className="truncate">{userEmail ?? "Signed in"}</span>
                                         <Badge variant="secondary" className="gap-1">
-                                            <Crown className="h-3 w-3"/> {loadingPoints ? "…" : fmtInt(points)}
+                                            <Crown className="h-3 w-3"/>{" "}
+                                            {loadingPoints ? "…" : fmtInt(points)}
                                         </Badge>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator/>
@@ -434,10 +465,12 @@ export default function AppShell({children, userEmail}: Props) {
                 </header>
 
                 {/* Page content */}
-                <main className="mx-auto w-full max-w-[1400px] px-3 md:px-6">{children}</main>
+                <main className="flex-1 mx-auto w-full max-w-[1400px] px-3 md:px-6">
+                    {children}
+                </main>
 
-                {/* Subtle footer */}
-                <footer className="border-t border-gray-200 py-6 text-center text-xs text-muted-foreground">
+                {/* Footer stays at bottom */}
+                <footer className="mt-auto border-t border-border py-6 text-center text-xs text-muted-foreground">
                     © {new Date().getFullYear()} Itinero
                 </footer>
 
@@ -463,7 +496,8 @@ export default function AppShell({children, userEmail}: Props) {
                                 aria-label="Top up amount in Ghana cedis"
                             />
                             <p className="text-xs text-muted-foreground">
-                                This creates a credit row in <span className="font-medium">itinero.points_ledger</span>.
+                                This creates a credit row in{" "}
+                                <span className="font-medium">itinero.points_ledger</span>.
                             </p>
                         </div>
                         <DialogFooter>
@@ -485,7 +519,6 @@ export default function AppShell({children, userEmail}: Props) {
 }
 
 /* ---------- Nav items ---------- */
-
 function NavItem({
                      href,
                      active,

@@ -14,6 +14,7 @@ import TripViewerClient from "./TripViewerClient";
 
 import TripActionsClient, {TripConfig} from "@/app/trips/TripActionsClient";
 import TripEditorClient from "@/app/trips/TripEditorClient";
+import PublicToggle from "@/app/trips/PublicToggle";
 
 type UUID = string;
 
@@ -310,6 +311,7 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
 
                 {/* Hero Header */}
                 <Card className="mb-6 overflow-hidden border-0 shadow-sm relative">
+
                     {/* Full background image */}
                     <div
                         className="absolute inset-0 bg-cover bg-center bg-slate-900"
@@ -354,6 +356,7 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                                     </div>
                                 </div>
                             </div>
+
                         </CardHeader>
 
                         <CardContent className="pt-0 text-white">
@@ -378,7 +381,7 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                             </div>
 
                             {/* Action row */}
-                            <div className="mt-4 flex flex-wrap items-center gap-2">
+                            <div className="flex flex-wrap justify-between items-end gap-2">
                                 <TripActionsClient
                                     tripId={trip.id}
                                     tripTitle={trip.title ?? "Trip"}
@@ -394,6 +397,10 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                                     }
                                     places={clientPlaces}
                                 />
+
+                                <div className="">
+                                    <PublicToggle tripId={trip.id} publicId={tripId}/>
+                                </div>
                             </div>
                         </CardContent>
                     </div>

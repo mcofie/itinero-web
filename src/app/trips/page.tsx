@@ -1,14 +1,14 @@
 // app/trips/page.tsx
 import * as React from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClientServer } from "@/lib/supabase/server";
+import {redirect} from "next/navigation";
+import {createClientServer} from "@/lib/supabase/server";
 import AppShell from "@/components/layout/AppShell";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CalendarDays, DollarSign, Plane, MapPin, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {Badge} from "@/components/ui/badge";
+import {CalendarDays, DollarSign, Plane, MapPin, Clock} from "lucide-react";
+import {cn} from "@/lib/utils";
 
 /** Match ONLY existing columns in itinero.trips */
 type TripRow = {
@@ -27,17 +27,17 @@ export default async function TripsPage() {
 
     // Auth (server-side)
     const {
-        data: { user },
+        data: {user},
     } = await sb.auth.getUser();
     if (!user) redirect("/login");
 
     // Fetch trips using only existing columns
-    const { data: trips, error } = await sb
+    const {data: trips, error} = await sb
         .schema("itinero")
         .from("trips")
         .select("id,user_id,title,start_date,end_date,est_total_cost,currency,created_at")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", {ascending: false});
 
     if (error) {
         return (
@@ -45,7 +45,7 @@ export default async function TripsPage() {
                 <section className="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
                     <div className="mb-6">
                         <h1 className="flex items-center gap-2 text-2xl font-bold md:text-3xl">
-                            <Plane className="h-6 w-6" />
+                            <Plane className="h-6 w-6"/>
                             Saved itineraries
                         </h1>
                         <p className="mt-2 text-sm text-muted-foreground">
@@ -70,7 +70,7 @@ export default async function TripsPage() {
                             Your Trips
                         </div>
                         <h1 className="flex items-center gap-2 text-2xl font-bold md:text-3xl">
-                            <Plane className="h-6 w-6" />
+                            <Plane className="h-6 w-6"/>
                             Saved itineraries
                         </h1>
                         <div className="mt-1 text-sm text-muted-foreground">
@@ -88,11 +88,11 @@ export default async function TripsPage() {
                 {hasTrips ? (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {tripsSafe.map((t) => (
-                            <TripCard key={t.id} trip={t} />
+                            <TripCard key={t.id} trip={t}/>
                         ))}
                     </div>
                 ) : (
-                    <EmptyState />
+                    <EmptyState/>
                 )}
             </section>
         </AppShell>
@@ -130,12 +130,42 @@ type Palette = {
 };
 
 const palettes: Palette[] = [
-    { bgClass: "bg-fuchsia-600", chip: "bg-fuchsia-100 text-fuchsia-900 border-fuchsia-200", textOn: "text-white", patternHex: "#c026d3" },
-    { bgClass: "bg-cyan-600",    chip: "bg-cyan-100 text-cyan-900 border-cyan-200",         textOn: "text-white", patternHex: "#0891b2" },
-    { bgClass: "bg-amber-500",   chip: "bg-amber-100 text-amber-900 border-amber-200",      textOn: "text-zinc-900", patternHex: "#f59e0b" },
-    { bgClass: "bg-violet-600",  chip: "bg-violet-100 text-violet-900 border-violet-200",   textOn: "text-white", patternHex: "#7c3aed" },
-    { bgClass: "bg-emerald-600", chip: "bg-emerald-100 text-emerald-900 border-emerald-200", textOn: "text-white", patternHex: "#059669" },
-    { bgClass: "bg-blue-600",    chip: "bg-blue-100 text-blue-900 border-blue-200",         textOn: "text-white", patternHex: "#2563eb" },
+    {
+        bgClass: "bg-fuchsia-600",
+        chip: "bg-fuchsia-100 text-fuchsia-900 border-fuchsia-200",
+        textOn: "text-white",
+        patternHex: "#c026d3"
+    },
+    {
+        bgClass: "bg-cyan-600",
+        chip: "bg-cyan-100 text-cyan-900 border-cyan-200",
+        textOn: "text-white",
+        patternHex: "#0891b2"
+    },
+    {
+        bgClass: "bg-amber-500",
+        chip: "bg-amber-100 text-amber-900 border-amber-200",
+        textOn: "text-zinc-900",
+        patternHex: "#f59e0b"
+    },
+    {
+        bgClass: "bg-violet-600",
+        chip: "bg-violet-100 text-violet-900 border-violet-200",
+        textOn: "text-white",
+        patternHex: "#7c3aed"
+    },
+    {
+        bgClass: "bg-emerald-600",
+        chip: "bg-emerald-100 text-emerald-900 border-emerald-200",
+        textOn: "text-white",
+        patternHex: "#059669"
+    },
+    {
+        bgClass: "bg-blue-600",
+        chip: "bg-blue-100 text-blue-900 border-blue-200",
+        textOn: "text-white",
+        patternHex: "#2563eb"
+    },
 ];
 
 // deterministic “random”
@@ -163,13 +193,25 @@ function getDestinationBits(trip: TripRow) {
     // We didn’t select inputs; keep a safe fallback using title
     const name = trip.title || "Trip";
     const countryCode = null as string | null;
-    return { name, countryCode };
+    return {name, countryCode};
 }
 
 /** ---------- Card ---------- */
-export function TripCard({ trip }: { trip: TripRow }) {
-    const { name, countryCode } = getDestinationBits(trip);
-    const title = (trip.title?.trim() || name || "Untitled Trip").trim();
+/** ---------- TripCard Component ---------- */
+export function TripCard({
+                             trip,
+                         }: {
+    trip: {
+        id: string;
+        title?: string | null;
+        start_date?: string | null;
+        end_date?: string | null;
+        est_total_cost?: number | null;
+        currency?: string | null;
+        created_at?: string | null;
+    };
+}) {
+    const title = trip.title?.trim() || "Untitled Trip";
     const date = formatDateRange(trip.start_date ?? undefined, trip.end_date ?? undefined);
     const amount =
         typeof trip.est_total_cost === "number"
@@ -177,67 +219,81 @@ export function TripCard({ trip }: { trip: TripRow }) {
             : null;
     const created = trip.created_at ? new Date(trip.created_at).toLocaleDateString() : null;
 
-    const seed = `${trip.id}-${name}`;
-    const palette = pickPalette(seed);
-    const flag = ccToFlag(countryCode || "");
-    const cityEmoji = guessEmoji(name);
+    // optional dynamic background
+    const imageUrl =
+        "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80";
+
+    const flag = "🌍";
+    const cityEmoji = "✈️";
 
     return (
         <Card
             className={cn(
-                "group py-0 pb-3 relative overflow-hidden border border-border/50 bg-card text-card-foreground",
-                "transition-all hover:-translate-y-0.5 hover:shadow-md"
+                "group relative overflow-hidden border border-border/50 bg-card text-card-foreground",
+                "transition-all hover:-translate-y-0.5 hover:shadow-md py-0 pb-3"
             )}
         >
-            {/* Color band – theme aware via semantic text classes + overlay pattern */}
-            <div className={cn("relative w-full h-24 sm:h-28", palette.bgClass)}>
-                {/* dots overlay (respects dark via lower opacity) */}
-                <div
-                    className="pointer-events-none absolute inset-0 opacity-30 dark:opacity-20"
-                    style={{ backgroundImage: dotsPattern(palette.patternHex), backgroundSize: "64px 64px" }}
-                />
-                {/* Stamp */}
-                <div className="absolute right-3 top-3 flex items-center gap-1">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
+            {/* --- Background image band --- */}
+            <div
+                className="relative w-full h-24 sm:h-28 bg-cover bg-center"
+                style={{
+                    backgroundImage: `url(${imageUrl})`,
+                }}
+            >
+                {/* Overlay tint for readability */}
+                <div className="absolute inset-0 bg-black/40 dark:bg-black/50"/>
+
+                {/* Stamp icons */}
+                <div className="absolute right-3 top-3 flex items-center gap-1 z-10">
+          <span
+              className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
             {flag}
           </span>
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
+                    <span
+                        className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
             {cityEmoji}
           </span>
                 </div>
-                {/* Title */}
-                <div className="absolute left-4 bottom-2">
-                    <div className={cn("text-xs opacity-90", palette.textOn)}>Destination</div>
-                    <div className={cn("mt-0.5 line-clamp-1 text-lg font-semibold tracking-tight drop-shadow-sm", palette.textOn)}>
+
+                {/* Destination title */}
+                <div className="absolute left-4 bottom-2 z-10 text-white">
+                    <div className="text-xs opacity-90">Destination</div>
+                    <div className="mt-0.5 line-clamp-1 text-lg font-semibold tracking-tight drop-shadow-sm">
                         {title}
                     </div>
                 </div>
             </div>
 
+            {/* --- Trip Info --- */}
             <CardHeader className="space-y-2 pb-2 pt-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <Badge variant="outline" className={cn("flex items-center gap-1 border", palette.chip)}>
-                        <CalendarDays className="h-3.5 w-3.5 opacity-70" />
+                    <Badge variant="outline"
+                           className="flex items-center gap-1 border border-white/10 bg-white/10 text-foreground">
+                        <CalendarDays className="h-3.5 w-3.5 opacity-70"/>
                         {date}
                     </Badge>
                     {amount && (
-                        <Badge variant="secondary" className={cn("flex items-center gap-1 border", palette.chip)}>
-                            <DollarSign className="h-3.5 w-3.5 opacity-80" />
+                        <Badge
+                            variant="secondary"
+                            className="flex items-center gap-1 border border-white/10 bg-white/10 text-foreground"
+                        >
+                            <DollarSign className="h-3.5 w-3.5 opacity-80"/>
                             {amount}
                         </Badge>
                     )}
                 </div>
             </CardHeader>
 
+            {/* --- Footer --- */}
             <CardContent className="flex items-center justify-between border-t border-border/40 pt-3">
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" />
+                    <Clock className="h-3.5 w-3.5"/>
                     {created ? `Saved ${created}` : "Recently added"}
                 </div>
 
                 <Button asChild size="sm" className="gap-1">
                     <Link href={`/trips/${trip.id}`}>
-                        <MapPin className="mr-1 h-4 w-4" />
+                        <MapPin className="mr-1 h-4 w-4"/>
                         Open
                     </Link>
                 </Button>
@@ -269,7 +325,7 @@ function formatDateRange(start?: string, end?: string) {
     if (!start && !end) return "—";
     const s = start ? new Date(start + "T00:00:00") : null;
     const e = end ? new Date(end + "T00:00:00") : null;
-    const fmt = (d: Date) => d.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+    const fmt = (d: Date) => d.toLocaleDateString(undefined, {day: "2-digit", month: "short", year: "numeric"});
     if (s && e) return `${fmt(s)} → ${fmt(e)}`;
     if (s) return fmt(s);
     if (e) return fmt(e);

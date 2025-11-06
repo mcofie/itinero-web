@@ -249,7 +249,7 @@ export default function ProfilePage() {
                 {/* Grid: Profile / Points / History */}
                 <div className="grid gap-4 lg:grid-cols-3">
                     {/* Profile card */}
-                    <Card className="border border-gray-200 bg-card/60 lg:col-span-1">
+                    <Card className="border border-border bg-card/60 lg:col-span-1">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <User2 className="h-5 w-5"/>
@@ -258,7 +258,8 @@ export default function ProfilePage() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center gap-4">
-                                <div className="relative h-16 w-16 overflow-hidden rounded-full border bg-muted">
+                                <div
+                                    className="relative h-16 w-16 overflow-hidden rounded-full border border-border bg-muted">
                                     {profile?.avatar_url ? (
                                         <Image src={profile.avatar_url} alt="avatar" fill sizes="64px"
                                                className="object-cover"/>
@@ -300,7 +301,7 @@ export default function ProfilePage() {
                     </Card>
 
                     {/* Points summary (stats) */}
-                    <Card className="border border-gray-200 bg-card/60 lg:col-span-2">
+                    <Card className="border border-border bg-card/60 lg:col-span-2">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Star className="h-5 w-5"/>
@@ -329,12 +330,12 @@ export default function ProfilePage() {
                     </Card>
 
                     {/* History table */}
-                    <Card className="border border-gray-200 bg-card/60 shadow-sm lg:col-span-3">
+                    <Card className="border border-border bg-card/60 shadow-sm lg:col-span-3">
                         <CardHeader>
                             <CardTitle>Top-up & activity history</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="rounded-xl border border-gray-200  overflow-hidden">
+                            <div className="rounded-xl border border-border  overflow-hidden">
                                 {/* Fixed height so it always scrolls when content exceeds */}
                                 <ScrollArea className="h-[420px] rounded-xl">
                                     {/* Keep horizontal safety for narrow screens */}
@@ -359,7 +360,7 @@ export default function ProfilePage() {
                                                 </tr>
                                             ) : history.length ? (
                                                 history.map((r) => (
-                                                    <tr key={r.id} className="border-t border-gray-200">
+                                                    <tr key={r.id} className="border-t border-border">
                                                         <td className="whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</td>
                                                         <td className={r.delta >= 0 ? "text-emerald-600" : "text-red-600"}>
                                                             <DeltaPill value={r.delta}/>
@@ -394,7 +395,7 @@ export default function ProfilePage() {
 
             {/* Top up dialog */}
             <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
-                <DialogContent className="sm:max-w-sm">
+                <DialogContent className="sm:max-w-sm border border-border">
                     <DialogHeader><DialogTitle>Top up points</DialogTitle></DialogHeader>
                     <div className="space-y-3">
                         <Label htmlFor="topup-amount" className="text-xs text-muted-foreground">Amount (pts)</Label>
@@ -433,7 +434,7 @@ function StatTile({label, value, big, icon}: {
     icon?: React.ReactNode
 }) {
     return (
-        <div className="rounded-2xl border border-gray-200 bg-background p-4">
+        <div className="rounded-2xl border border-border bg-background p-4">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
             <div className="mt-1 flex items-center gap-2">
                 {icon}

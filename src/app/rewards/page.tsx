@@ -2,18 +2,18 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import {useMemo, useState} from "react";
 import {
     Card, CardHeader, CardTitle, CardContent, CardFooter,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
+import {Progress} from "@/components/ui/progress";
+import {Separator} from "@/components/ui/separator";
 import {
     Plane, Award, ShieldCheck, MapPin, Camera, Edit3, Trash2, Users, Info,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import {ThemeToggle} from "@/components/ThemeToggle";
 
 /* ================= Types & Data ================= */
 
@@ -159,10 +159,10 @@ const ACTIVITIES: Activity[] = [
 ];
 
 const TIERS = [
-    { key: "explorer", name: "Explorer", min: 0, perks: ["Starter badge", "Monthly challenges"] },
-    { key: "guide", name: "Guide", min: 500, perks: ["Profile flair", "Early feature access"] },
-    { key: "pathfinder", name: "Pathfinder", min: 2000, perks: ["Beta invites", "Priority reviews"] },
-    { key: "ambassador", name: "Ambassador", min: 6000, perks: ["Itinero merch", "Invite-only programs"] },
+    {key: "explorer", name: "Explorer", min: 0, perks: ["Starter badge", "Monthly challenges"]},
+    {key: "guide", name: "Guide", min: 500, perks: ["Profile flair", "Early feature access"]},
+    {key: "pathfinder", name: "Pathfinder", min: 2000, perks: ["Beta invites", "Priority reviews"]},
+    {key: "ambassador", name: "Ambassador", min: 6000, perks: ["Itinero merch", "Invite-only programs"]},
 ];
 
 // Demo points (wire this to user profile later)
@@ -196,7 +196,7 @@ export default function RewardsPage() {
         for (const a of ACTIVITIES) map.set(a.category, [...(map.get(a.category) ?? []), a]);
         return order
             .filter((k) => map.has(k))
-            .map((k) => ({ category: k as Activity["category"], items: map.get(k)! }));
+            .map((k) => ({category: k as Activity["category"], items: map.get(k)!}));
     }, []);
 
     // Helpers for primary-styled buttons
@@ -210,7 +210,7 @@ export default function RewardsPage() {
                 <div className="mx-auto w-full max-w-6xl px-6 py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2 font-semibold text-lg tracking-tight">
             <span className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">
-              <Plane className="h-4 w-4" />
+              <Plane className="h-4 w-4"/>
             </span>
                         Itinero
                     </Link>
@@ -224,7 +224,7 @@ export default function RewardsPage() {
                         <Link href="/signup">
                             <Button className={primaryBtn}>Sign up</Button>
                         </Link>
-                        <ThemeToggle />
+                        <ThemeToggle/>
                     </nav>
                 </div>
             </header>
@@ -234,18 +234,20 @@ export default function RewardsPage() {
                 <div className="mx-auto w-full max-w-6xl px-6 py-14 md:py-20">
                     <div className="mx-auto max-w-3xl text-center">
                         <Badge variant="secondary" className="mb-3 gap-1">
-                            <Award className="h-3.5 w-3.5" />
+                            <Award className="h-3.5 w-3.5"/>
                             Itinero Rewards
                         </Badge>
                         <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05] text-primary">
                             Earn points by improving travel for everyone.
                         </h1>
                         <p className="mt-4 text-lg md:text-xl text-muted-foreground">
-                            Help keep places trusted & up-to-date. Contribute verified data, photos, and fixes — unlock perks as you go.
+                            Help keep places trusted & up-to-date. Contribute verified data, photos, and fixes — unlock
+                            perks as you go.
                         </p>
 
-                        <div className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/70 px-3 py-2 text-sm ring-4 ring-primary/10">
-                            <Info className="h-4 w-4 text-muted-foreground" />
+                        <div
+                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/70 px-3 py-2 text-sm ring-4 ring-primary/10">
+                            <Info className="h-4 w-4 text-muted-foreground"/>
                             <span>Points are awarded after automated & human checks pass.</span>
                         </div>
 
@@ -269,14 +271,15 @@ export default function RewardsPage() {
             {/* ===== Tier summary ===== */}
             <section className="mx-auto w-full max-w-6xl px-6 py-10">
                 <div className="mb-10 grid gap-4 md:grid-cols-3">
-                    <Card className="md:col-span-2 border-[color:var(--card-border, var(--border))]">
+                    <Card className="md:col-span-2 border border-border">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-base">Your progress</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-end justify-between">
                                 <div>
-                                    <div className="text-3xl font-semibold tabular-nums">{points.toLocaleString()} pts</div>
+                                    <div className="text-3xl font-semibold tabular-nums">{points.toLocaleString()} pts
+                                    </div>
                                     <div className="mt-1 text-sm text-muted-foreground">
                                         Tier: <span className="font-medium">{tier.name}</span>
                                     </div>
@@ -285,14 +288,15 @@ export default function RewardsPage() {
                                     {nextTier ? (
                                         <>
                                             Next: <span className="font-medium">{nextTier.name}</span>{" "}
-                                            <span className="ml-1">({(nextTier.min - points).toLocaleString()} pts left)</span>
+                                            <span
+                                                className="ml-1">({(nextTier.min - points).toLocaleString()} pts left)</span>
                                         </>
                                     ) : (
                                         <>Top tier reached 🎉</>
                                     )}
                                 </div>
                             </div>
-                            <Progress value={progressPct} className="mt-3" />
+                            <Progress value={progressPct} className="mt-3"/>
                         </CardContent>
                         <CardFooter className="flex flex-wrap gap-2">
                             {TIERS.map((t) => (
@@ -307,14 +311,20 @@ export default function RewardsPage() {
                         </CardFooter>
                     </Card>
 
-                    <Card className="border-[color:var(--card-border, var(--border))]">
+                    <Card className="border border-border">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-base">How it works</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /> Contribute reliable info.</div>
-                            <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> We verify accuracy.</div>
-                            <div className="flex items-center gap-2"><Award className="h-4 w-4 text-primary" /> Earn points & unlock perks.</div>
+                            <div className="flex items-center gap-2"><MapPin
+                                className="h-4 w-4 text-primary"/> Contribute reliable info.
+                            </div>
+                            <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> We
+                                verify accuracy.
+                            </div>
+                            <div className="flex items-center gap-2"><Award className="h-4 w-4 text-primary"/> Earn
+                                points & unlock perks.
+                            </div>
                         </CardContent>
                         <CardFooter className="flex gap-2">
                             <Button size="sm" className={primaryBtn}>Add a place</Button>
@@ -330,12 +340,13 @@ export default function RewardsPage() {
             <section className="mx-auto w-full max-w-6xl px-6">
                 <h2 className="text-2xl font-semibold tracking-tight">Ways to earn</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Points are credited when contributions pass automated and human checks. Some items have daily caps to keep things fair.
+                    Points are credited when contributions pass automated and human checks. Some items have daily caps
+                    to keep things fair.
                 </p>
 
                 <div className="mt-5 space-y-8">
-                    {grouped.map(({ category, items }) => (
-                        <Card key={category} className="border-[color:var(--card-border, var(--border))]">
+                    {grouped.map(({category, items}) => (
+                        <Card key={category} className="border border-border">
                             <CardHeader className="pb-3">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
@@ -354,7 +365,8 @@ export default function RewardsPage() {
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <span className="font-medium">{a.label}</span>
                                                 {a.capPerDay ? (
-                                                    <Badge variant="secondary" className="h-5 rounded-full px-2 text-[10px]">
+                                                    <Badge variant="secondary"
+                                                           className="h-5 rounded-full px-2 text-[10px]">
                                                         max {a.capPerDay}/day
                                                     </Badge>
                                                 ) : null}
@@ -377,14 +389,15 @@ export default function RewardsPage() {
 
             {/* ===== Rules / Trust ===== */}
             <section className="mx-auto w-full max-w-6xl px-6 mt-10">
-                <Card className="border-[color:var(--card-border, var(--border))]">
+                <Card className="border border-border">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-base">Trust & fair use</CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm space-y-2 text-muted-foreground">
                         <div>
                             <span className="font-medium text-foreground">Verification: </span>
-                            We use duplicate detection, EXIF checks, temporal signals, and peer review. Points may be revoked for inaccurate or low-effort submissions.
+                            We use duplicate detection, EXIF checks, temporal signals, and peer review. Points may be
+                            revoked for inaccurate or low-effort submissions.
                         </div>
                         <div>
                             <span className="font-medium text-foreground">Original media only: </span>
@@ -417,8 +430,8 @@ export default function RewardsPage() {
                         <Card
                             key={t.key}
                             className={t.key === tier.key
-                                ? "border-[color:var(--card-border, var(--border))] ring-1 ring-primary/30"
-                                : "border-[color:var(--card-border, var(--border))]"}
+                                ? "border border-border ring-1 ring-primary/30"
+                                : "border border-border"}
                         >
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-base flex items-center justify-between">
@@ -438,7 +451,7 @@ export default function RewardsPage() {
                 </div>
             </section>
 
-            <Separator className="my-10 mx-6 max-w-6xl self-center" />
+            <Separator className="my-10 mx-6 max-w-6xl self-center"/>
 
             {/* ===== CTA strip ===== */}
             <section className="mx-auto w-full max-w-6xl px-6 pb-16">
@@ -457,7 +470,8 @@ export default function RewardsPage() {
 
             {/* ===== Footer ===== */}
             <footer className="mt-auto border-t border-border bg-background">
-                <div className="mx-auto w-full max-w-6xl px-6 py-8 text-sm text-muted-foreground flex items-center justify-between">
+                <div
+                    className="mx-auto w-full max-w-6xl px-6 py-8 text-sm text-muted-foreground flex items-center justify-between">
                     <div>© {new Date().getFullYear()} Itinero</div>
                     <div className="flex gap-4">
                         <Link href="/pricing">Pricing</Link>
@@ -477,18 +491,18 @@ function categoryIcon(cat: Activity["category"]) {
     const cls = "h-4 w-4 text-primary";
     switch (cat) {
         case "Places":
-            return <MapPin className={cls} />;
+            return <MapPin className={cls}/>;
         case "Verification":
-            return <ShieldCheck className={cls} />;
+            return <ShieldCheck className={cls}/>;
         case "Media":
-            return <Camera className={cls} />;
+            return <Camera className={cls}/>;
         case "Edits":
-            return <Edit3 className={cls} />;
+            return <Edit3 className={cls}/>;
         case "Cleanup":
-            return <Trash2 className={cls} />;
+            return <Trash2 className={cls}/>;
         case "Community":
-            return <Users className={cls} />;
+            return <Users className={cls}/>;
         default:
-            return <Award className={cls} />;
+            return <Award className={cls}/>;
     }
 }

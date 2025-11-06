@@ -81,7 +81,7 @@ export default function LoginPage() {
 
     return (
         <main className="grid min-h-screen place-items-center bg-background">
-            <div className="w-full max-w-md rounded-2xl border bg-card p-6 shadow-sm">
+            <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm">
                 <div className="mb-4 flex items-center gap-2">
                     <Plane className="h-5 w-5"/>
                     <h1 className="text-lg font-semibold">Sign in to Itinero</h1>

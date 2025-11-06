@@ -1,20 +1,23 @@
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, Polyline, Marker, Popup } from "react-leaflet";
-import L, { LatLngExpression, LatLngTuple } from "leaflet";
+import {MapContainer, TileLayer, Polyline, Marker, Popup, useMap} from "react-leaflet";
+import L, {LatLngExpression, LatLngTuple} from "leaflet";
 import React from "react";
 
 // With Turbopack/Next these resolve to URLs (string) or to an object { src: string } depending on config.
 import marker2x from "leaflet/dist/images/marker-icon-2x.png";
 import marker1x from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import {useTheme} from "next-themes";
 
 // ---------- helpers for asset URLs (no `any`) ----------
 type ImageLike = string | { src: string } | undefined;
+
 function isObjWithSrc(x: unknown): x is { src: string } {
     return typeof x === "object" && x !== null && "src" in x && typeof (x as { src: unknown }).src === "string";
 }
+
 const asUrl = (x: ImageLike): string | undefined => {
     if (!x) return undefined;
     return typeof x === "string" ? x : isObjWithSrc(x) ? x.src : undefined;
@@ -44,13 +47,33 @@ type Day = {
 };
 type Place = { id: string; name: string; lat?: number; lng?: number; category?: string | null };
 
+// Choose any providers you like. These two are free, simple, and theme-friendly.
+// (You can swap for MapTiler, Stadia, Carto, etc., if you have keys.)
+const LIGHT_TILES = {
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+};
+
+const DARK_TILES = {
+    // A popular dark OSM style mirror (no key). Replace with your provider if you prefer.
+    url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
+    attribution:
+        '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+};
+
 export default function LeafletMap({
+                                       theme = "light",
                                        day,
                                        placesById,
                                    }: {
+    theme?: "light" | "dark";
     day: Day;
     placesById: Map<string, Place>;
 }) {
+    // const { theme } = useTheme();
+
+
     const poly: LatLngTuple[] = React.useMemo(() => {
         if (day?.map_polyline) {
             try {
@@ -87,7 +110,7 @@ export default function LeafletMap({
             if (!b.place_id) return;
             const p = placesById.get(b.place_id);
             if (typeof p?.lat === "number" && typeof p?.lng === "number") {
-                out.push({ pos: [p.lat, p.lng], label: `${capitalize(b.when)} • ${p.name}` });
+                out.push({pos: [p.lat, p.lng], label: `${capitalize(b.when)} • ${p.name}`});
             }
         });
         return out;
@@ -98,22 +121,48 @@ export default function LeafletMap({
             ? [day.lodging.lat, day.lodging.lng]
             : null;
 
+    // Choose map style based on theme
+    const tileUrl =
+        theme === "dark"
+            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+    const attribution =
+        theme === "dark"
+            ? '&copy; <a href="https://carto.com/">CARTO</a> contributors'
+            : '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
+
+    // Helper to invalidate size when theme or container changes to avoid grey tiles.
+    function InvalidateOnThemeChange({deps}: { deps: React.DependencyList }) {
+        const map = useMap();
+        React.useEffect(() => {
+            // slight delay helps during CSS transitions
+            const t = setTimeout(() => map.invalidateSize(), 60);
+            return () => clearTimeout(t);
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, deps);
+        return null;
+    }
+
+    const tiles = theme === "dark" ? DARK_TILES : LIGHT_TILES;
+
+
     return (
         <div className="h-full">
             {bounds ? (
                 <MapContainer
                     key={day.date}
                     bounds={bounds}
-                    boundsOptions={{ padding: [24, 24] }}
+                    boundsOptions={{padding: [24, 24]}}
                     className="h-[calc(100vh-120px)] w-full"
                     scrollWheelZoom={false}
                 >
-                    <TileLayer
-                        attribution="&copy; OpenStreetMap contributors"
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
+                    <TileLayer url={tiles.url} attribution={tiles.attribution}/>
 
-                    {!!poly.length && <Polyline positions={poly as LatLngExpression[]} />}
+                    {/* Recalculate size when theme flips */}
+                    <InvalidateOnThemeChange deps={[theme]}/>
+
+                    {!!poly.length && <Polyline positions={poly as LatLngExpression[]}/>}
 
                     {lodgingPos && (
                         <Marker position={lodgingPos as LatLngExpression}>
@@ -122,7 +171,7 @@ export default function LeafletMap({
                     )}
 
                     {lodgingPos && poly.length ? (
-                        <Polyline positions={[poly[poly.length - 1], lodgingPos] as LatLngExpression[]} />
+                        <Polyline positions={[poly[poly.length - 1], lodgingPos] as LatLngExpression[]}/>
                     ) : null}
 
                     {markers.map((m, idx) => (

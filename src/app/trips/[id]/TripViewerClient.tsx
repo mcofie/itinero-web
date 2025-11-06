@@ -3,19 +3,20 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
-import {JSX, useMemo, useState} from "react";
-import {Card, CardContent} from "@/components/ui/card";
-import {Badge} from "@/components/ui/badge";
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
-import {ScrollArea} from "@/components/ui/scroll-area";
-import {Button} from "@/components/ui/button";
-import type {PreviewLike, Day, Place} from "./page";
+import { JSX, useMemo, useState } from "react";
+import { useTheme } from "next-themes";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import type { PreviewLike, Day, Place } from "./page";
 
-const LeafletMap = dynamic(() => import("@/app/preview/_leaflet/LeafletMap"), {ssr: false});
+const LeafletMap = dynamic(() => import("@/app/preview/_leaflet/LeafletMap"), { ssr: false });
 import "leaflet/dist/leaflet.css";
 
-import {BlockActions, ItemRowLite} from "@/app/trips/BlockEditControls";
-import {cn} from "@/lib/utils";
+import { BlockActions, ItemRowLite } from "@/app/trips/BlockEditControls";
+import { cn } from "@/lib/utils";
 import {
     Cloud,
     DollarSign,
@@ -25,12 +26,12 @@ import {
     SmartphoneNfc,
     Thermometer,
     TrainFront,
-    Clock,
+    // Clock,
     Plug,
-    Languages,
+    Languages as LanguagesIcon,
 } from "lucide-react";
-import {AddItemUnderDay} from "@/app/trips/AddItemUnderDay";
-import {DestinationMeta, TripConfig} from "@/app/trips/TripActionsClient";
+import { AddItemUnderDay } from "@/app/trips/AddItemUnderDay";
+import { DestinationMeta, TripConfig } from "@/app/trips/TripActionsClient";
 
 /** ---------- helpers for safe inputs typing ---------- */
 type TripInputs = { interests?: string[] } | undefined;
@@ -50,6 +51,9 @@ export default function TripViewerClient({
     data: PreviewLike;
     startDate?: string;
 }) {
+    const { resolvedTheme } = useTheme();
+    const dark = resolvedTheme === "dark";
+
     const [activeDayIdx, setActiveDayIdx] = useState(0);
 
     const placesById = useMemo(() => new Map(data.places.map((p) => [p.id, p])), [data.places]);
@@ -74,6 +78,7 @@ export default function TripViewerClient({
         return anyCfg?.destination_meta ?? null;
     }, [tripConfig]);
 
+    // Seed example meta if missing (safe no-op if present)
     if (tripConfig && !tripConfig.destination_meta) {
         tripConfig.destination_meta = {
             currency_code: "THB",
@@ -88,10 +93,10 @@ export default function TripViewerClient({
             weather_temp_c: 29.39,
             transport: ["Taxi", "Tuk-Tuk", "Songthaew"],
             esim_provider: "Airalo",
-            description: "Ghana, located along the Gulf of Guinea in West Africa, is known for its warm hospitality, political stability, and rich cultural heritage. The country gained independence from British colonial rule on 6th March 1957, becoming the first sub-Saharan African nation to do so. Its capital, Accra, serves as a vibrant hub of commerce, art, and modern African identity.",
-            history: "Ghana’s history is one of resilience and pride. Once home to powerful kingdoms like the Ashanti Empire and the ancient Kingdom of Ghana (which inspired the country’s modern name), it became a centre of trade and culture long before European contact. During the colonial era, it was known as the Gold Coast for its rich mineral wealth.\n" +
-                "\n" +
-                "In 1957, under the leadership of Dr. Kwame Nkrumah, Ghana became the first sub-Saharan African nation to gain independence—sparking a wave of freedom movements across the continent. Today, Ghana stands as a symbol of African unity, democracy, and progress, blending its proud past with a dynamic and forward-looking spirit.",
+            description:
+                "Ghana, located along the Gulf of Guinea in West Africa, is known for its warm hospitality, political stability, and rich cultural heritage. The country gained independence from British colonial rule on 6th March 1957, becoming the first sub-Saharan African nation to do so. Its capital, Accra, serves as a vibrant hub of commerce, art, and modern African identity.",
+            history:
+                "Ghana’s history is one of resilience and pride. Once home to powerful kingdoms like the Ashanti Empire and the ancient Kingdom of Ghana (which inspired the country’s modern name), it became a centre of trade and culture long before European contact. During the colonial era, it was known as the Gold Coast for its rich mineral wealth.\n\nIn 1957, under the leadership of Dr. Kwame Nkrumah, Ghana became the first sub-Saharan African nation to gain independence—sparking a wave of freedom movements across the continent. Today, Ghana stands as a symbol of African unity, democracy, and progress, blending its proud past with a dynamic and forward-looking spirit.",
         };
     }
 
@@ -132,14 +137,14 @@ export default function TripViewerClient({
     }, [data.days]);
 
     return (
-        <Card className="overflow-hidden border border-gray-200 shadow-2xs">
+        <Card className="overflow-hidden border-border border shadow-sm">
             <CardContent className="space-y-6 py-6">
                 {hasInterests(inputs) && inputs.interests.length > 0 && (
                     <div>
                         <div className="text-xs uppercase tracking-wider text-muted-foreground">Interests</div>
                         <div className="mt-2 flex flex-wrap gap-2">
                             {inputs.interests.map((t) => (
-                                <Badge key={t} variant="outline" className="capitalize border-gray-200">
+                                <Badge key={t} variant="outline" className="capitalize">
                                     {emojiFor(t)} {t}
                                 </Badge>
                             ))}
@@ -154,9 +159,8 @@ export default function TripViewerClient({
               Day {activeDayIdx + 1} of {totalDays || "—"}
             </span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full border-gray-200 border bg-muted/40">
-                        <div className="h-full rounded-full bg-primary transition-all"
-                             style={{width: `${progressPct}%`}}/>
+                    <div className="h-2 w-full overflow-hidden rounded-full border-border border bg-muted/40">
+                        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
                     </div>
                 </div>
 
@@ -168,19 +172,15 @@ export default function TripViewerClient({
                         <TabsTrigger value="raw">Raw</TabsTrigger>
                     </TabsList>
 
+                    {/* ---------- OVERVIEW ---------- */}
                     <TabsContent value="overview" className="mt-4">
                         <div className="grid gap-4 md:grid-cols-[minmax(520px,1fr)_380px]">
                             <div className="space-y-4">
-                                <div className="space-y-4 rounded-2xl border border-gray-200 bg-card p-4">
+                                <div className="space-y-4 rounded-2xl border-border border bg-card p-4">
                                     <div className="space-y-1">
-                                        <div
-                                            className="text-[11px] uppercase tracking-wider text-muted-foreground">Destination
-                                        </div>
+                                        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Destination</div>
                                         <div className="text-xl font-semibold">
                                             {primaryDestination?.name ?? destinationMeta?.city ?? "Destination"}{" "}
-                                            {/*{primaryDestination?.country_code ? (*/}
-                                            {/*    <span className="text-muted-foreground">· {primaryDestination.country_code}</span>*/}
-                                            {/*) : null}*/}
                                         </div>
                                         {primaryDestination && (primaryDestination.lat ?? null) != null && (primaryDestination.lng ?? null) != null ? (
                                             <div className="text-xs text-muted-foreground">
@@ -190,25 +190,20 @@ export default function TripViewerClient({
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                                        <Metric label="Dates"
-                                                value={`${formatISODate(startDate)} → ${formatISODate(data.days.at(-1)?.date)}`}/>
-                                        <Metric label="Trip length"
-                                                value={`${totalDays} day${totalDays === 1 ? "" : "s"}`}/>
-                                        <Metric label="Places" value={data.places.length}/>
-                                        <Metric label="Est. total cost" value={`$${totals.estCost}`}/>
-                                        <Metric label="Planned duration" value={`${totals.durationMin}m`}/>
-                                        <Metric label="Est. travel time" value={`${totals.travelMin}m`}/>
+                                        <Metric label="Dates" value={`${formatISODate(startDate)} → ${formatISODate(data.days.at(-1)?.date)}`} />
+                                        <Metric label="Trip length" value={`${totalDays} day${totalDays === 1 ? "" : "s"}`} />
+                                        <Metric label="Places" value={data.places.length} />
+                                        <Metric label="Est. total cost" value={`$${totals.estCost}`} />
+                                        <Metric label="Planned duration" value={`${totals.durationMin}m`} />
+                                        <Metric label="Est. travel time" value={`${totals.travelMin}m`} />
                                     </div>
 
                                     {hasInterests(inputs) && inputs.interests.length > 0 && (
                                         <div>
-                                            <div
-                                                className="text-[11px] uppercase tracking-wider text-muted-foreground">Focus
-                                            </div>
+                                            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Focus</div>
                                             <div className="mt-2 flex flex-wrap gap-2">
                                                 {inputs.interests.map((t) => (
-                                                    <Badge key={`ov-${t}`} variant="secondary"
-                                                           className="capitalize border-gray-200">
+                                                    <Badge key={`ov-${t}`} variant="secondary" className="capitalize">
                                                         {emojiFor(t)} {t}
                                                     </Badge>
                                                 ))}
@@ -217,38 +212,36 @@ export default function TripViewerClient({
                                     )}
                                 </div>
 
-                                <div className="rounded-2xl border bg-card border-gray-200 p-4">
+                                <div className="rounded-2xl border-border border bg-card p-4">
                                     <div className="mb-2 text-sm font-semibold">About this destination</div>
                                     {destinationMeta?.description ? (
                                         <p className="text-sm leading-relaxed text-muted-foreground">{destinationMeta.description}</p>
                                     ) : (
                                         <p className="text-sm text-muted-foreground">
-                                            No description yet. Add a short overview of the destination—vibe,
-                                            highlights, seasons, and must-knows.
+                                            No description yet. Add a short overview of the destination—vibe, highlights, seasons, and must-knows.
                                         </p>
                                     )}
                                 </div>
 
-                                <div className="rounded-2xl border border-gray-200 bg-card p-4">
+                                <div className="rounded-2xl border-border border bg-card p-4">
                                     <div className="mb-2 text-sm font-semibold">History</div>
                                     {destinationMeta?.history ? (
                                         <p className="text-sm leading-relaxed text-muted-foreground">{destinationMeta.history}</p>
                                     ) : (
                                         <p className="text-sm text-muted-foreground">
-                                            No history added yet. Summarize key historical periods, influences, and
-                                            notable events.
+                                            No history added yet. Summarize key historical periods, influences, and notable events.
                                         </p>
                                     )}
                                 </div>
                             </div>
 
                             <aside className="md:sticky md:top-20 md:self-start">
-                                <div className="space-y-3 rounded-2xl border border-gray-200 bg-card p-4">
+                                <div className="space-y-3 rounded-2xl border-border border bg-card p-4">
                                     <div className="text-sm font-semibold">Know before you go</div>
                                     <ul className="mt-2 space-y-2 text-sm">
                                         {(destinationMeta?.currency_code || destinationMeta?.fx_rate) && (
                                             <li className="flex items-start gap-2">
-                                                <DollarSign className="mt-0.5 h-4 w-4"/>
+                                                <DollarSign className="mt-0.5 h-4 w-4" />
                                                 <div>
                                                     <div className="font-medium">Currency</div>
                                                     <div className="text-muted-foreground">
@@ -258,56 +251,41 @@ export default function TripViewerClient({
                                                             : null}
                                                     </div>
                                                     {destinationMeta?.money_tools?.length ? (
-                                                        <div
-                                                            className="text-muted-foreground">Helpful: {destinationMeta.money_tools.join(", ")}</div>
+                                                        <div className="text-muted-foreground">Helpful: {destinationMeta.money_tools.join(", ")}</div>
                                                     ) : null}
                                                 </div>
                                             </li>
                                         )}
 
-                                        {/*{(destinationMeta?.timezone || primaryDestination?.timezone) && (*/}
-                                        {/*    <li className="flex items-start gap-2">*/}
-                                        {/*        <Clock className="mt-0.5 h-4 w-4" />*/}
-                                        {/*        <div>*/}
-                                        {/*            <div className="font-medium">Time zone</div>*/}
-                                        {/*            <div className="text-muted-foreground">*/}
-                                        {/*                {destinationMeta?.timezone ?? primaryDestination?.timezone ?? "—"}*/}
-                                        {/*            </div>*/}
-                                        {/*        </div>*/}
-                                        {/*    </li>*/}
-                                        {/*)}*/}
-
                                         {destinationMeta?.plugs?.length ? (
                                             <li className="flex items-start gap-2">
-                                                <Plug className="mt-0.5 h-4 w-4"/>
+                                                <Plug className="mt-0.5 h-4 w-4" />
                                                 <div>
                                                     <div className="font-medium">Plugs</div>
-                                                    <div
-                                                        className="text-muted-foreground">{destinationMeta.plugs.join(", ")}</div>
+                                                    <div className="text-muted-foreground">{destinationMeta.plugs.join(", ")}</div>
                                                 </div>
                                             </li>
                                         ) : null}
 
                                         {destinationMeta?.languages?.length ? (
                                             <li className="flex items-start gap-2">
-                                                <Languages className="mt-0.5 h-4 w-4"/>
+                                                <LanguagesIcon className="mt-0.5 h-4 w-4" />
                                                 <div>
                                                     <div className="font-medium">Languages</div>
-                                                    <div
-                                                        className="text-muted-foreground">{destinationMeta.languages.join(", ")}</div>
+                                                    <div className="text-muted-foreground">{destinationMeta.languages.join(", ")}</div>
                                                 </div>
                                             </li>
                                         ) : null}
 
                                         {destinationMeta?.weather_temp_c != null || destinationMeta?.weather_desc ? (
                                             <li className="flex items-start gap-2">
-                                                <Thermometer className="mt-0.5 h-4 w-4"/>
+                                                <Thermometer className="mt-0.5 h-4 w-4" />
                                                 <div>
                                                     <div className="font-medium">Weather</div>
                                                     <div className="text-muted-foreground flex items-center gap-2">
                                                         {destinationMeta?.weather_desc ? (
                                                             <>
-                                                                <Cloud className="h-4 w-4"/>
+                                                                <Cloud className="h-4 w-4" />
                                                                 <span>{destinationMeta.weather_desc}</span>
                                                             </>
                                                         ) : null}
@@ -321,29 +299,27 @@ export default function TripViewerClient({
 
                                         {destinationMeta?.transport?.length ? (
                                             <li className="flex items-start gap-2">
-                                                <TrainFront className="mt-0.5 h-4 w-4"/>
+                                                <TrainFront className="mt-0.5 h-4 w-4" />
                                                 <div>
                                                     <div className="font-medium">Getting around</div>
-                                                    <div
-                                                        className="text-muted-foreground">{destinationMeta.transport.join(", ")}</div>
+                                                    <div className="text-muted-foreground">{destinationMeta.transport.join(", ")}</div>
                                                 </div>
                                             </li>
                                         ) : null}
 
                                         {destinationMeta?.esim_provider ? (
                                             <li className="flex items-start gap-2">
-                                                <SmartphoneNfc className="mt-0.5 h-4 w-4"/>
+                                                <SmartphoneNfc className="mt-0.5 h-4 w-4" />
                                                 <div>
                                                     <div className="font-medium">eSIM</div>
-                                                    <div
-                                                        className="text-muted-foreground">{destinationMeta.esim_provider}</div>
+                                                    <div className="text-muted-foreground">{destinationMeta.esim_provider}</div>
                                                 </div>
                                             </li>
                                         ) : null}
 
                                         {(destinationMeta?.city || primaryDestination?.name) && (
                                             <li className="flex items-start gap-2">
-                                                <Globe className="mt-0.5 h-4 w-4"/>
+                                                <Globe className="mt-0.5 h-4 w-4" />
                                                 <div>
                                                     <div className="font-medium">Primary city</div>
                                                     <div className="text-muted-foreground">
@@ -358,6 +334,7 @@ export default function TripViewerClient({
                         </div>
                     </TabsContent>
 
+                    {/* ---------- DAYS ---------- */}
                     <TabsContent value="days" className="mt-0">
                         {/* Day picker */}
                         <div className="relative">
@@ -381,8 +358,7 @@ export default function TripViewerClient({
                         {/* Two-pane layout with matched heights */}
                         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[minmax(480px,1fr)_minmax(540px,1fr)]">
                             {/* LEFT: Days pane — same height as map, scrolls internally */}
-                            <div
-                                className="rounded-2xl border border-gray-200 bg-card md:h-[calc(100vh-160px)] overflow-hidden">
+                            <div className="rounded-2xl border-border border bg-card md:h-[calc(100vh-160px)] overflow-hidden">
                                 <ScrollArea className="h-full">
                                     <div className="p-2 md:p-3">
                                         <EditableDay
@@ -401,22 +377,23 @@ export default function TripViewerClient({
 
                             {/* RIGHT: Map pane — same height */}
                             <aside className="md:sticky md:top-20 md:self-start">
-                                <div
-                                    className="overflow-hidden rounded-2xl border border-gray-200 md:h-[calc(100vh-160px)]">
-                                    <LeafletMap day={activeDay} placesById={placesById}/>
+                                <div className="overflow-hidden rounded-2xl border-border border md:h-[calc(100vh-160px)]">
+                                    {/* Optionally pass hint to choose dark tiles */}
+                                    <LeafletMap day={activeDay} placesById={placesById}  theme={resolvedTheme ?? "light"} // pass theme down
+                                    />
                                 </div>
                             </aside>
                         </div>
                     </TabsContent>
 
                     <TabsContent value="places" className="mt-0">
-                        <div className="rounded-2xl border border-gray-200 p-4">
-                            <PlacesList places={data.places}/>
+                        <div className="rounded-2xl border-border border p-4">
+                            <PlacesList places={data.places} />
                         </div>
                     </TabsContent>
 
                     <TabsContent value="raw" className="mt-0">
-                        <div className="h-[420px] w-full overflow-hidden rounded-2xl border-gray-200 border">
+                        <div className="h-[420px] w-full overflow-hidden rounded-2xl border-border border">
                             <pre className="p-4 text-xs">{JSON.stringify(data, null, 2)}</pre>
                         </div>
                     </TabsContent>
@@ -461,8 +438,7 @@ function EditableDay({
                     <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Day {dayIdx + 1}</div>
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="text-lg font-semibold">{formatISODate(day.date)}</span>
-                        <span
-                            className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-2 py-0.5 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 rounded-full border-border border px-2 py-0.5 text-xs text-muted-foreground">
               est. day cost <span className="font-medium text-foreground">${dayCost}</span>
             </span>
                     </div>
@@ -483,17 +459,15 @@ function EditableDay({
             </div>
 
             {!hasRealIds && (
-                <div className="rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
-                    Heads up: these items don’t include IDs. Save/load the trip from the database (not preview) to
-                    enable editing.
+                <div className="rounded-md border-border border border-border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900 dark:border-border border-amber-900/30 dark:bg-amber-900/20 dark:text-amber-200">
+                    Heads up: these items don’t include IDs. Save/load the trip from the database (not preview) to enable editing.
                 </div>
             )}
 
             {/* ---- Timeline (prettier stepwise) ---- */}
             <div className="relative">
                 {/* Vertical rail */}
-                <div
-                    className="pointer-events-none absolute border border-gray-200 left-4 top-0 bottom-0 w-px bg-gradient-to-b from-border via-border/70 to-transparent"/>
+                <div className="pointer-events-none absolute left-4 top-0 bottom-0 w-px bg-border-border border" />
 
                 <ol role="list" className="space-y-3">
                     {day.blocks.map((b, i) => {
@@ -508,55 +482,50 @@ function EditableDay({
                                 <div className="absolute left-4 top-6 -translate-x-1/2">
                                     <div className="relative grid place-items-center">
                                         {/* Connector tail (hidden on last) */}
-                                        {!isLast && (
-                                            <span
-                                                className="absolute left-1/2 top-6 h-[calc(100%+12px)] w-px -translate-x-1/2 bg-border"/>
-                                        )}
+                                        {!isLast && <span className="absolute left-1/2 top-6 h-[calc(100%+12px)] w-px -translate-x-1/2 bg-border-border border" />}
 
                                         {/* Numbered node */}
                                         <span
                                             className={cn(
-                                                "grid h-6 w-6 place-items-center rounded-full border bg-background",
+                                                "grid h-6 w-6 place-items-center rounded-full border-border border bg-background",
                                                 "text-[11px] font-semibold tabular-nums shadow-sm ring-1 ring-transparent transition",
                                                 "group-hover:ring-primary/20"
                                             )}
                                             aria-label={`Step ${i + 1}`}
                                         >
-                {i + 1}
-              </span>
+                      {i + 1}
+                    </span>
                                     </div>
                                 </div>
 
                                 {/* Card */}
-                                <div
-                                    className="group rounded-2xl border border-gray-200 p-4  transition hover:shadow-md focus-within:shadow-md">
+                                <div className="group rounded-2xl border-border border p-4 transition hover:shadow-md focus-within:shadow-md">
                                     {/* Header */}
                                     <div className="flex flex-wrap items-center justify-between gap-3">
                                         <div className="flex items-center gap-2">
-                <span
-                    className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                        whenUi.badge
-                    )}
-                >
-                  {whenUi.icon}
-                    {b.when}
-                </span>
+                      <span
+                          className={cn(
+                              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                              whenUi.badge
+                          )}
+                      >
+                        {whenUi.icon}
+                          {b.when}
+                      </span>
                                             <div className="text-base font-semibold leading-tight">{b.title}</div>
                                         </div>
-                                        <BlockActions item={forControls}/>
+                                        <BlockActions item={forControls} />
                                     </div>
 
                                     {/* Meta */}
                                     <div className="mt-3 space-y-2">
                                         {place ? (
-                                            <div
-                                                className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                                                <PlaceChip place={place}/>
+                                            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                                <PlaceChip place={place} />
                                                 {place.lat != null && place.lng != null && (
                                                     <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs">
-                      {place.lat.toFixed(3)}, {place.lng.toFixed(3)}
-                    </span>
+                            {place.lat.toFixed(3)}, {place.lng.toFixed(3)}
+                          </span>
                                                 )}
                                             </div>
                                         ) : (
@@ -569,13 +538,10 @@ function EditableDay({
                                     </div>
 
                                     {/* Footer */}
-                                    <div
-                                        className="mt-4 grid grid-cols-3 items-center gap-2 border-t border-gray-200 pt-3 text-xs sm:flex sm:flex-wrap sm:justify-between">
-                                        <StatChip variant="cost" label="Est. cost" value={`$${b.est_cost ?? 0}`}/>
-                                        <StatChip variant="duration" label="Duration"
-                                                  value={`${b.duration_min ?? 0}m`}/>
-                                        <StatChip variant="travel" label="Travel"
-                                                  value={`${b.travel_min_from_prev ?? 0}m`}/>
+                                    <div className="mt-4 grid grid-cols-3 items-center gap-2 border-border border-t pt-3 text-xs sm:flex sm:flex-wrap sm:justify-between">
+                                        <StatChip variant="cost" label="Est. cost" value={`$${b.est_cost ?? 0}`} />
+                                        <StatChip variant="duration" label="Duration" value={`${b.duration_min ?? 0}m`} />
+                                        <StatChip variant="travel" label="Travel" value={`${b.travel_min_from_prev ?? 0}m`} />
                                     </div>
                                 </div>
                             </li>
@@ -614,19 +580,22 @@ function StatChip({
 }) {
     const styles: Record<StatVariant, { wrap: string; dot: string; icon: JSX.Element }> = {
         cost: {
-            wrap: "bg-amber-50 text-amber-900 border border-amber-200",
-            dot: "bg-amber-400",
-            icon: <DollarSign className="h-3.5 w-3.5"/>,
+            wrap:
+                "bg-amber-50 text-amber-900 border-border border border-border border-amber-200 dark:bg-amber-900/20 dark:text-amber-200 dark:border-border border-amber-900/30",
+            dot: "bg-amber-400 dark:bg-amber-300",
+            icon: <DollarSign className="h-3.5 w-3.5" />,
         },
         duration: {
-            wrap: "bg-blue-50 text-blue-900 border border-blue-200",
-            dot: "bg-blue-400",
-            icon: <Hourglass className="h-3.5 w-3.5"/>,
+            wrap:
+                "bg-blue-50 text-blue-900 border-border border border-border border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-border border-blue-900/30",
+            dot: "bg-blue-400 dark:bg-blue-300",
+            icon: <Hourglass className="h-3.5 w-3.5" />,
         },
         travel: {
-            wrap: "bg-violet-50 text-violet-900 border border-violet-200",
-            dot: "bg-violet-400",
-            icon: <MoveRight className="h-3.5 w-3.5"/>,
+            wrap:
+                "bg-violet-50 text-violet-900 border-border border border-border border-violet-200 dark:bg-violet-900/20 dark:text-violet-200 dark:border-border border-violet-900/30",
+            dot: "bg-violet-400 dark:bg-violet-300",
+            icon: <MoveRight className="h-3.5 w-3.5" />,
         },
     };
 
@@ -637,7 +606,7 @@ function StatChip({
             className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium", s.wrap)}
             aria-label={`${label}: ${value}`}
         >
-            <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)}/>
+            <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />
             {s.icon}
             <span className="opacity-80">{label}:</span>
             <span className="text-foreground/90">{value}</span>
@@ -645,9 +614,9 @@ function StatChip({
     );
 }
 
-function PlaceChip({place}: { place: Place }) {
+function PlaceChip({ place }: { place: Place }) {
     return (
-        <span className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-0.5 text-xs">
+        <span className="inline-flex items-center gap-1 rounded-md border-border border bg-background px-2 py-0.5 text-xs">
       <span className="font-medium text-foreground">{place.name}</span>
             {place.category ? <span className="text-muted-foreground">• {place.category}</span> : null}
     </span>
@@ -677,12 +646,12 @@ function getWhenUi(
 
 /* ---------- Places list ---------- */
 
-function PlacesList({places}: { places: Place[] }) {
+function PlacesList({ places }: { places: Place[] }) {
     if (!places?.length) return <div className="text-sm text-muted-foreground">No places included.</div>;
     return (
         <div className="grid gap-3 md:grid-cols-2">
             {places.map((p) => (
-                <div key={p.id} className="rounded-xl border border-gray-200 bg-card/60 p-3">
+                <div key={p.id} className="rounded-xl border-border border bg-card/60 p-3">
                     <div className="font-medium">{p.name}</div>
                     <div className="mt-1 text-xs text-muted-foreground">{p.category ?? "—"}</div>
                     {typeof p.popularity === "number" && (
@@ -694,9 +663,9 @@ function PlacesList({places}: { places: Place[] }) {
     );
 }
 
-function Metric({label, value}: { label: string; value: string | number }) {
+function Metric({ label, value }: { label: string; value: string | number }) {
     return (
-        <div className="rounded-md border border-gray-200 bg-background p-2">
+        <div className="rounded-md border-border border bg-background p-2">
             <div className="text-[11px] text-muted-foreground">{label}</div>
             <div className="font-medium">{value}</div>
         </div>

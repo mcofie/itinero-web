@@ -132,3 +132,24 @@
     --chart-4: oklch(0.627 0.265 303.9);
     --chart-5: oklch(0.645 0.246 16.439);
 }
+
+@layer components {
+    /* Make all Card components use the same themed border style */
+    .card {
+        @apply border border-primary/40 dark:border-primary/30 bg-card shadow-sm transition-colors;
+    }
+
+    /* Optional: accent border for any bordered box */
+    .border-accent {
+        @apply border border-primary/40 dark:border-primary/30;
+    }
+
+    /* Optional: hoverable border effect */
+    .hover-border-accent {
+        @apply hover:border-primary/80 transition-colors;
+    }
+}
+
+html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
