@@ -1,8 +1,8 @@
 // supabase/functions/build_preview_itinerary/index.ts
 // @ts-nocheck
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { normalizeModeClient } from "./normalizeModeClient.ts";
+import {serve} from "https://deno.land/std@0.224.0/http/server.ts";
+import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
+import {normalizeModeClient} from "./normalizeModeClient.ts";
 
 /** ---------------- Types ---------------- */
 type Lodging = { name: string; lat: number; lng: number; address?: string };
@@ -58,13 +58,13 @@ serve(async (req) => {
         const auth = req.headers.get("Authorization") ?? "";
 
         const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            db: { schema: "itinero" },
-            global: { headers: { Authorization: auth } },
+            db: {schema: "itinero"},
+            global: {headers: {Authorization: auth}},
         });
 
         const input = (await req.json()) as Input;
-        if (!input?.destinations?.length) return j({ error: "destinations[] is required" }, 400);
-        if (!input.start_date || !input.end_date) return j({ error: "start_date and end_date are required" }, 400);
+        if (!input?.destinations?.length) return j({error: "destinations[] is required"}, 400);
+        if (!input.start_date || !input.end_date) return j({error: "start_date and end_date are required"}, 400);
 
         const interests = (input.interests ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean);
         const pace = input.pace ?? "balanced";
@@ -75,7 +75,7 @@ serve(async (req) => {
         const hasDestCoords = typeof destAnchor.lat === "number" && typeof destAnchor.lng === "number";
 
         // ⚡ transport speed once
-        const { data: speedRow } = await client
+        const {data: speedRow} = await client
             .from("transport_speeds")
             .select("km_per_hour")
             .eq("mode", mode)
@@ -84,13 +84,13 @@ serve(async (req) => {
 
         // budget + distance prefs once
         const dailyBudget = Number.isFinite(input.budget_daily) ? input.budget_daily : 100;
-        const slotBudgetShare = { morning: 0.35, afternoon: 0.35, evening: 0.30 } as const;
+        const slotBudgetShare = {morning: 0.35, afternoon: 0.35, evening: 0.30} as const;
         const softAnchorKm = input.soft_distance?.anchor_km ?? 12;
         const hopPrefKm = input.soft_distance?.hop_km ?? (pace === "chill" ? 12 : pace === "packed" ? 18 : 15);
 
         // ⚡ day list once
         const dayDates = buildDays(input.start_date, input.end_date);
-        const days: Day[] = dayDates.map((date) => ({ date, blocks: [] }));
+        const days: Day[] = dayDates.map((date) => ({date, blocks: []}));
         const rotatedInterests = days.map((_, i) => (interests.length ? interests[i % interests.length] : null));
 
         // Lodging accessor (no allocations in loop)
@@ -114,7 +114,7 @@ serve(async (req) => {
 
         let q = client
             .from("places")
-            .select("id,name,lat,lng,category,tags,popularity,cost_typical,cost_currency");
+            .select("id,name,lat,lng,category,tags,popularity,cost_typical,cost_currency,description");
 
         if (bbox) {
             q = q
@@ -123,15 +123,15 @@ serve(async (req) => {
         }
 
         // ⚡ smaller pool
-        const { data: places, error: pErr } = await q.order("popularity", { ascending: false }).limit(120);
+        const {data: places, error: pErr} = await q.order("popularity", {ascending: false}).limit(120);
         if (pErr) throw pErr;
         const pool = places ?? [];
 
         // ⚡ Opening hours map once
         const ids = pool.map((p) => p.id);
-        const { data: hours } = ids.length
+        const {data: hours} = ids.length
             ? await client.from("place_hours").select("place_id,dow,open_min,close_min").in("place_id", ids)
-            : { data: [] as any[] };
+            : {data: [] as any[]};
 
         const hoursByPlace: Record<string, { [dow: number]: { open: number; close: number } }> = {};
         for (const r of (hours ?? [])) {
@@ -182,11 +182,11 @@ serve(async (req) => {
                 const farPenalty = Math.max(0, (distKm - softAnchorKm) / 20);
                 const base = interestScore + prox * 0.9 + (pop / 100) * 0.5 + openBonus - 0.3 * farPenalty;
 
-                return { ...p, _base: base, _cost: cost };
+                return {...p, _base: base, _cost: cost};
             });
 
             const picks: any[] = [];
-            let last: any = hasLodge ? { lat: L!.lat, lng: L!.lng, id: null, name: L!.name } : null;
+            let last: any = hasLodge ? {lat: L!.lat, lng: L!.lng, id: null, name: L!.name} : null;
             const ALT_K = 4;
             const perSlotAlts: Alternative[][] = [];
 
@@ -209,7 +209,7 @@ serve(async (req) => {
                     // no jitter → deterministic
                     const score = p._base - 0.6 * pricePenalty - 0.3 * hopPenalty;
 
-                    const cand = { ...p, _slotScore: score, _hopKm: hopKmFromLast };
+                    const cand = {...p, _slotScore: score, _hopKm: hopKmFromLast};
                     if (!best || cand._slotScore > best._slotScore) {
                         if (best) altBuf.push(best);
                         best = cand;
@@ -246,7 +246,12 @@ serve(async (req) => {
             }
 
             // === Routing (optional, time-boxed) ===
-            const waypoints = picks.filter(Boolean).map((p: any) => ({ id: p.id ?? null, name: p.name, lat: p.lat, lng: p.lng }));
+            const waypoints = picks.filter(Boolean).map((p: any) => ({
+                id: p.id ?? null,
+                name: p.name,
+                lat: p.lat,
+                lng: p.lng
+            }));
             let orderedPicks = [...picks];
             let legsDurMin: number[] | null = null;
             let polyline: string | undefined;
@@ -255,8 +260,8 @@ serve(async (req) => {
                 const routingPayload = {
                     mode: mode === "walk" ? "walk" : mode === "bike" ? "bike" : "car" as "walk" | "bike" | "car",
                     start: L
-                        ? { id: null, name: L.name, lat: L.lat, lng: L.lng }
-                        : { id: null, name: "Anchor", lat: anchorLat!, lng: anchorLng! },
+                        ? {id: null, name: L.name, lat: L.lat, lng: L.lng}
+                        : {id: null, name: "Anchor", lat: anchorLat!, lng: anchorLng!},
                     waypoints,
                     roundtrip: true,
                 };
@@ -339,7 +344,7 @@ serve(async (req) => {
                     est_cost: estCost,
                     duration_min: pace === "packed" ? 150 : pace === "chill" ? 90 : 120,
                     travel_min_from_prev: travelMin,
-                    notes: p?.category ? `Category: ${p.category}` : undefined,
+                    notes: p?.description ? p.description : undefined,
                     alternatives: alts,
                 });
             }
@@ -351,7 +356,7 @@ serve(async (req) => {
             }
 
             days[di].blocks = blocks;
-            days[di].lodging = hasLodge ? { name: L!.name, lat: L!.lat, lng: L!.lng } : null;
+            days[di].lodging = hasLodge ? {name: L!.name, lat: L!.lat, lng: L!.lng} : null;
             days[di].return_to_lodging_min = returnMin;
             days[di].est_day_cost = Math.round(dayCost);
             days[di].budget_daily = dailyBudget;
@@ -386,13 +391,23 @@ serve(async (req) => {
             },
             days,
             // Keep if your UI uses it; otherwise you can drop for smaller payloads
-            places: (pool ?? []).map(({ id, name, lat, lng, category, tags, popularity, cost_typical, cost_currency }) => ({
-                id, name, lat, lng, category, tags, popularity, cost_typical, cost_currency,
+            places: (pool ?? []).map(({
+                                          id,
+                                          name,
+                                          lat,
+                                          lng,
+                                          category,
+                                          tags,
+                                          popularity,
+                                          cost_typical,
+                                          cost_currency, description
+                                      }) => ({
+                id, name, lat, lng, category, tags, popularity, cost_typical, cost_currency, description
             })),
         });
     } catch (e) {
         console.error(e);
-        return j({ error: String(e?.message ?? e) }, 500);
+        return j({error: String(e?.message ?? e)}, 500);
     }
 });
 
@@ -406,12 +421,14 @@ function cors() {
         },
     });
 }
+
 function j(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
         status,
-        headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: {"content-type": "application/json", "Access-Control-Allow-Origin": "*"},
     });
 }
+
 function buildDays(start: string, end: string): string[] {
     const out: string[] = [];
     const s = new Date(start + "T00:00:00");
@@ -419,19 +436,23 @@ function buildDays(start: string, end: string): string[] {
     for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) out.push(d.toISOString().slice(0, 10));
     return out;
 }
+
 function isNum(v: any): v is number {
     return typeof v === "number" && Number.isFinite(v);
 }
+
 function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number) {
     const R = 6371, toRad = (x: number) => x * Math.PI / 180;
     const dLat = toRad(bLat - aLat), dLon = toRad(bLng - aLng);
     const v = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLon / 2) ** 2;
     return 2 * R * Math.asin(Math.sqrt(v));
 }
+
 function hopKm(a: any, b: any) {
     if (!a || !b || a.lat == null || b.lat == null) return 3;
     return haversineKm(a.lat, a.lng, b.lat, b.lng);
 }
+
 function isOpenForSlot(
     hours: Record<number, { open: number; close: number }> | undefined,
     dow: number,
@@ -442,6 +463,7 @@ function isOpenForSlot(
     const h = hours[dow];
     return !!h && slotMin >= h.open && slotMin <= h.close;
 }
+
 async function withTimeout<T>(p: Promise<T>, ms = 1800): Promise<T | null> {
     return await Promise.race([p, new Promise<null>((r) => setTimeout(() => r(null), ms))]);
 }

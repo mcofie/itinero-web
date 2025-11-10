@@ -1,15 +1,15 @@
+// app/preview/_leaflet/LeafletMap.tsx
 "use client";
 
 import "leaflet/dist/leaflet.css";
-import {MapContainer, TileLayer, Polyline, Marker, Popup, useMap} from "react-leaflet";
-import L, {LatLngExpression, LatLngTuple} from "leaflet";
+import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from "react-leaflet";
+import L, { LatLngExpression, LatLngTuple } from "leaflet";
 import React from "react";
 
 // With Turbopack/Next these resolve to URLs (string) or to an object { src: string } depending on config.
 import marker2x from "leaflet/dist/images/marker-icon-2x.png";
 import marker1x from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import {useTheme} from "next-themes";
 
 // ---------- helpers for asset URLs (no `any`) ----------
 type ImageLike = string | { src: string } | undefined;
@@ -48,15 +48,12 @@ type Day = {
 type Place = { id: string; name: string; lat?: number; lng?: number; category?: string | null };
 
 // Choose any providers you like. These two are free, simple, and theme-friendly.
-// (You can swap for MapTiler, Stadia, Carto, etc., if you have keys.)
 const LIGHT_TILES = {
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 };
 
 const DARK_TILES = {
-    // A popular dark OSM style mirror (no key). Replace with your provider if you prefer.
     url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
     attribution:
         '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -68,18 +65,16 @@ export default function LeafletMap({
                                        placesById,
                                    }: {
     theme?: "light" | "dark";
-    day: Day;
+    day: Day | null;               // <-- allow null
     placesById: Map<string, Place>;
 }) {
-    // const { theme } = useTheme();
-
-
+    // Decode / build route points safely
     const poly: LatLngTuple[] = React.useMemo(() => {
-        if (day?.map_polyline) {
+        if (!day) return [];
+        if (day.map_polyline) {
             try {
                 return decodePolyline(day.map_polyline, 1e6);
             } catch {
-                // try standard precision
                 try {
                     return decodePolyline(day.map_polyline, 1e5);
                 } catch {
@@ -88,8 +83,9 @@ export default function LeafletMap({
             }
         }
         const coords: LatLngTuple[] = [];
-        for (const b of day.blocks) {
-            if (!b.place_id) continue;
+        const blocks = Array.isArray(day.blocks) ? day.blocks : [];
+        for (const b of blocks) {
+            if (!b?.place_id) continue;
             const p = placesById.get(b.place_id);
             if (typeof p?.lat === "number" && typeof p?.lng === "number") {
                 coords.push([p.lat, p.lng]);
@@ -105,38 +101,30 @@ export default function LeafletMap({
     }, [poly]);
 
     const markers = React.useMemo(() => {
+        if (!day) return [];
         const out: Array<{ pos: LatLngTuple; label: string }> = [];
-        day.blocks.forEach((b) => {
-            if (!b.place_id) return;
+        const blocks = Array.isArray(day.blocks) ? day.blocks : [];
+        for (const b of blocks) {
+            if (!b?.place_id) continue;
             const p = placesById.get(b.place_id);
             if (typeof p?.lat === "number" && typeof p?.lng === "number") {
-                out.push({pos: [p.lat, p.lng], label: `${capitalize(b.when)} • ${p.name}`});
+                out.push({ pos: [p.lat, p.lng], label: `${capitalize(b.when)} • ${p.name}` });
             }
-        });
+        }
         return out;
     }, [day, placesById]);
 
     const lodgingPos: LatLngTuple | null =
-        day.lodging && typeof day.lodging.lat === "number" && typeof day.lodging.lng === "number"
+        day?.lodging && typeof day.lodging.lat === "number" && typeof day.lodging.lng === "number"
             ? [day.lodging.lat, day.lodging.lng]
             : null;
 
-    // Choose map style based on theme
-    const tileUrl =
-        theme === "dark"
-            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-
-    const attribution =
-        theme === "dark"
-            ? '&copy; <a href="https://carto.com/">CARTO</a> contributors'
-            : '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
+    const tiles = theme === "dark" ? DARK_TILES : LIGHT_TILES;
 
     // Helper to invalidate size when theme or container changes to avoid grey tiles.
-    function InvalidateOnThemeChange({deps}: { deps: React.DependencyList }) {
+    function InvalidateOnThemeChange({ deps }: { deps: React.DependencyList }) {
         const map = useMap();
         React.useEffect(() => {
-            // slight delay helps during CSS transitions
             const t = setTimeout(() => map.invalidateSize(), 60);
             return () => clearTimeout(t);
             // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,8 +132,14 @@ export default function LeafletMap({
         return null;
     }
 
-    const tiles = theme === "dark" ? DARK_TILES : LIGHT_TILES;
-
+    // Empty state when no `day` provided at all
+    if (!day) {
+        return (
+            <div className="grid h-full min-h-48 place-items-center text-sm text-muted-foreground">
+                No day selected.
+            </div>
+        );
+    }
 
     return (
         <div className="h-full">
@@ -153,16 +147,16 @@ export default function LeafletMap({
                 <MapContainer
                     key={day.date}
                     bounds={bounds}
-                    boundsOptions={{padding: [24, 24]}}
-                    className="h-[calc(100vh-120px)] w-full"
+                    boundsOptions={{ padding: [24, 24] }}
+                    className="h-full w-full"                 // fill parent; parent controls height
                     scrollWheelZoom={false}
                 >
-                    <TileLayer url={tiles.url} attribution={tiles.attribution}/>
+                    <TileLayer url={tiles.url} attribution={tiles.attribution} />
 
                     {/* Recalculate size when theme flips */}
-                    <InvalidateOnThemeChange deps={[theme]}/>
+                    <InvalidateOnThemeChange deps={[theme]} />
 
-                    {!!poly.length && <Polyline positions={poly as LatLngExpression[]}/>}
+                    {!!poly.length && <Polyline positions={poly as LatLngExpression[]} />}
 
                     {lodgingPos && (
                         <Marker position={lodgingPos as LatLngExpression}>
@@ -171,7 +165,7 @@ export default function LeafletMap({
                     )}
 
                     {lodgingPos && poly.length ? (
-                        <Polyline positions={[poly[poly.length - 1], lodgingPos] as LatLngExpression[]}/>
+                        <Polyline positions={[poly[poly.length - 1], lodgingPos] as LatLngExpression[]} />
                     ) : null}
 
                     {markers.map((m, idx) => (
@@ -181,8 +175,8 @@ export default function LeafletMap({
                     ))}
                 </MapContainer>
             ) : (
-                <div className="grid h-[calc(100vh-120px)] place-items-center text-sm text-muted-foreground">
-                    No route to display
+                <div className="grid h-full min-h-48 place-items-center text-sm text-muted-foreground">
+                    No route to display.
                 </div>
             )}
         </div>
@@ -194,7 +188,6 @@ function capitalize(s: string) {
 }
 
 // Decode polyline to Leaflet-friendly [lat, lng] tuples.
-// `coordinates` is an array we mutate with push — declare as const to satisfy prefer-const (the binding isn’t reassigned).
 function decodePolyline(str: string, precision = 1e5): LatLngTuple[] {
     let index = 0;
     let lat = 0;

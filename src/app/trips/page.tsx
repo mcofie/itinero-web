@@ -9,6 +9,10 @@ import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
 import {CalendarDays, DollarSign, Plane, MapPin, Clock} from "lucide-react";
 import {cn} from "@/lib/utils";
+// app/trips/[id]/page.tsx
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'default-no-store'; // Next 14+ only
 
 /** Match ONLY existing columns in itinero.trips */
 type TripRow = {

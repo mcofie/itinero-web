@@ -1,7 +1,6 @@
 // app/profile/page.tsx
 import * as React from "react";
 import Image from "next/image";
-import Link from "next/link";
 import {redirect} from "next/navigation";
 
 import {createClientServer} from "@/lib/supabase/server";
@@ -13,6 +12,10 @@ import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {ScrollArea, ScrollBar} from "@/components/ui/scroll-area";
 import {CalendarClock, Clock, MapPin, Star, User2, Wallet} from "lucide-react";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'default-no-store'; // Next 14+ only
 
 import {saveProfileAction, topupPointsAction} from "@/app/profile/server-actions";
 
@@ -96,32 +99,33 @@ export default async function ProfilePage() {
     const userId = user.id;
     const email = user.email ?? null;
 
+
     // Profile
     const {data: profileRow} = await sb
+        .schema('itinero')
         .from("profiles")
         .select("id, full_name, username, avatar_url, points_balance")
         .eq("id", userId)
         .maybeSingle<ProfileRow>();
 
     // Points (aggregate w/ fallback to profiles.points_balance)
-    let points = 0;
-    const {data: sumRow} = await sb
-        .schema("itinero")
-        .from("points_ledger")
-        .select("sum:sum(delta)")
-        .eq("user_id", userId)
-        .maybeSingle<{ sum: number | null }>();
-    if (typeof sumRow?.sum === "number") points = sumRow.sum || 0;
-    else if (typeof profileRow?.points_balance === "number") points = profileRow.points_balance || 0;
+    const { data: sumValue, error } = await sb.rpc("sum_points_for_user", { uid: userId });
+    if (error) console.error(error);
+    const points = Number(sumValue ?? 0);
+
+
 
     // History
     const {data: historyRows} = await sb
         .schema("itinero")
         .from("points_ledger")
-        .select("id, created_at, user_id, delta, reason, source")
+        .select("id, created_at, user_id, delta, reason")
         .eq("user_id", userId)
         .order("created_at", {ascending: false})
         .limit(200);
+
+    console.log(historyRows);
+
 
     const history = Array.isArray(historyRows) ? (historyRows as LedgerRow[]) : [];
 

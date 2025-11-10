@@ -49,7 +49,7 @@ export default function LoginPage() {
             if (result.error) throw result.error;
 
             toast.success(mode === "login" ? "Signed in" : "Account created");
-            router.replace("/preview");
+            router.replace("/trips");
             router.refresh();
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
