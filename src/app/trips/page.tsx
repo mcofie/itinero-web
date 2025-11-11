@@ -2,7 +2,7 @@
 import * as React from "react";
 import Link from "next/link";
 import {redirect} from "next/navigation";
-import {createClientServer} from "@/lib/supabase/server";
+import {createClientServerRSC} from "@/lib/supabase/server";
 import AppShell from "@/components/layout/AppShell";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
@@ -27,7 +27,7 @@ type TripRow = {
 };
 
 export default async function TripsPage() {
-    const sb = await createClientServer();
+    const sb = await createClientServerRSC();
 
     // Auth (server-side)
     const {

@@ -1,40 +1,47 @@
-import {createServerClient, type CookieOptions} from "@supabase/ssr"
-import {cookies} from "next/headers"
+// src/lib/supabase/server.ts
+import 'server-only';
+import { cookies } from 'next/headers';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-/** Use in Server Components (no cookie mutations) */
-export async function createClientServer() {
-    const store = await cookies()
-    return createServerClient(url, key, {
+/**
+ * Use this inside Server Components (e.g. page.tsx, layout.tsx) and generateMetadata.
+ * It MUST NOT write cookies, so set/remove are no-ops.
+ */
+export function createClientServerRSC() {
+    const cookieStore = cookies();
+    return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         cookies: {
             get(name: string) {
-                return store.get(name)?.value
+                return cookieStore.get(name)?.value;
             },
-            set() { /* no-op in RSC */
-            },
-            remove() { /* no-op in RSC */
-            },
+            // No-ops in RSC (mutations are not allowed)
+            set(_name: string, _value: string, _options: CookieOptions) {},
+            remove(_name: string, _options: CookieOptions) {},
         },
-    })
+    });
 }
 
-/** Use in Server Actions / Route Handlers (cookie mutations allowed) */
-export async function createClientAction() {
-    const store = await cookies()
-    return createServerClient(url, key, {
+/**
+ * Use this only inside Server Actions ("use server") and Route Handlers (app/api/*).
+ * It can read/write cookies.
+ */
+export function createClientServerAction() {
+    const cookieStore = cookies();
+    return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         cookies: {
             get(name: string) {
-                return store.get(name)?.value
+                return cookieStore.get(name)?.value;
             },
             set(name: string, value: string, options: CookieOptions) {
-                store.set({name, value, ...options})
+                cookieStore.set({ name, value, ...options });
             },
-            remove(name: string, options: CookieOptions) {
-                // delete by setting past expiry (next/cookies has no .delete)
-                store.set({name, value: "", ...options, expires: new Date(0)})
+            remove(name: string, _options: CookieOptions) {
+                // Next 15 supports delete(); either is fine.
+                cookieStore.delete(name);
             },
         },
-    })
+    });
 }

@@ -2,7 +2,7 @@
 import * as React from "react";
 import Link from "next/link";
 import {redirect} from "next/navigation";
-import {createClientServer} from "@/lib/supabase/server";
+import {createClientServerRSC} from "@/lib/supabase/server";
 import AppShell from "@/components/layout/AppShell";
 
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
@@ -278,7 +278,7 @@ function getValidLodging(inputs: TripRow["inputs"]): { name: string; lat: number
 }
 
 export default async function TripIdPage({params}: { params: { id: string } }) {
-    const sb = await createClientServer();
+    const sb = await createClientServerRSC();
 
     // Auth (SSR)
     const {

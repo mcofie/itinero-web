@@ -1,102 +1,121 @@
 // app/actions/trips.ts
 "use server";
 
-import {revalidatePath} from "next/cache";
-import {createClientServer} from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { createClientServerAction } from "@/lib/supabase/server";
 
-/** Crypto-safe short id like: 8g5xkz2a */
-function makeShortId(length = 8): string {
-    const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
-    // Use Web Crypto on the server (Node >=18 in Next)
-    const bytes = new Uint8Array(length);
-    crypto.getRandomValues(bytes);
-    let id = "";
-    for (let i = 0; i < length; i++) {
-        id += alphabet[bytes[i] % alphabet.length];
-    }
-    return id;
+type Supa = Awaited<ReturnType<typeof createClientServerAction>>;
+
+// unambiguous slug
+function makeSlug(len = 8) {
+    const abc = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+    const buf = new Uint8Array(len);
+    crypto.getRandomValues(buf);
+    let s = "";
+    for (let i = 0; i < len; i++) s += abc[buf[i] % abc.length];
+    return s;
 }
 
-/** Try to generate a unique id, retrying to avoid collisions. */
-async function getUniquePublicId(sb: ReturnType<typeof createClientServer> extends Promise<infer C> ? C : never) {
-    const MAX_TRIES = 5;
-    for (let i = 0; i < MAX_TRIES; i++) {
-        const candidate = makeShortId(8);
-        const {data: clash, error} = await sb
+async function uniquePublicId(sb: Supa, tries = 6) {
+    for (let i = 0; i < tries; i++) {
+        const id = makeSlug();
+        const { data, error } = await sb
             .schema("itinero")
             .from("trips")
             .select("id")
-            .eq("public_id", candidate)
+            .eq("public_id", id)
             .maybeSingle();
 
-        if (error) {
-            // If this is a 'no rows' shape it's fine; otherwise bubble up
-            // Supabase returns null data + null error when no match (with maybeSingle())
-        }
-        if (!clash) return candidate;
+        if (error) throw new Error(`[check-id] ${error.message}`);
+        if (!data) return id;
     }
     throw new Error("Could not generate a unique public id; please try again.");
 }
 
-/**
- * Toggle public visibility by setting/clearing trips.public_id.
- * Returns the current public URL (or null if disabled).
- */
+function formatPgErr(prefix: string, e: any) {
+    // Supabase often returns { message, code, details, hint }
+    const parts = [prefix, e?.message];
+    if (e?.code) parts.push(`code=${e.code}`);
+    if (e?.details) parts.push(`details=${e.details}`);
+    if (e?.hint) parts.push(`hint=${e.hint}`);
+    return parts.filter(Boolean).join(" | ");
+}
+
 export async function setTripPublic(tripId: string, makePublic: boolean) {
-    const sb = await createClientServer();
+    const sb = await createClientServerAction();
 
-    // Ensure caller is signed in + ownership (RLS should also enforce)
-    const {data: auth} = await sb.auth.getUser();
-    const userId = auth?.user?.id ?? null;
-    if (!userId) throw new Error("Not signed in");
+    // 1) AUTH DEBUG
+    const { data: auth, error: authErr } = await sb.auth.getUser();
+    if (authErr) throw new Error(formatPgErr("Auth error", authErr));
+    if (!auth?.user?.id) throw new Error("Not signed in (no user id in server action).");
 
-    const {data: row, error: getErr} = await sb
+    const userId = auth.user.id;
+
+    // 2) FETCH + OWNERSHIP
+    const { data: row, error: selErr } = await sb
         .schema("itinero")
         .from("trips")
-        .select("id, user_id, public_id")
+        .select("id,user_id,public_id")
         .eq("id", tripId)
         .maybeSingle();
 
-    if (getErr) throw new Error(getErr.message);
+
+    if (selErr) throw new Error(formatPgErr("Select trip failed", selErr));
     if (!row) throw new Error("Trip not found");
     if (row.user_id !== userId) throw new Error("You do not have access to this trip");
 
-    const oldPublicId = row.public_id as string | null;
+    const oldPublicId = (row.public_id as string | null) ?? null;
+    let finalPublicId: string | null = null;
 
-    let newPublicId: string | null = null;
-
+    // 3) UPDATE (atomic .select() + retry on 23505)
     if (makePublic) {
-        // Keep existing id if present; otherwise generate a new unique one
-        newPublicId = oldPublicId || (await getUniquePublicId(sb));
+        let candidate = oldPublicId ?? (await uniquePublicId(sb));
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const { data: updated, error: upErr } = await sb
+                .schema("itinero")
+                .from("trips")
+                .update({ public_id: candidate })
+                .eq("id", tripId)
+                .select("public_id")
+                .maybeSingle();
 
-        const {error: upErr} = await sb
-            .schema("itinero")
-            .from("trips")
-            .update({public_id: newPublicId})
-            .eq("id", tripId);
+            if (!upErr) {
+                finalPublicId = updated?.public_id ?? candidate;
+                break;
+            }
 
-        if (upErr) throw new Error(upErr.message);
+            // unique violation
+            if ((upErr as any)?.code === "23505") {
+                candidate = await uniquePublicId(sb);
+                continue;
+            }
+
+            throw new Error(formatPgErr("Update public_id failed", upErr));
+        }
+
+        if (!finalPublicId) {
+            throw new Error("Could not assign a unique public id after retries.");
+        }
     } else {
-        // Make private: clear the id
-        const {error: upErr} = await sb
+        const { data: updated, error: upErr } = await sb
             .schema("itinero")
             .from("trips")
-            .update({public_id: null})
-            .eq("id", tripId);
+            .update({ public_id: null })
+            .eq("id", tripId)
+            .select("public_id")
+            .maybeSingle();
 
-        if (upErr) throw new Error(upErr.message);
+        if (upErr) throw new Error(formatPgErr("Clear public_id failed", upErr));
+        finalPublicId = updated?.public_id ?? null;
     }
 
-    // Revalidate private page
+    // 4) REVALIDATE
     revalidatePath(`/trips/${tripId}`);
+    if (oldPublicId && oldPublicId !== finalPublicId) revalidatePath(`/t/${oldPublicId}`);
+    if (finalPublicId) revalidatePath(`/t/${finalPublicId}`);
 
-    // Revalidate public pages
-    if (oldPublicId) revalidatePath(`/t/${oldPublicId}`); // will 404 after removal
-    if (newPublicId) revalidatePath(`/t/${newPublicId}`);
-
-    // Return a friendly payload for the UI
     return {
-        public_id: newPublicId,
-        public_url: newPublicId ? `/t/${newPublicId}` : null,
+        public_id: finalPublicId,
+        public_url: finalPublicId ? `/t/${finalPublicId}` : null,
     };
 }

@@ -3,7 +3,7 @@ import * as React from "react";
 import Image from "next/image";
 import {redirect} from "next/navigation";
 
-import {createClientServer} from "@/lib/supabase/server";
+import {createClientServerRSC} from "@/lib/supabase/server";
 import AppShell from "@/components/layout/AppShell";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
@@ -87,7 +87,7 @@ function StatTile({
 }
 
 export default async function ProfilePage() {
-    const sb = await createClientServer();
+    const sb = await createClientServerRSC();
 
     // Auth (server-side)
     const {

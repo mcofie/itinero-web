@@ -1,0 +1,474 @@
+"use client";
+
+import * as React from "react";
+import {
+    DollarSign,
+    Clock,
+    CarFront,
+    MapPin,
+    X,
+    ArrowUpRight,
+} from "lucide-react";
+
+type DayBlock = {
+    when?: string | null;
+    title?: string | null;
+    notes?: string | null;
+    est_cost?: number | null;
+    duration_min?: number | null;
+    travel_min_from_prev?: number | null;
+    place_id?: string | null;
+};
+
+type Day = {
+    date?: string | null; // YYYY-MM-DD or null
+    blocks: DayBlock[];
+};
+
+type PlaceLite = {
+    id: string;
+    name: string;
+    category?: string | null;
+};
+
+type PlaceDetail = {
+    id: string;
+    name: string;
+    category?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+    address?: string | null;
+    photo_url?: string | null;
+    google_place_id?: string | null;
+};
+
+export default function PublicItineraryClient({
+                                                  currency,
+                                                  estTotalCost,
+                                                  tripSummary, // unused here, but kept to preserve prop shape
+                                                  days,
+                                                  places,
+                                                  placeDetails = [],
+                                              }: {
+    currency: string;
+    estTotalCost: number | null;
+    tripSummary: Record<string, unknown> | null;
+    days: Day[];
+    places: PlaceLite[];
+    placeDetails?: PlaceDetail[];
+}) {
+    // Index for quick lookup
+    const nameIndex = React.useMemo(() => {
+        const idx = new Map<string, PlaceLite>();
+        for (const p of places) idx.set(p.id, p);
+        return idx;
+    }, [places]);
+
+    const detailIndex = React.useMemo(() => {
+        const idx = new Map<string, PlaceDetail>();
+        for (const p of placeDetails) idx.set(p.id, p);
+        return idx;
+    }, [placeDetails]);
+
+    // Tabs: choose first day that has items, else 0
+    const initialTab = React.useMemo(() => {
+        const withItems = days.findIndex((d) => d.blocks.length > 0);
+        return withItems >= 0 ? withItems : 0;
+    }, [days]);
+    const [active, setActive] = React.useState(initialTab);
+
+    // Keep active index in range if days change
+    React.useEffect(() => {
+        if (active > days.length - 1) setActive(days.length - 1);
+    }, [days.length, active]);
+
+    return (
+        <section className="space-y-6">
+            {/* Optional trip total */}
+            {typeof estTotalCost === "number" && Number.isFinite(estTotalCost) && (
+                <div className="rounded-xl border border-border/60 bg-card/50 p-4 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <DollarSign className="h-4 w-4" />
+                        <span className="font-medium">Estimated trip cost:</span>
+                        <span className="text-foreground">
+              {formatMoney(estTotalCost, currency)}
+            </span>
+                    </div>
+                </div>
+            )}
+
+            {/* Tabs header */}
+            <div
+                role="tablist"
+                aria-label="Itinerary days"
+                className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1"
+            >
+                {days.map((day, i) => {
+                    const selected = i === active;
+                    return (
+                        <button
+                            key={day.date ?? `unscheduled-${i}`}
+                            role="tab"
+                            aria-selected={selected}
+                            aria-controls={`day-panel-${i}`}
+                            id={`day-tab-${i}`}
+                            onClick={() => setActive(i)}
+                            className={[
+                                "snap-start whitespace-nowrap rounded-full border px-3 py-1.5 text-sm transition",
+                                selected
+                                    ? "border-primary/50 bg-primary/10 text-primary"
+                                    : "border-border/60 bg-background/60 text-foreground hover:bg-accent",
+                            ].join(" ")}
+                        >
+                            {dayLabel(i, day)}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Active day panel */}
+            {days[active] ? (
+                <div
+                    role="tabpanel"
+                    id={`day-panel-${active}`}
+                    aria-labelledby={`day-tab-${active}`}
+                    className="focus-visible:outline-none"
+                >
+                    <DayCard
+                        day={days[active]}
+                        nameIndex={nameIndex}
+                        detailIndex={detailIndex}
+                        currency={currency}
+                    />
+                </div>
+            ) : (
+                <div className="rounded-xl border border-border/60 bg-card/50 p-4 text-sm text-muted-foreground">
+                    No itinerary days yet.
+                </div>
+            )}
+        </section>
+    );
+}
+
+/* ---------------- Day + Item ---------------- */
+
+function DayCard({
+                     day,
+                     nameIndex,
+                     detailIndex,
+                     currency,
+                 }: {
+    day: Day;
+    nameIndex: Map<string, PlaceLite>;
+    detailIndex: Map<string, PlaceDetail>;
+    currency: string;
+}) {
+    const label = day.date ? friendlyDate(day.date) : "Unscheduled";
+
+    return (
+        <article className="rounded-2xl border border-border/60 bg-card/50 shadow-sm">
+            <header className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3 sm:px-5">
+                <h3 className="text-sm font-semibold tracking-wide">{label}</h3>
+            </header>
+
+            <div className="divide-y divide-border/60">
+                {day.blocks.length === 0 && (
+                    <div className="px-4 py-4 text-sm text-muted-foreground sm:px-5">
+                        No items for this day.
+                    </div>
+                )}
+
+                {day.blocks.map((block, idx) => (
+                    <ItineraryItemRow
+                        key={`${block.title}-${idx}`}
+                        block={block}
+                        place={block.place_id ? nameIndex.get(block.place_id) ?? null : null}
+                        placeDetail={
+                            block.place_id ? detailIndex.get(block.place_id) ?? null : null
+                        }
+                        currency={currency}
+                    />
+                ))}
+            </div>
+        </article>
+    );
+}
+
+function ItineraryItemRow({
+                              block,
+                              place,
+                              placeDetail,
+                              currency,
+                          }: {
+    block: DayBlock;
+    place: PlaceLite | null;
+    placeDetail: PlaceDetail | null;
+    currency: string;
+}) {
+    const [open, setOpen] = React.useState(false);
+    const anchorRef = React.useRef<HTMLButtonElement | null>(null);
+
+    // Close popover on outside click or Escape
+    React.useEffect(() => {
+        if (!open) return;
+        const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+        const onClick = (e: MouseEvent) => {
+            const t = e.target as Node;
+            if (!anchorRef.current) return;
+            const panel = document.getElementById(popId(anchorRef.current));
+            if (!panel) return;
+            if (!anchorRef.current.contains(t) && !panel.contains(t as Node)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener("keydown", onKey);
+        document.addEventListener("click", onClick);
+        return () => {
+            document.removeEventListener("keydown", onKey);
+            document.removeEventListener("click", onClick);
+        };
+    }, [open]);
+
+    const chips: Array<{ icon: React.ReactNode; label: string }> = [];
+
+    if (isFiniteNum(block.est_cost))
+        chips.push({
+            icon: <DollarSign className="h-3.5 w-3.5" />,
+            label: formatMoney(block.est_cost!, currency),
+        });
+
+    if (isFiniteNum(block.duration_min))
+        chips.push({
+            icon: <Clock className="h-3.5 w-3.5" />,
+            label: formatMinutes(block.duration_min!),
+        });
+
+    if (isFiniteNum(block.travel_min_from_prev))
+        chips.push({
+            icon: <CarFront className="h-3.5 w-3.5" />,
+            label: `${block.travel_min_from_prev} min travel`,
+        });
+
+    return (
+        <div className="px-4 py-3 sm:px-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                {/* Left: title + when + place */}
+                <div className="min-w-0 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {block.when && (
+                            <span className="inline-flex items-center rounded-md border border-border/60 px-2.5 py-0.5 text-xs text-muted-foreground">
+                {block.when}
+              </span>
+                        )}
+
+                        {block.title && (
+                            <span className="text-sm font-medium">{block.title}</span>
+                        )}
+                    </div>
+
+                    {/* Place (clickable to open popover) */}
+                    {place && (
+                        <div className="mt-0.5">
+                            <button
+                                ref={anchorRef}
+                                id={buttonId(place.id)}
+                                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                                onClick={() => setOpen((v) => !v)}
+                                aria-expanded={open}
+                                aria-controls={open ? popId(anchorRef.current!) : undefined}
+                            >
+                                <MapPin className="h-4 w-4" />
+                                <span>{place.name}</span>
+                            </button>
+                        </div>
+                    )}
+
+                    {block.notes && (
+                        <p className="text-sm text-muted-foreground">{block.notes}</p>
+                    )}
+                </div>
+
+                {/* Right: chips */}
+                {chips.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                        {chips.map((c, i) => (
+                            <span
+                                key={i}
+                                className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-xs"
+                            >
+                {c.icon}
+                                <span>{c.label}</span>
+              </span>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Popover */}
+            {place && open && (
+                <Popover
+                    anchorId={buttonId(place.id)}
+                    onClose={() => setOpen(false)}
+                    place={place}
+                    detail={placeDetail}
+                />
+            )}
+        </div>
+    );
+}
+
+/* ---------------- Popover ---------------- */
+
+function Popover({
+                     anchorId,
+                     onClose,
+                     place,
+                     detail,
+                 }: {
+    anchorId: string;
+    onClose: () => void;
+    place: PlaceLite;
+    detail: PlaceDetail | null;
+}) {
+    // Position below the anchor
+    const [style, setStyle] = React.useState<React.CSSProperties>({});
+    React.useLayoutEffect(() => {
+        const anchor = document.getElementById(anchorId);
+        if (!anchor) return;
+        const rect = anchor.getBoundingClientRect();
+        setStyle({
+            position: "fixed",
+            top: rect.bottom + 8,
+            left: Math.min(rect.left, window.innerWidth - 340),
+            width: Math.min(320, window.innerWidth - 16),
+            zIndex: 50,
+        });
+    }, [anchorId]);
+
+    const gmapsHref = buildGoogleMapsLink(detail ?? undefined, place);
+
+    return (
+        <div
+            id={popIdByAnchor(anchorId)}
+            className="overflow-hidden rounded-xl border border-border/60 bg-popover shadow-lg"
+            style={style}
+            role="dialog"
+            aria-label={`${place.name} details`}
+        >
+            {/* Header */}
+            <div className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-2">
+                <div className="min-w-0">
+                    <div className="truncate text-sm font-semibold">{place.name}</div>
+                    {detail?.category && (
+                        <div className="truncate text-xs text-muted-foreground">
+                            {detail.category}
+                        </div>
+                    )}
+                </div>
+                <button
+                    className="rounded p-1 text-muted-foreground hover:bg-accent"
+                    onClick={onClose}
+                    aria-label="Close"
+                >
+                    <X className="h-4 w-4" />
+                </button>
+            </div>
+
+            {/* Body */}
+            <div className="space-y-3 p-3">
+                {detail?.photo_url && (
+                    <div className="relative h-40 w-full overflow-hidden rounded-lg">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={detail.photo_url}
+                            alt={place.name}
+                            className="h-full w-full object-cover"
+                        />
+                    </div>
+                )}
+                {detail?.address && (
+                    <div className="text-sm text-muted-foreground">{detail.address}</div>
+                )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2 border-t border-border/60 p-3">
+                <a
+                    href={gmapsHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
+                >
+                    Open in Google Maps
+                    <ArrowUpRight className="h-4 w-4" />
+                </a>
+            </div>
+        </div>
+    );
+}
+
+/* ---------------- Utils ---------------- */
+
+function dayLabel(index: number, day: Day) {
+    // Day N • Mon, 11 Nov (or “Unscheduled”)
+    const left = `Day ${index + 1}`;
+    if (!day.date) return `${left} • Unscheduled`;
+    const d = new Date(`${day.date}T00:00:00`);
+    const right = d.toLocaleDateString(undefined, {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+    });
+    return `${left} • ${right}`;
+}
+
+function popId(btn: HTMLElement) {
+    return `${btn.id}-popover`;
+}
+function popIdByAnchor(anchorId: string) {
+    return `${anchorId}-popover`;
+}
+function buttonId(placeId: string) {
+    return `place-btn-${placeId}`;
+}
+
+function isFiniteNum(n: unknown): n is number {
+    return typeof n === "number" && Number.isFinite(n);
+}
+
+function formatMoney(n: number, currency: string) {
+    try {
+        return new Intl.NumberFormat(undefined, {
+            style: "currency",
+            currency,
+            maximumFractionDigits: 0,
+        }).format(n);
+    } catch {
+        return `${currency} ${Math.round(n).toLocaleString()}`;
+    }
+}
+
+function formatMinutes(min: number) {
+    if (min < 60) return `${min} min`;
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return m ? `${h}h ${m}m` : `${h}h`;
+}
+
+function friendlyDate(ymd: string) {
+    const d = new Date(`${ymd}T00:00:00`);
+    return d.toLocaleDateString(undefined, {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "2-digit",
+    });
+}
+
+function buildGoogleMapsLink(detail: PlaceDetail | undefined, fallback: PlaceLite) {
+    const q =
+        detail?.lat && detail?.lng
+            ? `${detail.lat},${detail.lng}`
+            : encodeURIComponent(fallback.name);
+    return `https://www.google.com/maps/search/?api=1&query=${q}`;
+}

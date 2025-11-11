@@ -2,7 +2,7 @@
 "use server";
 
 import {revalidatePath} from "next/cache";
-import {createClientServer} from "@/lib/supabase/server";
+import {createClientServerRSC} from "@/lib/supabase/server";
 
 /**
  * Update basic profile fields.
@@ -15,7 +15,7 @@ export async function saveProfileAction(formData: FormData) {
 
     if (!id) throw new Error("Missing user id");
 
-    const sb = await createClientServer();
+    const sb = await createClientServerRSC();
 
     // optional: ensure the caller is the same user
     const {
@@ -47,7 +47,7 @@ export async function topupPointsAction(formData: FormData) {
         throw new Error("Invalid topup");
     }
 
-    const sb = await createClientServer();
+    const sb = await createClientServerRSC();
 
     const {
         data: {user},

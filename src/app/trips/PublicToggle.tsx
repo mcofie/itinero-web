@@ -37,7 +37,7 @@ export default function PublicToggle({
         } finally {
             setBusy(false);
             // hard-reload to pick updated public_id
-            if (typeof window !== "undefined") window.location.reload();
+            // if (typeof window !== "undefined") window.location.reload();
         }
     }
 
