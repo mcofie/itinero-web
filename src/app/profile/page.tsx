@@ -110,7 +110,6 @@ export default async function ProfilePage() {
 
     // Points (aggregate w/ fallback to profiles.points_balance)
     const { data: sumValue, error } = await sb.rpc("sum_points_for_user", { uid: userId });
-    if (error) console.error(error);
     const points = Number(sumValue ?? 0);
 
 
@@ -123,9 +122,6 @@ export default async function ProfilePage() {
         .eq("user_id", userId)
         .order("created_at", {ascending: false})
         .limit(200);
-
-    console.log(historyRows);
-
 
     const history = Array.isArray(historyRows) ? (historyRows as LedgerRow[]) : [];
 

@@ -147,18 +147,22 @@ export default function AppShell({children, userEmail}: Props) {
                     return;
                 }
 
+                // Points (aggregate w/ fallback to profiles.points_balance)
+                const { data: sumValue, error } = await sb.rpc("sum_points_for_user", { uid: userId });
+                const points = Number(sumValue ?? 0);
+                setPoints(points);
                 // 1) Preferred: secure RPC
-                try {
-                    const {data: rpcBalance, error: rpcErr} = await sb.rpc(
-                        "get_points_balance"
-                    );
-                    if (!rpcErr && typeof rpcBalance === "number") {
-                        setPoints(rpcBalance);
-                        return;
-                    }
-                } catch {
-                    /* ignore */
-                }
+                // try {
+                //     const {data: rpcBalance, error: rpcErr} = await sb.rpc(
+                //         "get_points_balance"
+                //     );
+                //     if (!rpcErr && typeof rpcBalance === "number") {
+                //         setPoints(rpcBalance);
+                //         return;
+                //     }
+                // } catch {
+                //     /* ignore */
+                // }
 
                 // 2) Aggregate on ledger
                 try {

@@ -132,7 +132,7 @@ export default function TripViewerClient({
     }, [data.days]);
 
     return (
-        <Card className="overflow-hidden border-border border shadow-sm">
+        <Card className="overflow-hidden border border-border shadow-sm">
             <CardContent className="space-y-6 py-6">
                 {hasInterests(inputs) && inputs.interests.length > 0 && (
                     <div>
@@ -152,7 +152,7 @@ export default function TripViewerClient({
                         <span>Trip progress</span>
                         <span>Day {Math.min(activeDayIdx + 1, Math.max(1, totalDays))} of {totalDays || "—"}</span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full border-border border bg-muted/40">
+                    <div className="h-2 w-full overflow-hidden rounded-full border border-border bg-muted/40">
                         <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
                     </div>
                 </div>
@@ -172,7 +172,7 @@ export default function TripViewerClient({
                     <TabsContent value="overview" className="mt-4">
                         <div className="grid gap-4 lg:grid-cols-[minmax(520px,1fr)_380px]">
                             <div className="space-y-4">
-                                <div className="space-y-4 rounded-2xl border-border border bg-card p-4">
+                                <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
                                     <div className="space-y-1">
                                         <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Destination</div>
                                         <div className="text-xl font-semibold">
@@ -208,7 +208,7 @@ export default function TripViewerClient({
                                     )}
                                 </div>
 
-                                <div className="rounded-2xl border-border border bg-card p-4">
+                                <div className="rounded-2xl border border-border bg-card p-4">
                                     <div className="mb-2 text-sm font-semibold">About this destination</div>
                                     {destinationMeta?.description ? (
                                         <p className="text-sm leading-relaxed text-muted-foreground">{destinationMeta.description}</p>
@@ -219,7 +219,7 @@ export default function TripViewerClient({
                                     )}
                                 </div>
 
-                                <div className="rounded-2xl border-border border bg-card p-4">
+                                <div className="rounded-2xl border border-border bg-card p-4">
                                     <div className="mb-2 text-sm font-semibold">History</div>
                                     {destinationMeta?.history ? (
                                         <p className="text-sm leading-relaxed text-muted-foreground">{destinationMeta.history}</p>
@@ -232,7 +232,7 @@ export default function TripViewerClient({
                             </div>
 
                             <aside className="lg:sticky lg:top-20 lg:self-start">
-                                <div className="space-y-3 rounded-2xl border-border border bg-card p-4">
+                                <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
                                     <div className="text-sm font-semibold">Know before you go</div>
                                     <ul className="mt-2 space-y-2 text-sm">
                                         {(destinationMeta?.currency_code || destinationMeta?.fx_rate) && (
@@ -354,7 +354,7 @@ export default function TripViewerClient({
                         {/* Two-pane layout with matched heights */}
                         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(480px,1fr)_minmax(540px,1fr)]">
                             {/* LEFT: Days pane — scrolls internally; full-height only on lg+ */}
-                            <div className="rounded-2xl border-border border bg-card overflow-hidden h-auto lg:h-[calc(100vh-160px)]">
+                            <div className="rounded-2xl border border-border bg-card overflow-hidden h-auto lg:h-[calc(100vh-160px)]">
                                 <ScrollArea className="h-full">
                                     <div className="p-2 md:p-3">
                                         <EditableDay
@@ -373,7 +373,7 @@ export default function TripViewerClient({
 
                             {/* RIGHT: Map — mobile gets sane height; sticky only on lg+ */}
                             <aside className="lg:sticky lg:top-20 lg:self-start">
-                                <div className="overflow-hidden rounded-2xl border-border border h-64 sm:h-80 lg:h-[calc(100vh-160px)]">
+                                <div className="overflow-hidden rounded-2xl border border-border h-64 sm:h-80 lg:h-[calc(100vh-160px)]">
                                     <LeafletMap day={activeDay} placesById={placesById} theme={theme} />
                                 </div>
                             </aside>
@@ -381,13 +381,13 @@ export default function TripViewerClient({
                     </TabsContent>
 
                     <TabsContent value="places" className="mt-0">
-                        <div className="rounded-2xl border-border border p-4">
+                        <div className="rounded-2xl border border-border p-4">
                             <PlacesList places={data.places} />
                         </div>
                     </TabsContent>
 
                     <TabsContent value="raw" className="mt-0">
-                        <div className="h-[420px] w-full overflow-hidden rounded-2xl border-border border">
+                        <div className="h-[420px] w-full overflow-hidden rounded-2xl border border-border">
                             <pre className="p-4 text-xs">{JSON.stringify(data, null, 2)}</pre>
                         </div>
                     </TabsContent>
@@ -450,14 +450,14 @@ function EditableDay({
     }
 
     return (
-        <div className="space-y-4 p-3 md:p-4">
+        <div className="space-y-4 md:p-4">
             {/* Header */}
             <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto] md:items-end">
                 <div className="space-y-1">
                     <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Day {dayIdx + 1}</div>
+                    <DayCostPill amount={dayCost} />
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="text-lg font-semibold">{formatISODate(day?.date)}</span>
-                        <DayCostPill amount={dayCost} />
                     </div>
                 </div>
 
@@ -481,14 +481,13 @@ function EditableDay({
                 </div>
             )}
 
-            {/* ---- Clean list (no rails/connectors) ---- */}
+            {/* Clean list (no step nodes / rails) */}
             <ol role="list" className="space-y-4 md:space-y-5">
                 {blocks.map((b, i) => {
                     const place = b.place_id ? placesById.get(b.place_id) : null;
                     const forControls = items[i];
                     return (
-                        <li key={`${day?.date ?? "no-date"}-${i}`} className="relative pl-9 sm:pl-10">
-                            <StepNode index={i + 1} variant={b.when} />
+                        <li key={`${day?.date ?? "no-date"}-${i}`}>
                             <BlockCard
                                 title={b.title}
                                 when={b.when}
@@ -554,7 +553,6 @@ function BlockCard({
     const hasNotes = !!notes?.trim();
     const hasStats = stats?.length > 0;
 
-    // helper to truncate notes safely
     const truncate = (s: string, n: number) => (s.length > n ? `${s.slice(0, n)}…` : s);
 
     return (
@@ -586,84 +584,61 @@ function BlockCard({
           {whenUi.icon}
             {when}
         </span>
-                <h3 className="min-w-0 truncate text-base font-semibold leading-tight">{title}</h3>
                 {actions ? <div className="ml-auto shrink-0 opacity-90 transition-opacity group-hover:opacity-100">{actions}</div> : null}
             </div>
 
-            {/* --- Notes (truncated), optional divider above if also showing meta/stats --- */}
+            <h3 className="min-w-0 truncate text-base font-semibold leading-tight">{title}</h3>
+
             {hasNotes && (
                 <>
-                    {(hasMeta || hasStats) && <div className="relative z-10 mt-2 border-t border-border/70" />}
-                    <p
-                        className="relative z-10 mt-2 text-sm leading-relaxed text-muted-foreground"
-                        title={notes}
-                    >
+                    {(hasMeta || hasStats) && <div className="relative z-10 mt-2 border-border/70" />}
+                    <p className="relative z-10 mt-2 text-sm leading-relaxed text-muted-foreground" title={notes}>
                         {truncate(notes ?? "", 160)}
                     </p>
                 </>
             )}
 
-            {/* Divider only if there will be body content */}
-            {(hasMeta || hasStats) && <div className="relative z-10 mt-3 border-t border-border/70" />}
+            {(hasMeta || hasStats) && <div className="relative z-10 mt-3 border-border/70" />}
 
-            {/* --- Body: Meta (left) • Stats (right) --- */}
             {(hasMeta || hasStats) && (
-                <div className="relative z-10 mt-3 grid gap-3 md:mt-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+                <div className="relative z-10 mt-3 grid gap-3 pb-2 md:mt-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
                     {/* Meta (place + coords) */}
-                    <div className="min-w-0">
+                    <div className="w-full">
                         {place ? (
                             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                                 <PlaceChip place={place} />
-                                {coords ? (
-                                    <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px]">{coords}</span>
-                                ) : null}
+                                {coords ? <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px]">{coords}</span> : null}
                             </div>
                         ) : (
                             <div className="text-sm text-muted-foreground">No place selected</div>
                         )}
                     </div>
-
-                    {/* Stats (always inline, scroll if overflow) */}
-                    {hasStats ? (
-                        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto py-1 md:justify-end">
-                            {stats.map((s, idx) => (
-                                <div key={idx} className="flex-shrink-0">
-                                    <StatChip variant={s.kind} label={s.label} value={s.value} />
-                                </div>
-                            ))}
-                        </div>
-                    ) : null}
                 </div>
             )}
+
+            {/* Stats */}
+            {hasStats ? (
+                <div className="flex items-center px-2.5 gap-2 sm:gap-3 border-t mt-2 py-2 overflow-x-auto border-border md:justify-end">
+                    {stats.map((s, idx) => (
+                        <div key={idx} className="flex-shrink-0">
+                            <StatChip variant={s.kind} label={s.label} value={s.value} />
+                        </div>
+                    ))}
+                </div>
+            ) : null}
         </div>
     );
 }
 
 /* ---------- Visual helpers ---------- */
 
-function StepNode({ index, variant }: { index: number; variant: "morning" | "afternoon" | "evening" }) {
-    const whenUi = getWhenUi(variant);
-    return (
-        <span
-            className={cn(
-                "absolute left-2 sm:left-3 top-3 grid h-7 w-7 place-items-center rounded-full text-[11px] font-semibold tabular-nums",
-                "border border-border shadow-sm ring-2",
-                whenUi.nodeRing,
-                "bg-background text-foreground"
-            )}
-            aria-label={`Step ${index}`}
-        >
-      {index}
-    </span>
-    );
-}
-
 function getWhenUi(
     when: "morning" | "afternoon" | "evening"
 ): { badge: string; icon: React.ReactNode; nodeRing: string } {
     if (when === "morning") {
         return {
-            badge: "bg-amber-50 text-amber-900 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-100 dark:ring-amber-900/40",
+            badge:
+                "bg-amber-50 text-amber-900 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-100 dark:ring-amber-900/40",
             icon: <span className="text-[12px]">🌅</span>,
             nodeRing: "ring-amber-200/70 dark:ring-amber-300/30",
         };
@@ -676,7 +651,8 @@ function getWhenUi(
         };
     }
     return {
-        badge: "bg-violet-50 text-violet-900 ring-violet-200 dark:bg-violet-900/20 dark:text-violet-100 dark:ring-violet-900/40",
+        badge:
+            "bg-violet-50 text-violet-900 ring-violet-200 dark:bg-violet-900/20 dark:text-violet-100 dark:ring-violet-900/40",
         icon: <span className="text-[12px]">🌆</span>,
         nodeRing: "ring-violet-200/70 dark:ring-violet-300/30",
     };
@@ -732,7 +708,10 @@ function StatChip({
     const s = styles[variant];
 
     return (
-        <div className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium", s.wrap)} aria-label={`${label}: ${value}`}>
+        <div
+            className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium", s.wrap)}
+            aria-label={`${label}: ${value}`}
+        >
             <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />
             {s.icon}
             <span className="opacity-80">{label}:</span>
