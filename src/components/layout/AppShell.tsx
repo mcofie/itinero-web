@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {usePathname, useRouter} from "next/navigation";
-import {createClientBrowser} from "@/lib/supabase/browser";
-import {cn} from "@/lib/utils";
+import { usePathname, useRouter } from "next/navigation";
+import { createClientBrowser } from "@/lib/supabase/browser";
+import { cn } from "@/lib/utils";
 
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
     DialogContent,
@@ -15,7 +15,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
-import {Input} from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import {
     Tooltip,
     TooltipContent,
@@ -37,7 +37,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
     LogOut,
@@ -49,7 +49,7 @@ import {
     Menu,
     Crown,
 } from "lucide-react";
-import {ThemeToggle} from "@/components/ThemeToggle";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Props = {
     children: React.ReactNode;
@@ -61,7 +61,9 @@ type LedgerSumRow = { sum: number | null };
 type LedgerRow = { delta: number | null };
 type ProfileRow = { points_balance: number | null; points: number | null };
 
-export default function AppShell({children, userEmail}: Props) {
+const POINT_UNIT_PRICE_GHS = 0.4; // 40 pesewas per point
+
+export default function AppShell({ children, userEmail }: Props) {
     const pathname = usePathname();
     const router = useRouter();
     const sb = React.useMemo(() => createClientBrowser(), []);
@@ -71,29 +73,28 @@ export default function AppShell({children, userEmail}: Props) {
     const [loadingPoints, setLoadingPoints] = React.useState<boolean>(true);
 
     const [topupOpen, setTopupOpen] = React.useState(false);
-    const [topupAmt, setTopupAmt] = React.useState<string>("");
+    const [pointsInput, setPointsInput] = React.useState<string>(""); // NEW: enter points
     const [topupBusy, setTopupBusy] = React.useState(false);
 
-    // number helpers
     const fmtInt = React.useCallback(
         (n: number) =>
-            new Intl.NumberFormat(undefined, {maximumFractionDigits: 0}).format(n),
+            new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n),
         []
     );
 
-    // init: session + first load, and listen to auth changes
+    // Session init + auth listener
     React.useEffect(() => {
         let mounted = true;
 
         (async () => {
-            const {data: auth} = await sb.auth.getUser();
-            const userId = auth?.user?.id ?? null;
+            const { data: auth } = await sb.auth.getUser();
             if (!mounted) return;
+            const userId = auth?.user?.id ?? null;
             setUid(userId);
             await refreshPoints(userId);
         })();
 
-        const {data: sub} = sb.auth.onAuthStateChange(async (_evt, sess) => {
+        const { data: sub } = sb.auth.onAuthStateChange(async (_evt, sess) => {
             const userId = sess?.user?.id ?? null;
             setUid(userId);
             await refreshPoints(userId);
@@ -105,11 +106,11 @@ export default function AppShell({children, userEmail}: Props) {
         };
     }, [sb]);
 
-    // live updates when ledger OR profiles change
+    // Live updates for points changes
     React.useEffect(() => {
         if (!uid) return;
 
-        const ch1 = sb
+        const chLedger = sb
             .channel("points-ledger-live")
             .on(
                 "postgres_changes",
@@ -123,21 +124,22 @@ export default function AppShell({children, userEmail}: Props) {
             )
             .subscribe();
 
-        const ch2 = sb
+        const chProfiles = sb
             .channel("profiles-live")
             .on(
-                "postgres_changes",                           // ← you were missing this
+                "postgres_changes",
                 { event: "*", schema: "public", table: "profiles", filter: `id=eq.${uid}` },
                 () => void refreshPoints(uid)
             )
             .subscribe();
 
         return () => {
-            void sb.removeChannel(ch1);
-            void sb.removeChannel(ch2);
+            void sb.removeChannel(chLedger);
+            void sb.removeChannel(chProfiles);
         };
     }, [uid, sb]);
 
+    // Consolidated refresh: prefer RPC → aggregate → profiles
     const refreshPoints = React.useCallback(
         async (userId: string | null) => {
             setLoadingPoints(true);
@@ -147,84 +149,52 @@ export default function AppShell({children, userEmail}: Props) {
                     return;
                 }
 
-                // Points (aggregate w/ fallback to profiles.points_balance)
-                const { data: sumValue, error } = await sb.rpc("sum_points_for_user", { uid: userId });
-                const points = Number(sumValue ?? 0);
-                setPoints(points);
-                // 1) Preferred: secure RPC
-                // try {
-                //     const {data: rpcBalance, error: rpcErr} = await sb.rpc(
-                //         "get_points_balance"
-                //     );
-                //     if (!rpcErr && typeof rpcBalance === "number") {
-                //         setPoints(rpcBalance);
-                //         return;
-                //     }
-                // } catch {
-                //     /* ignore */
-                // }
-
-                // 2) Aggregate on ledger
+                // 1) RPC (fast & accurate)
                 try {
-                    const {data, error} = await sb
+                    const { data: sumValue } = await sb.rpc("sum_points_for_user", { uid: userId });
+                    const rpcPoints = Number(sumValue ?? 0);
+                    if (Number.isFinite(rpcPoints)) {
+                        setPoints(rpcPoints);
+                        return;
+                    }
+                } catch {
+                    /* skip to fallbacks */
+                }
+
+                // 2) Server aggregate
+                try {
+                    const { data } = await sb
                         .schema("itinero")
                         .from("points_ledger")
                         .select("sum:sum(delta)")
                         .eq("user_id", userId)
                         .maybeSingle<LedgerSumRow>();
-
-                    if (!error && data) {
-                        const agg = Number(data.sum ?? 0);
-                        if (Number.isFinite(agg)) {
-                            setPoints(agg);
-                            return;
-                        }
-                    }
-                } catch {
-                    /* ignore */
-                }
-
-                // 3) Client-side sum fallback
-                try {
-                    const {data: rows, error} = await sb
-                        .schema("itinero")
-                        .from("points_ledger")
-                        .select("delta")
-                        .eq("user_id", userId);
-
-                    if (!error && Array.isArray(rows)) {
-                        const typedRows = rows as LedgerRow[];
-                        const total = typedRows.reduce<number>(
-                            (acc, r) => acc + (Number(r.delta ?? 0) || 0),
-                            0
-                        );
-                        setPoints(total);
+                    const agg = Number(data?.sum ?? 0);
+                    if (Number.isFinite(agg)) {
+                        setPoints(agg);
                         return;
                     }
                 } catch {
-                    /* ignore */
+                    /* skip */
                 }
 
-                // 4) Final fallback: profiles
+                // 3) Profiles fallback
                 try {
-                    const {data: prof, error: pErr} = await sb
+                    const { data: prof } = await sb
                         .from("profiles")
                         .select("points_balance, points")
                         .eq("id", userId)
                         .maybeSingle<ProfileRow>();
-
-                    if (!pErr && prof) {
-                        const bal =
-                            typeof prof.points_balance === "number"
-                                ? prof.points_balance
-                                : typeof prof.points === "number"
-                                    ? prof.points
-                                    : 0;
-                        setPoints(bal);
-                        return;
-                    }
+                    const bal =
+                        typeof prof?.points_balance === "number"
+                            ? prof.points_balance
+                            : typeof prof?.points === "number"
+                                ? prof.points
+                                : 0;
+                    setPoints(bal);
+                    return;
                 } catch {
-                    /* ignore */
+                    /* skip */
                 }
 
                 setPoints(0);
@@ -243,129 +213,130 @@ export default function AppShell({children, userEmail}: Props) {
         }
     }, [router, sb]);
 
-    const handleTopup = React.useCallback(async () => {
-        const amount = Number(topupAmt);
-        if (!Number.isFinite(amount) || amount <= 0 || !uid || topupBusy) return;
+    // ---- NEW: startTopup using points → quote → paystack init (GHS)
+    const startTopup = React.useCallback(async () => {
+        const pts = Number(pointsInput);
+        if (!Number.isFinite(pts) || pts <= 0 || !uid || topupBusy) return;
 
         setTopupBusy(true);
         try {
-            const {
-                data: {session},
-            } = await sb.auth.getSession();
-            if (!session?.access_token) {
-                throw new Error("Please sign in to top up points.");
+            const qRes = await fetch("/api/points/quote", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ points: pts }),
+            });
+
+            if (!qRes.ok) {
+                const err = await qRes.json().catch(() => ({}));
+                console.error("Quote failed", err);
+                return;
+            }
+            const q = await qRes.json();
+
+            const initRes = await fetch("/api/paystack/init", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ quoteId: q.quoteId, email: userEmail ?? "user@example.com" }),
+            });
+
+            if (!initRes.ok) {
+                const err = await initRes.json().catch(() => ({}));
+                console.error("Paystack init failed", err);
+                return;
             }
 
-            const r = await fetch(
-                `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create_topup_session`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${session.access_token}`,
-                        apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
-                    },
-                    body: JSON.stringify({amount, currency: "GHS"}),
-                }
-            );
-
-            const data = await r.json();
-            if (r.ok && data.authorization_url) {
-                window.location.href = data.authorization_url;
-            } else {
-                console.error("Topup init failed", data);
-            }
+            const init = await initRes.json();
+            window.location.href = init.authorization_url;
         } catch (e) {
             console.error(e);
         } finally {
             setTopupBusy(false);
         }
-    }, [sb, topupAmt, uid, topupBusy]);
+    }, [pointsInput, uid, topupBusy, userEmail]);
 
-    const onTopupKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+
+    const onPointsKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
             e.preventDefault();
-            void handleTopup();
+            void startTopup();
         }
     };
 
+    const initials = (email?: string | null) =>
+        (email?.[0] ?? "U").toUpperCase() +
+        (email?.split("@")?.[0]?.[1]?.toUpperCase() ?? "");
+
+    // live preview of GHS amount
+    const pointsToBuy = Number(pointsInput) || 0;
+    const ghsPreview = Math.round(pointsToBuy * POINT_UNIT_PRICE_GHS * 100) / 100;
+
     return (
-        <TooltipProvider>
-            {/* Wrapper now flexes vertically to keep footer at bottom */}
-            <div
-                className="min-h-dvh min-h-screen flex flex-col bg-gradient-to-b from-background via-background/70 to-background text-foreground">
+        <TooltipProvider delayDuration={150}>
+            <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background/70 to-background text-foreground">
                 {/* Header */}
-                <header
-                    className="sticky top-0 z-40 border-b border-border bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
-                    <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center justify-between px-3 md:px-6">
-                        {/* Left: Brand + Mobile Menu */}
+                <header className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
+                    <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+                        {/* Left: Mobile menu + Brand */}
                         <div className="flex items-center gap-2">
                             <Sheet>
                                 <SheetTrigger asChild>
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="mr-1 md:hidden"
+                                        className="md:hidden"
                                         aria-label="Open menu"
                                     >
-                                        <Menu className="h-5 w-5"/>
+                                        <Menu className="h-5 w-5" />
                                     </Button>
                                 </SheetTrigger>
-                                <SheetContent side="left" className="w-72">
+                                <SheetContent side="left" className="w-80">
                                     <SheetHeader>
                                         <SheetTitle className="flex items-center gap-2">
-                                            <Map className="h-4 w-4"/>
+                      <span className="grid h-8 w-8 place-items-center rounded-md bg-primary/90 text-primary-foreground shadow-sm">
+                        <Map className="h-4 w-4" />
+                      </span>
                                             Itinero
                                         </SheetTitle>
                                     </SheetHeader>
+
                                     <nav className="mt-6 grid gap-1">
-                                        <MobileNavItem
-                                            href="/trips"
-                                            active={pathname?.startsWith("/trips")}
-                                        >
-                                            <Calendar className="mr-2 h-4 w-4"/>
+                                        <MobileNavItem href="/trips" active={pathname?.startsWith("/trips")}>
+                                            <Calendar className="mr-2 h-4 w-4" />
                                             Trips
                                         </MobileNavItem>
                                         <MobileNavItem href="/profile" active={pathname === "/profile"}>
-                                            <User className="mr-2 h-4 w-4"/>
+                                            <User className="mr-2 h-4 w-4" />
                                             Profile
                                         </MobileNavItem>
                                         <MobileNavItem href="/rewards" active={pathname === "/rewards"}>
-                                            <Star className="mr-2 h-4 w-4"/>
+                                            <Star className="mr-2 h-4 w-4" />
                                             Rewards
                                         </MobileNavItem>
                                     </nav>
+
                                     <div className="mt-6">
-                                        <Button
-                                            className="w-full gap-1"
-                                            onClick={() => router.push("/trip-maker")}
-                                        >
-                                            <Plus className="h-4 w-4"/>
+                                        <Button className="w-full gap-1" onClick={() => router.push("/trip-maker")}>
+                                            <Plus className="h-4 w-4" />
                                             New Trip
                                         </Button>
                                     </div>
                                 </SheetContent>
                             </Sheet>
 
-                            <Link
-                                href="/trips"
-                                className="group flex items-center gap-2 text-sm font-semibold"
-                            >
-                <span
-                    className="grid h-8 w-8 place-items-center rounded-md bg-primary/90 text-primary-foreground shadow-sm transition group-hover:scale-[1.02]">
-                  <Map className="h-4 w-4"/>
+                            <Link href="/trips" className="group flex items-center gap-2 text-sm font-semibold">
+                <span className="grid h-9 w-9 place-items-center rounded-md bg-primary/90 text-primary-foreground shadow-sm transition group-hover:scale-[1.02]">
+                  <Map className="h-4 w-4" />
                 </span>
-                                <span
-                                    className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                                <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-base text-transparent">
                   Itinero
                 </span>
                             </Link>
                         </div>
 
-                        {/* Center: Desktop nav */}
+                        {/* Center: Desktop Nav */}
                         <nav className="hidden items-center gap-1 md:flex">
                             <NavItem href="/trips" active={pathname?.startsWith("/trips")}>
-                                <Calendar className="mr-2 h-4 w-4"/>
+                                <Calendar className="mr-2 h-4 w-4" />
                                 Trips
                             </NavItem>
 
@@ -376,19 +347,19 @@ export default function AppShell({children, userEmail}: Props) {
                                 aria-label="Create new trip"
                                 title="Create new trip"
                             >
-                                <Plus className="h-4 w-4"/>
+                                <Plus className="h-4 w-4" />
                                 New Trip
                             </Button>
 
                             <NavItem href="/profile" active={pathname === "/profile"}>
-                                <User className="mr-2 h-4 w-4"/>
+                                <User className="mr-2 h-4 w-4" />
                                 Profile
                             </NavItem>
                         </nav>
 
-                        {/* Right: Theme toggle + points + user */}
+                        {/* Right: Theme + Points + User */}
                         <div className="flex items-center gap-1">
-                            <ThemeToggle/>
+                            <ThemeToggle />
 
                             <Tooltip>
                                 <TooltipTrigger asChild>
@@ -400,9 +371,9 @@ export default function AppShell({children, userEmail}: Props) {
                                         title="View rewards"
                                         aria-label="View rewards"
                                     >
-                                        <Star className="h-4 w-4"/>
+                                        <Star className="h-4 w-4" />
                                         {loadingPoints ? (
-                                            <span className="inline-flex h-4 w-10 animate-pulse rounded-sm bg-muted"/>
+                                            <span className="inline-flex h-4 w-10 animate-pulse rounded-sm bg-muted" />
                                         ) : (
                                             <span className="tabular-nums">{fmtInt(points)}</span>
                                         )}
@@ -415,51 +386,46 @@ export default function AppShell({children, userEmail}: Props) {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="gap-1"
-                                onClick={() => setTopupOpen(true)}
+                                className="gap-1 border-border"
+                                onClick={() => {
+                                    setPointsInput("");
+                                    setTopupOpen(true);
+                                }}
                                 aria-label="Top up points"
                             >
-                                <Plus className="h-4 w-4"/>
+                                <Plus className="h-4 w-4" />
                                 Top up
                             </Button>
 
-                            {/* User menu */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="ml-1 px-2"
-                                        aria-label="Open user menu"
-                                    >
-                                        <Avatar className="h-7 w-7">
-                                            <AvatarImage alt={userEmail ?? "User"}/>
-                                            <AvatarFallback>
-                                                {(userEmail ?? "U").slice(0, 2).toUpperCase()}
-                                            </AvatarFallback>
+                                    <Button variant="ghost" size="sm" className="ml-1 px-2" aria-label="Open user menu">
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage alt={userEmail ?? "User"} />
+                                            <AvatarFallback>{initials(userEmail)}</AvatarFallback>
                                         </Avatar>
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-60">
-                                    <DropdownMenuLabel className="flex items-center justify-between">
+                                <DropdownMenuContent align="end" className="w-64 border-border">
+                                    <DropdownMenuLabel className="flex items-center justify-between gap-2">
                                         <span className="truncate">{userEmail ?? "Signed in"}</span>
                                         <Badge variant="secondary" className="gap-1">
-                                            <Crown className="h-3 w-3"/>{" "}
+                                            <Crown className="h-3 w-3" />
                                             {loadingPoints ? "…" : fmtInt(points)}
                                         </Badge>
                                     </DropdownMenuLabel>
-                                    <DropdownMenuSeparator/>
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => router.push("/profile")}>
-                                        <User className="mr-2 h-4 w-4"/>
+                                        <User className="mr-2 h-4 w-4" />
                                         Profile
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => router.push("/rewards")}>
-                                        <Star className="mr-2 h-4 w-4"/>
+                                        <Star className="mr-2 h-4 w-4" />
                                         Rewards
                                     </DropdownMenuItem>
-                                    <DropdownMenuSeparator/>
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={logout}>
-                                        <LogOut className="mr-2 h-4 w-4"/>
+                                        <LogOut className="mr-2 h-4 w-4" />
                                         Logout
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -468,51 +434,67 @@ export default function AppShell({children, userEmail}: Props) {
                     </div>
                 </header>
 
-                {/* Page content */}
-                <main className="flex-1 mx-auto w-full max-w-[1400px] px-3 md:px-6">
+                {/* Main */}
+                <main
+                    id="app-content"
+                    className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-10"
+                >
                     {children}
                 </main>
 
-                {/* Footer stays at bottom */}
-                <footer className="mt-auto border-t border-border py-6 text-center text-xs text-muted-foreground">
+                {/* Footer */}
+                <footer className="mt-auto border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
                     © {new Date().getFullYear()} Itinero
                 </footer>
 
-                {/* Top up dialog */}
+                {/* Top up dialog (POINTS → GHS) */}
                 <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
                     <DialogContent className="sm:max-w-sm">
                         <DialogHeader>
                             <DialogTitle>Top up points</DialogTitle>
                         </DialogHeader>
+
                         <div className="space-y-3">
-                            <label htmlFor="topup-amount" className="text-xs text-muted-foreground">
-                                Amount (GHS)
-                            </label>
+                            <div className="flex items-baseline justify-between">
+                                <label htmlFor="pts" className="text-xs text-muted-foreground">
+                                    Points to buy
+                                </label>
+                                <span className="text-xs text-muted-foreground">1 pt = GHS {POINT_UNIT_PRICE_GHS.toFixed(2)}</span>
+                            </div>
+
                             <Input
-                                id="topup-amount"
+                                id="pts"
                                 type="number"
-                                inputMode="decimal"
+                                inputMode="numeric"
                                 min={1}
                                 placeholder="e.g., 100"
-                                value={topupAmt}
-                                onChange={(e) => setTopupAmt(e.target.value)}
-                                onKeyDown={onTopupKeyDown}
-                                aria-label="Top up amount in Ghana cedis"
+                                value={pointsInput}
+                                onChange={(e) => setPointsInput(e.target.value)}
+                                onKeyDown={onPointsKeyDown}
+                                aria-label="Points to purchase"
                             />
+
+                            <div className="text-sm">
+                                You’ll be charged{" "}
+                                <span className="font-semibold">
+                  GHS {ghsPreview.toFixed(2)}
+                </span>
+                                <span className="text-muted-foreground"> via Paystack</span>.
+                            </div>
                             <p className="text-xs text-muted-foreground">
-                                This creates a credit row in{" "}
-                                <span className="font-medium">itinero.points_ledger</span>.
+                                After a successful payment, your points balance will update automatically.
                             </p>
                         </div>
+
                         <DialogFooter>
                             <Button variant="ghost" onClick={() => setTopupOpen(false)} disabled={topupBusy}>
                                 Cancel
                             </Button>
                             <Button
-                                onClick={handleTopup}
-                                disabled={topupBusy || !Number(topupAmt) || Number(topupAmt) <= 0}
+                                onClick={startTopup}
+                                disabled={topupBusy || !Number(pointsInput) || Number(pointsInput) <= 0}
                             >
-                                {topupBusy ? "Processing…" : "Confirm"}
+                                {topupBusy ? "Processing…" : "Confirm & Pay"}
                             </Button>
                         </DialogFooter>
                     </DialogContent>

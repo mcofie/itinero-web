@@ -155,6 +155,33 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/api/paystack/init/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/paystack/init">> = Specific
+  const handler = {} as typeof import("../../src/app/api/paystack/init/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/paystack/webhook/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/paystack/webhook">> = Specific
+  const handler = {} as typeof import("../../src/app/api/paystack/webhook/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/points/quote/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/points/quote">> = Specific
+  const handler = {} as typeof import("../../src/app/api/points/quote/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/api/rewards/verify/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/rewards/verify">> = Specific

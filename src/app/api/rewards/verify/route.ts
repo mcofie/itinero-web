@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {createClientServer} from "@/lib/supabase/server";
+import {createClientServerRSC} from "@/lib/supabase/server";
 
 export async function GET(req: Request) {
     const {searchParams} = new URL(req.url);
@@ -8,7 +8,7 @@ export async function GET(req: Request) {
         return NextResponse.json({ok: false, message: "Missing reference"}, {status: 400});
     }
 
-    const sb = await createClientServer();
+    const sb = await createClientServerRSC();
 
     // Auth (server)
     const {

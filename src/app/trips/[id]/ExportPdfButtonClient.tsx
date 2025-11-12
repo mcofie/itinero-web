@@ -1,3 +1,4 @@
+// src/app/trips/[id]/ExportPdfButtonClient.tsx
 "use client";
 
 import * as React from "react";
@@ -13,7 +14,9 @@ export default function ExportPdfButtonClient({ tripId }: { tripId: string }) {
         setLoading(true);
         try {
             const res = await fetch(
-                `https://ziglffbvcexvwguqopqm.supabase.co/functions/v1/export_itinerary_pdf?trip_id=${tripId}`,
+                `https://ziglffbvcexvwguqopqm.supabase.co/functions/v1/export_itinerary_pdf?trip_id=${encodeURIComponent(
+                    tripId
+                )}`,
                 {
                     headers: {
                         Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
@@ -22,20 +25,37 @@ export default function ExportPdfButtonClient({ tripId }: { tripId: string }) {
             );
 
             if (!res.ok) {
+                // Try to extract a JSON error shape, but keep it typed as unknown and narrow
                 let msg = `HTTP ${res.status}`;
                 try {
-                    const j = await res.json();
-                    msg = j?.error || j?.message || msg;
-                } catch {}
+                    const j: unknown = await res.json();
+                    if (
+                        j &&
+                        typeof j === "object" &&
+                        ("error" in j || "message" in j)
+                    ) {
+                        const maybeMsg =
+                            (typeof (j as { error?: unknown }).error === "string" &&
+                                (j as { error: string }).error) ||
+                            (typeof (j as { message?: unknown }).message === "string" &&
+                                (j as { message: string }).message);
+                        if (maybeMsg) msg = maybeMsg;
+                    }
+                } catch {
+                    // ignore parse errors, keep status text
+                }
                 throw new Error(msg);
             }
 
             const blob = await res.blob();
             const filename = parseFilename(res.headers) || "itinerary.pdf";
             triggerDownload(blob, filename);
-        } catch (e: any) {
+        } catch (e: unknown) {
+            // Narrow unknown error to a message
+            const message =
+                e instanceof Error ? e.message : typeof e === "string" ? e : "Unknown error";
             console.error(e);
-            setErr(e.message || String(e));
+            setErr(message);
         } finally {
             setLoading(false);
         }
@@ -43,11 +63,7 @@ export default function ExportPdfButtonClient({ tripId }: { tripId: string }) {
 
     return (
         <div>
-            <Button
-                onClick={onClick}
-                disabled={loading}
-                className="inline-flex items-center gap-2"
-            >
+            <Button onClick={onClick} disabled={loading} className="inline-flex items-center gap-2">
                 <FileDown className="h-4 w-4" />
                 {loading ? "Preparing…" : "Download PDF"}
             </Button>

@@ -2,11 +2,28 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClientServerAction } from "@/lib/supabase/server";
+import { createClientServerRSC } from "@/lib/supabase/server";
 
-type Supa = Awaited<ReturnType<typeof createClientServerAction>>;
+/** Narrowest shape we rely on from Supabase/PostgREST errors */
+type PostgrestLikeError = {
+    message?: string;
+    code?: string;
+    details?: string | null;
+    hint?: string | null;
+};
 
-// unambiguous slug
+type Supa = Awaited<ReturnType<typeof createClientServerRSC>>;
+
+/** Minimal row used for lookups in this file */
+type TripLookupRow = {
+    id: string;
+    user_id: string;
+    public_id: string | null;
+};
+
+// ───────────────────────── helpers ─────────────────────────
+
+/** Random, unambiguous slug */
 function makeSlug(len = 8) {
     const abc = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
     const buf = new Uint8Array(len);
@@ -32,19 +49,32 @@ async function uniquePublicId(sb: Supa, tries = 6) {
     throw new Error("Could not generate a unique public id; please try again.");
 }
 
-function formatPgErr(prefix: string, e: any) {
-    // Supabase often returns { message, code, details, hint }
-    const parts = [prefix, e?.message];
-    if (e?.code) parts.push(`code=${e.code}`);
-    if (e?.details) parts.push(`details=${e.details}`);
-    if (e?.hint) parts.push(`hint=${e.hint}`);
+/** Type guard: does the value look like a PostgREST/Supabase error? */
+function isPostgrestLikeError(e: unknown): e is PostgrestLikeError {
+    return typeof e === "object" && e !== null && ("message" in e || "code" in e);
+}
+
+/** Nicely format Supabase errors without using `any` */
+function formatPgErr(prefix: string, e: unknown) {
+    if (!isPostgrestLikeError(e)) return prefix;
+    const parts = [prefix, e.message];
+    if (e.code) parts.push(`code=${e.code}`);
+    if (e.details) parts.push(`details=${e.details}`);
+    if (e.hint) parts.push(`hint=${e.hint}`);
     return parts.filter(Boolean).join(" | ");
 }
 
-export async function setTripPublic(tripId: string, makePublic: boolean) {
-    const sb = await createClientServerAction();
+/** Type guard: check for a specific Postgres error code (e.g. 23505 unique_violation) */
+function hasPgCode(e: unknown, code: string): boolean {
+    return isPostgrestLikeError(e) && e.code === code;
+}
 
-    // 1) AUTH DEBUG
+// ───────────────────────── actions ─────────────────────────
+
+export async function setTripPublic(tripId: string, makePublic: boolean) {
+    const sb = await createClientServerRSC();
+
+    // 1) AUTH
     const { data: auth, error: authErr } = await sb.auth.getUser();
     if (authErr) throw new Error(formatPgErr("Auth error", authErr));
     if (!auth?.user?.id) throw new Error("Not signed in (no user id in server action).");
@@ -57,14 +87,13 @@ export async function setTripPublic(tripId: string, makePublic: boolean) {
         .from("trips")
         .select("id,user_id,public_id")
         .eq("id", tripId)
-        .maybeSingle();
-
+        .maybeSingle<TripLookupRow>();
 
     if (selErr) throw new Error(formatPgErr("Select trip failed", selErr));
     if (!row) throw new Error("Trip not found");
     if (row.user_id !== userId) throw new Error("You do not have access to this trip");
 
-    const oldPublicId = (row.public_id as string | null) ?? null;
+    const oldPublicId = row.public_id ?? null;
     let finalPublicId: string | null = null;
 
     // 3) UPDATE (atomic .select() + retry on 23505)
@@ -77,15 +106,15 @@ export async function setTripPublic(tripId: string, makePublic: boolean) {
                 .update({ public_id: candidate })
                 .eq("id", tripId)
                 .select("public_id")
-                .maybeSingle();
+                .maybeSingle<{ public_id: string | null }>();
 
             if (!upErr) {
                 finalPublicId = updated?.public_id ?? candidate;
                 break;
             }
 
-            // unique violation
-            if ((upErr as any)?.code === "23505") {
+            // unique violation → try a fresh id
+            if (hasPgCode(upErr, "23505")) {
                 candidate = await uniquePublicId(sb);
                 continue;
             }
@@ -103,7 +132,7 @@ export async function setTripPublic(tripId: string, makePublic: boolean) {
             .update({ public_id: null })
             .eq("id", tripId)
             .select("public_id")
-            .maybeSingle();
+            .maybeSingle<{ public_id: string | null }>();
 
         if (upErr) throw new Error(formatPgErr("Clear public_id failed", upErr));
         finalPublicId = updated?.public_id ?? null;

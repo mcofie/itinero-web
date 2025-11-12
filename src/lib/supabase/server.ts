@@ -1,36 +1,28 @@
 // src/lib/supabase/server.ts
-import 'server-only';
-import { cookies } from 'next/headers';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { cookies } from "next/headers";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-/**
- * Use this inside Server Components (e.g. page.tsx, layout.tsx) and generateMetadata.
- * It MUST NOT write cookies, so set/remove are no-ops.
- */
-export function createClientServerRSC() {
-    const cookieStore = cookies();
-    return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+/** For RSC / Server Components — cookie mutations are no-ops */
+export async function createClientServerRSC() {
+    const cookieStore = await cookies();
+    return createServerClient(SUPABASE_URL, SUPABASE_ANON, {
         cookies: {
             get(name: string) {
                 return cookieStore.get(name)?.value;
             },
-            // No-ops in RSC (mutations are not allowed)
             set(_name: string, _value: string, _options: CookieOptions) {},
             remove(_name: string, _options: CookieOptions) {},
         },
     });
 }
 
-/**
- * Use this only inside Server Actions ("use server") and Route Handlers (app/api/*).
- * It can read/write cookies.
- */
-export function createClientServerAction() {
-    const cookieStore = cookies();
-    return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+/** For Route Handlers (/app/api/**) — cookie mutations allowed */
+export async function createClientServerRoute() {
+    const cookieStore = await cookies();
+    return createServerClient(SUPABASE_URL, SUPABASE_ANON, {
         cookies: {
             get(name: string) {
                 return cookieStore.get(name)?.value;
@@ -38,9 +30,8 @@ export function createClientServerAction() {
             set(name: string, value: string, options: CookieOptions) {
                 cookieStore.set({ name, value, ...options });
             },
-            remove(name: string, _options: CookieOptions) {
-                // Next 15 supports delete(); either is fine.
-                cookieStore.delete(name);
+            remove(name: string, options: CookieOptions) {
+                cookieStore.set({ name, value: "", ...options });
             },
         },
     });

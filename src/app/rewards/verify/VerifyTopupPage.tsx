@@ -155,7 +155,7 @@ export default function VerifyTopupPage() {
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                            <Button variant="secondary" onClick={() => router.push("/trips")}>
+                            <Button variant="secondary" onClick={() => router.push("/profile")}>
                                 <ArrowLeft className="mr-2 h-4 w-4" />
                                 Back to Home
                             </Button>

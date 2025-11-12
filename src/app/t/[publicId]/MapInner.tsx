@@ -2,6 +2,7 @@
 "use client";
 import "leaflet/dist/leaflet.css";
 import * as React from "react";
+import type * as Leaflet from "leaflet";
 
 export default function MapInner({
                                      places,
@@ -11,15 +12,19 @@ export default function MapInner({
     const ref = React.useRef<HTMLDivElement | null>(null);
 
     React.useEffect(() => {
-        let map: any;
-        let L: typeof import("leaflet");
+        let map: Leaflet.Map | null = null;
+        let L: typeof Leaflet;
 
         (async () => {
             L = (await import("leaflet")).default;
 
-            // Fix default icon URLs (optional)
-            // @ts-ignore
-            delete (L.Icon.Default as any).prototype._getIconUrl;
+            // Ensure default marker icons resolve from CDN (avoid bundler URL issues)
+            const defaultProto = L.Icon.Default.prototype as unknown as {
+                _getIconUrl?: unknown;
+            };
+            // Some setups keep a private _getIconUrl reference; remove it so mergeOptions takes effect
+            delete defaultProto._getIconUrl;
+
             L.Icon.Default.mergeOptions({
                 iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
                 iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
@@ -36,13 +41,14 @@ export default function MapInner({
             }).addTo(map);
 
             const valid = places.filter(
-                (p) => Number.isFinite(p.lat) && Number.isFinite(p.lng)
-            ) as Array<{ id: string; name: string; lat: number; lng: number }>;
+                (p): p is { id: string; name: string; lat: number; lng: number } =>
+                    Number.isFinite(p.lat) && Number.isFinite(p.lng)
+            );
 
             if (valid.length) {
                 const bounds = L.latLngBounds([]);
                 valid.forEach((p) => {
-                    L.marker([p.lat, p.lng]).addTo(map).bindPopup(p.name);
+                    L.marker([p.lat, p.lng]).addTo(map!).bindPopup(p.name);
                     bounds.extend([p.lat, p.lng]);
                 });
                 map.fitBounds(bounds.pad(0.2));
@@ -52,9 +58,11 @@ export default function MapInner({
         })();
 
         return () => {
-            try {
-                // Leaflet cleans up when the element is removed; nothing special here.
-            } catch {}
+            // Properly dispose map instance if it was created
+            if (map) {
+                map.remove();
+                map = null;
+            }
         };
     }, [places]);
 

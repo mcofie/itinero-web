@@ -1,23 +1,22 @@
 // app/trips/[id]/page.tsx
 import * as React from "react";
 import Link from "next/link";
-import {redirect} from "next/navigation";
-import {createClientServerRSC} from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { createClientServerRSC } from "@/lib/supabase/server";
 import AppShell from "@/components/layout/AppShell";
 
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
-import {CalendarDays, DollarSign, MapPin, ArrowLeft} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, DollarSign, MapPin, ArrowLeft } from "lucide-react";
 
 import TripViewerClient from "./TripViewerClient";
-
-import TripActionsClient, {TripConfig} from "@/app/trips/TripActionsClient";
+import TripActionsClient, { TripConfig } from "@/app/trips/TripActionsClient";
 import PublicToggle from "@/app/trips/PublicToggle";
-// app/trips/[id]/page.tsx
-export const dynamic = 'force-dynamic';
+
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
-export const fetchCache = 'default-no-store'; // Next 14+ only
+export const fetchCache = "default-no-store";
 
 type UUID = string;
 
@@ -30,8 +29,8 @@ type TripRow = {
     end_date: string | null;
     est_total_cost: number | null;
     currency: string | null;
-    cover_url?: string | null; // ✅ add this
-    destination_id?: UUID | null; // 👈 used to fetch destination + history
+    cover_url?: string | null;
+    destination_id?: UUID | null;
     inputs?:
         | {
         destinations?: { name: string; lat?: number; lng?: number }[];
@@ -134,7 +133,13 @@ export type PreviewLike = {
 };
 
 /* ---------- meta & history helpers ---------- */
-type JSONValue = string | number | boolean | null | JSONValue[] | { [k: string]: JSONValue };
+type JSONValue =
+    | string
+    | number
+    | boolean
+    | null
+    | JSONValue[]
+    | { [k: string]: JSONValue };
 
 type ItineroKBYG = {
     currency?: string;
@@ -179,51 +184,56 @@ type DestinationMetaLike = {
     history?: string;
 };
 
-function isObject(x: unknown): x is Record<string, unknown> {
-    return typeof x === "object" && x !== null;
-}
+/* ---------- strict guards & accessors (no `any`) ---------- */
+type UnknownRecord = Record<string, unknown>;
 
-function toDate(x: unknown): Date | null {
-    if (x instanceof Date && !isNaN(x.getTime())) return x;
-    if (typeof x === "string") {
-        const d = new Date(x);
-        return isNaN(d.getTime()) ? null : d;
-    }
-    return null;
+function isUnknownRecord(v: unknown): v is UnknownRecord {
+    return typeof v === "object" && v !== null;
 }
-
-function asHistoryRow(x: unknown): DestinationHistoryRow | null {
-    if (!isObject(x)) return null;
-    const row: DestinationHistoryRow = {
-        id: typeof x.id === "string" ? x.id : undefined,
-        section: typeof x.section === "string" ? x.section : undefined,
-        payload: isObject(x.payload) || Array.isArray(x.payload) ? (x.payload as JSONValue) : undefined,
-        sources: Array.isArray(x.sources) || isObject(x.sources) ? (x.sources as JSONValue) : undefined,
-        created_at: typeof x.created_at === "string" || x.created_at instanceof Date ? (x.created_at as any) : undefined,
-        backdrop_image_url: typeof x.backdrop_image_url === "string" ? x.backdrop_image_url : undefined,
-        backdrop_image_attribution:
-            typeof x.backdrop_image_attribution === "string" ? x.backdrop_image_attribution : undefined,
-    };
-    return row;
+function isString(v: unknown): v is string {
+    return typeof v === "string";
+}
+function isStringArray(v: unknown): v is string[] {
+    return Array.isArray(v) && v.every((x) => typeof x === "string");
 }
 
 function coercePayload(p: unknown): DestinationHistoryPayload {
-    if (!isObject(p)) return {};
+    if (!isUnknownRecord(p)) return {};
     const out: DestinationHistoryPayload = {};
-    if (typeof (p as any).about === "string") out.about = (p as any).about;
-    if (typeof (p as any).history === "string") out.history = (p as any).history;
 
-    const kbyg = (p as any).kbyg;
-    if (isObject(kbyg)) {
+    const about = p["about"];
+    if (isString(about)) out.about = about;
+
+    const history = p["history"];
+    if (isString(history)) out.history = history;
+
+    const kbygRaw = p["kbyg"];
+    if (isUnknownRecord(kbygRaw)) {
         const kb: ItineroKBYG = {};
-        if (typeof (kbyg as any).currency === "string") kb.currency = (kbyg as any).currency;
-        if (typeof (kbyg as any).plugs === "string") kb.plugs = (kbyg as any).plugs;
-        if (Array.isArray((kbyg as any).languages)) kb.languages = (kbyg as any).languages as string[];
-        else if (typeof (kbyg as any).languages === "string") kb.languages = [(kbyg as any).languages];
-        if (isObject((kbyg as any).weather) || Array.isArray((kbyg as any).weather)) kb.weather = (kbyg as any).weather as JSONValue;
-        if (typeof (kbyg as any).getting_around === "string") kb.getting_around = (kbyg as any).getting_around;
-        if (typeof (kbyg as any).esim === "string") kb.esim = (kbyg as any).esim;
-        if (typeof (kbyg as any).primary_city === "string") kb.primary_city = (kbyg as any).primary_city;
+
+        const currency = kbygRaw["currency"];
+        if (isString(currency)) kb.currency = currency;
+
+        const plugs = kbygRaw["plugs"];
+        if (isString(plugs)) kb.plugs = plugs;
+
+        const languagesRaw = kbygRaw["languages"];
+        if (isStringArray(languagesRaw)) kb.languages = languagesRaw;
+        else if (isString(languagesRaw)) kb.languages = languagesRaw;
+
+        const weatherRaw = kbygRaw["weather"];
+        if (isUnknownRecord(weatherRaw) || Array.isArray(weatherRaw))
+            kb.weather = weatherRaw as JSONValue;
+
+        const gettingAround = kbygRaw["getting_around"];
+        if (isString(gettingAround)) kb.getting_around = gettingAround;
+
+        const esim = kbygRaw["esim"];
+        if (isString(esim)) kb.esim = esim;
+
+        const primaryCity = kbygRaw["primary_city"];
+        if (isString(primaryCity)) kb.primary_city = primaryCity;
+
         out.kbyg = kb;
     }
     return out;
@@ -239,28 +249,39 @@ export function extractDestName(inputs: unknown): string {
 }
 
 /** Build a client-friendly meta object from a destination_history payload */
-function buildDestinationMetaFromHistoryRow(hist: DestinationHistoryRow | null | undefined): {
+function buildDestinationMetaFromHistoryRow(
+    hist: DestinationHistoryRow | null | undefined
+): {
     meta?: DestinationMetaLike;
     heroUrl?: string;
 } {
     if (!hist) return {};
     const payload = coercePayload(hist.payload);
     const k = payload.kbyg ?? {};
-    const weather = (k.weather && isObject(k.weather)) ? (k.weather as Record<string, any>) : undefined;
+
+    const weatherObj =
+        k.weather && isUnknownRecord(k.weather) ? (k.weather as UnknownRecord) : undefined;
 
     const meta: DestinationMetaLike = {
         description: payload.about ?? undefined,
         history: payload.history ?? undefined,
-        currency_code: typeof k.currency === "string" ? k.currency : undefined,
-        plugs: typeof k.plugs === "string" ? k.plugs.split(",").map(s => s.trim()).filter(Boolean) : undefined,
-        languages: Array.isArray(k.languages) ? (k.languages as string[]) : undefined,
-        weather_desc: typeof weather?.summary === "string" ? weather.summary : undefined,
-        transport: typeof k.getting_around === "string" ? k.getting_around.split(",").map(s => s.trim()).filter(Boolean) : undefined,
-        esim_provider: typeof k.esim === "string" ? k.esim : undefined,
-        city: typeof k.primary_city === "string" ? k.primary_city : undefined,
+        currency_code: isString(k.currency) ? k.currency : undefined,
+        plugs: isString(k.plugs)
+            ? k.plugs.split(",").map((s) => s.trim()).filter(Boolean)
+            : undefined,
+        languages: Array.isArray(k.languages) && isStringArray(k.languages)
+            ? k.languages
+            : undefined,
+        weather_desc:
+            weatherObj && isString(weatherObj["summary"]) ? (weatherObj["summary"] as string) : undefined,
+        transport: isString(k.getting_around)
+            ? k.getting_around.split(",").map((s) => s.trim()).filter(Boolean)
+            : undefined,
+        esim_provider: isString(k.esim) ? k.esim : undefined,
+        city: isString(k.primary_city) ? k.primary_city : undefined,
     };
 
-    return {meta, heroUrl: hist.backdrop_image_url};
+    return { meta, heroUrl: hist.backdrop_image_url };
 }
 
 /* ---------- lodging helper ---------- */
@@ -268,29 +289,41 @@ type InputsWithLodging = {
     lodging?: { name: string; lat?: number; lng?: number } | null;
 };
 
-function getValidLodging(inputs: TripRow["inputs"]): { name: string; lat: number; lng: number } | null {
+function getValidLodging(
+    inputs: TripRow["inputs"]
+): { name: string; lat: number; lng: number } | null {
     if (!inputs || typeof inputs !== "object") return null;
     const maybe = inputs as InputsWithLodging;
     const l = maybe.lodging;
-    if (l && typeof l === "object" && typeof l.name === "string" && typeof l.lat === "number" && typeof l.lng === "number") {
-        return {name: l.name, lat: l.lat, lng: l.lng};
+    if (
+        l &&
+        typeof l === "object" &&
+        typeof l.name === "string" &&
+        typeof l.lat === "number" &&
+        typeof l.lng === "number"
+    ) {
+        return { name: l.name, lat: l.lat, lng: l.lng };
     }
     return null;
 }
 
-export default async function TripIdPage({params}: { params: { id: string } }) {
+export default async function TripIdPage({
+                                             params,
+                                         }: {
+    params: { id: string };
+}) {
     const sb = await createClientServerRSC();
 
     // Auth (SSR)
     const {
-        data: {user},
+        data: { user },
     } = await sb.auth.getUser();
     if (!user) redirect("/login");
 
     const tripId = params.id;
 
     // ---- Trip ----
-    const {data: trip, error: tripErr} = await sb
+    const { data: trip, error: tripErr } = await sb
         .schema("itinero")
         .from("trips")
         .select("*")
@@ -303,15 +336,18 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                 <div className="mx-auto mt-10 max-w-2xl px-4">
                     <Button asChild variant="ghost" className="mb-3">
                         <Link href="/trips">
-                            <ArrowLeft className="mr-2 h-4 w-4"/> Back to trips
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to trips
                         </Link>
                     </Button>
                     <Card>
                         <CardHeader>
-                            <CardTitle>{tripErr ? "Couldn’t load trip" : "Trip not found"}</CardTitle>
+                            <CardTitle>
+                                {tripErr ? "Couldn’t load trip" : "Trip not found"}
+                            </CardTitle>
                         </CardHeader>
                         <CardContent className="text-sm text-muted-foreground">
-                            {tripErr?.message ?? "The requested trip doesn’t exist or you don’t have access to it."}
+                            {tripErr?.message ??
+                                "The requested trip doesn’t exist or you don’t have access to it."}
                         </CardContent>
                     </Card>
                 </div>
@@ -320,13 +356,13 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
     }
 
     // ---- Items (ordered) ----
-    const {data: items, error: itemsErr} = await sb
+    const { data: items, error: itemsErr } = await sb
         .schema("itinero")
         .from("itinerary_items")
         .select("*")
         .eq("trip_id", tripId)
-        .order("date", {ascending: true, nullsFirst: true})
-        .order("order_index", {ascending: true});
+        .order("date", { ascending: true, nullsFirst: true })
+        .order("order_index", { ascending: true });
 
     if (itemsErr) {
         return (
@@ -334,7 +370,7 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                 <div className="mx-auto mt-10 max-w-2xl px-4">
                     <Button asChild variant="ghost" className="mb-3">
                         <Link href="/trips">
-                            <ArrowLeft className="mr-2 h-4 w-4"/> Back to trips
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to trips
                         </Link>
                     </Button>
                     <Card>
@@ -353,10 +389,12 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
     const safeItems: ItemRow[] = Array.isArray(items) ? (items as ItemRow[]) : [];
 
     // ---- Places (for map markers) ----
-    const placeIds = Array.from(new Set(safeItems.map((r) => r.place_id).filter(Boolean))) as string[];
+    const placeIds = Array.from(
+        new Set(safeItems.map((r) => r.place_id).filter(Boolean))
+    ) as string[];
     let places: PlaceRow[] = [];
     if (placeIds.length) {
-        const {data: pRows} = await sb
+        const { data: pRows } = await sb
             .schema("itinero")
             .from("places")
             .select("id,name,lat,lng,category,popularity,cost_typical,cost_currency,tags")
@@ -367,7 +405,7 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
     // ---- Optional per-day polylines ----
     const polyByDate = new Map<string, string>();
     try {
-        const {data: routes} = await sb
+        const { data: routes } = await sb
             .schema("itinero")
             .from("trip_day_routes")
             .select("date,polyline6,polyline")
@@ -400,12 +438,12 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
         lodging: getValidLodging(trip.inputs),
     }));
 
-    // ---------- NEW: fetch destination + its history using trips.destination_id ----------
+    // ---------- Destination + history ----------
     let destination: DestinationRow | null = null;
     let history: DestinationHistoryRow | null = null;
 
     if (trip.destination_id) {
-        const {data: dRow} = await sb
+        const { data: dRow } = await sb
             .schema("itinero")
             .from("destinations")
             .select("id,name,lat,lng,current_history_id")
@@ -414,46 +452,61 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
         destination = dRow ?? null;
 
         if (destination?.current_history_id) {
-            const {data: hRow} = await sb
+            const { data: hRow } = await sb
                 .schema("itinero")
                 .from("destination_history")
-                .select("id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution")
+                .select(
+                    "id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution"
+                )
                 .eq("id", destination.current_history_id)
                 .maybeSingle<DestinationHistoryRow>();
             history = hRow ?? null;
         }
     }
 
-    // ---- Inputs enrichment (keep existing inputs but inject destination + meta from history) ----
+    // ---- Inputs enrichment ----
     const rawInputs = (trip.inputs ?? null) as TripRow["inputs"] | null;
-    const parsedInputs: Record<string, any> | null = ((): Record<string, any> | null => {
+
+    const parsedInputs: Record<string, unknown> | null = (() => {
         if (!rawInputs) return null;
         if (typeof rawInputs === "string") {
             try {
-                return JSON.parse(rawInputs as any);
+                const u: unknown = JSON.parse(rawInputs);
+                return isUnknownRecord(u) ? u : null;
             } catch {
                 return null;
             }
         }
-        return (rawInputs as any) ?? null;
+        return isUnknownRecord(rawInputs) ? (rawInputs as Record<string, unknown>) : null;
     })();
 
     // Ensure we have a destinations[0] entry for the UI (name/coords)
     const enrichedDestList =
         destination
-            ? [{
-                name: destination.name ?? "Destination",
-                lat: typeof destination.lat === "number" ? destination.lat : undefined,
-                lng: typeof destination.lng === "number" ? destination.lng : undefined,
-            }]
-            : (parsedInputs?.destinations ?? undefined);
+            ? [
+                {
+                    name: destination.name ?? "Destination",
+                    lat: typeof destination.lat === "number" ? destination.lat : undefined,
+                    lng: typeof destination.lng === "number" ? destination.lng : undefined,
+                },
+            ]
+            : (parsedInputs?.destinations as
+                | { name: string; lat?: number; lng?: number }[]
+                | undefined);
 
-    const {meta: histMeta, heroUrl} = buildDestinationMetaFromHistoryRow(history);
+    const { meta: histMeta, heroUrl } = buildDestinationMetaFromHistoryRow(history);
 
     const enrichedInputs = {
         ...(parsedInputs ?? {}),
-        ...(enrichedDestList ? {destinations: enrichedDestList} : {}),
-        ...(histMeta ? {destination_meta: {...(parsedInputs?.destination_meta ?? {}), ...histMeta}} : {}),
+        ...(enrichedDestList ? { destinations: enrichedDestList } : {}),
+        ...(histMeta
+            ? {
+                destination_meta: {
+                    ...((parsedInputs?.destination_meta as DestinationMetaLike | undefined) ?? {}),
+                    ...histMeta,
+                },
+            }
+            : {}),
     };
 
     const previewLike: PreviewLike = {
@@ -490,9 +543,24 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
     }));
 
     const heroBackground =
-        trip.cover_url // ✅ prefer the trip’s cover image
-        || heroUrl     // then the destination_history backdrop
-        || "https://images.unsplash.com/photo-1589556045897-c444ffa0a6ff?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2874";
+        trip.cover_url ||
+        heroUrl ||
+        "https://images.unsplash.com/photo-1589556045897-c444ffa0a6ff?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2874";
+
+    // Safely coerce useInputs for TripActionsClient without `any`
+    const inputsForClient: TripConfig | null = (() => {
+        const val = previewLike.trip_summary.inputs;
+        if (!val) return null;
+        if (typeof val === "string") {
+            try {
+                const u: unknown = JSON.parse(val);
+                return u as TripConfig;
+            } catch {
+                return null;
+            }
+        }
+        return val as TripConfig;
+    })();
 
     return (
         <AppShell userEmail={user.email ?? null}>
@@ -501,7 +569,7 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                 <div className="mb-4 flex items-center justify-between">
                     <Button asChild variant="ghost" size="sm" className="rounded-full">
                         <Link href="/trips">
-                            <ArrowLeft className="mr-2 h-4 w-4"/> Back
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Back
                         </Link>
                     </Button>
                 </div>
@@ -514,18 +582,18 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                         style={{
                             backgroundImage: `url('${heroBackground}')`,
                             backgroundSize: "cover",
-                            backgroundPosition: "center"
+                            backgroundPosition: "center",
                         }}
                     />
                     {/* Tint overlay */}
-                    <div className="absolute inset-0 bg-black/40 backdrop-brightness-75"/>
+                    <div className="absolute inset-0 bg-black/40 backdrop-brightness-75" />
                     {/* Content */}
                     <div className="relative z-10">
                         <CardHeader className="pb-2 text-white">
                             <div className="flex items-start justify-between gap-3">
                                 <div>
-                                    <div className="mb-1 text-[11px] uppercase tracking-wider opacity-90">Saved
-                                        Itinerary
+                                    <div className="mb-1 text-[11px] uppercase tracking-wider opacity-90">
+                                        Saved Itinerary
                                     </div>
                                     <CardTitle className="text-2xl leading-tight">
                                         {trip.title ?? "Untitled Trip"}
@@ -553,19 +621,19 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                             {/* Meta chips */}
                             <div className="flex flex-wrap items-center gap-2 text-sm">
                                 <Badge variant="outline" className="gap-1 rounded-full border-white/40 text-white">
-                                    <CalendarDays className="h-3.5 w-3.5"/>
+                                    <CalendarDays className="h-3.5 w-3.5" />
                                     {dateRange}
                                 </Badge>
 
                                 {typeof trip.est_total_cost === "number" && (
                                     <Badge variant="secondary" className="gap-1 rounded-full bg-white/20 text-white">
-                                        <DollarSign className="h-3.5 w-3.5"/>
+                                        <DollarSign className="h-3.5 w-3.5" />
                                         est. {trip.currency ?? "USD"} {Math.round(trip.est_total_cost)}
                                     </Badge>
                                 )}
 
                                 <Badge variant="outline" className="gap-1 rounded-full border-white/40 text-white">
-                                    <MapPin className="h-3.5 w-3.5"/>
+                                    <MapPin className="h-3.5 w-3.5" />
                                     {extractDestName(enrichedInputs)}
                                 </Badge>
                             </div>
@@ -578,18 +646,12 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                                     startDate={trip.start_date ?? undefined}
                                     endDate={trip.end_date ?? undefined}
                                     days={days}
-                                    useInputs={
-                                        (previewLike.trip_summary.inputs
-                                            ? typeof previewLike.trip_summary.inputs === "string"
-                                                ? JSON.parse(previewLike.trip_summary.inputs as any)
-                                                : previewLike.trip_summary.inputs
-                                            : null) as TripConfig | null
-                                    }
+                                    useInputs={inputsForClient}
                                     places={clientPlaces}
                                 />
 
                                 <div className="">
-                                    <PublicToggle tripId={trip.id} publicId={tripId}/>
+                                    <PublicToggle tripId={trip.id} publicId={tripId} />
                                 </div>
                             </div>
                         </CardContent>
@@ -597,7 +659,11 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
                 </Card>
 
                 {/* Viewer */}
-                <TripViewerClient tripId={trip.id} data={previewLike} startDate={previewLike.trip_summary.start_date}/>
+                <TripViewerClient
+                    tripId={trip.id}
+                    data={previewLike}
+                    startDate={previewLike.trip_summary.start_date}
+                />
             </div>
         </AppShell>
     );
@@ -606,7 +672,7 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
 /* ---------------- helpers ---------------- */
 
 // 🔒 Stable, SSR-safe date formatting (fixed locale + UTC)
-const STABLE_DATE_LOCALE = "en-GB";      // change to "en-US" if you prefer
+const STABLE_DATE_LOCALE = "en-GB";
 const STABLE_DATE_TIMEZONE = "UTC";
 
 const STABLE_DTF = new Intl.DateTimeFormat(STABLE_DATE_LOCALE, {
@@ -635,16 +701,14 @@ function formatDateRange(start?: string, end?: string) {
     return "—";
 }
 
-// (no other changes below)
-
 function groupItemsByDayIndex(items: ItemRow[]) {
     const map = new Map<number, { date: string | null; items: ItemRow[] }>();
     for (const it of items) {
         const key = it.day_index;
-        if (!map.has(key)) map.set(key, {date: it.date, items: []});
+        if (!map.has(key)) map.set(key, { date: it.date, items: [] });
         map.get(key)!.items.push(it);
     }
     return Array.from(map.entries())
         .sort((a, b) => a[0] - b[0])
-        .map(([dayIndex, v]) => ({dayIndex, date: v.date, items: v.items}));
+        .map(([dayIndex, v]) => ({ dayIndex, date: v.date, items: v.items }));
 }
