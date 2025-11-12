@@ -15,7 +15,6 @@ import {
     ChevronDown,
     User2,
 } from "lucide-react";
-import PublicTripMap from "@/app/t/[publicId]/PublicTripMap";
 import MapSection from "@/app/t/[publicId]/MapSection";
 
 /* ---------------- Types ---------------- */
@@ -43,7 +42,8 @@ export type PlaceLite = {
     category?: string | null;
 };
 
-type TripRowLoose = {
+type TripRowLoose =
+    | {
     id: string;
     public_id?: string | null;
     user_id?: string | null;
@@ -55,19 +55,23 @@ type TripRowLoose = {
     created_at?: string | null;
     inputs?: unknown;
     trip_summary?: unknown;
-    days?: unknown;        // legacy
+    days?: unknown; // legacy
     places?: unknown;
     cover_url?: string | null;
     destination_id?: string | null;
-} | null;
+}
+    | null;
 
-type DestinationRow = {
+type DestinationRow =
+    | {
     id: string;
     name: string | null;
     current_history_id: string | null;
-} | null;
+}
+    | null;
 
-type DestinationHistoryRow = {
+type DestinationHistoryRow =
+    | {
     id?: string;
     section?: string | null;
     payload?: unknown;
@@ -75,7 +79,8 @@ type DestinationHistoryRow = {
     created_at?: string | Date | null;
     backdrop_image_url?: string | null;
     backdrop_image_attribution?: string | null;
-} | null;
+}
+    | null;
 
 type ItineroKBYG = {
     currency?: string;
@@ -94,8 +99,6 @@ type PlaceDetail = {
     lat?: number | null;
     lng?: number | null;
     address?: string | null;
-    // photo_url?: string | null;
-    // google_place_id?: string | null;
 };
 
 type DestinationHistoryPayload = {
@@ -116,15 +119,18 @@ type DestinationMetaLike = {
     city?: string;
 };
 
-type ProfileRow = {
+type ProfileRow =
+    | {
     id: string;
     full_name?: string | null;
     avatar_url?: string | null;
     username?: string | null;
-} | null;
+}
+    | null;
 
 /** New: raw row from itinero.itinerary_items */
-type ItineraryItemRow = {
+type ItineraryItemRow =
+    | {
     id: string;
     trip_id: string;
     place_id?: string | null;
@@ -135,7 +141,8 @@ type ItineraryItemRow = {
     travel_min_from_prev?: number | null;
     date?: string | null; // ISO timestamp
     when?: string | null; // optional friendly label if you store one
-} | null;
+}
+    | null;
 
 /* ---------------- Coercion helpers ---------------- */
 
@@ -160,15 +167,25 @@ function isObject(x: unknown): x is Record<string, unknown> {
     return typeof x === "object" && x !== null;
 }
 
+function hasKey<T extends string>(
+    obj: Record<string, unknown>,
+    key: T
+): obj is Record<T, unknown> & typeof obj {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
 function coercePayload(u: unknown): DestinationHistoryPayload {
-    if (!isObject(u)) return {};
     const out: DestinationHistoryPayload = {};
+    if (!isObject(u)) return out;
+
     if (typeof u.about === "string") out.about = u.about;
     if (typeof u.history === "string") out.history = u.history;
 
-    const k = (u as any).kbyg;
-    if (isObject(k)) {
+    // Safely read u.kbyg without `any`
+    if (hasKey(u, "kbyg") && isObject(u.kbyg)) {
+        const k = u.kbyg as Record<string, unknown>;
         const kbyg: ItineroKBYG = {};
+
         if (typeof k.currency === "string") kbyg.currency = k.currency;
         if (typeof k.plugs === "string") kbyg.plugs = k.plugs;
         if (Array.isArray(k.languages)) kbyg.languages = k.languages as string[];
@@ -177,6 +194,7 @@ function coercePayload(u: unknown): DestinationHistoryPayload {
         if (typeof k.getting_around === "string") kbyg.getting_around = k.getting_around;
         if (typeof k.esim === "string") kbyg.esim = k.esim;
         if (typeof k.primary_city === "string") kbyg.primary_city = k.primary_city;
+
         out.kbyg = kbyg;
     }
     return out;
@@ -192,20 +210,36 @@ function buildMetaFromHistory(h: DestinationHistoryRow | null | undefined) {
 
     const payload = coercePayload(h.payload);
     const k = payload.kbyg ?? {};
-    const weather = (k.weather && isObject(k.weather)) ? (k.weather as Record<string, unknown>) : undefined;
+    const weather =
+        k.weather && isObject(k.weather) ? (k.weather as Record<string, unknown>) : undefined;
 
     const meta: DestinationMetaLike = {
         description: payload.about ?? undefined,
         history: payload.history ?? undefined,
         currency_code: typeof k.currency === "string" ? k.currency : undefined,
-        plugs: typeof k.plugs === "string" ? k.plugs.split(",").map(s => s.trim()).filter(Boolean) : undefined,
+        plugs:
+            typeof k.plugs === "string"
+                ? k.plugs
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                : undefined,
         languages: Array.isArray(k.languages)
             ? (k.languages as string[])
             : typeof k.languages === "string"
-                ? k.languages.split(",").map(s => s.trim()).filter(Boolean)
+                ? k.languages
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean)
                 : undefined,
         weather_desc: typeof weather?.summary === "string" ? (weather.summary as string) : undefined,
-        transport: typeof k.getting_around === "string" ? k.getting_around.split(",").map(s => s.trim()).filter(Boolean) : undefined,
+        transport:
+            typeof k.getting_around === "string"
+                ? k.getting_around
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                : undefined,
         esim_provider: typeof k.esim === "string" ? k.esim : undefined,
         city: typeof k.primary_city === "string" ? k.primary_city : undefined,
     };
@@ -213,15 +247,20 @@ function buildMetaFromHistory(h: DestinationHistoryRow | null | undefined) {
     return {
         meta,
         heroUrl: typeof h.backdrop_image_url === "string" ? h.backdrop_image_url : undefined,
-        attribution: typeof h.backdrop_image_attribution === "string" ? h.backdrop_image_attribution : undefined,
+        attribution:
+            typeof h.backdrop_image_attribution === "string"
+                ? h.backdrop_image_attribution
+                : undefined,
     };
 }
 
 /* ---------------- Metadata (SEO) ---------------- */
 
-export async function generateMetadata(
-    {params}: { params: { publicId: string } }
-): Promise<Metadata> {
+export async function generateMetadata({
+                                           params,
+                                       }: {
+    params: { publicId: string };
+}): Promise<Metadata> {
     const sb = await createClientServerRSC();
 
     const {data: trip} = await sb
@@ -302,7 +341,6 @@ export default async function PublicTripPage({
         owner = o ?? null;
     }
 
-
     // Destination history
     let dest: DestinationRow = null;
     let hist: DestinationHistoryRow = null;
@@ -320,7 +358,9 @@ export default async function PublicTripPage({
             const {data: hRow} = await sb
                 .schema("itinero")
                 .from("destination_history")
-                .select("id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution")
+                .select(
+                    "id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution"
+                )
                 .eq("id", dest.current_history_id)
                 .maybeSingle<DestinationHistoryRow>();
             hist = hRow ?? null;
@@ -330,10 +370,7 @@ export default async function PublicTripPage({
     const {meta: destMeta, heroUrl, attribution} = buildMetaFromHistory(hist);
 
     const title = (data.title ?? "Shared Trip").trim();
-    const dateRange = formatDateRange(
-        data.start_date ?? undefined,
-        data.end_date ?? undefined
-    );
+    const dateRange = formatDateRange(data.start_date ?? undefined, data.end_date ?? undefined);
 
     // Prefer destination_history backdrop over trip.cover_url
     const cover =
@@ -353,45 +390,32 @@ export default async function PublicTripPage({
         .order("date", {ascending: true, nullsFirst: true})
         .returns<ItineraryItemRow[]>();
 
-
-    // const items = Array.isArray(itemsRows) ? (itemsRows.filter(Boolean) as NonNullable<ItineraryItemRow>[]) : [];
-
-
     const items = Array.isArray(itemsRows)
         ? (itemsRows.filter(Boolean) as NonNullable<ItineraryItemRow>[])
         : [];
 
-// Collect place ids used by itinerary items
-    const placeIds = Array.from(
-        new Set(items.map((it) => it.place_id).filter(Boolean))
-    ) as string[];
+    // Collect place ids used by itinerary items
+    const placeIds = Array.from(new Set(items.map((it) => it.place_id).filter(Boolean))) as string[];
 
-// Fetch details for places referenced in itinerary
+    // Fetch details for places referenced in itinerary
     let placeDetails: PlaceDetail[] = [];
     if (placeIds.length > 0) {
         const {data: placeRows} = await sb
             .schema("itinero")
             .from("places")
-            .select(
-                "id,name,category,lat,lng,description"
-            )
+            .select("id,name,category,lat,lng,description")
             .in("id", placeIds)
             .returns<PlaceDetail[]>();
         placeDetails = placeRows ?? [];
-
     }
 
-
     // Build Day[] structure for the client component (group by date)
-    const days: Day[] =
-        items.length > 0 ? buildDaysFromItems(items) : fallbackDaysFromTrip(data.days);
-
+    const days: Day[] = items.length > 0 ? buildDaysFromItems(items) : fallbackDaysFromTrip(data.days);
 
     // Build PlaceLite[] from fetched placeDetails (fallback to legacy if any)
-    const places: PlaceLite[] =
-        (placeDetails?.length
-            ? placeDetails.map(({id, name, category}) => ({id, name, category: category ?? null}))
-            : asPlaceArray(data.places)) ?? [];
+    const places: PlaceLite[] = (placeDetails?.length
+        ? placeDetails.map(({id, name, category}) => ({id, name, category: category ?? null}))
+        : asPlaceArray(data.places)) ?? [];
 
     // Owner pill content
     const ownerName =
@@ -402,7 +426,6 @@ export default async function PublicTripPage({
 
     // Interests (top, non-collapsible)
     const interests = extractInterests(data.inputs, tripSummary);
-
 
     return (
         <div className="min-h-dvh bg-background text-foreground">
@@ -677,29 +700,36 @@ function extractInterests(inputsRaw: unknown, tripSummary: TripSummary): string[
 }
 
 function parseInterestsFrom(maybe: unknown): string[] {
-    try {
-        let obj: any = maybe;
-        if (typeof maybe === "string") obj = JSON.parse(maybe);
-        if (!isObject(obj)) return [];
-        const raw = (obj as any).interests;
-
-        if (Array.isArray(raw)) {
-            return raw
-                .map((v) => (typeof v === "string" ? v : String(v)))
-                .map(normalizeInterest)
-                .filter(Boolean) as string[];
+    // Accept JSON string or object; avoid `any`
+    let obj: unknown = maybe;
+    if (typeof maybe === "string") {
+        try {
+            obj = JSON.parse(maybe);
+        } catch {
+            return [];
         }
-        if (typeof raw === "string") {
-            return raw
-                .split(/[,\n]/g)
-                .map((s) => s.trim())
-                .filter(Boolean)
-                .map(normalizeInterest);
-        }
-        return [];
-    } catch {
-        return [];
     }
+    if (!isObject(obj)) return [];
+
+    const interestsRaw =
+        (hasKey(obj, "interests") ? (obj.interests as unknown) : undefined) ?? undefined;
+
+    if (Array.isArray(interestsRaw)) {
+        return interestsRaw
+            .map((v) => (typeof v === "string" ? v : String(v)))
+            .map(normalizeInterest)
+            .filter(Boolean);
+    }
+
+    if (typeof interestsRaw === "string") {
+        return interestsRaw
+            .split(/[,\n]/g)
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .map(normalizeInterest);
+    }
+
+    return [];
 }
 
 function normalizeInterest(s: string): string {
@@ -767,7 +797,9 @@ function buildDaysFromItems(items: NonNullable<ItineraryItemRow>[]): Day[] {
 
     // Order dates ascending; within a date they are already ordered by date from the query
     const out: Day[] = Array.from(byDate.entries())
-        .sort(([a], [b]) => (a === "unscheduled" ? 1 : b === "unscheduled" ? -1 : a.localeCompare(b)))
+        .sort(([a], [b]) =>
+            a === "unscheduled" ? 1 : b === "unscheduled" ? -1 : a.localeCompare(b)
+        )
         .map(([date, blocks]) => ({date: date === "unscheduled" ? null : date, blocks}));
 
     return out;

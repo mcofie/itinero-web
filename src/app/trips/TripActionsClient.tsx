@@ -6,7 +6,7 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/components/ui/dialog";
 import {createClientBrowser} from "@/lib/supabase/browser";
-import {CalendarPlus, FileDown, Link as LinkIcon, Pencil, Plus, Share2, Trash2, Save, X} from "lucide-react";
+import {CalendarPlus, FileDown, Link as LinkIcon, Pencil, Plus, Share2, Trash2, Save, X, Loader2} from "lucide-react";
 import {useRouter} from "next/navigation";
 import ExportPdfButtonClient from "@/app/trips/[id]/ExportPdfButtonClient";
 
@@ -201,10 +201,52 @@ export default function TripActionsClient({
 
 
     function DownloadPdfButton({tripId}: { tripId: string }) {
-        const href = `/api/trips/${tripId}/pdf`;
+        const [loading, setLoading] = useState(false);
+
+        const onClick = async () => {
+            if (loading) return;
+            setLoading(true);
+            try {
+                const res = await fetch(`/api/trips/${tripId}/pdf`, {
+                    method: "GET",
+                    credentials: "include", // carry auth cookies to the API route
+                });
+
+                if (!res.ok) {
+                    const text = await res.text().catch(() => "");
+                    throw new Error(text || `Failed with ${res.status}`);
+                }
+
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `trip-${tripId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                console.error("PDF download failed:", err);
+                alert("Failed to generate PDF. Please try again.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
         return (
-            <Button asChild variant="secondary">
-                <a href={href}>Download PDF</a>
+            <Button size="sm" variant="secondary" onClick={onClick} disabled={loading} aria-busy={loading}>
+                {loading ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                        Generating…
+                    </>
+                ) : (
+                    <>
+                        <FileDown className="mr-2 h-4 w-4"/>
+                        Download PDF
+                    </>
+                )}
             </Button>
         );
     }

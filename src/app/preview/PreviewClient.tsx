@@ -236,7 +236,6 @@ export default function PreviewClient({
 
     const [activeDayIdx, setActiveDayIdx] = React.useState(0);
     const [insufficientOpen, setInsufficientOpen] = React.useState(false);
-    const [saving, setSaving] = React.useState(false);
 
     const [paywallLeft, setPaywallLeft] = React.useState<number>(10);
     const [showPaywall, setShowPaywall] = React.useState<boolean>(false);
@@ -274,21 +273,20 @@ export default function PreviewClient({
     // Countdown to paywall (10s)
     React.useEffect(() => {
         if (showPaywall) return;
-        let id: number | undefined;
         let left = 10;
         setPaywallLeft(left);
 
-        id = window.setInterval(() => {
+        const timer = window.setInterval(() => {
             left -= 1;
             setPaywallLeft(left);
             if (left <= 0) {
-                window.clearInterval(id);
+                window.clearInterval(timer);
                 setShowPaywall(true);
             }
         }, 1000);
 
         return () => {
-            if (id) window.clearInterval(id);
+            window.clearInterval(timer);
         };
     }, [showPaywall]);
 
@@ -299,12 +297,7 @@ export default function PreviewClient({
     }, [inputs]);
 
     const modeIcon = modeToIcon(inputs?.mode);
-    const totalDays = preview?.days?.length ?? preview?.trip_summary.total_days ?? 0;
     const estTotal = preview?.trip_summary.est_total_cost ?? 0;
-    const dailyBudget = preview?.trip_summary?.currency
-        ? `${preview.trip_summary.currency} ${Math.round(estTotal / Math.max(totalDays, 1))}`
-        : `~$${Math.round(estTotal / Math.max(totalDays, 1))}`;
-    const progressPct = totalDays ? Math.min(100, Math.round(((activeDayIdx + 1) / totalDays) * 100)) : 0;
 
     const coverUrl = inputs?.destinations?.[0]?.cover_url || HERO_FALLBACK;
 
@@ -324,7 +317,6 @@ export default function PreviewClient({
                 return;
             }
 
-
             const {data, error} = await sb
                 .schema("itinero")
                 .from("destination_history")
@@ -335,9 +327,6 @@ export default function PreviewClient({
                 .limit(1)
                 .maybeSingle<DestinationHistoryRow>();
 
-            console.error("dfd",destId);
-
-
             if (error || !data) {
                 setDestMetaFromDb(null);
                 return;
@@ -347,7 +336,10 @@ export default function PreviewClient({
                 Array.isArray(v)
                     ? v
                     : typeof v === "string"
-                        ? v.split(",").map((s) => s.trim()).filter(Boolean)
+                        ? v
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean)
                         : undefined;
 
             const normalized: DestinationMetaLike = {
@@ -383,8 +375,6 @@ export default function PreviewClient({
     const handleSave = () => {
         if (!preview) return;
         router.push("/trips");
-        // If you want to actually persist, swap in the save flow below.
-        // saveDraftAsTrip(sb, preview, requiredPoints, points, setPoints, setInsufficientOpen, setSaving, router);
     };
 
     if (loading) {
@@ -476,22 +466,6 @@ export default function PreviewClient({
 
             {/* Main content */}
             <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:py-8 md:max-w-6xl">
-                {/* Optional stats/progress – currently hidden */}
-                {/* <div className="mb-4 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-          <StatPill icon={<CalendarDays className="h-4 w-4" />} label="Days" value={String((preview.days?.length ?? preview.trip_summary.total_days) || "—")} />
-          <StatPill icon={<DollarSign className="h-4 w-4" />} label="Daily est." value={
-            preview.trip_summary.currency
-              ? `${preview.trip_summary.currency} ${Math.round((preview.trip_summary.est_total_cost ?? 0) / Math.max(preview.days?.length ?? 1, 1))}`
-              : `~$${Math.round((preview.trip_summary.est_total_cost ?? 0) / Math.max(preview.days?.length ?? 1, 1))}`
-          } />
-          <StatPill icon={<Clock3 className="h-4 w-4" />} label="Pace" value={inputs?.pace ?? "—"} />
-          <StatPill icon={<MapPin className="h-4 w-4" />} label="Primary" value={inputs?.destinations?.[0]?.name ?? "—"} />
-        </div>
-
-        <div className="mb-6 h-2 w-full overflow-hidden rounded-full border bg-muted/40">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progressPct}%` }} />
-        </div> */}
-
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(520px,1.15fr)_minmax(460px,1fr)]">
                     {/* LEFT: map + interests */}
                     <aside className="md:sticky md:top-24 h-[calc(100vh-160px)] md:self-start">
@@ -555,7 +529,10 @@ export default function PreviewClient({
                                 dayIdx={activeDayIdx}
                                 day={
                                     preview.days?.[activeDayIdx] ?? {
-                                        date: preview.trip_summary.inputs?.start_date ?? preview.trip_summary.start_date ?? "",
+                                        date:
+                                            preview.trip_summary.inputs?.start_date ??
+                                            preview.trip_summary.start_date ??
+                                            "",
                                         blocks: [],
                                     }
                                 }
@@ -598,7 +575,7 @@ export default function PreviewClient({
                                         {
                                             label: "Getting around",
                                             value: joinArr(destinationMeta?.transport),
-                                            Icon: MapPin
+                                            Icon: MapPin,
                                         },
                                         {label: "eSIM", value: destinationMeta?.esim_provider, Icon: Phone},
                                         {label: "Weather", value: destinationMeta?.weather_desc, Icon: CloudSun},
@@ -624,11 +601,11 @@ export default function PreviewClient({
                     onSave={handleSave}
                     points={pointsBusy ? null : points}
                     required={requiredPoints}
-                    // forceTheme={isDark ? "dark" : "light"} // optional: uncomment to hard-force overlay theme
+                    forceTheme={isDark ? "dark" : "light"}
                 />
             )}
 
-            {/* Not enough points dialog (theme-aware via tokens) */}
+            {/* Not enough points dialog */}
             <Dialog open={insufficientOpen} onOpenChange={setInsufficientOpen}>
                 <DialogContent
                     className={[
@@ -684,20 +661,6 @@ export default function PreviewClient({
 /* =========================
    Helpers / UI bits
 ========================= */
-function StatPill({icon, label, value}: { icon: React.ReactNode; label: string; value: string }) {
-    return (
-        <div className="group rounded-2xl border bg-background/60 p-3 shadow-sm transition hover:shadow-md">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="grid h-7 w-7 place-items-center rounded-full border bg-card/60">{icon}</span>
-                    <span className="text-[11px] uppercase tracking-wider">{label}</span>
-                </div>
-                <div className="text-base font-semibold">{value}</div>
-            </div>
-        </div>
-    );
-}
-
 function ItineraryDay({
                           dayIdx,
                           day,
@@ -851,8 +814,10 @@ function IconFacts({
     return (
         <dl className="grid grid-cols-1 gap-2">
             {rows.map(({label, value, Icon}) => (
-                <div key={label}
-                     className="flex items-center gap-3 rounded-lg border border-border/60 bg-background/40 px-3 py-2">
+                <div
+                    key={label}
+                    className="flex items-center gap-3 rounded-lg border border-border/60 bg-background/40 px-3 py-2"
+                >
           <span
               className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60">
             <Icon className="h-4 w-4 text-muted-foreground"/>
@@ -889,7 +854,9 @@ function InterestChips({
                         className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm backdrop-blur ${base}`}
                         title={label}
                     >
-                        <span aria-hidden className="text-base leading-none">{emoji}</span>
+            <span aria-hidden className="text-base leading-none">
+              {emoji}
+            </span>
                         <span className="leading-none">{label}</span>
                     </li>
                 );
@@ -916,7 +883,7 @@ function FullScreenPaywallOverlay({
                                       onSave,
                                       points,
                                       required,
-                                      forceTheme, // optional: only if you want to force a theme in this overlay
+                                      forceTheme, // optional
                                   }: {
     onBuy: () => void;
     onSave: () => void;
@@ -949,9 +916,7 @@ function FullScreenPaywallOverlay({
                                 Preview limited
                             </Badge>
 
-                            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
-                                Unlock the full itinerary
-                            </h2>
+                            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Unlock the full itinerary</h2>
 
                             <p className="mt-1 text-sm text-muted-foreground md:text-base">
                                 See every activity, get the printable PDF, shareable link, and calendar sync.
@@ -960,24 +925,13 @@ function FullScreenPaywallOverlay({
 
                         {/* Perks */}
                         <ul className="mx-auto mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                            <Perk icon={<Sparkles className="h-4 w-4 text-primary"/>}>
-                                Full day-by-day schedule
-                            </Perk>
-                            <Perk icon={<MapIcon className="h-4 w-4 text-primary"/>}>
-                                Local insights & transport mapping
-                            </Perk>
-                            <Perk icon={<Download className="h-4 w-4 text-primary"/>}>
-                                Printable PDF
-                            </Perk>
-                            <Perk icon={<Share2 className="h-4 w-4 text-primary"/>}>
-                                Shareable trip link
-                            </Perk>
-                            <Perk icon={<CalendarDays className="h-4 w-4 text-primary"/>}>
-                                Calendar export
-                            </Perk>
-                            <Perk icon={<PencilLine className="h-4 w-4 text-primary"/>}>
-                                7-day free edits
-                            </Perk>
+                            <Perk icon={<Sparkles className="h-4 w-4 text-primary"/>}>Full day-by-day schedule</Perk>
+                            <Perk icon={<MapIcon className="h-4 w-4 text-primary"/>}>Local insights & transport
+                                mapping</Perk>
+                            <Perk icon={<Download className="h-4 w-4 text-primary"/>}>Printable PDF</Perk>
+                            <Perk icon={<Share2 className="h-4 w-4 text-primary"/>}>Shareable trip link</Perk>
+                            <Perk icon={<CalendarDays className="h-4 w-4 text-primary"/>}>Calendar export</Perk>
+                            <Perk icon={<PencilLine className="h-4 w-4 text-primary"/>}>7-day free edits</Perk>
                         </ul>
 
                         {/* CTAs */}
@@ -1016,149 +970,4 @@ function Perk({children, icon}: { children: React.ReactNode; icon?: React.ReactN
             <span className="text-sm md:text-base text-foreground">{children}</span>
         </li>
     );
-}
-
-/* =========================
-   Save flow (optional)
-========================= */
-async function saveDraftAsTrip(
-    sbClient: ReturnType<typeof createClientBrowser>,
-    currentPreview: PreviewResponse,
-    requiredPoints: number,
-    points: number | null,
-    setPoints: (v: number | null) => void,
-    setInsufficientOpen: (v: boolean) => void,
-    setSavingState: (v: boolean) => void,
-    router: ReturnType<typeof useRouter>
-) {
-    setSavingState(true);
-    const COST = requiredPoints ?? 100;
-
-    if ((points ?? 0) < COST) {
-        setInsufficientOpen(true);
-        setSavingState(false);
-        return;
-    }
-
-    let currentUserId: string | undefined;
-    let pointsSpent = false;
-
-    try {
-        const {data: auth} = await sbClient.auth.getUser();
-        currentUserId = auth?.user?.id ?? undefined;
-        if (!currentUserId) throw new Error("Not authenticated");
-
-        try {
-            const {data: ok, error: rpcErr} = await sbClient.rpc("spend_points", {p_cost: COST});
-            if (rpcErr) throw rpcErr;
-            if (ok !== true) {
-                setInsufficientOpen(true);
-                return;
-            }
-            pointsSpent = true;
-        } catch {
-            const {error: debitErr} = await sbClient
-                .schema("itinero")
-                .from("points_ledger")
-                .insert({
-                    user_id: currentUserId,
-                    delta: -COST,
-                    reason: "save_trip",
-                    meta: {source: "web", at: new Date().toISOString()},
-                });
-            if (debitErr) {
-                setInsufficientOpen(true);
-                return;
-            }
-            pointsSpent = true;
-        }
-
-        const ins = currentPreview.trip_summary?.inputs;
-        const title = ins?.destinations?.[0]?.name ? `${ins.destinations[0].name} Trip` : "Trip";
-
-        const tripRow = {
-            user_id: currentUserId!,
-            title,
-            start_date: ins?.start_date ?? currentPreview.trip_summary.start_date ?? null,
-            end_date: ins?.end_date ?? currentPreview.trip_summary.end_date ?? null,
-            est_total_cost:
-                typeof currentPreview.trip_summary.est_total_cost === "number"
-                    ? currentPreview.trip_summary.est_total_cost
-                    : null,
-            currency: currentPreview.trip_summary.currency ?? null,
-            destination_id: ins?.destinations?.[0]?.id ?? null,
-            inputs: ins,
-        };
-
-        const {data: tripInsert, error: tripErr} = await sbClient
-            .schema("itinero")
-            .from("trips")
-            .insert(tripRow as any)
-            .select("id")
-            .single();
-        if (tripErr) throw tripErr;
-        const tripId: string = (tripInsert as { id: string }).id;
-
-        type ItemInsert = {
-            trip_id: string;
-            day_index: number;
-            date: string | null;
-            order_index: number;
-            when: "morning" | "afternoon" | "evening";
-            place_id: string | null;
-            title: string;
-            est_cost: number | null;
-            duration_min: number | null;
-            travel_min_from_prev: number | null;
-            notes: string | null;
-        };
-
-        const items: ItemInsert[] = [];
-        currentPreview.days.forEach((d, dIdx) => {
-            d.blocks.forEach((b, iIdx) => {
-                items.push({
-                    trip_id: tripId,
-                    day_index: dIdx,
-                    date: d.date ?? null,
-                    order_index: iIdx,
-                    when: b.when,
-                    place_id: b.place_id ?? null,
-                    title: b.title,
-                    est_cost: Number.isFinite(b.est_cost) ? b.est_cost : null,
-                    duration_min: Number.isFinite(b.duration_min) ? b.duration_min : null,
-                    travel_min_from_prev: Number.isFinite(b.travel_min_from_prev) ? b.travel_min_from_prev : null,
-                    notes: b.notes ?? null,
-                });
-            });
-        });
-
-        if (items.length) {
-            const {error: itemsErr} = await sbClient.schema("itinero").from("itinerary_items").insert(items);
-            if (itemsErr) throw itemsErr;
-        }
-
-        try {
-            const {data: newBal} = await sbClient.rpc("get_points_balance");
-            if (typeof newBal === "number") setPoints(newBal);
-        } catch {
-            /* ignore */
-        }
-
-        router.push(`/trips/${tripId}`);
-    } catch (err) {
-        if (pointsSpent) {
-            try {
-                await sbClient.schema("itinero").from("points_ledger").insert({
-                    user_id: (await sbClient.auth.getUser()).data.user?.id ?? null,
-                    delta: COST,
-                    reason: "refund_save_trip_failed",
-                    meta: {source: "web", at: new Date().toISOString()},
-                });
-            } catch {
-            }
-        }
-        console.error("Save trip failed:", err);
-    } finally {
-        setSavingState(false);
-    }
 }
