@@ -1,5 +1,36 @@
 {
-  "node": {},
+  "node": {
+    "40381e34e78a69929c77e753d479557af5717bdaf6": {
+      "workers": {
+        "app/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/profile/server-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "topupPointsAction",
+          "filename": "src/app/profile/server-actions.ts"
+        }
+      },
+      "layer": {
+        "app/profile/page": "rsc"
+      },
+      "filename": "src/app/profile/server-actions.ts",
+      "exportedName": "topupPointsAction"
+    },
+    "40a8c92ab989e95ef7b307239aad31212e9715cb03": {
+      "workers": {
+        "app/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/profile/server-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveProfileAction",
+          "filename": "src/app/profile/server-actions.ts"
+        }
+      },
+      "layer": {
+        "app/profile/page": "rsc"
+      },
+      "filename": "src/app/profile/server-actions.ts",
+      "exportedName": "saveProfileAction"
+    }
+  },
   "edge": {},
   "encryptionKey": "pgrkzvvvCeUiKDSUvYFTjEK3Vle6zBEDWXiR/FVf+FA="
 }

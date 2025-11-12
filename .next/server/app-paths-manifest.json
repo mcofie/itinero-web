@@ -1,1 +1,12 @@
-{}
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/paystack/init/route": "app/api/paystack/init/route.js",
+  "/api/points/quote/route": "app/api/points/quote/route.js",
+  "/api/rewards/verify/route": "app/api/rewards/verify/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js",
+  "/pricing/page": "app/pricing/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/rewards/page": "app/rewards/page.js",
+  "/rewards/verify/page": "app/rewards/verify/page.js"
+}
