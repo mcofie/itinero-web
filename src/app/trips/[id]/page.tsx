@@ -1,18 +1,19 @@
 // app/trips/[id]/page.tsx
 import * as React from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClientServerRSC } from "@/lib/supabase/server";
+import {redirect} from "next/navigation";
+import {createClientServerRSC} from "@/lib/supabase/server";
 import AppShell from "@/components/layout/AppShell";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CalendarDays, DollarSign, MapPin, ArrowLeft } from "lucide-react";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
+import {CalendarDays, DollarSign, MapPin, ArrowLeft} from "lucide-react";
 
 import TripViewerClient from "./TripViewerClient";
-import TripActionsClient, { TripConfig } from "@/app/trips/TripActionsClient";
+import TripActionsClient, {TripConfig} from "@/app/trips/TripActionsClient";
 import PublicToggle from "@/app/trips/PublicToggle";
+import DeleteTripClient from "@/app/trips/[id]/DeleteTripClient";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -190,9 +191,11 @@ type UnknownRecord = Record<string, unknown>;
 function isUnknownRecord(v: unknown): v is UnknownRecord {
     return typeof v === "object" && v !== null;
 }
+
 function isString(v: unknown): v is string {
     return typeof v === "string";
 }
+
 function isStringArray(v: unknown): v is string[] {
     return Array.isArray(v) && v.every((x) => typeof x === "string");
 }
@@ -281,7 +284,7 @@ function buildDestinationMetaFromHistoryRow(
         city: isString(k.primary_city) ? k.primary_city : undefined,
     };
 
-    return { meta, heroUrl: hist.backdrop_image_url };
+    return {meta, heroUrl: hist.backdrop_image_url};
 }
 
 /* ---------- lodging helper ---------- */
@@ -302,7 +305,7 @@ function getValidLodging(
         typeof l.lat === "number" &&
         typeof l.lng === "number"
     ) {
-        return { name: l.name, lat: l.lat, lng: l.lng };
+        return {name: l.name, lat: l.lat, lng: l.lng};
     }
     return null;
 }
@@ -316,14 +319,14 @@ export default async function TripIdPage({
 
     // Auth (SSR)
     const {
-        data: { user },
+        data: {user},
     } = await sb.auth.getUser();
     if (!user) redirect("/login");
 
     const tripId = params.id;
 
     // ---- Trip ----
-    const { data: trip, error: tripErr } = await sb
+    const {data: trip, error: tripErr} = await sb
         .schema("itinero")
         .from("trips")
         .select("*")
@@ -336,7 +339,7 @@ export default async function TripIdPage({
                 <div className="mx-auto mt-10 max-w-2xl px-4">
                     <Button asChild variant="ghost" className="mb-3">
                         <Link href="/trips">
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to trips
+                            <ArrowLeft className="mr-2 h-4 w-4"/> Back to trips
                         </Link>
                     </Button>
                     <Card>
@@ -356,13 +359,13 @@ export default async function TripIdPage({
     }
 
     // ---- Items (ordered) ----
-    const { data: items, error: itemsErr } = await sb
+    const {data: items, error: itemsErr} = await sb
         .schema("itinero")
         .from("itinerary_items")
         .select("*")
         .eq("trip_id", tripId)
-        .order("date", { ascending: true, nullsFirst: true })
-        .order("order_index", { ascending: true });
+        .order("date", {ascending: true, nullsFirst: true})
+        .order("order_index", {ascending: true});
 
     if (itemsErr) {
         return (
@@ -370,7 +373,7 @@ export default async function TripIdPage({
                 <div className="mx-auto mt-10 max-w-2xl px-4">
                     <Button asChild variant="ghost" className="mb-3">
                         <Link href="/trips">
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to trips
+                            <ArrowLeft className="mr-2 h-4 w-4"/> Back to trips
                         </Link>
                     </Button>
                     <Card>
@@ -394,7 +397,7 @@ export default async function TripIdPage({
     ) as string[];
     let places: PlaceRow[] = [];
     if (placeIds.length) {
-        const { data: pRows } = await sb
+        const {data: pRows} = await sb
             .schema("itinero")
             .from("places")
             .select("id,name,lat,lng,category,popularity,cost_typical,cost_currency,tags")
@@ -405,7 +408,7 @@ export default async function TripIdPage({
     // ---- Optional per-day polylines ----
     const polyByDate = new Map<string, string>();
     try {
-        const { data: routes } = await sb
+        const {data: routes} = await sb
             .schema("itinero")
             .from("trip_day_routes")
             .select("date,polyline6,polyline")
@@ -443,7 +446,7 @@ export default async function TripIdPage({
     let history: DestinationHistoryRow | null = null;
 
     if (trip.destination_id) {
-        const { data: dRow } = await sb
+        const {data: dRow} = await sb
             .schema("itinero")
             .from("destinations")
             .select("id,name,lat,lng,current_history_id")
@@ -452,7 +455,7 @@ export default async function TripIdPage({
         destination = dRow ?? null;
 
         if (destination?.current_history_id) {
-            const { data: hRow } = await sb
+            const {data: hRow} = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select(
@@ -494,11 +497,11 @@ export default async function TripIdPage({
                 | { name: string; lat?: number; lng?: number }[]
                 | undefined);
 
-    const { meta: histMeta, heroUrl } = buildDestinationMetaFromHistoryRow(history);
+    const {meta: histMeta, heroUrl} = buildDestinationMetaFromHistoryRow(history);
 
     const enrichedInputs = {
         ...(parsedInputs ?? {}),
-        ...(enrichedDestList ? { destinations: enrichedDestList } : {}),
+        ...(enrichedDestList ? {destinations: enrichedDestList} : {}),
         ...(histMeta
             ? {
                 destination_meta: {
@@ -569,7 +572,7 @@ export default async function TripIdPage({
                 <div className="mb-4 flex items-center justify-between">
                     <Button asChild variant="ghost" size="sm" className="rounded-full">
                         <Link href="/trips">
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                            <ArrowLeft className="mr-2 h-4 w-4"/> Back
                         </Link>
                     </Button>
                 </div>
@@ -586,7 +589,7 @@ export default async function TripIdPage({
                         }}
                     />
                     {/* Tint overlay */}
-                    <div className="absolute inset-0 bg-black/40 backdrop-brightness-75" />
+                    <div className="absolute inset-0 bg-black/40 backdrop-brightness-75"/>
                     {/* Content */}
                     <div className="relative z-10">
                         <CardHeader className="pb-2 text-white">
@@ -621,19 +624,19 @@ export default async function TripIdPage({
                             {/* Meta chips */}
                             <div className="flex flex-wrap items-center gap-2 text-sm">
                                 <Badge variant="outline" className="gap-1 rounded-full border-white/40 text-white">
-                                    <CalendarDays className="h-3.5 w-3.5" />
+                                    <CalendarDays className="h-3.5 w-3.5"/>
                                     {dateRange}
                                 </Badge>
 
                                 {typeof trip.est_total_cost === "number" && (
                                     <Badge variant="secondary" className="gap-1 rounded-full bg-white/20 text-white">
-                                        <DollarSign className="h-3.5 w-3.5" />
+                                        <DollarSign className="h-3.5 w-3.5"/>
                                         est. {trip.currency ?? "USD"} {Math.round(trip.est_total_cost)}
                                     </Badge>
                                 )}
 
                                 <Badge variant="outline" className="gap-1 rounded-full border-white/40 text-white">
-                                    <MapPin className="h-3.5 w-3.5" />
+                                    <MapPin className="h-3.5 w-3.5"/>
                                     {extractDestName(enrichedInputs)}
                                 </Badge>
                             </div>
@@ -651,7 +654,7 @@ export default async function TripIdPage({
                                 />
 
                                 <div className="">
-                                    <PublicToggle tripId={trip.id} publicId={tripId} />
+                                    <PublicToggle tripId={trip.id} publicId={tripId}/>
                                 </div>
                             </div>
                         </CardContent>
@@ -664,6 +667,17 @@ export default async function TripIdPage({
                     data={previewLike}
                     startDate={previewLike.trip_summary.start_date}
                 />
+
+                {/* --- Delete button section at the very bottom --- */}
+                <div className="flex flex-col items-center justify-center mt-8 pt-6">
+                    <p className="text-xs text-gray-500 w-1/3 mx-auto text-center">
+                        Deleting a trip permanently removes it, including all days, activities, and routes. This action
+                        can’t be undone.
+                    </p>
+                    <div className="mt-2">
+                        <DeleteTripClient tripId={trip.id} title={trip.title ?? "Trip"}/>
+                    </div>
+                </div>
             </div>
         </AppShell>
     );
@@ -705,10 +719,10 @@ function groupItemsByDayIndex(items: ItemRow[]) {
     const map = new Map<number, { date: string | null; items: ItemRow[] }>();
     for (const it of items) {
         const key = it.day_index;
-        if (!map.has(key)) map.set(key, { date: it.date, items: [] });
+        if (!map.has(key)) map.set(key, {date: it.date, items: []});
         map.get(key)!.items.push(it);
     }
     return Array.from(map.entries())
         .sort((a, b) => a[0] - b[0])
-        .map(([dayIndex, v]) => ({ dayIndex, date: v.date, items: v.items }));
+        .map(([dayIndex, v]) => ({dayIndex, date: v.date, items: v.items}));
 }

@@ -7,7 +7,13 @@ import AppShell from "@/components/layout/AppShell";
 import {Card, CardContent, CardHeader} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
-import {CalendarDays, DollarSign, Plane, MapPin, Clock} from "lucide-react";
+import {
+    CalendarDays,
+    DollarSign,
+    Plane,
+    MapPin,
+    Clock,
+} from "lucide-react";
 import {cn} from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -87,7 +93,7 @@ export default async function TripsPage() {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="secondary" asChild>
+                        <Button asChild>
                             <Link href="/trip-maker">New itinerary</Link>
                         </Button>
                     </div>
@@ -124,89 +130,97 @@ export function TripCard({
     };
 }) {
     const title = trip.title?.trim() || "Untitled Trip";
-    const date = formatDateRange(
-        trip.start_date ?? undefined,
-        trip.end_date ?? undefined
-    );
+    const date = formatDateRange(trip.start_date ?? undefined, trip.end_date ?? undefined);
     const amount =
         typeof trip.est_total_cost === "number"
             ? `${trip.currency ?? "USD"} ${Math.round(trip.est_total_cost)}`
             : null;
-    const created = trip.created_at
-        ? new Date(trip.created_at).toLocaleDateString()
-        : null;
+
+    const created = trip.created_at ? relativeTimeFromNow(trip.created_at) : "just now";
 
     // Use cover_url if present; otherwise a pleasant fallback
     const imageUrl =
         trip.cover_url ??
         "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80";
 
-    const flag = "🌍";
-    const cityEmoji = "✈️";
-
     return (
         <Card
             className={cn(
-                "group relative overflow-hidden border border-border/50 bg-card text-card-foreground",
-                "transition-all hover:-translate-y-0.5 hover:shadow-md py-0 pb-3"
+                "group relative overflow-hidden border bg-card text-card-foreground",
+                "border-border/60 ring-1 ring-border/40",
+                "transition-all hover:-translate-y-0.5 hover:shadow-lg py-0 pb-4"
             )}
         >
-            {/* --- Background image band (from cover_url) --- */}
-            <div
-                className="relative h-24 w-full bg-cover bg-center sm:h-28"
-                style={{backgroundImage: `url(${imageUrl})`}}
-            >
-                {/* Overlay tint for readability */}
-                <div className="absolute inset-0 bg-black/40 dark:bg-black/50"/>
+            {/* --- Media / Hero band --- */}
+            <Link href={`/trips/${trip.id}`}>
+                <div
+                    className={cn(
+                        "relative w-full",
+                        // pleasant wide ratio that adapts well in grid
+                        "aspect-[16/9]",
+                        "bg-cover bg-center"
+                    )}
+                    style={{backgroundImage: `url(${imageUrl})`}}
+                >
+                    {/* Theme-aware overlay for readability */}
+                    <div
+                        className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/25 to-black/40 dark:from-black/45 dark:via-black/40 dark:to-black/50"/>
 
-                {/* Stamp icons */}
-                <div className="absolute right-3 top-3 z-10 flex items-center gap-1">
-          <span
-              className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
-            {flag}
-          </span>
-                    <span
-                        className="grid h-9 w-9 place-items-center rounded-full bg-white/90 text-lg shadow ring-1 ring-white/50">
-            {cityEmoji}
-          </span>
-                </div>
+                    {/* Destination title */}
+                    <div className="absolute inset-x-3 bottom-2 sm:bottom-3">
+                        <div
+                            className="line-clamp-1 text-base font-semibold tracking-tight text-white drop-shadow sm:text-lg">
+                            {title}
+                        </div>
+                        <div className="mt-0.5 text-[11px] text-white/85 drop-shadow">
+                            {date}
+                        </div>
+                    </div>
 
-                {/* Destination title */}
-                <div className="absolute bottom-2 left-4 z-10 text-white">
-                    <div className="text-xs opacity-90">Destination</div>
-                    <div className="mt-0.5 line-clamp-1 text-lg font-semibold tracking-tight drop-shadow-sm">
-                        {title}
+                    {/* Subtle floating chips (top-right) */}
+                    <div className="absolute right-2 top-2 flex gap-1">
+                        {amount && (
+                            <div
+                                className="rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/95 backdrop-blur-sm">
+                                {amount}
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
+            </Link>
 
-            {/* --- Trip Info --- */}
+            {/* --- Meta & actions --- */}
             <CardHeader className="space-y-2 pb-2 pt-3">
-                <div className="flex flex-wrap items-center gap-2 text-xs">
+                <div className="flex flex-wrap items-center gap-2 text-[11px]">
                     <Badge
                         variant="outline"
-                        className="flex items-center gap-1 border border-white/10 bg-white/10 text-foreground"
+                        className="flex items-center gap-1 rounded-full border-border/60 bg-background/70 px-2 py-1 text-foreground"
                     >
                         <CalendarDays className="h-3.5 w-3.5 opacity-70"/>
-                        {date}
+                        <span className="font-medium">Dates</span>
+                        <span className="text-muted-foreground">· {date}</span>
                     </Badge>
+
                     {amount && (
-                        <Badge className="flex items-center gap-1 border border-white/10 bg-white/10 text-foreground">
+                        <Badge
+                            variant="secondary"
+                            className="flex items-center gap-1 rounded-full border-border/60 bg-muted px-2 py-1 text-foreground"
+                        >
                             <DollarSign className="h-3.5 w-3.5 opacity-80"/>
-                            {amount}
+                            <span className="font-medium">{amount}</span>
                         </Badge>
                     )}
                 </div>
             </CardHeader>
 
-            {/* --- Footer --- */}
-            <CardContent className="flex items-center justify-between border-t border-border/40 pt-3">
+            <CardContent className="flex items-center justify-between border-t border-border/50 pt-3">
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Clock className="h-3.5 w-3.5"/>
-                    {created ? `Saved ${created}` : "Recently added"}
+                    {/* human-friendly relative time */}
+                    <span>Saved {created}</span>
                 </div>
 
-                <Button asChild size="sm" className="gap-1">
+                <Button variant={'outline'} asChild size="sm" className="gap-1 border-border">
                     <Link href={`/trips/${trip.id}`}>
                         <MapPin className="mr-1 h-4 w-4"/>
                         Open
@@ -247,4 +261,44 @@ function formatDateRange(start?: string, end?: string) {
     if (s) return fmt(s);
     if (e) return fmt(e);
     return "—";
+}
+
+/**
+ * Returns human-friendly relative time like:
+ * "just now", "1 min ago", "2 hours ago", "a day ago", "2 weeks ago", "3 months ago", "a year ago"
+ */
+function relativeTimeFromNow(isoOrDate: string | Date): string {
+    const now = new Date();
+    const then = typeof isoOrDate === "string" ? new Date(isoOrDate) : isoOrDate;
+
+    const diffMs = now.getTime() - then.getTime();
+    const diffSec = Math.max(0, Math.floor(diffMs / 1000));
+
+    const minute = 60;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+    const week = 7 * day;
+    const month = 30 * day; // rough
+    const year = 365 * day; // rough
+
+    if (diffSec < 30) return "just now";
+    if (diffSec < minute) return `${diffSec} sec${diffSec === 1 ? "" : "s"} ago`;
+
+    const mins = Math.floor(diffSec / minute);
+    if (mins < 60) return mins === 1 ? "1 min ago" : `${mins} mins ago`;
+
+    const hrs = Math.floor(diffSec / hour);
+    if (hrs < 24) return hrs === 1 ? "1 hour ago" : `${hrs} hours ago`;
+
+    const days = Math.floor(diffSec / day);
+    if (days < 7) return days === 1 ? "a day ago" : `${days} days ago`;
+
+    const weeks = Math.floor(diffSec / week);
+    if (weeks < 5) return weeks === 1 ? "a week ago" : `${weeks} weeks ago`;
+
+    const months = Math.floor(diffSec / month);
+    if (months < 12) return months === 1 ? "a month ago" : `${months} months ago`;
+
+    const years = Math.floor(diffSec / year);
+    return years === 1 ? "a year ago" : `${years} years ago`;
 }

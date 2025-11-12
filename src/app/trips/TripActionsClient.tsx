@@ -10,6 +10,7 @@ import {CalendarPlus, FileDown, Link as LinkIcon, Pencil, Plus, Share2, Trash2, 
 import {useRouter} from "next/navigation";
 import ExportPdfButtonClient from "@/app/trips/[id]/ExportPdfButtonClient";
 
+
 type UUID = string;
 
 export type DayBlock = {
@@ -198,6 +199,16 @@ export default function TripActionsClient({
         });
     }
 
+
+    function DownloadPdfButton({tripId}: { tripId: string }) {
+        const href = `/api/trips/${tripId}/pdf`;
+        return (
+            <Button asChild variant="secondary">
+                <a href={href}>Download PDF</a>
+            </Button>
+        );
+    }
+
     async function confirmAddItem() {
         if (!addingForDate || !newBlock?.title) {
             setAddingForDate(null);
@@ -288,12 +299,10 @@ export default function TripActionsClient({
             <Button size="sm" variant="secondary" onClick={downloadICS}>
                 <CalendarPlus className="mr-2 h-4 w-4"/> Calendar
             </Button>
-            {/*<Button size="sm" variant="secondary" onClick={printToPDF}>*/}
-            {/*    <FileDown className="mr-2 h-4 w-4"/> PDF*/}
-            {/*</Button>*/}
-            <ExportPdfButtonClient
-                tripId={tripId}
-            />
+            <DownloadPdfButton tripId={tripId}/>
+            {/*<ExportPdfButtonClient*/}
+            {/*    tripId={tripId}*/}
+            {/*/>*/}
             <Button size="sm" onClick={share}>
                 <Share2 className="mr-2 h-4 w-4"/> Share
             </Button>
