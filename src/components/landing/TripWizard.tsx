@@ -797,7 +797,7 @@ function ReviewCard({
     const chips = (data.interests || []).slice(0, 12);
     return (
         <div className="mx-auto max-w-2xl">
-            <div className="relative overflow-hidden rounded-2xl border bg-card shadow-sm">
+            <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 {/* soft gradient header */}
                 <div
                     className="absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent"/>
@@ -884,7 +884,7 @@ function SectionRow({
     children: React.ReactNode;
 }) {
     return (
-        <div className="grid grid-cols-[auto_1fr_auto] items-start gap-3 border-t py-4 first:border-t-0">
+        <div className="grid grid-cols-[auto_1fr_auto] items-start gap-3 border-t border-border py-4 first:border-t-0">
             <div className="mt-0.5 grid h-9 w-9 place-items-center rounded-xl bg-muted">{icon}</div>
             <div>
                 <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>

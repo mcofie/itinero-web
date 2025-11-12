@@ -8,7 +8,10 @@ import {
     MapPin,
     X,
     ArrowUpRight,
+    CalendarDays,
 } from "lucide-react";
+
+/* ---------- Types ---------- */
 
 type DayBlock = {
     when?: string | null;
@@ -35,6 +38,7 @@ type PlaceDetail = {
     id: string;
     name: string;
     category?: string | null;
+    description?: string | null;
     lat?: number | null;
     lng?: number | null;
     address?: string | null;
@@ -82,20 +86,49 @@ export default function PublicItineraryClient({
         if (active > days.length - 1) setActive(days.length - 1);
     }, [days.length, active]);
 
+    // ---- Trip stats (days + cost) ----
+    const totalDays = React.useMemo(() => computeTripDays(days), [days]);
+    const displayCost =
+        typeof estTotalCost === "number" && Number.isFinite(estTotalCost)
+            ? estTotalCost
+            : computeEstimatedCostFallback(days);
+
     return (
         <section className="space-y-6">
-            {/* Optional trip total */}
-            {typeof estTotalCost === "number" && Number.isFinite(estTotalCost) && (
-                <div className="rounded-xl border border-border/60 bg-card/50 p-4 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <DollarSign className="h-4 w-4" />
-                        <span className="font-medium">Estimated trip cost:</span>
-                        <span className="text-foreground">
-              {formatMoney(estTotalCost, currency)}
+            {/* Trip stats */}
+            <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card/70 to-card/40 p-4 sm:p-5 shadow-sm">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {/* Days */}
+                    <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/60 px-3 py-3">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60">
+              <CalendarDays className="h-5 w-5 text-muted-foreground" />
             </span>
+                        <div className="min-w-0">
+                            <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                                Trip length
+                            </div>
+                            <div className="text-lg font-semibold leading-tight">
+                                {totalDays} {totalDays === 1 ? "day" : "days"}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Cost */}
+                    <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/60 px-3 py-3">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60">
+              <DollarSign className="h-5 w-5 text-muted-foreground" />
+            </span>
+                        <div className="min-w-0">
+                            <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                                Estimated cost
+                            </div>
+                            <div className="text-lg font-semibold leading-tight">
+                                {displayCost !== null ? formatMoney(displayCost, currency) : "—"}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            )}
+            </div>
 
             {/* Tabs header */}
             <div
@@ -150,7 +183,7 @@ export default function PublicItineraryClient({
     );
 }
 
-/* ---------------- Day + Item ---------------- */
+/* ---------- Day + Item ---------- */
 
 function DayCard({
                      day,
@@ -252,17 +285,13 @@ function ItineraryItemRow({
     return (
         <div className="px-4 py-3 sm:px-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                {/* Left: title + when + place */}
+                {/* Left: when + place + notes */}
                 <div className="min-w-0 space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
                         {block.when && (
                             <span className="inline-flex items-center rounded-md border border-border/60 px-2.5 py-0.5 text-xs text-muted-foreground">
                 {block.when}
               </span>
-                        )}
-
-                        {block.title && (
-                            <span className="text-sm font-medium">{block.title}</span>
                         )}
                     </div>
 
@@ -317,7 +346,7 @@ function ItineraryItemRow({
     );
 }
 
-/* ---------------- Popover ---------------- */
+/* ---------- Popover ---------- */
 
 function Popover({
                      anchorId,
@@ -386,6 +415,9 @@ function Popover({
                         />
                     </div>
                 )}
+                {detail?.description && (
+                    <div className="text-xs text-muted-foreground">{detail.description}</div>
+                )}
                 {detail?.address && (
                     <div className="text-sm text-muted-foreground">{detail.address}</div>
                 )}
@@ -407,7 +439,7 @@ function Popover({
     );
 }
 
-/* ---------------- Utils ---------------- */
+/* ---------- Utils ---------- */
 
 function dayLabel(index: number, day: Day) {
     // Day N • Mon, 11 Nov (or “Unscheduled”)
@@ -425,9 +457,11 @@ function dayLabel(index: number, day: Day) {
 function popId(btn: HTMLElement) {
     return `${btn.id}-popover`;
 }
+
 function popIdByAnchor(anchorId: string) {
     return `${anchorId}-popover`;
 }
+
 function buttonId(placeId: string) {
     return `place-btn-${placeId}`;
 }
@@ -471,4 +505,36 @@ function buildGoogleMapsLink(detail: PlaceDetail | undefined, fallback: PlaceLit
             ? `${detail.lat},${detail.lng}`
             : encodeURIComponent(fallback.name);
     return `https://www.google.com/maps/search/?api=1&query=${q}`;
+}
+
+/* ---- Trip stats helpers ---- */
+
+function toDate(d?: string | null) {
+    return d ? new Date(`${d}T00:00:00`) : null;
+}
+
+function daysInclusive(a: Date, b: Date) {
+    const ms = Math.abs(b.getTime() - a.getTime());
+    return Math.floor(ms / (1000 * 60 * 60 * 24)) + 1;
+}
+
+function computeTripDays(days: Day[]) {
+    const dated = days.map((d) => d.date).filter(Boolean) as string[];
+    if (dated.length === 0) return Math.max(0, days.length); // fallback to count of day entries
+    const sorted = dated.sort();
+    const start = toDate(sorted[0])!;
+    const end = toDate(sorted[sorted.length - 1])!;
+    return daysInclusive(start, end);
+}
+
+function computeEstimatedCostFallback(days: Day[]) {
+    let total = 0;
+    for (const d of days) {
+        for (const b of d.blocks) {
+            if (typeof b.est_cost === "number" && Number.isFinite(b.est_cost)) {
+                total += b.est_cost;
+            }
+        }
+    }
+    return total || null;
 }

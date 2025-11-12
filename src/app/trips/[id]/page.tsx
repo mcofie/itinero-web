@@ -30,6 +30,7 @@ type TripRow = {
     end_date: string | null;
     est_total_cost: number | null;
     currency: string | null;
+    cover_url?: string | null; // ✅ add this
     destination_id?: UUID | null; // 👈 used to fetch destination + history
     inputs?:
         | {
@@ -489,8 +490,9 @@ export default async function TripIdPage({params}: { params: { id: string } }) {
     }));
 
     const heroBackground =
-        heroUrl ??
-        "https://images.unsplash.com/photo-1589556045897-c444ffa0a6ff?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2874";
+        trip.cover_url // ✅ prefer the trip’s cover image
+        || heroUrl     // then the destination_history backdrop
+        || "https://images.unsplash.com/photo-1589556045897-c444ffa0a6ff?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2874";
 
     return (
         <AppShell userEmail={user.email ?? null}>

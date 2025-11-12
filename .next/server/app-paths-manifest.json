@@ -6,6 +6,7 @@
   "/preview/page": "app/preview/page.js",
   "/profile/page": "app/profile/page.js",
   "/t/[publicId]/page": "app/t/[publicId]/page.js",
+  "/trip-maker/page": "app/trip-maker/page.js",
   "/trips/[id]/page": "app/trips/[id]/page.js",
   "/trips/page": "app/trips/page.js"
 }

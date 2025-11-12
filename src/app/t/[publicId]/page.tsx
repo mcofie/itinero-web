@@ -15,6 +15,8 @@ import {
     ChevronDown,
     User2,
 } from "lucide-react";
+import PublicTripMap from "@/app/t/[publicId]/PublicTripMap";
+import MapSection from "@/app/t/[publicId]/MapSection";
 
 /* ---------------- Types ---------------- */
 
@@ -292,12 +294,14 @@ export default async function PublicTripPage({
     let owner: ProfileRow = null;
     if (data.user_id) {
         const {data: o} = await sb
+            .schema("itinero")
             .from("profiles")
             .select("id,full_name,avatar_url,username")
             .eq("id", data.user_id)
             .maybeSingle<ProfileRow>();
         owner = o ?? null;
     }
+
 
     // Destination history
     let dest: DestinationRow = null;
@@ -333,8 +337,8 @@ export default async function PublicTripPage({
 
     // Prefer destination_history backdrop over trip.cover_url
     const cover =
-        heroUrl ||
         data.cover_url ||
+        heroUrl ||
         "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1600&auto=format&fit=crop";
 
     // Tolerant parsing for trip content
@@ -383,8 +387,11 @@ export default async function PublicTripPage({
         items.length > 0 ? buildDaysFromItems(items) : fallbackDaysFromTrip(data.days);
 
 
-    // Places (keep legacy if present)
-    const places = asPlaceArray(data.places);
+    // Build PlaceLite[] from fetched placeDetails (fallback to legacy if any)
+    const places: PlaceLite[] =
+        (placeDetails?.length
+            ? placeDetails.map(({id, name, category}) => ({id, name, category: category ?? null}))
+            : asPlaceArray(data.places)) ?? [];
 
     // Owner pill content
     const ownerName =
@@ -395,6 +402,7 @@ export default async function PublicTripPage({
 
     // Interests (top, non-collapsible)
     const interests = extractInterests(data.inputs, tripSummary);
+
 
     return (
         <div className="min-h-dvh bg-background text-foreground">
@@ -496,7 +504,7 @@ export default async function PublicTripPage({
 
                         {/* Know before you go (icons) */}
                         <div className="sm:col-span-1">
-                            <CollapsibleCard title="Destination at a glance" defaultOpen>
+                            <CollapsibleCard title="Destination at a glance">
                                 <IconFacts
                                     facts={[
                                         {label: "City", value: destMeta?.city, Icon: MapPin},
@@ -514,6 +522,18 @@ export default async function PublicTripPage({
                 </section>
             )}
 
+            {/* Map (collapsible) — plots all places with coordinates via Leaflet */}
+            {placeDetails.length > 0 && (
+                <section className="mx-auto w-full max-w-5xl px-4 pt-2 pb-8 sm:pt-3 md:max-w-6xl">
+                    <CollapsibleCard title="Map of places" initialOpen={false}>
+                        {/* additional wrapper to enforce bounds inside details */}
+                        <div className="relative isolate overflow-hidden rounded-xl border border-border/60">
+                            <MapSection places={placeDetails}/>
+                        </div>
+                    </CollapsibleCard>
+                </section>
+            )}
+
             {/* Footer */}
             <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
                 Shared via Itinero — plan smarter, wander farther.
@@ -527,16 +547,18 @@ export default async function PublicTripPage({
 function CollapsibleCard({
                              title,
                              children,
-                             defaultOpen = false,
+                             /** renamed from defaultOpen */
+                             initialOpen = false,
                          }: {
     title: string;
     children: React.ReactNode;
-    defaultOpen?: boolean;
+    initialOpen?: boolean;
 }) {
     return (
         <details
             className="group rounded-2xl border border-border/60 bg-card/50 shadow-sm open:shadow-md"
-            defaultOpen={defaultOpen}
+            /* use the real DOM attribute */
+            open={initialOpen || undefined}
         >
             <summary
                 className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 sm:px-5"
@@ -562,7 +584,7 @@ function IconFacts({
     if (rows.length === 0) return null;
 
     return (
-        <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-2 sm:grid-cols-1">
             {rows.map(({label, value, Icon}) => (
                 <div
                     key={label}
@@ -574,7 +596,7 @@ function IconFacts({
           </span>
                     <div className="min-w-0">
                         <dt className="text-xs text-muted-foreground">{label}</dt>
-                        <dd className="truncate text-sm font-medium">{value}</dd>
+                        <dd className="text-sm font-medium">{value}</dd>
                     </div>
                 </div>
             ))}
