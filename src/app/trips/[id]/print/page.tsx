@@ -492,11 +492,22 @@ export default async function TripPrintPage({params}: { params: { id: string } }
           .chips { display: flex; gap: 8px; flex-wrap: wrap; }
 
           .card {
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            padding: 16px;
-            background: white;
-          }
+              border: 1px solid var(--line);
+              border-radius: 14px;
+              padding: 16px;
+              background: white;
+              box-shadow: none !important; /* ⛔ no shadows */
+            }
+
+            /* Ensure *all* card-like blocks have zero shadow in print */
+            .stat,
+            .toc-item,
+            .kbyg-item,
+            .day-table,
+            .badge {
+              box-shadow: none !important;
+              filter: none !important;
+            }
 
           .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
           .stat {

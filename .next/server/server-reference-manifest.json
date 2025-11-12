@@ -1,45 +1,15 @@
 {
   "node": {
-    "40381e34e78a69929c77e753d479557af5717bdaf6": {
-      "workers": {
-        "app/profile/page": {
-          "moduleId": "35053",
-          "async": false,
-          "exportedName": "topupPointsAction",
-          "filename": "src/app/profile/server-actions.ts"
-        }
-      },
-      "layer": {
-        "app/profile/page": "rsc"
-      },
-      "filename": "src/app/profile/server-actions.ts",
-      "exportedName": "topupPointsAction"
-    },
-    "40a8c92ab989e95ef7b307239aad31212e9715cb03": {
-      "workers": {
-        "app/profile/page": {
-          "moduleId": "35053",
-          "async": false,
-          "exportedName": "saveProfileAction",
-          "filename": "src/app/profile/server-actions.ts"
-        }
-      },
-      "layer": {
-        "app/profile/page": "rsc"
-      },
-      "filename": "src/app/profile/server-actions.ts",
-      "exportedName": "saveProfileAction"
-    },
     "6060e61f163bc00474c9762e089ba53554d8756612": {
       "workers": {
         "app/trips/[id]/page": {
-          "moduleId": "19842",
+          "moduleId": "[project]/.next-internal/server/app/trips/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/trips.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
           "exportedName": "setTripPublic",
           "filename": "src/app/actions/trips.ts"
         },
         "app/trips/[id]/print/page": {
-          "moduleId": "89072",
+          "moduleId": "[project]/.next-internal/server/app/trips/[id]/print/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/trips.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
           "exportedName": "setTripPublic",
           "filename": "src/app/actions/trips.ts"
