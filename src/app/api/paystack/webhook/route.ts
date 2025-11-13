@@ -34,28 +34,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ ok: true });
         }
 
-        // // 2) Mark quote paid & add ledger in a transaction (RPC recommended; simplified here)
-        // const { error: qErr } = await sb
-        //     .schema("itinero")
-        //     .from("points_quotes")
-        //     .update({ status: "paid" })
-        //     .eq("id", quote.id);
-        //
-        // if (!qErr) {
-        //     await sb
-        //         .schema("itinero")
-        //         .from("points_ledger")
-        //         .insert({
-        //             user_id: quote.user_id,
-        //             delta: quote.points,
-        //             reason: "paystack_topup",
-        //             ref_type: "paystack",
-        //             ref_id: tx.reference,
-        //             meta: { paystack: { id: tx.id, currency: tx.currency, amount: tx.amount } },
-        //         });
-        // }
-
-
         const { error: qErr } = await sb
             .schema("itinero")
             .from("points_quotes")
