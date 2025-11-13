@@ -1,12 +1,14 @@
 // app/api/trips/[id]/pdf/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import {NextRequest, NextResponse} from "next/server";
 import chromium from "@sparticuz/chromium";
 import puppeteerCore from "puppeteer-core";
-import { setTimeout as sleep } from "timers/promises";
+import {setTimeout as sleep} from "timers/promises";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const runtime = "nodejs";          // use Node runtime (not edge)
+export const dynamic = "force-dynamic";   // always run server-side
+export const maxDuration = 60;            // Vercel function limit (adjust per plan)
+
+const BLOCKED = /(google-analytics|gtag|hotjar|facebook|segment|intercom|fullstory|clarity)/i;
 
 const isProd = () => !!process.env.VERCEL;
 const isDev = () => process.env.NODE_ENV !== "production";
@@ -23,9 +25,14 @@ export async function GET(
     req: NextRequest,
     ctx: { params: Promise<{ id: string }> } // Next 15: params is a Promise
 ) {
-    const { id } = await ctx.params;
+    const {id} = await ctx.params;
     const origin = new URL(req.url).origin;
-    const targetUrl = `${origin}/trips/${id}/print`;
+
+    // Optional: support one-time access tokens to bypass strict auth on print route
+    const token = new URL(req.url).searchParams.get("token") ?? "";
+
+    // Use a dedicated print mode to disable analytics/maps/etc.
+    const targetUrl = `${origin}/trips/${id}/print?print=1${token ? `&token=${encodeURIComponent(token)}` : ""}`;
 
     let browser: Awaited<ReturnType<typeof puppeteerCore.launch>> | null = null;
 
@@ -34,37 +41,37 @@ export async function GET(
         let executablePath: string | undefined;
         if (isProd()) {
             executablePath = await chromium.executablePath();
-            console.log("[PDF] Prod chromium exec:", executablePath);
         } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
             executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
-            console.log("[PDF] Dev exec from env:", executablePath);
         } else {
             const puppeteerDev = await import("puppeteer");
             executablePath = puppeteerDev.executablePath();
-            console.log("[PDF] Dev exec from puppeteer bundled Chrome:", executablePath);
         }
 
-        // Launch
         browser = await puppeteerCore.launch({
             args: chromium.args,
             executablePath,
-            headless: true, // don't rely on chromium.headless types
+            headless: true,
+            defaultViewport: {width: 1200, height: 800, deviceScaleFactor: 2},
         });
 
         const page = await browser.newPage();
+
+        // Make layout deterministic & print-friendly
+        await page.setUserAgent(
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome Safari/537.36"
+        );
         await page.emulateMediaType("print");
 
         if (isDev()) {
-            page.on("console", (msg) =>
-                console.log("[PDF][page.console]", msg.type(), msg.text())
-            );
-            page.on("pageerror", (err) => console.error("[PDF][page.error]", err));
+            page.on("console", (msg) => console.log("[PDF][console]", msg.type(), msg.text()));
+            page.on("pageerror", (err) => console.error("[PDF][pageerror]", err));
             page.on("requestfailed", (r) =>
-                console.error("[PDF][request.failed]", r.failure()?.errorText, "=>", r.url())
+                console.warn("[PDF][requestfailed]", r.failure()?.errorText, "=>", r.url())
             );
         }
 
-        // Forward cookies for auth’d page
+        // Forward cookies for auth’d pages
         const cookiesHeader = req.headers.get("cookie");
         if (cookiesHeader) {
             const cookies = cookiesHeader.split(";").map((c) => {
@@ -79,43 +86,89 @@ export async function GET(
             await page.setCookie(...cookies);
         }
 
-        // Go to printable page
-        await page.goto(targetUrl, { waitUntil: "networkidle2", timeout: 60_000 });
+        // Block trackers to prevent "networkidle" hangs
+        await page.setRequestInterception(true);
+        page.on("request", (r) => {
+            const u = r.url();
+            if (BLOCKED.test(u)) return r.abort();
+            r.continue();
+        });
 
+        // Navigate with resilience: try networkidle2, fall back to domcontentloaded
+        const nav = page.goto(targetUrl, {waitUntil: "networkidle2", timeout: 45_000});
+        const fallback = (async () => {
+            await sleep(10_000);
+            // If still spinning, switch to a lighter wait
+            try {
+                await page.goto(targetUrl, {waitUntil: "domcontentloaded", timeout: 20_000});
+            } catch {
+            }
+        })();
+        await Promise.race([nav, fallback]);
+
+        // Detect auth redirect
         if (page.url().includes("/login")) {
-            throw new Error("Auth redirect detected. Ensure cookies/session are valid.");
+            throw new Error("Auth redirect detected. Ensure cookies/session or token are valid.");
         }
 
-        // Extra print safety
+        // Extra print safety (tables, images)
         await page.addStyleTag({
             content: `
         @media print {
           tr, td, th { break-inside: avoid; page-break-inside: avoid; }
           table { page-break-inside: auto; }
+          img { max-width: 100%; }
         }
       `,
         });
 
-        // Wait for hero-ready flag
-        await page
-            .waitForSelector("html[data-hero-ready='1']", { timeout: 5000 })
-            .catch(() =>
-                console.warn("[PDF] hero-ready flag not seen before timeout; continuing.")
-            );
+        // Wait for your custom "ready" flag (set by the print page)
+        await page.waitForSelector("html[data-hero-ready='1']", {timeout: 5000}).catch(() => {
+            if (isDev()) console.warn("[PDF] hero-ready flag not seen; continuing...");
+        });
 
+        // Give fonts/images a moment to settle
         await sleep(150);
 
-        // Puppeteer returns Uint8Array (backed by ArrayBufferLike)
+        // If you want a branded header/footer, uncomment below and add to pdf() options
+        // const headerTemplate = `
+        // <style>
+        //   .hdr { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:10px; width:100%; padding:0 12mm; }
+        //   .row { display:flex; justify-content:space-between; align-items:center; }
+        //   .muted { color:#666; }
+        // </style>
+        // <div class="hdr">
+        //   <div class="row">
+        //     <div><strong>Itinero</strong> — Trip ${id}</div>
+        //     <div class="muted">${new Date().toLocaleDateString()}</div>
+        //   </div>
+        // </div>`;
+        // const footerTemplate = `
+        // <style>
+        //   .ftr { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:10px; width:100%; padding:0 12mm; }
+        //   .row { display:flex; justify-content:space-between; align-items:center; }
+        //   .muted { color:#666; }
+        // </style>
+        // <div class="ftr">
+        //   <div class="row">
+        //     <div class="muted">Generated by Itinero</div>
+        //     <div class="muted">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>
+        //   </div>
+        // </div>`;
+
         const pdfBytes = await page.pdf({
             format: "A4",
             printBackground: true,
-            margin: { top: "16mm", right: "16mm", bottom: "16mm", left: "16mm" },
+            margin: {top: "16mm", right: "16mm", bottom: "16mm", left: "16mm"},
+            // displayHeaderFooter: true,
+            // headerTemplate,
+            // footerTemplate,
         });
 
         await browser.close();
         browser = null;
 
-        // ✅ Convert to a real ArrayBuffer (BodyInit) — avoids Blob typing issues
+        // Convert to ArrayBuffer for NextResponse
         const ab = pdfBytes.buffer.slice(
             pdfBytes.byteOffset,
             pdfBytes.byteOffset + pdfBytes.byteLength
@@ -132,24 +185,15 @@ export async function GET(
     } catch (err: unknown) {
         const e = toError(err);
         console.error("[PDF] ERROR:", e.stack || e);
-        if (isDev()) {
-            return NextResponse.json(
-                {
-                    error: "Failed to generate PDF (dev)",
-                    message: String(e.message || e),
-                    hint:
-                        "Common causes: auth redirect, blocked/signed image URLs, strict CSP, or missing Chrome executable.",
-                },
-                { status: 500 }
-            );
-        }
-        return NextResponse.json({ error: "Failed to generate PDF" }, { status: 500 });
+        return NextResponse.json(
+            {error: "Failed to generate PDF", message: isDev() ? String(e.message || e) : undefined},
+            {status: 500}
+        );
     } finally {
         if (browser) {
             try {
                 await browser.close();
             } catch {
-                /* ignore */
             }
         }
     }

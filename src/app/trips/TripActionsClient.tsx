@@ -199,6 +199,18 @@ export default function TripActionsClient({
         });
     }
 
+    async function downloadTripPdf(tripId: string) {
+        const r = await fetch("/functions/v1/generate-pdf", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({tripId}),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || "PDF export failed");
+        // open signed URL
+        window.location.href = data.url;
+    }
+
 
     function DownloadPdfButton({tripId}: { tripId: string }) {
         const [loading, setLoading] = useState(false);
@@ -207,25 +219,37 @@ export default function TripActionsClient({
             if (loading) return;
             setLoading(true);
             try {
-                const res = await fetch(`/api/trips/${tripId}/pdf`, {
-                    method: "GET",
-                    credentials: "include", // carry auth cookies to the API route
+                // const res = await fetch(`/api/trips/${tripId}/pdf`, {
+                //     method: "GET",
+                //     credentials: "include", // carry auth cookies to the API route
+                // });
+                //
+                // if (!res.ok) {
+                //     const text = await res.text().catch(() => "");
+                //     throw new Error(text || `Failed with ${res.status}`);
+                // }
+                //
+                // const blob = await res.blob();
+                // const url = URL.createObjectURL(blob);
+                // const a = document.createElement("a");
+                // a.href = url;
+                // a.download = `trip-${tripId}.pdf`;
+                // document.body.appendChild(a);
+                // a.click();
+                // a.remove();
+                // URL.revokeObjectURL(url);
+
+                const r = await fetch("/functions/v1/generate_pdf", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({tripId}),
                 });
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.error || "PDF export failed");
+                // open signed URL
+                window.location.href = data.url;
 
-                if (!res.ok) {
-                    const text = await res.text().catch(() => "");
-                    throw new Error(text || `Failed with ${res.status}`);
-                }
 
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `trip-${tripId}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(url);
             } catch (err) {
                 console.error("PDF download failed:", err);
                 alert("Failed to generate PDF. Please try again.");

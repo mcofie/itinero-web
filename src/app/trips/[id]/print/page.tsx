@@ -4,11 +4,12 @@ import {redirect} from "next/navigation";
 import {createClientServerRSC} from "@/lib/supabase/server";
 import {extractDestName} from "../page";
 
+/* Force SSR, no cache */
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "default-no-store";
 
-/* ---------------- types (expanded) ---------------- */
+/* ---------------- types ---------------- */
 type UUID = string;
 
 type TripRow = {
@@ -101,7 +102,7 @@ type DestinationHistoryRow = {
 
 /* ---------------- helpers ---------------- */
 
-// SSR-safe date formatting (fixed locale + UTC)
+// Stable date formatting (UTC to avoid server TZ drift)
 const STABLE_DATE_LOCALE = "en-GB";
 const STABLE_DATE_TIMEZONE = "UTC";
 const STABLE_DTF = new Intl.DateTimeFormat(STABLE_DATE_LOCALE, {
@@ -191,16 +192,13 @@ function whenPretty(w: DayBlock["when"]) {
 }
 
 function whenEmoji(w: DayBlock["when"]) {
-    if (w === "morning") return "🌅";
-    if (w === "afternoon") return "🌞";
-    return "🌙";
+    return w === "morning" ? "🌅" : w === "afternoon" ? "🌞" : "🌙";
 }
 
 function whenLabel(w: DayBlock["when"]) {
     return `${whenEmoji(w)} ${whenPretty(w)}`;
 }
 
-/** parse a maybe-JSON inputs into an object */
 function parseInputs(inputs: unknown): Record<string, unknown> | null {
     if (!inputs) return null;
     if (typeof inputs === "string") {
@@ -214,7 +212,6 @@ function parseInputs(inputs: unknown): Record<string, unknown> | null {
     return typeof inputs === "object" ? (inputs as Record<string, unknown>) : null;
 }
 
-/** pull interests: string[] from inputs if present */
 function getInterests(inputs: unknown): string[] {
     const obj = parseInputs(inputs);
     const list = (obj?.interests as unknown) as string[] | undefined;
@@ -222,7 +219,6 @@ function getInterests(inputs: unknown): string[] {
     return [];
 }
 
-/** map an interest to a cute emoji */
 function emojiForInterest(raw: string): string {
     const s = raw.toLowerCase();
     if (/(food|cuisine|street)/.test(s)) return "🍽️";
@@ -247,34 +243,6 @@ function emojiForInterest(raw: string): string {
     return "⭐";
 }
 
-/** safe coerce destination_history payload */
-function coerceHistoryPayload(p: unknown): DestinationHistoryPayload {
-    const out: DestinationHistoryPayload = {};
-    if (!p || typeof p !== "object") return out;
-    const obj = p as Record<string, unknown>;
-    if (typeof obj.about === "string") out.about = obj.about as string;
-    if (typeof obj.history === "string") out.history = obj.history as string;
-    const k = obj.kbyg as unknown;
-    if (k && typeof k === "object") {
-        const kb = k as Record<string, unknown>;
-        out.kbyg = {
-            currency: typeof kb.currency === "string" ? (kb.currency as string) : undefined,
-            plugs: typeof kb.plugs === "string" ? (kb.plugs as string) : undefined,
-            languages: Array.isArray(kb.languages)
-                ? (kb.languages as string[])
-                : typeof kb.languages === "string"
-                    ? (kb.languages as string)
-                    : undefined,
-            weather: kb.weather,
-            getting_around: typeof kb.getting_around === "string" ? (kb.getting_around as string) : undefined,
-            esim: typeof kb.esim === "string" ? (kb.esim as string) : undefined,
-            primary_city: typeof kb.primary_city === "string" ? (kb.primary_city as string) : undefined,
-        };
-    }
-    return out;
-}
-
-/** pick lodging (if present) */
 type InputsWithLodging = { lodging?: { name: string; lat?: number; lng?: number } | null };
 
 function getLodging(inputs: unknown) {
@@ -283,19 +251,16 @@ function getLodging(inputs: unknown) {
     return l && typeof l.name === "string" ? l : null;
 }
 
-/** tiny sums & time formatters */
 function sum<T>(arr: T[], pick: (t: T) => number | null | undefined) {
     return arr.reduce((s, x) => s + (Number(pick(x) ?? 0) || 0), 0);
 }
 
 function fmtHoursMin(mins: number) {
     if (!mins) return "—";
-    const h = Math.floor(mins / 60),
-        m = mins % 60;
+    const h = Math.floor(mins / 60), m = mins % 60;
     return h ? `${h}h${m ? " " + m + "m" : ""}` : `${m}m`;
 }
 
-/** emojis for KBYG labels */
 function kbygEmoji(key: keyof ItineroKBYG): string {
     switch (key) {
         case "currency":
@@ -315,13 +280,39 @@ function kbygEmoji(key: keyof ItineroKBYG): string {
     }
 }
 
+function coerceHistoryPayload(p: unknown): DestinationHistoryPayload {
+    const out: DestinationHistoryPayload = {};
+    if (!p || typeof p !== "object") return out;
+    const obj = p as Record<string, unknown>;
+    if (typeof obj.about === "string") out.about = obj.about;
+    if (typeof obj.history === "string") out.history = obj.history;
+
+    const k = obj.kbyg as unknown;
+    if (k && typeof k === "object") {
+        const kb = k as Record<string, unknown>;
+        out.kbyg = {
+            currency: typeof kb.currency === "string" ? kb.currency : undefined,
+            plugs: typeof kb.plugs === "string" ? kb.plugs : undefined,
+            languages: Array.isArray(kb.languages)
+                ? (kb.languages as string[])
+                : typeof kb.languages === "string"
+                    ? kb.languages
+                    : undefined,
+            weather: kb.weather,
+            getting_around: typeof kb.getting_around === "string" ? kb.getting_around : undefined,
+            esim: typeof kb.esim === "string" ? kb.esim : undefined,
+            primary_city: typeof kb.primary_city === "string" ? kb.primary_city : undefined,
+        };
+    }
+    return out;
+}
+
+
 /* ---------------- page ---------------- */
 
 export default async function TripPrintPage({params}: { params: { id: string } }) {
     const sb = await createClientServerRSC();
-    const {
-        data: {user},
-    } = await sb.auth.getUser();
+    const {data: {user}} = await sb.auth.getUser();
     if (!user) redirect("/login");
 
     const tripId = params.id;
@@ -347,7 +338,7 @@ export default async function TripPrintPage({params}: { params: { id: string } }
     const safeItems: ItemRow[] = Array.isArray(items) ? (items as ItemRow[]) : [];
     const days = groupItemsByDayIndex(safeItems);
 
-    // Places (name lookup)
+    // Places
     const placeIds = Array.from(new Set(safeItems.map((r) => r.place_id).filter(Boolean))) as string[];
     let places: PlaceRow[] = [];
     if (placeIds.length) {
@@ -363,7 +354,7 @@ export default async function TripPrintPage({params}: { params: { id: string } }
     const dateRange = formatDateRange(trip.start_date, trip.end_date);
     const destinationName = extractDestName(trip.inputs);
 
-    // Destination history (about/history + KBYG + sources)
+    // Destination history
     let aboutText: string | undefined;
     let historyText: string | undefined;
     let kbyg: ItineroKBYG | undefined;
@@ -381,9 +372,7 @@ export default async function TripPrintPage({params}: { params: { id: string } }
             const {data: histRow} = await sb
                 .schema("itinero")
                 .from("destination_history")
-                .select(
-                    "id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution"
-                )
+                .select("id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution")
                 .eq("id", dest.current_history_id)
                 .maybeSingle<DestinationHistoryRow>();
 
@@ -392,43 +381,42 @@ export default async function TripPrintPage({params}: { params: { id: string } }
             historyText = payload.history;
             kbyg = payload.kbyg;
 
-            // sources may be string[] or JSON in column
             const s = histRow?.sources as unknown;
             sources = Array.isArray(s) ? (s.filter((x) => typeof x === "string") as string[]) : undefined;
         }
     }
 
-    // Interests from inputs
     const interests = getInterests(trip.inputs);
-
-    // Lodging
     const lodging = getLodging(trip.inputs);
 
-    // Use absolute URL for hero (important for headless fetch)
+    // Absolute hero URL (ensure public access for headless)
     const hero =
         trip.cover_url && trip.cover_url.startsWith("http")
             ? trip.cover_url
             : "https://images.unsplash.com/photo-1589556045897-c444ffa0a6ff?auto=format&fit=crop&q=80&w=2000";
 
-    // Optional: public/share URL QR (set NEXT_PUBLIC_SITE_URL)
+    // Optional share QR
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
     const shareUrl = siteUrl ? `${siteUrl}/trips/${trip.id}` : "";
     const qr = shareUrl
         ? `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(shareUrl)}`
         : "";
 
-    // Simple totals
     const totalBlocks = safeItems.length;
     const totalCost = trip.est_total_cost ?? safeItems.reduce((s, it) => s + (it.est_cost ?? 0), 0);
 
     return (
         <html lang="en">
         <head>
+            <meta charSet="utf-8"/>
+            <meta name="robots" content="noindex, nofollow"/>
             <title>{trip.title ?? "Trip"} – Printable</title>
 
             {/* Speed up image fetching */}
             <link rel="preconnect" href="https://images.unsplash.com" crossOrigin=""/>
             <link rel="dns-prefetch" href="//images.unsplash.com"/>
+            {/* If you serve images from Supabase storage, preconnect that too:
+             <link rel="preconnect" href="https://<project>.supabase.co" crossOrigin="" /> */}
 
             {/* Preload hero so Chromium starts fetching immediately */}
             <link rel="preload" as="image" href={hero}/>
@@ -446,7 +434,6 @@ export default async function TripPrintPage({params}: { params: { id: string } }
             counter-reset: page;
           }
 
-          /* Variables for nice grayscale too */
           :root {
             --ink: #0f172a;
             --muted: #475569;
@@ -460,26 +447,11 @@ export default async function TripPrintPage({params}: { params: { id: string } }
           .page { page-break-after: always; }
           .page:last-child { page-break-after: auto; }
 
-          .cover {
-            position: relative;
-            min-height: calc(100vh - 32mm);
-            border-radius: 20px;
-            overflow: hidden;
-          }
+          .cover { position: relative; min-height: calc(100vh - 32mm); border-radius: 20px; overflow: hidden; }
           .cover-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
           .cover-tint { position: absolute; inset: 0; background: rgba(0,0,0,0.28); }
-          .cover-inner {
-            position: relative; z-index: 1;
-            display: flex; flex-direction: column;
-            justify-content: flex-end;
-            height: 100%;
-            padding: 28mm 0 0 0;
-          }
-          .glass {
-            background: rgba(255,255,255,0.16);
-            border: 1px solid rgba(255,255,255,0.35);
-            backdrop-filter: blur(6px);
-          }
+          .cover-inner { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; padding: 28mm 0 0 0; }
+          .glass { background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.35); backdrop-filter: blur(6px); }
 
           h1 { font-size: 40px; line-height: 1.1; margin: 0; color: white; }
           h2 { font-size: 22px; margin: 0 0 8px; }
@@ -491,29 +463,11 @@ export default async function TripPrintPage({params}: { params: { id: string } }
           .tiny { font-size: 11px; }
           .chips { display: flex; gap: 8px; flex-wrap: wrap; }
 
-          .card {
-              border: 1px solid var(--line);
-              border-radius: 14px;
-              padding: 16px;
-              background: white;
-              box-shadow: none !important; /* ⛔ no shadows */
-            }
-
-            /* Ensure *all* card-like blocks have zero shadow in print */
-            .stat,
-            .toc-item,
-            .kbyg-item,
-            .day-table,
-            .badge {
-              box-shadow: none !important;
-              filter: none !important;
-            }
+          .card { border: 1px solid var(--line); border-radius: 14px; padding: 16px; background: white; box-shadow: none !important; }
+          .stat, .toc-item, .kbyg-item, .day-table, .badge { box-shadow: none !important; filter: none !important; }
 
           .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-          .stat {
-            border: 1px dashed rgba(15,23,42,0.18);
-            border-radius: 12px; padding: 10px 12px; background: rgba(15,23,42,0.02);
-          }
+          .stat { border: 1px dashed rgba(15,23,42,0.18); border-radius: 12px; padding: 10px 12px; background: rgba(15,23,42,0.02); }
           .stat .k { font-weight: 600; font-size: 12px; color: #334155; }
           .stat .v { font-weight: 700; font-size: 14px; }
 
@@ -528,44 +482,32 @@ export default async function TripPrintPage({params}: { params: { id: string } }
           .section-title { display:flex; align-items:center; gap:8px; margin-top:18px; }
           .rule { height:1px; background: var(--line); border:0; margin:6px 0 0; }
 
-          .badge {
-            display: inline-block; padding: 4px 8px; border-radius: 999px;
-            background: rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.08);
-            font-size: 11.5px;
-          }
+          .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.08); font-size: 11.5px; }
 
-          /* Day table tweaks for alignment */
-          .day-table {
-            width: 100%; border-collapse: collapse; overflow: hidden;
-            border-radius: 12px; border: 1px solid var(--line); table-layout: fixed;
-          }
-          .day-table thead th {
-            background: rgba(15,23,42,0.04);
-            font-weight: 600; color: #334155;
-            border-bottom: 1px solid rgba(15,23,42,0.1);
-          }
-          .day-table th, .day-table td {
-            padding: 10px 12px; text-align: left; vertical-align: middle; font-size: 12.5px;
-          }
+          /* Day table */
+          .day-table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 12px; border: 1px solid var(--line); table-layout: fixed; }
+          thead { display: table-header-group; } /* repeat headers */
+          .day-table thead th { background: rgba(15,23,42,0.04); font-weight: 600; color: #334155; border-bottom: 1px solid rgba(15,23,42,0.1); }
+          .day-table th, .day-table td { padding: 10px 12px; text-align: left; vertical-align: middle; font-size: 12.5px; }
           .day-table tbody tr:nth-child(odd) td { background: rgba(15,23,42,0.02); }
           .day-table tbody tr td { border-bottom: 1px solid var(--line); }
           .day-table tbody tr:last-child td { border-bottom: none; }
 
           .place-cell-title { font-weight: 600; }
-          .place-cell-sub { color: #64748b; font-size: 11px; margin-top: 2px; word-break: break-word; }
+          .place-cell-sub { color: #64748b; font-size: 11px; margin-top: 2px; word-break: break-word; hyphens: auto; }
 
-          /* Colorful WHEN badges with emojis */
+          /* WHEN badges */
           .when-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: 11.5px; border: 1px solid transparent; }
-          .when-badge.morning { background: #fff7cc; border-color: #fde68a; color: #92400e; }   /* warm yellow */
-          .when-badge.afternoon { background: #ffe8d6; border-color: #fed7aa; color: #9a3412; } /* soft orange */
-          .when-badge.evening { background: #eae8ff; border-color: #c7d2fe; color: #3730a3; }   /* calm indigo */
+          .when-badge.morning { background: #fff7cc; border-color: #fde68a; color: #92400e; }
+          .when-badge.afternoon { background: #ffe8d6; border-color: #fed7aa; color: #9a3412; }
+          .when-badge.evening { background: #eae8ff; border-color: #c7d2fe; color: #3730a3; }
 
-          /* Page footer numbering */
+          /* Footer with page numbers */
           .footer { position: fixed; bottom: 6mm; left: 0; right: 0; color: var(--muted); font-size: 11px; }
           .footer .inner { max-width: 730px; margin: 0 auto; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
           .pageno:after { counter-increment: page; content: counter(page); }
 
-          /* Avoid awkward splits */
+          /* Break control */
           .avoid-break-inside { break-inside: avoid; page-break-inside: avoid; }
           .avoid-break-after { break-after: avoid; page-break-after: avoid; }
           .section { margin: 14px 0 0; }
@@ -588,7 +530,7 @@ export default async function TripPrintPage({params}: { params: { id: string } }
             />
         </head>
         <body>
-        {/* Hidden probe ensures the background image actually gets fetched */}
+        {/* Hidden probe ensures the background actually fetches */}
         <img id="hero-probe" src={hero} alt="" style={{display: "none"}}/>
 
         {/* -------- Cover Page -------- */}
@@ -605,7 +547,7 @@ export default async function TripPrintPage({params}: { params: { id: string } }
                         style={{
                             background: "rgba(255,255,255,0.18)",
                             color: "white",
-                            borderColor: "rgba(255,255,255,0.35)",
+                            borderColor: "rgba(255,255,255,0.35)"
                         }}
                     >
                       Saved Itinerary
@@ -615,7 +557,7 @@ export default async function TripPrintPage({params}: { params: { id: string } }
                                     style={{
                                         background: "rgba(255,255,255,0.18)",
                                         color: "white",
-                                        borderColor: "rgba(255,255,255,0.35)",
+                                        borderColor: "rgba(255,255,255,0.35)"
                                     }}
                                 >
                       {destinationName}
@@ -628,34 +570,25 @@ export default async function TripPrintPage({params}: { params: { id: string } }
 
                             <div style={{height: 22}}/>
 
-                            <div
-                                className="glass"
-                                style={{
-                                    borderRadius: 14,
-                                    padding: 14,
-                                    display: "inline-flex",
-                                    gap: 10,
-                                    alignItems: "center",
-                                }}
-                            >
-                    <span
-                        className="badge"
-                        style={{
-                            background: "rgba(255,255,255,0.22)",
-                            color: "white",
-                            borderColor: "rgba(255,255,255,0.45)",
-                        }}
-                    >
+                            <div className="glass" style={{
+                                borderRadius: 14,
+                                padding: 14,
+                                display: "inline-flex",
+                                gap: 10,
+                                alignItems: "center"
+                            }}>
+                    <span className="badge" style={{
+                        background: "rgba(255,255,255,0.22)",
+                        color: "white",
+                        borderColor: "rgba(255,255,255,0.45)"
+                    }}>
                       {days.length} day{days.length === 1 ? "" : "s"}
                     </span>
-                                <span
-                                    className="badge"
-                                    style={{
-                                        background: "rgba(255,255,255,0.22)",
-                                        color: "white",
-                                        borderColor: "rgba(255,255,255,0.45)",
-                                    }}
-                                >
+                                <span className="badge" style={{
+                                    background: "rgba(255,255,255,0.22)",
+                                    color: "white",
+                                    borderColor: "rgba(255,255,255,0.45)"
+                                }}>
                       Est. {money(trip.est_total_cost, trip.currency)}
                     </span>
                             </div>
@@ -678,27 +611,21 @@ export default async function TripPrintPage({params}: { params: { id: string } }
         <div className="page">
             <div className="container">
                 <h2>Trip Summary</h2>
-                <p className="muted" style={{marginTop: 2}}>
-                    A quick overview of your itinerary details and the day-by-day plan.
-                </p>
+                <p className="muted" style={{marginTop: 2}}>A quick overview of your itinerary details and the
+                    day-by-day plan.</p>
 
                 {/* Top Stats */}
-                <div
-                    className="section card avoid-break-inside"
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: qr ? "1fr auto" : "1fr",
-                        alignItems: "center",
-                        gap: 12,
-                    }}
-                >
+                <div className="section card avoid-break-inside" style={{
+                    display: "grid",
+                    gridTemplateColumns: qr ? "1fr auto" : "1fr",
+                    alignItems: "center",
+                    gap: 12
+                }}>
                     <div>
                         <div className="stats">
                             <div className="stat">
                                 <div className="k">Duration</div>
-                                <div className="v">
-                                    {days.length} day{days.length === 1 ? "" : "s"}
-                                </div>
+                                <div className="v">{days.length} day{days.length === 1 ? "" : "s"}</div>
                             </div>
                             <div className="stat">
                                 <div className="k">Destination</div>
@@ -718,36 +645,20 @@ export default async function TripPrintPage({params}: { params: { id: string } }
                     </div>
 
                     {qr && (
-                        <img
-                            src={qr}
-                            alt="Trip QR"
-                            width={60}
-                            height={60}
-                            style={{borderRadius: 8, border: "1px solid var(--line)"}}
-                        />
+                        <img src={qr} alt="Trip QR" width={60} height={60}
+                             style={{borderRadius: 8, border: "1px solid var(--line)"}}/>
                     )}
                 </div>
 
                 {/* Lodging */}
                 {lodging && (
                     <div className="section card avoid-break-inside">
-                        <div className="section-title">
-                            <h3 style={{margin: 0}}>Where You’re Staying</h3>
-                        </div>
+                        <div className="section-title"><h3 style={{margin: 0}}>Where You’re Staying</h3></div>
                         <hr className="rule"/>
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                gap: 12,
-                            }}
-                        >
+                        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12}}>
                             <div>
                                 <div style={{fontWeight: 700}}>{lodging.name}</div>
-                                <div className="tiny muted">
-                                    Check your app for directions &amp; check-in info
-                                </div>
+                                <div className="tiny muted">Check your app for directions &amp; check-in info</div>
                             </div>
                         </div>
                     </div>
@@ -756,17 +667,12 @@ export default async function TripPrintPage({params}: { params: { id: string } }
                 {/* Interests */}
                 {interests.length > 0 && (
                     <div className="section card avoid-break-inside">
-                        <div className="section-title">
-                            <h3 style={{margin: 0}}>Your Interests</h3>
-                        </div>
+                        <div className="section-title"><h3 style={{margin: 0}}>Your Interests</h3></div>
                         <hr className="rule"/>
                         <div className="chips" style={{marginTop: 8}}>
                             {interests.map((i) => (
-                                <span
-                                    key={i}
-                                    className="badge"
-                                    style={{display: "inline-flex", gap: 6, alignItems: "center"}}
-                                >
+                                <span key={i} className="badge"
+                                      style={{display: "inline-flex", gap: 6, alignItems: "center"}}>
                       <span aria-hidden="true">{emojiForInterest(i)}</span>
                       <span>{i}</span>
                     </span>
@@ -778,84 +684,51 @@ export default async function TripPrintPage({params}: { params: { id: string } }
                 {/* Destination: About / History */}
                 {(aboutText || historyText) && (
                     <div className="section card avoid-break-inside">
-                        <div className="section-title">
-                            <h3 style={{margin: 0}}>About the Destination</h3>
-                        </div>
+                        <div className="section-title"><h3 style={{margin: 0}}>About the Destination</h3></div>
                         <hr className="rule"/>
                         {aboutText && <p style={{marginTop: 8}}>{aboutText}</p>}
-                        {historyText && (
-                            <>
-                                <h3 style={{marginTop: 14}}>A Brief History</h3>
-                                <p>{historyText}</p>
-                            </>
-                        )}
+                        {historyText && (<><h3 style={{marginTop: 14}}>A Brief History</h3><p>{historyText}</p></>)}
                     </div>
                 )}
 
-                {/* KBYG highlights (with emojis) */}
+                {/* KBYG */}
                 {kbyg && (
                     <div className="section card avoid-break-inside">
-                        <div className="section-title">
-                            <h3 style={{margin: 0}}>Know Before You Go</h3>
-                        </div>
+                        <div className="section-title"><h3 style={{margin: 0}}>Know Before You Go</h3></div>
                         <hr className="rule"/>
                         <div className="kbyg-grid" style={{marginTop: 8}}>
-                            {kbyg.currency && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("currency")}</span>
-                                        <span>Currency</span>
-                                    </div>
-                                    <div className="kbyg-v">{kbyg.currency}</div>
+                            {kbyg.currency && (<div className="kbyg-item">
+                                <div className="kbyg-k"><span
+                                    aria-hidden="true">{kbygEmoji("currency")}</span><span>Currency</span></div>
+                                <div className="kbyg-v">{kbyg.currency}</div>
+                            </div>)}
+                            {kbyg.plugs && (<div className="kbyg-item">
+                                <div className="kbyg-k"><span aria-hidden="true">{kbygEmoji("plugs")}</span><span>Power Plugs</span>
                                 </div>
-                            )}
-                            {kbyg.plugs && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("plugs")}</span>
-                                        <span>Power Plugs</span>
-                                    </div>
-                                    <div className="kbyg-v">{kbyg.plugs}</div>
+                                <div className="kbyg-v">{kbyg.plugs}</div>
+                            </div>)}
+                            {kbyg.languages && (<div className="kbyg-item">
+                                <div className="kbyg-k"><span
+                                    aria-hidden="true">{kbygEmoji("languages")}</span><span>Languages</span></div>
+                                <div
+                                    className="kbyg-v">{Array.isArray(kbyg.languages) ? kbyg.languages.join(", ") : kbyg.languages}</div>
+                            </div>)}
+                            {kbyg.getting_around && (<div className="kbyg-item">
+                                <div className="kbyg-k"><span
+                                    aria-hidden="true">{kbygEmoji("getting_around")}</span><span>Getting Around</span>
                                 </div>
-                            )}
-                            {kbyg.languages && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("languages")}</span>
-                                        <span>Languages</span>
-                                    </div>
-                                    <div className="kbyg-v">
-                                        {Array.isArray(kbyg.languages) ? kbyg.languages.join(", ") : kbyg.languages}
-                                    </div>
-                                </div>
-                            )}
-                            {kbyg.getting_around && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("getting_around")}</span>
-                                        <span>Getting Around</span>
-                                    </div>
-                                    <div className="kbyg-v">{kbyg.getting_around}</div>
-                                </div>
-                            )}
-                            {kbyg.esim && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("esim")}</span>
-                                        <span>eSIM</span>
-                                    </div>
-                                    <div className="kbyg-v">{kbyg.esim}</div>
-                                </div>
-                            )}
-                            {kbyg.primary_city && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("primary_city")}</span>
-                                        <span>Primary City</span>
-                                    </div>
-                                    <div className="kbyg-v">{kbyg.primary_city}</div>
-                                </div>
-                            )}
+                                <div className="kbyg-v">{kbyg.getting_around}</div>
+                            </div>)}
+                            {kbyg.esim && (<div className="kbyg-item">
+                                <div className="kbyg-k"><span
+                                    aria-hidden="true">{kbygEmoji("esim")}</span><span>eSIM</span></div>
+                                <div className="kbyg-v">{kbyg.esim}</div>
+                            </div>)}
+                            {kbyg.primary_city && (<div className="kbyg-item">
+                                <div className="kbyg-k"><span
+                                    aria-hidden="true">{kbygEmoji("primary_city")}</span><span>Primary City</span></div>
+                                <div className="kbyg-v">{kbyg.primary_city}</div>
+                            </div>)}
                         </div>
                     </div>
                 )}
@@ -863,9 +736,7 @@ export default async function TripPrintPage({params}: { params: { id: string } }
                 {/* Sources */}
                 {sources && sources.length > 0 && (
                     <div className="section card avoid-break-inside">
-                        <div className="section-title">
-                            <h3 style={{margin: 0}}>Sources</h3>
-                        </div>
+                        <div className="section-title"><h3 style={{margin: 0}}>Sources</h3></div>
                         <hr className="rule"/>
                         <ul style={{paddingLeft: 18, marginTop: 8}}>
                             {sources.slice(0, 8).map((s, i) => (
@@ -912,30 +783,23 @@ export default async function TripPrintPage({params}: { params: { id: string } }
             return (
                 <div className="page" key={idx}>
                     <div className="container">
-                        <div
-                            className="day-head"
-                            style={{
-                                display: "flex",
-                                alignItems: "baseline",
-                                justifyContent: "space-between",
-                                marginBottom: 8,
-                            }}
-                        >
+                        <div className="day-head" style={{
+                            display: "flex",
+                            alignItems: "baseline",
+                            justifyContent: "space-between",
+                            marginBottom: 8
+                        }}>
                             <h2 style={{margin: 0}}>Day {idx + 1}</h2>
                             <div className="tiny muted" style={{display: "flex", gap: 12}}>
-                                <span>{formatDate(d.date)}</span>
-                                <span>•</span>
-                                <span>Activities: {d.blocks.length}</span>
-                                <span>•</span>
-                                <span>Duration: {fmtHoursMin(dayDuration)}</span>
-                                <span>•</span>
-                                <span>Travel: {fmtHoursMin(dayTravel)}</span>
-                                <span>•</span>
+                                <span>{formatDate(d.date)}</span><span>•</span>
+                                <span>Activities: {d.blocks.length}</span><span>•</span>
+                                <span>Duration: {fmtHoursMin(dayDuration)}</span><span>•</span>
+                                <span>Travel: {fmtHoursMin(dayTravel)}</span><span>•</span>
                                 <span>Est: {money(dayCost, trip.currency)}</span>
                             </div>
                         </div>
 
-                        {/* Lock column widths to keep alignment identical across pages */}
+                        {/* lock column widths */}
                         <table className="day-table avoid-break-inside">
                             <colgroup>
                                 <col style={{width: "20%"}}/>
@@ -961,18 +825,14 @@ export default async function TripPrintPage({params}: { params: { id: string } }
                             <tbody>
                             {d.blocks.map((b) => (
                                 <tr key={b.id ?? `${b.order_index}-${b.title}`}>
-                                    <td>
-                                        <span className={`when-badge ${b.when}`}>{whenLabel(b.when)}</span>
-                                    </td>
+                                    <td><span className={`when-badge ${b.when}`}>{whenLabel(b.when)}</span></td>
                                     <td>
                                         <div className="place-cell-title">{placeName(b.place_id)}</div>
                                         <div className="place-cell-sub">{b.title}</div>
                                     </td>
                                     <td>{minutes(b.duration_min)}</td>
                                     <td>{minutes(b.travel_min_from_prev)}</td>
-                                    <td className="tiny">
-                                        {b.notes ? b.notes : <span className="muted">—</span>}
-                                    </td>
+                                    <td className="tiny">{b.notes ? b.notes : <span className="muted">—</span>}</td>
                                 </tr>
                             ))}
                             </tbody>
@@ -980,8 +840,7 @@ export default async function TripPrintPage({params}: { params: { id: string } }
 
                         <div className="section card avoid-break-inside">
                             <div className="tiny muted">
-                                Tip: keep some buffer between activities to account for local conditions and
-                                traffic.
+                                Tip: keep some buffer between activities to account for local conditions and traffic.
                             </div>
                         </div>
 

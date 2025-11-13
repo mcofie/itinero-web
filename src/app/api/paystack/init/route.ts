@@ -40,7 +40,7 @@ export async function POST(req: Request) {
             email: email || user.email || "user@example.com",
             amount: quote.amount_minor,     // pesewas
             currency: quote.currency || "GHS",
-            metadata: {quote_id: quote.id, points: quote.points},
+            metadata: {quote_id: quote.id, points: quote.points,purpose: "points_topup"},
             callback_url: `${BASE_URL}/api/paystack/callback`,
         };
 
