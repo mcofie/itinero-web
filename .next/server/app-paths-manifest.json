@@ -3,20 +3,8 @@
   "/api/paystack/init/route": "app/api/paystack/init/route.js",
   "/api/paystack/webhook/route": "app/api/paystack/webhook/route.js",
   "/api/points/quote/route": "app/api/points/quote/route.js",
-  "/api/rewards/verify/route": "app/api/rewards/verify/route.js",
-  "/api/trips/[id]/pdf/route": "app/api/trips/[id]/pdf/route.js",
-  "/auth/callback/page": "app/auth/callback/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/login/page": "app/login/page.js",
   "/page": "app/page.js",
-  "/preview/page": "app/preview/page.js",
-  "/pricing/page": "app/pricing/page.js",
   "/profile/page": "app/profile/page.js",
-  "/rewards/page": "app/rewards/page.js",
-  "/rewards/verify/page": "app/rewards/verify/page.js",
-  "/t/[publicId]/page": "app/t/[publicId]/page.js",
-  "/trip-maker/page": "app/trip-maker/page.js",
-  "/trips/[id]/page": "app/trips/[id]/page.js",
-  "/trips/[id]/print/page": "app/trips/[id]/print/page.js",
-  "/trips/page": "app/trips/page.js"
+  "/trip-maker/page": "app/trip-maker/page.js"
 }

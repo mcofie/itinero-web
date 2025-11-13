@@ -34,27 +34,62 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ ok: true });
         }
 
-        // 2) Mark quote paid & add ledger in a transaction (RPC recommended; simplified here)
+        // // 2) Mark quote paid & add ledger in a transaction (RPC recommended; simplified here)
+        // const { error: qErr } = await sb
+        //     .schema("itinero")
+        //     .from("points_quotes")
+        //     .update({ status: "paid" })
+        //     .eq("id", quote.id);
+        //
+        // if (!qErr) {
+        //     await sb
+        //         .schema("itinero")
+        //         .from("points_ledger")
+        //         .insert({
+        //             user_id: quote.user_id,
+        //             delta: quote.points,
+        //             reason: "paystack_topup",
+        //             ref_type: "paystack",
+        //             ref_id: tx.reference,
+        //             meta: { paystack: { id: tx.id, currency: tx.currency, amount: tx.amount } },
+        //         });
+        // }
+
+
         const { error: qErr } = await sb
             .schema("itinero")
             .from("points_quotes")
             .update({ status: "paid" })
             .eq("id", quote.id);
 
-        if (!qErr) {
-            await sb
-                .schema("itinero")
-                .from("points_ledger")
-                .insert({
-                    user_id: quote.user_id,
-                    delta: quote.points,
-                    reason: "paystack_topup",
-                    ref_type: "paystack",
-                    ref_id: tx.reference,
-                    meta: { paystack: { id: tx.id, currency: tx.currency, amount: tx.amount } },
-                });
+        if (qErr) {
+            console.error("[paystack-webhook] quote update error:", qErr);
+            return NextResponse.json({ ok: false }, { status: 500 });
+        }
+
+        const { error: ledgerErr } = await sb
+            .schema("itinero")
+            .from("points_ledger")
+            .insert({
+                user_id: quote.user_id,
+                delta: quote.points,
+                reason: "paystack_topup",
+                ref_type: "paystack",
+                ref_id: tx.reference,
+                meta: { paystack: { id: tx.id, currency: tx.currency, amount: tx.amount } },
+            });
+
+        if (ledgerErr) {
+            console.error("[paystack-webhook] ledger insert error:", ledgerErr, {
+                quoteId: quote.id,
+                user_id: quote.user_id,
+                delta: quote.points,
+            });
+            return NextResponse.json({ ok: false }, { status: 500 });
         }
     }
 
     return NextResponse.json({ ok: true });
+
+
 }
