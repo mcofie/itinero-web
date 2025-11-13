@@ -71,6 +71,9 @@ export default function AppShell({children, userEmail}: Props) {
     const [pointsInput, setPointsInput] = React.useState<string>("");
     const [topupBusy, setTopupBusy] = React.useState(false);
 
+    // 🔔 Preview indicator state
+    const [hasPreview, setHasPreview] = React.useState(false);
+
     const fmtInt = React.useCallback(
         (n: number) =>
             new Intl.NumberFormat(undefined, {
@@ -78,6 +81,18 @@ export default function AppShell({children, userEmail}: Props) {
             }).format(n),
         []
     );
+
+    // Check localStorage for preview whenever route changes
+    React.useEffect(() => {
+        try {
+            if (typeof window !== "undefined") {
+                const raw = window.localStorage.getItem("itinero:latest_preview");
+                setHasPreview(!!raw);
+            }
+        } catch {
+            setHasPreview(false);
+        }
+    }, [pathname]);
 
     // Consolidated refresh: use RPC; if it fails, keep current points
     const refreshPoints = React.useCallback(
@@ -284,6 +299,24 @@ export default function AppShell({children, userEmail}: Props) {
                                             <Calendar className="mr-2 h-4 w-4"/>
                                             Trips
                                         </MobileNavItem>
+
+                                        {/* Mobile: Preview */}
+                                        <MobileNavItem
+                                            href="/preview"
+                                            active={pathname === "/preview"}
+                                        >
+                      <span className="flex items-center">
+                        <Calendar className="mr-2 h-4 w-4"/>
+                        Preview
+                          {hasPreview && (
+                              <span
+                                  className="ml-2 h-2 w-2 rounded-full bg-emerald-500 animate-pulse"
+                                  aria-hidden
+                              />
+                          )}
+                      </span>
+                                        </MobileNavItem>
+
                                         <MobileNavItem
                                             href="/profile"
                                             active={pathname === "/profile"}
@@ -329,6 +362,20 @@ export default function AppShell({children, userEmail}: Props) {
 
                         {/* Center: Desktop Nav */}
                         <nav className="hidden items-center gap-1 md:flex">
+
+                            {/* Desktop: Preview */}
+                            <NavItem href="/preview" active={pathname === "/preview"}>
+                <span className="inline-flex items-center">
+                  Preview
+                    {hasPreview && (
+                        <span
+                            className="ml-2 h-2 w-2 rounded-full bg-emerald-500 animate-pulse"
+                            aria-hidden
+                        />
+                    )}
+                </span>
+                            </NavItem>
+
                             <NavItem href="/trips" active={pathname?.startsWith("/trips")}>
                                 <Calendar className="mr-2 h-4 w-4"/>
                                 Trips

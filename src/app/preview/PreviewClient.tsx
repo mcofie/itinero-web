@@ -4,12 +4,12 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import {useRouter} from "next/navigation";
-import {useTheme} from "next-themes";
-import {createClientBrowser} from "@/lib/supabase/browser";
+import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import { createClientBrowser } from "@/lib/supabase/browser";
 
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
     Loader2,
     CalendarDays,
@@ -50,7 +50,13 @@ export type PreviewResponse = {
         est_total_cost: number;
         currency?: string;
         inputs?: {
-            destinations?: { id: string; name: string; lat?: number; lng?: number; cover_url?: string }[];
+            destinations?: {
+                id: string;
+                name: string;
+                lat?: number;
+                lng?: number;
+                cover_url?: string;
+            }[];
             start_date?: string;
             end_date?: string;
             interests?: string[];
@@ -136,10 +142,10 @@ const HERO_FALLBACK =
 function modeToIcon(mode?: string) {
     if (!mode) return null;
     const cl = "mr-1 h-3.5 w-3.5";
-    if (mode === "walk") return <Footprints className={cl}/>;
-    if (mode === "bike") return <Bike className={cl}/>;
-    if (mode === "car") return <Car className={cl}/>;
-    if (mode === "transit") return <Train className={cl}/>;
+    if (mode === "walk") return <Footprints className={cl} />;
+    if (mode === "bike") return <Bike className={cl} />;
+    if (mode === "car") return <Car className={cl} />;
+    if (mode === "transit") return <Train className={cl} />;
     return null;
 }
 
@@ -210,7 +216,7 @@ function hasDestMeta(meta?: DestinationMetaLike) {
 /* =========================
    Client-only dynamic
 ========================= */
-const MapSection = dynamic(() => import("../t/[publicId]/MapSection"), {ssr: false});
+const MapSection = dynamic(() => import("../t/[publicId]/MapSection"), { ssr: false });
 
 /* =========================
    Main client component
@@ -224,7 +230,7 @@ export default function PreviewClient({
 }) {
     const sb = createClientBrowser();
     const router = useRouter();
-    const {resolvedTheme} = useTheme();
+    const { resolvedTheme } = useTheme();
     const isDark = (resolvedTheme ?? "dark") === "dark";
 
     // Client state
@@ -236,6 +242,7 @@ export default function PreviewClient({
 
     const [activeDayIdx, setActiveDayIdx] = React.useState(0);
     const [insufficientOpen, setInsufficientOpen] = React.useState(false);
+    const [saving, setSaving] = React.useState(false);
 
     const [paywallLeft, setPaywallLeft] = React.useState<number>(10);
     const [showPaywall, setShowPaywall] = React.useState<boolean>(false);
@@ -245,10 +252,10 @@ export default function PreviewClient({
 
     // Load preview from localStorage (client-only)
     React.useEffect(() => {
-        const raw = localStorage.getItem("itinero:latest_preview");
+        const raw = typeof window !== "undefined" ? localStorage.getItem("itinero:latest_preview") : null;
         if (raw) {
             try {
-                setPreview(JSON.parse(raw));
+                setPreview(JSON.parse(raw) as PreviewResponse);
             } catch {
                 setPreview(null);
             }
@@ -262,7 +269,7 @@ export default function PreviewClient({
         (async () => {
             setPointsBusy(true);
             try {
-                const {data: rpcBalance} = await sb.rpc("get_points_balance");
+                const { data: rpcBalance } = await sb.rpc("get_points_balance");
                 if (typeof rpcBalance === "number") setPoints(rpcBalance);
             } finally {
                 setPointsBusy(false);
@@ -317,7 +324,7 @@ export default function PreviewClient({
                 return;
             }
 
-            const {data, error} = await sb
+            const { data, error } = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select(
@@ -332,7 +339,7 @@ export default function PreviewClient({
                 return;
             }
 
-            const toArr = (v: string[] | string | null | undefined) =>
+            const toArr = (v: string[] | string | null | undefined): string[] | undefined =>
                 Array.isArray(v)
                     ? v
                     : typeof v === "string"
@@ -371,9 +378,20 @@ export default function PreviewClient({
     }, [sb, inputs?.destinations?.[0]?.id]);
 
     // Actions
-    const handleBuy = () => router.push("/rewards");
-    const handleSave = () => {
+    const handleBuy = () => {
         if (!preview) return;
+        void saveDraftAsTrip(
+            sb,
+            preview,
+            requiredPoints,
+            points,
+            setPoints,
+            setInsufficientOpen,
+            setSaving,
+            router
+        );
+    };
+    const handleSave = () => {
         router.push("/trips");
     };
 
@@ -381,7 +399,7 @@ export default function PreviewClient({
         return (
             <div className="mx-auto grid min-h-[40vh] max-w-4xl place-items-center">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin"/> Loading preview…
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading preview…
                 </div>
             </div>
         );
@@ -389,13 +407,50 @@ export default function PreviewClient({
 
     if (!preview) {
         return (
-            <div className="mx-auto mt-10 max-w-lg text-center">
-                <div
-                    className="rounded-2xl border-none bg-gradient-to-br from-card to-card/60 p-6 shadow-md ring-1 ring-border/60">
-                    <h2 className="text-lg font-semibold">No preview found</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        Generate a preview from the wizard first. Then return here.
-                    </p>
+            <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-4 text-center">
+                <div className="relative w-full overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-card/90 via-background/80 to-background shadow-sm">
+                    {/* soft glow */}
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_80%_at_0%_0%,rgba(56,189,248,0.18),transparent_55%),radial-gradient(80%_80%_at_100%_100%,rgba(129,140,248,0.18),transparent_55%)] opacity-70" />
+
+                    <div className="relative z-10 px-6 py-7 sm:px-8 sm:py-9">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground">
+                            <Sparkles className="h-3.5 w-3.5 text-primary" />
+                            Preview your next adventure
+                        </div>
+
+                        <h2 className="mt-3 text-xl font-semibold tracking-tight sm:text-2xl">
+                            No trip preview yet
+                        </h2>
+
+                        <p className="mt-2 text-sm text-muted-foreground">
+                            Use the trip maker to tell us where you’re going, for how long, and what you enjoy.
+                            We’ll build a smart day-by-day plan and show it here.
+                        </p>
+
+                        <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+                            <Button
+                                size="lg"
+                                className="w-full sm:w-auto"
+                                onClick={() => router.push("/trip-maker")}
+                            >
+                                <CalendarDays className="mr-2 h-4 w-4" />
+                                Start a new trip
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full border-border/70 text-xs text-muted-foreground sm:w-auto"
+                                onClick={() => router.push("/trips")}
+                            >
+                                View saved trips
+                            </Button>
+                        </div>
+
+                        <p className="mt-3 text-[11px] text-muted-foreground">
+                            Your latest generated plan will automatically appear here as a preview.
+                        </p>
+                    </div>
                 </div>
             </div>
         );
@@ -409,12 +464,11 @@ export default function PreviewClient({
         <>
             {/* HERO */}
             <section className="relative h-[40svh] w-full overflow-hidden sm:h-[44svh]">
-                <Image src={coverUrl} alt={tripTitle} priority fill className="object-cover" sizes="100vw"/>
-                <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/60"/>
+                <Image src={coverUrl} alt={tripTitle} priority fill className="object-cover" sizes="100vw" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/60" />
                 <div className="absolute inset-x-0 bottom-0">
                     <div className="mx-auto w-full max-w-5xl px-4 pb-5 md:max-w-6xl">
-                        <div
-                            className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-white/90 ring-1 ring-white/20">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-white/90 ring-1 ring-white/20">
                             Preview
                         </div>
 
@@ -423,33 +477,31 @@ export default function PreviewClient({
                         </h1>
 
                         <div className="mt-1 flex flex-wrap items-center gap-2 text-white/90">
-                            <p className="text-sm sm:text-base">{formatDateRange(preview.trip_summary)}</p>
+                            <p className="text-sm sm:text-base">
+                                {formatDateRange(preview.trip_summary)}
+                            </p>
 
                             {inputs?.destinations?.[0]?.name && (
-                                <span
-                                    className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
-                  <MapPin className="h-4 w-4 text-white/80"/>
+                                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
+                  <MapPin className="h-4 w-4 text-white/80" />
                   <span className="font-medium">{inputs.destinations[0].name}</span>
                 </span>
                             )}
                             {modeIcon && (
-                                <span
-                                    className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
+                                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
                   {modeIcon}
                                     <span className="font-medium">{inputs?.mode}</span>
                 </span>
                             )}
                             {inputs?.pace && (
-                                <span
-                                    className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
-                  <Clock3 className="h-4 w-4 text-white/80"/>
+                                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
+                  <Clock3 className="h-4 w-4 text-white/80" />
                   <span className="font-medium">pace: {inputs.pace}</span>
                 </span>
                             )}
                             {typeof estTotal === "number" && (
-                                <span
-                                    className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
-                  <DollarSign className="h-4 w-4 text-white/80"/>
+                                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
+                  <DollarSign className="h-4 w-4 text-white/80" />
                   <span className="font-medium">est. ${estTotal}</span>
                 </span>
                             )}
@@ -457,7 +509,7 @@ export default function PreviewClient({
 
                         {!!inputs?.interests?.length && (
                             <div className="mt-3">
-                                <InterestChips interests={inputs!.interests!} pillTone="light"/>
+                                <InterestChips interests={inputs!.interests!} pillTone="light" />
                             </div>
                         )}
                     </div>
@@ -469,19 +521,16 @@ export default function PreviewClient({
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(520px,1.15fr)_minmax(460px,1fr)]">
                     {/* LEFT: map + interests */}
                     <aside className="md:sticky md:top-24 h-[calc(100vh-160px)] md:self-start">
-                        <div
-                            className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/50 shadow-lg">
-                            <div
-                                className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_40%_at_50%_0%,rgba(255,255,255,0.06),transparent_60%)]"/>
-                            <div
-                                className="pointer-events-none absolute left-0 top-0 z-10 w-full bg-gradient-to-b from-black/50 to-transparent py-2 text-center text-xs text-white/80">
+                        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/50 shadow-lg">
+                            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_40%_at_50%_0%,rgba(255,255,255,0.06),transparent_60%)]" />
+                            <div className="pointer-events-none absolute left-0 top-0 z-10 w-full bg-gradient-to-b from-black/50 to-transparent py-2 text-center text-xs text-white/80">
                                 Map overview
                             </div>
 
                             <MapSection
                                 places={(preview.places || [])
                                     .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
-                                    .map((p) => ({id: p.id, name: p.name, lat: p.lat!, lng: p.lng!}))}
+                                    .map((p) => ({ id: p.id, name: p.name, lat: p.lat!, lng: p.lng! }))}
                             />
                         </div>
 
@@ -568,17 +617,17 @@ export default function PreviewClient({
                             <CollapsibleCard title="Destination at a glance" initialOpen={false}>
                                 <IconFacts
                                     facts={[
-                                        {label: "City", value: destinationMeta?.city, Icon: MapPin},
-                                        {label: "Currency", value: destinationMeta?.currency_code, Icon: DollarSign},
-                                        {label: "Plugs", value: joinArr(destinationMeta?.plugs), Icon: Plug},
-                                        {label: "Languages", value: joinArr(destinationMeta?.languages), Icon: Globe},
+                                        { label: "City", value: destinationMeta?.city, Icon: MapPin },
+                                        { label: "Currency", value: destinationMeta?.currency_code, Icon: DollarSign },
+                                        { label: "Plugs", value: joinArr(destinationMeta?.plugs), Icon: Plug },
+                                        { label: "Languages", value: joinArr(destinationMeta?.languages), Icon: Globe },
                                         {
                                             label: "Getting around",
                                             value: joinArr(destinationMeta?.transport),
                                             Icon: MapPin,
                                         },
-                                        {label: "eSIM", value: destinationMeta?.esim_provider, Icon: Phone},
-                                        {label: "Weather", value: destinationMeta?.weather_desc, Icon: CloudSun},
+                                        { label: "eSIM", value: destinationMeta?.esim_provider, Icon: Phone },
+                                        { label: "Weather", value: destinationMeta?.weather_desc, Icon: CloudSun },
                                     ]}
                                 />
                             </CollapsibleCard>
@@ -592,7 +641,7 @@ export default function PreviewClient({
             </footer>
 
             {/* Countdown chip */}
-            {!showPaywall && paywallLeft > 0 && <PaywallCountdownBadge seconds={paywallLeft}/>}
+            {!showPaywall && paywallLeft > 0 && <PaywallCountdownBadge seconds={paywallLeft} />}
 
             {/* Theme-aware paywall (no blur) */}
             {showPaywall && (
@@ -602,6 +651,7 @@ export default function PreviewClient({
                     points={pointsBusy ? null : points}
                     required={requiredPoints}
                     forceTheme={isDark ? "dark" : "light"}
+                    saving={saving}
                 />
             )}
 
@@ -615,12 +665,10 @@ export default function PreviewClient({
                     ].join(" ")}
                 >
                     {/* subtle theme-adaptive top gradient */}
-                    <div
-                        className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.06),transparent)] dark:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06),transparent)]"/>
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.06),transparent)] dark:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06),transparent)]" />
 
                     <DialogHeader className="space-y-1">
-                        <div
-                            className="inline-flex items-center gap-2 self-start rounded-full border px-2.5 py-1 text-xs border-border bg-muted/50 text-muted-foreground">
+                        <div className="inline-flex items-center gap-2 self-start rounded-full border px-2.5 py-1 text-xs border-border bg-muted/50 text-muted-foreground">
                             Balance
                         </div>
                         <DialogTitle className="text-base font-semibold">Not enough points</DialogTitle>
@@ -679,7 +727,9 @@ function ItineraryDay({
         <div className="space-y-5 p-3 md:p-4">
             <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-end">
                 <div>
-                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Day {dayIdx + 1}</div>
+                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                        Day {dayIdx + 1}
+                    </div>
                     <div className="text-lg font-semibold">{formatISODate(day.date)}</div>
                 </div>
                 <div className="rounded-full border bg-background/70 px-3 py-1 text-xs text-muted-foreground">
@@ -688,24 +738,22 @@ function ItineraryDay({
             </div>
 
             <div className="relative">
-                <div className="pointer-events-none absolute left-[18px] top-0 h-full w-[2px] rounded bg-border"/>
+                <div className="pointer-events-none absolute left-[18px] top-0 h-full w-[2px] rounded bg-border" />
                 <div className="space-y-3">
                     {day.blocks.map((b, i) => {
                         const place = b.place_id ? placesById.get(b.place_id) : null;
                         return (
                             <div key={`${day.date}-${i}`} className="relative pl-7">
-                                <div
-                                    className="absolute left-[10px] top-5 h-3 w-3 -translate-x-1/2 rounded-full border border-border/70 bg-background shadow-sm"/>
-                                <div
-                                    className="rounded-2xl border border-border/60 bg-card/70 p-4 shadow-sm transition hover:shadow-md">
+                                <div className="absolute left-[10px] top-5 h-3 w-3 -translate-x-1/2 rounded-full border border-border/70 bg-background shadow-sm" />
+                                <div className="rounded-2xl border border-border/60 bg-card/70 p-4 shadow-sm transition hover:shadow-md">
                                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                        <div
-                                            className="text-[11px] uppercase tracking-wider text-muted-foreground">{b.when}</div>
-                                        <div
-                                            className="grid grid-cols-3 gap-2 text-center text-[11px] text-muted-foreground sm:w-auto">
-                                            <Metric label="Est." value={`$${b.est_cost ?? 0}`}/>
-                                            <Metric label="Duration" value={`${b.duration_min}m`}/>
-                                            <Metric label="Travel" value={`${b.travel_min_from_prev}m`}/>
+                                        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                                            {b.when}
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2 text-center text-[11px] text-muted-foreground sm:w-auto">
+                                            <Metric label="Est." value={`$${b.est_cost ?? 0}`} />
+                                            <Metric label="Duration" value={`${b.duration_min}m`} />
+                                            <Metric label="Travel" value={`${b.travel_min_from_prev}m`} />
                                         </div>
                                     </div>
 
@@ -752,8 +800,7 @@ function ItineraryDay({
                     })}
 
                     {!day.blocks.length && (
-                        <div
-                            className="grid h-40 place-items-center rounded-2xl border bg-card/40 text-sm text-muted-foreground">
+                        <div className="grid h-40 place-items-center rounded-2xl border bg-card/40 text-sm text-muted-foreground">
                             No activities for this day yet.
                         </div>
                     )}
@@ -763,7 +810,7 @@ function ItineraryDay({
     );
 }
 
-function Metric({label, value}: { label: string; value: string | number }) {
+function Metric({ label, value }: { label: string; value: string | number }) {
     return (
         <div className="rounded-full border bg-background/70 px-2 py-0.5">
             <span className="text-[11px]">{label}: </span>
@@ -788,11 +835,13 @@ function CollapsibleCard({
         >
             <summary
                 className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 sm:px-5"
-                style={{listStyle: "none"}}
+                style={{ listStyle: "none" }}
             >
                 <span className="text-sm font-semibold tracking-wide">{title}</span>
-                <ChevronDown className="h-4 w-4 transition-transform duration-200 ease-out group-open:rotate-180"
-                             aria-hidden/>
+                <ChevronDown
+                    className="h-4 w-4 transition-transform duration-200 ease-out group-open:rotate-180"
+                    aria-hidden
+                />
             </summary>
             <div className="border-t border-border/60 px-4 py-4 sm:px-5">{children}</div>
         </details>
@@ -813,14 +862,13 @@ function IconFacts({
 
     return (
         <dl className="grid grid-cols-1 gap-2">
-            {rows.map(({label, value, Icon}) => (
+            {rows.map(({ label, value, Icon }) => (
                 <div
                     key={label}
                     className="flex items-center gap-3 rounded-lg border border-border/60 bg-background/40 px-3 py-2"
                 >
-          <span
-              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60">
-            <Icon className="h-4 w-4 text-muted-foreground"/>
+          <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60">
+            <Icon className="h-4 w-4 text-muted-foreground" />
           </span>
                     <div className="min-w-0">
                         <dt className="text-xs text-muted-foreground">{label}</dt>
@@ -865,11 +913,10 @@ function InterestChips({
     );
 }
 
-function PaywallCountdownBadge({seconds}: { seconds: number }) {
+function PaywallCountdownBadge({ seconds }: { seconds: number }) {
     return (
         <div className="fixed bottom-4 right-4 z-[55]">
-            <div
-                className="rounded-full border px-3 py-1 text-sm shadow-sm bg-background/90 text-foreground border-border/60">
+            <div className="rounded-full border px-3 py-1 text-sm shadow-sm bg-background/90 text-foreground border-border/60">
                 Paywall in <span className="font-semibold">{seconds}s</span>
             </div>
         </div>
@@ -884,12 +931,14 @@ function FullScreenPaywallOverlay({
                                       points,
                                       required,
                                       forceTheme, // optional
+                                      saving,
                                   }: {
     onBuy: () => void;
     onSave: () => void;
     points: number | null;
     required: number;
     forceTheme?: ThemeMode;
+    saving?: boolean;
 }) {
     const insuff = typeof points === "number" && points < required;
 
@@ -901,22 +950,24 @@ function FullScreenPaywallOverlay({
             aria-modal="true"
         >
             {/* Subtle non-blur accents that adapt in dark mode */}
-            <div
-                className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_50%_at_50%_0%,rgba(0,0,0,0.04),transparent_60%)] dark:bg-[radial-gradient(80%_50%_at_50%_0%,rgba(255,255,255,0.04),transparent_60%)]"/>
-            <div
-                className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.18),transparent_30%,transparent_70%,rgba(0,0,0,0.16))] dark:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.08),transparent_30%,transparent_70%,rgba(255,255,255,0.06))]"/>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_50%_at_50%_0%,rgba(0,0,0,0.04),transparent_60%)] dark:bg-[radial-gradient(80%_50%_at_50%_0%,rgba(255,255,255,0.04),transparent_60%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.18),transparent_30%,transparent_70%,rgba(0,0,0,0.16))] dark:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.08),transparent_30%,transparent_70%,rgba(255,255,255,0.06))]" />
 
             {/* Panel */}
             <div className="absolute inset-x-0 bottom-6 mx-auto w-full max-w-4xl px-4 sm:bottom-8 md:bottom-10">
                 <div className="rounded-3xl border border-border bg-card text-foreground shadow-2xl ring-1 ring-border">
                     <div className="px-5 py-6 sm:px-7 md:px-8 md:py-8">
                         <div className="text-center">
-                            <Badge variant="secondary"
-                                   className="mb-2 border border-border bg-muted text-foreground/80">
+                            <Badge
+                                variant="secondary"
+                                className="mb-2 border border-border bg-muted text-foreground/80"
+                            >
                                 Preview limited
                             </Badge>
 
-                            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Unlock the full itinerary</h2>
+                            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
+                                Unlock the full itinerary
+                            </h2>
 
                             <p className="mt-1 text-sm text-muted-foreground md:text-base">
                                 See every activity, get the printable PDF, shareable link, and calendar sync.
@@ -925,24 +976,40 @@ function FullScreenPaywallOverlay({
 
                         {/* Perks */}
                         <ul className="mx-auto mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                            <Perk icon={<Sparkles className="h-4 w-4 text-primary"/>}>Full day-by-day schedule</Perk>
-                            <Perk icon={<MapIcon className="h-4 w-4 text-primary"/>}>Local insights & transport
-                                mapping</Perk>
-                            <Perk icon={<Download className="h-4 w-4 text-primary"/>}>Printable PDF</Perk>
-                            <Perk icon={<Share2 className="h-4 w-4 text-primary"/>}>Shareable trip link</Perk>
-                            <Perk icon={<CalendarDays className="h-4 w-4 text-primary"/>}>Calendar export</Perk>
-                            <Perk icon={<PencilLine className="h-4 w-4 text-primary"/>}>7-day free edits</Perk>
+                            <Perk icon={<Sparkles className="h-4 w-4 text-primary" />}>
+                                Full day-by-day schedule
+                            </Perk>
+                            <Perk icon={<MapIcon className="h-4 w-4 text-primary" />}>
+                                Local insights & transport mapping
+                            </Perk>
+                            <Perk icon={<Download className="h-4 w-4 text-primary" />}>Printable PDF</Perk>
+                            <Perk icon={<Share2 className="h-4 w-4 text-primary" />}>Shareable trip link</Perk>
+                            <Perk icon={<CalendarDays className="h-4 w-4 text-primary" />}>Calendar export</Perk>
+                            <Perk icon={<PencilLine className="h-4 w-4 text-primary" />}>7-day free edits</Perk>
                         </ul>
 
                         {/* CTAs */}
                         <div className="mt-6 flex flex-col items-stretch gap-2">
-                            <Button className="w-full py-5 text-base md:py-6" onClick={onBuy}>
-                                Buy / Top up
+                            <Button
+                                className="w-full py-5 text-base md:py-6"
+                                onClick={onBuy}
+                                disabled={saving}
+                            >
+                                {saving ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Saving your trip…
+                                    </>
+                                ) : (
+                                    "Buy / Top up"
+                                )}
                             </Button>
+
                             <Button
                                 variant="outline"
                                 className="w-full py-5 text-base md:py-6 border-border"
                                 onClick={onSave}
+                                disabled={saving}
                             >
                                 Skip to Trip
                             </Button>
@@ -963,11 +1030,181 @@ function FullScreenPaywallOverlay({
 }
 
 /** Perk pill respects theme tokens */
-function Perk({children, icon}: { children: React.ReactNode; icon?: React.ReactNode }) {
+function Perk({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
     return (
         <li className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2">
-            {icon ?? <Check className="h-4 w-4 text-primary"/>}
+            {icon ?? <Check className="h-4 w-4 text-primary" />}
             <span className="text-sm md:text-base text-foreground">{children}</span>
         </li>
     );
+}
+
+/* =========================
+   Save flow
+========================= */
+async function saveDraftAsTrip(
+    sbClient: ReturnType<typeof createClientBrowser>,
+    currentPreview: PreviewResponse,
+    requiredPoints: number,
+    points: number | null,
+    setPoints: (v: number | null) => void,
+    setInsufficientOpen: (v: boolean) => void,
+    setSavingState: (v: boolean) => void,
+    router: ReturnType<typeof useRouter>
+) {
+    setSavingState(true);
+    const COST = requiredPoints ?? 100;
+
+    if ((points ?? 0) < COST) {
+        setInsufficientOpen(true);
+        setSavingState(false);
+        return;
+    }
+
+    let currentUserId: string | undefined;
+    let pointsSpent = false;
+
+    try {
+        const { data: auth } = await sbClient.auth.getUser();
+        currentUserId = auth?.user?.id ?? undefined;
+        if (!currentUserId) throw new Error("Not authenticated");
+
+        // 1) Spend points via RPC, fallback to manual ledger insert
+        try {
+            const { data: ok, error: rpcErr } = await sbClient.rpc("spend_points", { p_cost: COST });
+            if (rpcErr) throw rpcErr;
+            if (ok !== true) {
+                setInsufficientOpen(true);
+                return;
+            }
+            pointsSpent = true;
+        } catch {
+            const { error: debitErr } = await sbClient
+                .schema("itinero")
+                .from("points_ledger")
+                .insert({
+                    user_id: currentUserId,
+                    delta: -COST,
+                    reason: "save_trip",
+                    meta: { source: "web", at: new Date().toISOString() },
+                });
+            if (debitErr) {
+                setInsufficientOpen(true);
+                return;
+            }
+            pointsSpent = true;
+        }
+
+        // 2) Insert trip
+        const ins = currentPreview.trip_summary?.inputs;
+        const title = ins?.destinations?.[0]?.name ? `${ins.destinations[0].name} Trip` : "Trip";
+
+        const tripRow = {
+            user_id: currentUserId,
+            title,
+            start_date: ins?.start_date ?? currentPreview.trip_summary.start_date ?? null,
+            end_date: ins?.end_date ?? currentPreview.trip_summary.end_date ?? null,
+            est_total_cost:
+                typeof currentPreview.trip_summary.est_total_cost === "number"
+                    ? currentPreview.trip_summary.est_total_cost
+                    : null,
+            currency: currentPreview.trip_summary.currency ?? null,
+            destination_id: ins?.destinations?.[0]?.id ?? null,
+            inputs: ins,
+        };
+
+        const { data: tripInsert, error: tripErr } = await sbClient
+            .schema("itinero")
+            .from("trips")
+            .insert(tripRow)
+            .select("id")
+            .single<{ id: string }>(); // typed result instead of `as any`
+
+        if (tripErr) throw tripErr;
+        const tripId = tripInsert.id;
+
+        // 3) Insert itinerary items
+        type ItemInsert = {
+            trip_id: string;
+            day_index: number;
+            date: string | null;
+            order_index: number;
+            when: "morning" | "afternoon" | "evening";
+            place_id: string | null;
+            title: string;
+            est_cost: number | null;
+            duration_min: number | null;
+            travel_min_from_prev: number | null;
+            notes: string | null;
+        };
+
+        const items: ItemInsert[] = [];
+        currentPreview.days.forEach((d, dIdx) => {
+            d.blocks.forEach((b, iIdx) => {
+                items.push({
+                    trip_id: tripId,
+                    day_index: dIdx,
+                    date: d.date ?? null,
+                    order_index: iIdx,
+                    when: b.when,
+                    place_id: b.place_id ?? null,
+                    title: b.title,
+                    est_cost: Number.isFinite(b.est_cost) ? b.est_cost : null,
+                    duration_min: Number.isFinite(b.duration_min) ? b.duration_min : null,
+                    travel_min_from_prev: Number.isFinite(b.travel_min_from_prev)
+                        ? b.travel_min_from_prev
+                        : null,
+                    notes: b.notes ?? null,
+                });
+            });
+        });
+
+        if (items.length) {
+            const { error: itemsErr } = await sbClient
+                .schema("itinero")
+                .from("itinerary_items")
+                .insert(items);
+            if (itemsErr) throw itemsErr;
+        }
+
+        // 4) Refresh points balance
+        try {
+            const { data: newBal } = await sbClient.rpc("get_points_balance");
+            if (typeof newBal === "number") setPoints(newBal);
+        } catch {
+            /* ignore */
+        }
+
+        // 5️⃣ Clear preview from localStorage after successful save
+        try {
+            if (typeof window !== "undefined") {
+                localStorage.removeItem("itinero:latest_preview");
+            }
+        } catch {
+            // non-fatal
+        }
+
+        // 6) Redirect to trip
+        router.push(`/trips/${tripId}`);
+    } catch (err) {
+        // Refund points if we successfully spent them but failed later
+        if (pointsSpent) {
+            try {
+                const { data: auth2 } = await sbClient.auth.getUser();
+                const uid = auth2?.user?.id ?? null;
+                await sbClient.schema("itinero").from("points_ledger").insert({
+                    user_id: uid,
+                    delta: COST,
+                    reason: "refund_save_trip_failed",
+                    meta: { source: "web", at: new Date().toISOString() },
+                });
+            } catch {
+                // swallow
+            }
+        }
+        // eslint-disable-next-line no-console
+        console.error("Save trip failed:", err);
+    } finally {
+        setSavingState(false);
+    }
 }

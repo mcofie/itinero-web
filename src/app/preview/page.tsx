@@ -1,11 +1,6 @@
 // app/preview/page.tsx
-import Image from "next/image";
-import {cookies} from "next/headers";
 import {createClientServer, createClientServerRSC} from "@/lib/supabase/server"; // <-- server-side supabase helper
 import AppShell from "@/components/layout/AppShell";
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
-import {CalendarDays, MapPin, DollarSign, Clock3} from "lucide-react";
 import PreviewClient from "./PreviewClient";
 import {redirect} from "next/navigation"; // client-only child
 

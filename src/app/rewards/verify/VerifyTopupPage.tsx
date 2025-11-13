@@ -2,12 +2,12 @@
 "use client";
 
 import * as React from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { CheckCircle2, Clock, RefreshCw, XCircle, ArrowLeft } from "lucide-react";
+import {useSearchParams, useRouter} from "next/navigation";
+import {CheckCircle2, Clock, RefreshCw, XCircle, ArrowLeft} from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
 
 type VerifyResponse = {
     ok: boolean;
@@ -36,7 +36,7 @@ export default function VerifyTopupPage() {
         try {
             const r = await fetch(`/api/rewards/verify?reference=${encodeURIComponent(reference)}`, {
                 method: "GET",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 cache: "no-store",
             });
             const data = (await r.json()) as VerifyResponse;
@@ -95,7 +95,7 @@ export default function VerifyTopupPage() {
 
     async function refreshBalance() {
         try {
-            const r = await fetch("/api/points/balance", { cache: "no-store" });
+            const r = await fetch("/api/points/balance", {cache: "no-store"});
             const data = (await r.json()) as { ok: boolean; balance?: number; message?: string };
             if (data.ok && typeof data.balance === "number") {
                 setBalance(data.balance);
@@ -110,14 +110,14 @@ export default function VerifyTopupPage() {
 
     const Icon =
         state === "success" ? CheckCircle2 :
-            state === "error"   ? XCircle :
+            state === "error" ? XCircle :
                 state === "timeout" ? Clock :
                     RefreshCw;
 
     return (
         <AppShell userEmail={null}>
             <div className="mx-auto w-full max-w-md px-4 py-10">
-                <Card className="overflow-hidden">
+                <Card className="overflow-hidden border-border">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Icon
@@ -143,7 +143,7 @@ export default function VerifyTopupPage() {
                     <CardContent className="space-y-4">
                         <p className="text-sm text-muted-foreground">{message}</p>
 
-                        <div className="rounded-md border p-3 text-sm">
+                        <div className="rounded-md border border-border p-3 text-sm">
                             <div className="flex items-center justify-between">
                                 <span className="text-muted-foreground">Reference</span>
                                 <span className="font-mono text-xs">{reference || "—"}</span>
@@ -155,12 +155,12 @@ export default function VerifyTopupPage() {
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                            <Button variant="secondary" onClick={() => router.push("/profile")}>
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back to Home
+                            <Button variant="secondary" onClick={() => router.push("/trips")}>
+                                <ArrowLeft className="mr-2 h-4 w-4"/>
+                                Continue
                             </Button>
                             <Button onClick={refreshBalance}>
-                                <RefreshCw className="mr-2 h-4 w-4" />
+                                <RefreshCw className="mr-2 h-4 w-4"/>
                                 Refresh balance
                             </Button>
                             {state !== "success" && (
