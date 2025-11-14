@@ -310,7 +310,7 @@ export default function AppShell({children, userEmail}: Props) {
                         Preview
                           {hasPreview && (
                               <span
-                                  className="ml-2 h-2 w-2 rounded-full bg-emerald-500 animate-pulse"
+                                  className="ml-2 h-2 w-2 rounded-full bg-red-500 animate-pulse"
                                   aria-hidden
                               />
                           )}
