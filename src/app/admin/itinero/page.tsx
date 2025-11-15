@@ -1,0 +1,49 @@
+// app/admin/itinero/page.tsx
+import * as React from "react";
+import {redirect} from "next/navigation";
+import {createClientServerRSC} from "@/lib/supabase/server";
+import ItineroDashboardClient, {
+    DestinationOption,
+    PlaceOption,
+} from "./ItineroDashboardClient";
+
+export const dynamic = "force-dynamic";
+
+export default async function ItineroAdminPage() {
+    const sb = await createClientServerRSC();
+    const {
+        data: {user},
+    } = await sb.auth.getUser();
+
+    if (!user) {
+        redirect("/login");
+    }
+
+    // Fetch minimal lists for selects
+    const {data: destRows} = await sb
+        .schema("itinero")
+        .from("destinations")
+        .select("id,name")
+        .order("name", {ascending: true})
+        .returns<DestinationOption[]>();
+
+    const {data: placeRows} = await sb
+        .schema("itinero")
+        .from("places")
+        .select("id,name,category")
+        .order("name", {ascending: true})
+        .returns<PlaceOption[]>();
+
+    return (
+        <div className="mx-auto w-full max-w-6xl px-4 py-8">
+            <h1 className="mb-2 text-2xl font-semibold">Itinero Admin</h1>
+            <p className="mb-6 text-sm text-muted-foreground">
+                Manage destinations, destination history and places used by the planner.
+            </p>
+            <ItineroDashboardClient
+                initialDestinations={destRows ?? []}
+                initialPlaces={placeRows ?? []}
+            />
+        </div>
+    );
+}
