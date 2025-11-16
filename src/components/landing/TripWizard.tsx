@@ -4,6 +4,8 @@ import * as React from "react";
 import {useEffect, useMemo, useState} from "react";
 import {useRouter} from "next/navigation";
 import {motion, AnimatePresence} from "framer-motion";
+import {CurrencySelect} from "@/components/CurrencySelect";
+import {getCurrencyMeta} from "@/lib/currency-data";
 
 import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
@@ -13,7 +15,7 @@ import {cn} from "@/lib/utils";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import {createClientBrowser} from "@/lib/supabase/browser";
 
-import type {DateRange} from "react-day-picker";
+import {DateRange} from "react-day-picker";
 import {
     CalendarDays,
     ChevronLeft,
@@ -25,6 +27,8 @@ import {
     Car,
     Footprints,
 } from "lucide-react";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {WORLD_CURRENCIES} from "@/lib/currency-data";
 
 /* ---------------- date-only helpers ---------------- */
 type DateRangeValue = { from?: Date; to?: Date } | undefined;
@@ -56,6 +60,8 @@ type RequestBody = {
     pace: "chill" | "balanced" | "packed";
     mode: "walk" | "bike" | "car" | "transit";
     lodging?: Lodging;
+    currency: string;
+
 };
 
 const DEFAULT_INTERESTS = [
@@ -147,10 +153,28 @@ export default function TripWizard() {
         pace: "balanced",
         mode: "car",
         lodging: {name: ""},
+        currency: "USD", // or pull from user profile / browser locale
     });
 
     // keep calendar selection local (not required externally)
     const [, setSelectedRange] = useState<DateRangeValue>(undefined);
+
+    React.useEffect(() => {
+        if (typeof window === "undefined") return;
+
+        try {
+            const stored = window.localStorage.getItem("itinero:currency");
+            const fallback = guessCurrencyFromLocale();
+            const code = (stored || fallback || "USD").toUpperCase();
+
+            setState((s) => ({
+                ...s,
+                currency: s.currency ?? code,
+            }));
+        } catch {
+            // ignore
+        }
+    }, []);
 
     useEffect(() => {
         const {data: sub} = sb.auth.onAuthStateChange(async (evt) => {
@@ -208,6 +232,21 @@ export default function TripWizard() {
             console.error(e);
         } finally {
             setBusy(false);
+        }
+    };
+
+    const handleCurrencyChange = (code: string) => {
+        setState((s) => ({
+            ...s,
+            currency: code,
+        }));
+
+        try {
+            if (typeof window !== "undefined") {
+                window.localStorage.setItem("itinero:currency", code);
+            }
+        } catch {
+            // non-fatal
         }
     };
 
@@ -389,27 +428,45 @@ export default function TripWizard() {
                         )}
 
                         {step === 2 && (
-                            <Slide key="step-budget">
+                            <Slide>
                                 <FieldBlock
                                     label="Daily budget"
-                                    hint="Used to balance activity costs"
+                                    hint="We’ll convert this into local activity costs and tell you if it’s enough."
                                     icon={Footprints}
                                 >
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="number"
-                                            min={0}
-                                            placeholder="e.g., 150"
-                                            value={String(state.budget_daily)}
-                                            onChange={(e) =>
-                                                setState((s) => ({
-                                                    ...s,
-                                                    budget_daily: e.target.value === "" ? "" : Number(e.target.value),
-                                                }))
-                                            }
-                                        />
-                                        <span className="text-sm text-muted-foreground">USD (approx.)</span>
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                        <div className="flex flex-1 items-center gap-2">
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                placeholder="e.g., 150"
+                                                value={String(state.budget_daily ?? "")}
+                                                onChange={(e) =>
+                                                    setState((s) => ({
+                                                        ...s,
+                                                        budget_daily:
+                                                            e.target.value === "" ? "" : Number(e.target.value),
+                                                    }))
+                                                }
+                                            />
+
+                                            {/* New global currency selector with flags */}
+                                            <CurrencySelect
+                                                value={state.currency ?? "USD"}
+                                                onChange={handleCurrencyChange}
+                                            />
+                                        </div>
+
+                                        {/* Subtle hint with symbol */}
+                                        <div className="text-xs text-muted-foreground">
+                                            Using{" "}
+                                            <span className="font-medium">
+          {getCurrencyMeta(state.currency).symbol} {state.currency}
+        </span>{" "}
+                                            as your planning currency.
+                                        </div>
                                     </div>
+
                                     <div className="mt-3 flex flex-wrap gap-2">
                                         {[50, 100, 150, 250].map((v) => (
                                             <Button
@@ -418,24 +475,35 @@ export default function TripWizard() {
                                                 size="sm"
                                                 variant="secondary"
                                                 className="rounded-full"
-                                                onClick={() => setState((s) => ({...s, budget_daily: v}))}
+                                                onClick={() =>
+                                                    setState((s) => ({
+                                                        ...s,
+                                                        budget_daily: v,
+                                                    }))
+                                                }
                                             >
-                                                ≈ {v}
+                                                ≈ {getCurrencyMeta(state.currency).symbol}
+                                                {v}
                                             </Button>
                                         ))}
+
                                         <Button
                                             type="button"
                                             size="sm"
                                             variant="ghost"
                                             className="rounded-full"
-                                            onClick={() => setState((s) => ({...s, budget_daily: ""}))}
+                                            onClick={() =>
+                                                setState((s) => ({
+                                                    ...s,
+                                                    budget_daily: "",
+                                                }))
+                                            }
                                         >
                                             Skip
                                         </Button>
                                     </div>
                                 </FieldBlock>
-                            </Slide>
-                        )}
+                            </Slide>)}
 
                         {step === 3 && (
                             <Slide key="step-interests">
@@ -770,14 +838,21 @@ function FieldBlock({
     );
 }
 
-function Slide({children, key: k}: { children: React.ReactNode; key?: string }) {
+function Slide({
+                   children,
+                   slideKey,
+               }: {
+    children: React.ReactNode;
+    slideKey?: string;
+}) {
     return (
         <motion.div
-            key={k}
-            initial={{opacity: 0, y: 8}}
-            animate={{opacity: 1, y: 0}}
-            exit={{opacity: 0, y: -8}}
-            transition={{duration: 0.18}}
+            key={slideKey} // this is fine – you're just *passing* it to motion.div
+            initial={{opacity: 0, x: 16}}
+            animate={{opacity: 1, x: 0}}
+            exit={{opacity: 0, x: -16}}
+            transition={{duration: 0.18, ease: "easeOut"}}
+            className="space-y-4"
         >
             {children}
         </motion.div>
@@ -931,4 +1006,24 @@ function emojiFor(tag: string) {
     if (t.includes("festival") || t.includes("event")) return "🎉";
     if (t.includes("nature") || t.includes("park")) return "🌿";
     return "✨";
+}
+
+function guessCurrencyFromLocale(): string {
+    if (typeof window === "undefined") return "USD";
+
+    const locale = navigator.language || "en-US";
+
+    // super lightweight mapping – extend as you like
+    if (locale.startsWith("en-GH")) return "GHS";
+    if (locale.startsWith("en-KE")) return "KES";
+    if (locale.startsWith("en-NG")) return "NGN";
+    if (locale.startsWith("en-ZA")) return "ZAR";
+    if (locale.startsWith("fr-") || locale.startsWith("de-") || locale.startsWith("es-")) return "EUR";
+    if (locale.startsWith("en-GB")) return "GBP";
+    if (locale.startsWith("en-CA")) return "CAD";
+    if (locale.startsWith("en-AU")) return "AUD";
+    if (locale.startsWith("en-NZ")) return "NZD";
+    if (locale.startsWith("en-US")) return "USD";
+
+    return "USD";
 }
