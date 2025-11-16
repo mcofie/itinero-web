@@ -1,12 +1,7 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/itinero/page": "app/admin/itinero/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/preview/page": "app/preview/page.js",
   "/profile/page": "app/profile/page.js",
-  "/rewards/page": "app/rewards/page.js",
-  "/t/[publicId]/page": "app/t/[publicId]/page.js",
-  "/trip-maker/page": "app/trip-maker/page.js",
   "/trips/[id]/page": "app/trips/[id]/page.js",
-  "/trips/[id]/print/page": "app/trips/[id]/print/page.js",
   "/trips/page": "app/trips/page.js"
 }
