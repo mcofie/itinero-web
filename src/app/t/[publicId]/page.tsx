@@ -1,9 +1,9 @@
 // app/t/[publicId]/page.tsx
 import * as React from "react";
-import type {Metadata} from "next";
+import type { Metadata } from "next";
 import Image from "next/image";
-import {notFound} from "next/navigation";
-import {createClientServerRSC} from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+import { createClientServerRSC } from "@/lib/supabase/server";
 import PublicItineraryClient from "./public-itinerary-client";
 import {
     MapPin,
@@ -169,7 +169,7 @@ function isObject(x: unknown): x is Record<string, unknown> {
 
 function hasKey<T extends string>(
     obj: Record<string, unknown>,
-    key: T
+    key: T,
 ): obj is Record<T, unknown> & typeof obj {
     return Object.prototype.hasOwnProperty.call(obj, key);
 }
@@ -191,7 +191,8 @@ function coercePayload(u: unknown): DestinationHistoryPayload {
         if (Array.isArray(k.languages)) kbyg.languages = k.languages as string[];
         else if (typeof k.languages === "string") kbyg.languages = k.languages;
         if (isObject(k.weather)) kbyg.weather = k.weather;
-        if (typeof k.getting_around === "string") kbyg.getting_around = k.getting_around;
+        if (typeof k.getting_around === "string")
+            kbyg.getting_around = k.getting_around;
         if (typeof k.esim === "string") kbyg.esim = k.esim;
         if (typeof k.primary_city === "string") kbyg.primary_city = k.primary_city;
 
@@ -211,7 +212,9 @@ function buildMetaFromHistory(h: DestinationHistoryRow | null | undefined) {
     const payload = coercePayload(h.payload);
     const k = payload.kbyg ?? {};
     const weather =
-        k.weather && isObject(k.weather) ? (k.weather as Record<string, unknown>) : undefined;
+        k.weather && isObject(k.weather)
+            ? (k.weather as Record<string, unknown>)
+            : undefined;
 
     const meta: DestinationMetaLike = {
         description: payload.about ?? undefined,
@@ -232,7 +235,10 @@ function buildMetaFromHistory(h: DestinationHistoryRow | null | undefined) {
                     .map((s) => s.trim())
                     .filter(Boolean)
                 : undefined,
-        weather_desc: typeof weather?.summary === "string" ? (weather.summary as string) : undefined,
+        weather_desc:
+            typeof weather?.summary === "string"
+                ? (weather.summary as string)
+                : undefined,
         transport:
             typeof k.getting_around === "string"
                 ? k.getting_around
@@ -246,7 +252,10 @@ function buildMetaFromHistory(h: DestinationHistoryRow | null | undefined) {
 
     return {
         meta,
-        heroUrl: typeof h.backdrop_image_url === "string" ? h.backdrop_image_url : undefined,
+        heroUrl:
+            typeof h.backdrop_image_url === "string"
+                ? h.backdrop_image_url
+                : undefined,
         attribution:
             typeof h.backdrop_image_attribution === "string"
                 ? h.backdrop_image_attribution
@@ -263,7 +272,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
     const sb = await createClientServerRSC();
 
-    const {data: trip} = await sb
+    const { data: trip } = await sb
         .schema("itinero")
         .from("trips")
         .select("title, cover_url, start_date, end_date, destination_id")
@@ -272,10 +281,10 @@ export async function generateMetadata({
 
     let ogImage =
         trip?.cover_url ||
-        "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?q=80&w=1600&auto=format&fit=crop";
+        "https://images.unsplash.com/photo-1526772662000-3b5ec3a7fe05ff?q=80&w=1600&auto=format&fit=crop";
 
     if (trip?.destination_id) {
-        const {data: dest} = await sb
+        const { data: dest } = await sb
             .schema("itinero")
             .from("destinations")
             .select("id,current_history_id")
@@ -283,7 +292,7 @@ export async function generateMetadata({
             .maybeSingle<DestinationRow>();
 
         if (dest?.current_history_id) {
-            const {data: hist} = await sb
+            const { data: hist } = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select("id,backdrop_image_url")
@@ -298,15 +307,19 @@ export async function generateMetadata({
         trip?.start_date || trip?.end_date
             ? `Travel dates: ${formatDateRange(
                 trip?.start_date ?? undefined,
-                trip?.end_date ?? undefined
+                trip?.end_date ?? undefined,
             )}`
             : "View this shared itinerary on Itinero.";
 
     return {
         title,
         description,
-        openGraph: {title, description, images: [{url: ogImage, width: 1600, height: 840}]},
-        twitter: {card: "summary_large_image", title, description, images: [ogImage]},
+        openGraph: {
+            title,
+            description,
+            images: [{ url: ogImage, width: 1600, height: 840 }],
+        },
+        twitter: { card: "summary_large_image", title, description, images: [ogImage] },
     };
 }
 
@@ -320,7 +333,7 @@ export default async function PublicTripPage({
     const sb = await createClientServerRSC();
 
     // Load trip (include user_id for owner)
-    const {data, error} = await sb
+    const { data, error } = await sb
         .schema("itinero")
         .from("trips")
         .select("*")
@@ -332,7 +345,7 @@ export default async function PublicTripPage({
     // Fetch owner profile (optional, fail-soft)
     let owner: ProfileRow = null;
     if (data.user_id) {
-        const {data: o} = await sb
+        const { data: o } = await sb
             .schema("itinero")
             .from("profiles")
             .select("id,full_name,avatar_url,username")
@@ -346,7 +359,7 @@ export default async function PublicTripPage({
     let hist: DestinationHistoryRow = null;
 
     if (data.destination_id) {
-        const {data: dRow} = await sb
+        const { data: dRow } = await sb
             .schema("itinero")
             .from("destinations")
             .select("id,name,current_history_id")
@@ -355,11 +368,11 @@ export default async function PublicTripPage({
         dest = dRow ?? null;
 
         if (dest?.current_history_id) {
-            const {data: hRow} = await sb
+            const { data: hRow } = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select(
-                    "id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution"
+                    "id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution",
                 )
                 .eq("id", dest.current_history_id)
                 .maybeSingle<DestinationHistoryRow>();
@@ -367,10 +380,13 @@ export default async function PublicTripPage({
         }
     }
 
-    const {meta: destMeta, heroUrl, attribution} = buildMetaFromHistory(hist);
+    const { meta: destMeta, heroUrl, attribution } = buildMetaFromHistory(hist);
 
     const title = (data.title ?? "Shared Trip").trim();
-    const dateRange = formatDateRange(data.start_date ?? undefined, data.end_date ?? undefined);
+    const dateRange = formatDateRange(
+        data.start_date ?? undefined,
+        data.end_date ?? undefined,
+    );
 
     // Prefer destination_history backdrop over trip.cover_url
     const cover =
@@ -382,12 +398,14 @@ export default async function PublicTripPage({
     const tripSummary: TripSummary = (data.trip_summary as TripSummary) ?? null;
 
     // ===== NEW: Pull itinerary from itinero.itinerary_items =====
-    const {data: itemsRows} = await sb
+    const { data: itemsRows } = await sb
         .schema("itinero")
         .from("itinerary_items")
-        .select("id,trip_id,place_id,title,notes,est_cost,duration_min,travel_min_from_prev,when, date")
+        .select(
+            "id,trip_id,place_id,title,notes,est_cost,duration_min,travel_min_from_prev,when, date",
+        )
         .eq("trip_id", data.id)
-        .order("date", {ascending: true, nullsFirst: true})
+        .order("date", { ascending: true, nullsFirst: true })
         .returns<ItineraryItemRow[]>();
 
     const items = Array.isArray(itemsRows)
@@ -395,12 +413,14 @@ export default async function PublicTripPage({
         : [];
 
     // Collect place ids used by itinerary items
-    const placeIds = Array.from(new Set(items.map((it) => it.place_id).filter(Boolean))) as string[];
+    const placeIds = Array.from(
+        new Set(items.map((it) => it.place_id).filter(Boolean)),
+    ) as string[];
 
     // Fetch details for places referenced in itinerary
     let placeDetails: PlaceDetail[] = [];
     if (placeIds.length > 0) {
-        const {data: placeRows} = await sb
+        const { data: placeRows } = await sb
             .schema("itinero")
             .from("places")
             .select("id,name,category,lat,lng,description")
@@ -410,12 +430,20 @@ export default async function PublicTripPage({
     }
 
     // Build Day[] structure for the client component (group by date)
-    const days: Day[] = items.length > 0 ? buildDaysFromItems(items) : fallbackDaysFromTrip(data.days);
+    const days: Day[] =
+        items.length > 0
+            ? buildDaysFromItems(items)
+            : fallbackDaysFromTrip(data.days);
 
     // Build PlaceLite[] from fetched placeDetails (fallback to legacy if any)
-    const places: PlaceLite[] = (placeDetails?.length
-        ? placeDetails.map(({id, name, category}) => ({id, name, category: category ?? null}))
-        : asPlaceArray(data.places)) ?? [];
+    const places: PlaceLite[] =
+        (placeDetails?.length
+            ? placeDetails.map(({ id, name, category }) => ({
+                id,
+                name,
+                category: category ?? null,
+            }))
+            : asPlaceArray(data.places)) ?? [];
 
     // Owner pill content
     const ownerName =
@@ -431,12 +459,18 @@ export default async function PublicTripPage({
         <div className="min-h-dvh bg-background text-foreground">
             {/* HERO */}
             <section className="relative h-[40svh] w-full overflow-hidden sm:h-[44svh]">
-                <Image src={cover} alt={title} priority fill className="object-cover" sizes="100vw"/>
-                <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/60"/>
+                <Image
+                    src={cover}
+                    alt={title}
+                    priority
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/60" />
                 <div className="absolute inset-x-0 bottom-0">
                     <div className="mx-auto w-full max-w-5xl px-4 pb-5 md:max-w-6xl">
-                        <div
-                            className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-white/90 ring-1 ring-white/20 backdrop-blur">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-white/90 ring-1 ring-white/20 backdrop-blur">
                             View-only share
                         </div>
 
@@ -449,8 +483,7 @@ export default async function PublicTripPage({
 
                             {/* Owner pill */}
                             {ownerName && (
-                                <span
-                                    className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20 backdrop-blur">
+                                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20 backdrop-blur">
                   <span className="relative inline-block h-5 w-5 overflow-hidden rounded-full bg-white/20">
                     {ownerAvatar ? (
                         <Image
@@ -461,7 +494,7 @@ export default async function PublicTripPage({
                             className="object-cover"
                         />
                     ) : (
-                        <User2 className="h-4 w-4 text-white/80 absolute inset-0 m-auto"/>
+                        <User2 className="absolute inset-0 m-auto h-4 w-4 text-white/80" />
                     )}
                   </span>
                   <span className="font-medium">{ownerName}</span>
@@ -472,7 +505,7 @@ export default async function PublicTripPage({
                         {/* Interests (top, not collapsible) */}
                         {interests.length > 0 && (
                             <div className="mt-3">
-                                <InterestChips interests={interests} pillTone="light"/>
+                                <InterestChips interests={interests} pillTone="light" />
                             </div>
                         )}
 
@@ -508,7 +541,7 @@ export default async function PublicTripPage({
                 <section className="mx-auto w-full max-w-5xl px-4 pt-2 pb-8 sm:pt-3 md:max-w-6xl">
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                         {/* About / History */}
-                        <div className="sm:col-span-2 space-y-3">
+                        <div className="space-y-3 sm:col-span-2">
                             {destMeta?.description && (
                                 <CollapsibleCard title="About">
                                     <p className="text-sm leading-relaxed text-muted-foreground">
@@ -530,13 +563,37 @@ export default async function PublicTripPage({
                             <CollapsibleCard title="Destination at a glance">
                                 <IconFacts
                                     facts={[
-                                        {label: "City", value: destMeta?.city, Icon: MapPin},
-                                        {label: "Currency", value: destMeta?.currency_code, Icon: DollarSign},
-                                        {label: "Plugs", value: joinArr(destMeta?.plugs), Icon: Plug},
-                                        {label: "Languages", value: joinArr(destMeta?.languages), Icon: Globe},
-                                        {label: "Getting around", value: joinArr(destMeta?.transport), Icon: MapPin},
-                                        {label: "eSIM", value: destMeta?.esim_provider, Icon: Phone},
-                                        {label: "Weather", value: destMeta?.weather_desc, Icon: CloudSun},
+                                        { label: "City", value: destMeta?.city, Icon: MapPin },
+                                        {
+                                            label: "Currency",
+                                            value: destMeta?.currency_code,
+                                            Icon: DollarSign,
+                                        },
+                                        {
+                                            label: "Plugs",
+                                            value: joinArr(destMeta?.plugs),
+                                            Icon: Plug,
+                                        },
+                                        {
+                                            label: "Languages",
+                                            value: joinArr(destMeta?.languages),
+                                            Icon: Globe,
+                                        },
+                                        {
+                                            label: "Getting around",
+                                            value: joinArr(destMeta?.transport),
+                                            Icon: MapPin,
+                                        },
+                                        {
+                                            label: "eSIM",
+                                            value: destMeta?.esim_provider,
+                                            Icon: Phone,
+                                        },
+                                        {
+                                            label: "Weather",
+                                            value: destMeta?.weather_desc,
+                                            Icon: CloudSun,
+                                        },
                                     ]}
                                 />
                             </CollapsibleCard>
@@ -551,7 +608,7 @@ export default async function PublicTripPage({
                     <CollapsibleCard title="Map of places" initialOpen={false}>
                         {/* additional wrapper to enforce bounds inside details */}
                         <div className="relative isolate overflow-hidden rounded-xl border border-border/60">
-                            <MapSection places={placeDetails}/>
+                            <MapSection places={placeDetails} />
                         </div>
                     </CollapsibleCard>
                 </section>
@@ -579,13 +636,12 @@ function CollapsibleCard({
 }) {
     return (
         <details
-            className="group rounded-2xl border border-border/60 bg-card/50 shadow-sm open:shadow-md"
-            /* use the real DOM attribute */
+            className="group rounded-2xl border border-border/40 bg-card/70"
             open={initialOpen || undefined}
         >
             <summary
                 className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 sm:px-5"
-                style={{listStyle: "none"}}
+                style={{ listStyle: "none" }}
             >
                 <span className="text-sm font-semibold tracking-wide">{title}</span>
                 <ChevronDown
@@ -593,7 +649,9 @@ function CollapsibleCard({
                     aria-hidden
                 />
             </summary>
-            <div className="border-t border-border/60 px-4 py-4 sm:px-5">{children}</div>
+            <div className="border-t border-border/40 px-4 py-4 sm:px-5">
+                {children}
+            </div>
         </details>
     );
 }
@@ -601,21 +659,26 @@ function CollapsibleCard({
 function IconFacts({
                        facts,
                    }: {
-    facts: Array<{ label: string; value?: string | null; Icon: React.ComponentType<{ className?: string }> }>;
+    facts: Array<{
+        label: string;
+        value?: string | null;
+        Icon: React.ComponentType<{ className?: string }>;
+    }>;
 }) {
-    const rows = facts.filter((f) => f.value && String(f.value).trim().length > 0);
+    const rows = facts.filter(
+        (f) => f.value && String(f.value).trim().length > 0,
+    );
     if (rows.length === 0) return null;
 
     return (
-        <dl className="grid grid-cols-1 gap-2 sm:grid-cols-1">
-            {rows.map(({label, value, Icon}) => (
+        <dl className="grid grid-cols-1 gap-2">
+            {rows.map(({ label, value, Icon }) => (
                 <div
                     key={label}
-                    className="flex items-center gap-3 rounded-lg border border-border/60 bg-background/40 px-3 py-2"
+                    className="flex items-center gap-3 rounded-xl border border-border/30 bg-muted/40 px-3 py-2"
                 >
-          <span
-              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60">
-            <Icon className="h-4 w-4 text-muted-foreground"/>
+          <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background/80">
+            <Icon className="h-4 w-4 text-muted-foreground" />
           </span>
                     <div className="min-w-0">
                         <dt className="text-xs text-muted-foreground">{label}</dt>
@@ -652,7 +715,9 @@ function InterestChips({
                         className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm backdrop-blur ${base}`}
                         title={label}
                     >
-                        <span aria-hidden className="text-base leading-none">{emoji}</span>
+            <span aria-hidden className="text-base leading-none">
+              {emoji}
+            </span>
                         <span className="leading-none">{label}</span>
                     </li>
                 );
@@ -691,11 +756,16 @@ function joinArr(arr?: string[]) {
 
 /* ===== Interests extraction + emoji mapping ===== */
 
-function extractInterests(inputsRaw: unknown, tripSummary: TripSummary): string[] {
+function extractInterests(
+    inputsRaw: unknown,
+    tripSummary: TripSummary,
+): string[] {
     const fromInputs = parseInterestsFrom(inputsRaw);
     if (fromInputs.length > 0) return fromInputs;
 
-    const inner = isObject(tripSummary) ? (tripSummary.inputs as unknown) : null;
+    const inner = isObject(tripSummary)
+        ? (tripSummary.inputs as unknown)
+        : null;
     return parseInterestsFrom(inner);
 }
 
@@ -712,7 +782,8 @@ function parseInterestsFrom(maybe: unknown): string[] {
     if (!isObject(obj)) return [];
 
     const interestsRaw =
-        (hasKey(obj, "interests") ? (obj.interests as unknown) : undefined) ?? undefined;
+        (hasKey(obj, "interests") ? (obj.interests as unknown) : undefined) ??
+        undefined;
 
     if (Array.isArray(interestsRaw)) {
         return interestsRaw
@@ -775,7 +846,9 @@ function interestEmoji(s: string): string {
 
 /* ===== NEW: Build days from itinerary_items (with graceful fallback) ===== */
 
-function buildDaysFromItems(items: NonNullable<ItineraryItemRow>[]): Day[] {
+function buildDaysFromItems(
+    items: NonNullable<ItineraryItemRow>[],
+): Day[] {
     // Group by YYYY-MM-DD (use local time to be consistent with UI expectations)
     const byDate = new Map<string, DayBlock[]>();
 
@@ -784,7 +857,9 @@ function buildDaysFromItems(items: NonNullable<ItineraryItemRow>[]): Day[] {
         const dateKey = start ? toYMD(start) : "unscheduled";
         const list = byDate.get(dateKey) ?? [];
         list.push({
-            when: it.when ?? (start ? toTimeRangeLabel(start, it.duration_min ?? null) : null),
+            when:
+                it.when ??
+                (start ? toTimeRangeLabel(start, it.duration_min ?? null) : null),
             title: it.title ?? null,
             notes: it.notes ?? null,
             est_cost: safeNum(it.est_cost),
@@ -798,9 +873,16 @@ function buildDaysFromItems(items: NonNullable<ItineraryItemRow>[]): Day[] {
     // Order dates ascending; within a date they are already ordered by date from the query
     const out: Day[] = Array.from(byDate.entries())
         .sort(([a], [b]) =>
-            a === "unscheduled" ? 1 : b === "unscheduled" ? -1 : a.localeCompare(b)
+            a === "unscheduled"
+                ? 1
+                : b === "unscheduled"
+                    ? -1
+                    : a.localeCompare(b),
         )
-        .map(([date, blocks]) => ({date: date === "unscheduled" ? null : date, blocks}));
+        .map(([date, blocks]) => ({
+            date: date === "unscheduled" ? null : date,
+            blocks,
+        }));
 
     return out;
 }
@@ -849,10 +931,16 @@ function toYMD(d: Date): string {
 }
 
 function toTimeRangeLabel(start: Date, durationMin: number | null): string {
-    const startStr = start.toLocaleTimeString(undefined, {hour: "2-digit", minute: "2-digit"});
+    const startStr = start.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
     if (!durationMin || durationMin <= 0) return startStr;
     const end = new Date(start.getTime() + durationMin * 60 * 1000);
-    const endStr = end.toLocaleTimeString(undefined, {hour: "2-digit", minute: "2-digit"});
+    const endStr = end.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
     return `${startStr} – ${endStr}`;
 }
 

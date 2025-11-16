@@ -22,6 +22,7 @@ type TripRow = {
     currency: string | null;
     cover_url?: string | null;
     inputs?: unknown;
+    public_id?: string | null;
     destination_id?: UUID | null;
 };
 
@@ -410,7 +411,7 @@ export default async function TripPrintPage({
 
     // Optional share QR
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-    const shareUrl = siteUrl ? `${siteUrl}/trips/${trip.id}` : "";
+    const shareUrl = siteUrl ? `${siteUrl}/t/${trip.public_id}` : "";
     const qr = shareUrl
         ? `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(shareUrl)}`
         : "";

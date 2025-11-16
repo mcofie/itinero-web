@@ -1,4 +1,3 @@
-// app/profile/page.tsx
 import * as React from "react";
 import Image from "next/image";
 import {redirect} from "next/navigation";
@@ -11,13 +10,17 @@ import {Badge} from "@/components/ui/badge";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
 import {ScrollArea, ScrollBar} from "@/components/ui/scroll-area";
-import {CalendarClock, Clock, MapPin, Star, User2, Wallet} from "lucide-react";
+import {CalendarClock, Star, User2, Wallet} from "lucide-react";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
-export const fetchCache = 'default-no-store'; // Next 14+ only
+export const fetchCache = "default-no-store"; // Next 14+ only
 
-import {saveProfileAction, topupPointsAction} from "@/app/profile/server-actions";
+import {
+    saveProfileAction,
+    topupPointsAction,
+} from "@/app/profile/server-actions";
+import Link from "next/link";
 
 type LedgerRow = {
     id: string;
@@ -40,11 +43,36 @@ function fmtInt(n: number) {
     return new Intl.NumberFormat().format(n);
 }
 
+/**
+ * Month DD, YYYY - HH:MM:SS (24h)
+ * e.g. January 03, 2025 - 14:05:09
+ */
+function formatDateTime(raw: string | Date | null | undefined): string {
+    if (!raw) return "—";
+    const d = typeof raw === "string" ? new Date(raw) : raw;
+    if (!(d instanceof Date) || Number.isNaN(d.getTime())) return "—";
+
+    const datePart = d.toLocaleDateString("en-US", {
+        month: "long",
+        day: "2-digit",
+        year: "numeric",
+    });
+
+    const timePart = d.toLocaleTimeString("en-US", {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    });
+
+    return `${datePart} - ${timePart}`;
+}
+
 function formatLastTopup(history: LedgerRow[]) {
     const credit = history.find((r) => r.delta > 0);
     if (!credit) return "—";
     const amount = new Intl.NumberFormat().format(credit.delta);
-    const when = new Date(credit.created_at).toLocaleDateString();
+    const when = formatDateTime(credit.created_at);
     return `+${amount} pts on ${when}`;
 }
 
@@ -52,10 +80,10 @@ function DeltaPill({value}: { value: number }) {
     const positive = value >= 0;
     return (
         <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${
                 positive
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    : "bg-red-50 text-red-700 border border-red-200"
+                    ? "border-emerald-300/70 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/60 dark:text-emerald-200"
+                    : "border-red-300/70 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-200"
             }`}
         >
       {positive ? "+" : ""}
@@ -69,18 +97,54 @@ function StatTile({
                       value,
                       big,
                       icon,
+                      accent,
                   }: {
     label: string;
     value: React.ReactNode;
     big?: boolean;
     icon?: React.ReactNode;
+    /** extra emphasis */
+    accent?: boolean;
 }) {
     return (
-        <div className="rounded-2xl border border-border bg-background p-4">
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-            <div className="mt-1 flex items-center gap-2">
-                {icon}
-                <div className={big ? "text-3xl font-bold tabular-nums" : "text-sm font-medium"}>{value}</div>
+        <div
+            className={[
+                "relative overflow-hidden rounded-2xl border bg-card",
+                "border-border/70",
+                accent
+                    ? "shadow-md shadow-primary/10 ring-1 ring-primary/10"
+                    : "shadow-sm",
+            ]
+                .filter(Boolean)
+                .join(" ")}
+        >
+            {accent && (
+                <div
+                    className="pointer-events-none absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_top_left,var(--primary)_0,transparent_55%),radial-gradient(circle_at_bottom_right,var(--primary)_0,transparent_55%)]"/>
+            )}
+            <div className="relative p-4">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+                        {label}
+                    </div>
+                    {icon && (
+                        <div
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-background/60 text-muted-foreground">
+                            {icon}
+                        </div>
+                    )}
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                    <div
+                        className={
+                            big
+                                ? "text-3xl font-bold tabular-nums"
+                                : "text-sm font-semibold tabular-nums"
+                        }
+                    >
+                        {value}
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -99,20 +163,19 @@ export default async function ProfilePage() {
     const userId = user.id;
     const email = user.email ?? null;
 
-
     // Profile
     const {data: profileRow} = await sb
-        .schema('itinero')
+        .schema("itinero")
         .from("profiles")
         .select("id, full_name, username, avatar_url, points_balance")
         .eq("id", userId)
         .maybeSingle<ProfileRow>();
 
     // Points (aggregate w/ fallback to profiles.points_balance)
-    const { data: sumValue, error } = await sb.rpc("sum_points_for_user", { uid: userId });
+    const {data: sumValue} = await sb.rpc("sum_points_for_user", {
+        uid: userId,
+    });
     const points = Number(sumValue ?? 0);
-
-
 
     // History
     const {data: historyRows} = await sb
@@ -123,7 +186,13 @@ export default async function ProfilePage() {
         .order("created_at", {ascending: false})
         .limit(200);
 
-    const history = Array.isArray(historyRows) ? (historyRows as LedgerRow[]) : [];
+    const history = Array.isArray(historyRows)
+        ? (historyRows as LedgerRow[])
+        : [];
+
+    const lastActivity = history.length
+        ? formatDateTime(history[0].created_at)
+        : "—";
 
     return (
         <AppShell userEmail={email}>
@@ -131,50 +200,79 @@ export default async function ProfilePage() {
                 {/* Header */}
                 <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <div className="mb-1 text-xs uppercase tracking-wider text-muted-foreground">Profile</div>
-                        <h1 className="text-2xl font-bold md:text-3xl">Account & Points</h1>
+                        <div className="mb-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                            Profile
+                        </div>
+                        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+                            Account &amp; Points
+                        </h1>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Manage your profile details and see every point earned or spent.
+                        </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="gap-1 px-3 py-1.5 text-sm">
-                            <Star className="h-4 w-4"/>
-                            {fmtInt(points)} pts
+                    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+                        <Badge
+                            variant="secondary"
+                            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm"
+                        >
+                            <Star className="h-4 w-4 text-amber-500"/>
+                            <span className="tabular-nums font-semibold">
+                {fmtInt(points)}
+              </span>
+                            <span className="text-xs text-muted-foreground">pts</span>
                         </Badge>
+
                         {/* Topup (Server Action form) */}
-                        <form action={topupPointsAction}>
+                        <form
+                            action={topupPointsAction}
+                            className="flex items-center gap-2"
+                        >
                             <input type="hidden" name="user_id" value={userId}/>
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    name="amount"
-                                    type="number"
-                                    min={1}
-                                    placeholder="Amount"
-                                    className="h-9 w-28"
-                                    aria-label="Top up amount (points)"
-                                    required
-                                />
-                                <Button type="submit" variant="outline">
-                                    <Wallet className="mr-2 h-4 w-4"/>
-                                    Top up
-                                </Button>
-                            </div>
+                            <Input
+                                name="amount"
+                                type="number"
+                                min={1}
+                                placeholder="Points"
+                                className="h-9 w-28"
+                                aria-label="Top up amount (points)"
+                                required
+                            />
+                            <Button type="submit" variant="outline" size="sm">
+                                <Wallet className="mr-2 h-4 w-4"/>
+                                Top up
+                            </Button>
                         </form>
                     </div>
                 </div>
 
                 {/* Grid: Profile / Points / History */}
-                <div className="grid gap-4 lg:grid-cols-3">
-                    {/* Profile card */}
-                    <Card className="border border-border bg-card/60 lg:col-span-1">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <User2 className="h-5 w-5"/>
-                                Profile details
-                            </CardTitle>
+                <div className="grid gap-5 lg:grid-cols-3">
+                    {/* Profile card — more prominent */}
+                    <Card
+                        className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-background via-background to-background lg:col-span-1 shadow-sm">
+                        <div
+                            className="pointer-events-none absolute inset-0 opacity-[0.08] bg-[radial-gradient(circle_at_top_left,var(--primary)_0,transparent_55%),radial-gradient(circle_at_bottom_right,var(--primary)_0,transparent_55%)]"/>
+                        <CardHeader className="relative pb-2">
+                            <div className="flex items-center justify-between gap-2">
+                                <CardTitle className="flex items-center gap-2 text-sm font-semibold tracking-wide">
+                  <span
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <User2 className="h-4 w-4"/>
+                  </span>
+                                    Profile details
+                                </CardTitle>
+                                <Badge
+                                    variant="outline"
+                                    className="rounded-full border-border/60 bg-background/80 text-[11px]"
+                                >
+                                    ID • {userId.slice(0, 6)}…
+                                </Badge>
+                            </div>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="relative space-y-4">
                             <div className="flex items-center gap-4">
                                 <div
-                                    className="relative h-16 w-16 overflow-hidden rounded-full border border-border bg-muted">
+                                    className="relative h-16 w-16 overflow-hidden rounded-full border border-border/70 bg-muted/60 shadow-sm">
                                     {profileRow?.avatar_url ? (
                                         <Image
                                             src={profileRow.avatar_url}
@@ -184,71 +282,137 @@ export default async function ProfilePage() {
                                             className="object-cover"
                                         />
                                     ) : (
-                                        <div
-                                            className="grid h-full w-full place-items-center text-sm text-muted-foreground">👤</div>
+                                        <div className="grid h-full w-full place-items-center text-lg">
+                      <span role="img" aria-label="Avatar">
+                        👤
+                      </span>
+                                        </div>
                                     )}
                                 </div>
-                                <div>
-                                    <div className="text-base font-medium">{profileRow?.full_name || "—"}</div>
-                                    <div className="text-sm text-muted-foreground">{email || "—"}</div>
+                                <div className="space-y-0.5">
+                                    <div className="text-base font-semibold">
+                                        {profileRow?.full_name || "Unnamed traveller"}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {email || "No email on file"}
+                                    </div>
+                                    {profileRow?.username && (
+                                        <div className="text-xs text-muted-foreground">
+                                            @{profileRow.username}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
                             {/* Save profile (Server Action form) */}
-                            <form action={saveProfileAction} className="grid gap-3">
+                            <form action={saveProfileAction} className="mt-2 grid gap-3">
                                 <input type="hidden" name="id" value={userId}/>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground" htmlFor="full_name">
+                                <div className="space-y-1">
+                                    <Label
+                                        className="text-xs font-medium text-muted-foreground"
+                                        htmlFor="full_name"
+                                    >
                                         Full name
                                     </Label>
-                                    <Input id="full_name" name="full_name" defaultValue={profileRow?.full_name ?? ""}/>
+                                    <Input
+                                        id="full_name"
+                                        name="full_name"
+                                        defaultValue={profileRow?.full_name ?? ""}
+                                        placeholder="How should we call you?"
+                                    />
                                 </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground" htmlFor="username">
+                                <div className="space-y-1">
+                                    <Label
+                                        className="text-xs font-medium text-muted-foreground"
+                                        htmlFor="username"
+                                    >
                                         Username
                                     </Label>
-                                    <Input id="username" name="username" defaultValue={profileRow?.username ?? ""}/>
+                                    <Input
+                                        id="username"
+                                        name="username"
+                                        defaultValue={profileRow?.username ?? ""}
+                                        placeholder="Optional @username"
+                                    />
                                 </div>
-                                <div className="flex justify-end">
-                                    <Button type="submit">Save changes</Button>
+                                <div className="flex justify-end pt-1">
+                                    <Button size="sm" type="submit">
+                                        Save changes
+                                    </Button>
                                 </div>
                             </form>
                         </CardContent>
                     </Card>
 
-                    {/* Points summary */}
-                    <Card className="border border-border bg-card/60 lg:col-span-2">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Star className="h-5 w-5"/>
+                    {/* Points summary — more “dashboard-y” */}
+                    <Card
+                        className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/80 lg:col-span-2 shadow-sm"
+                    >
+                        <div
+                            className="pointer-events-none absolute inset-0 opacity-[0.06] bg-[radial-gradient(circle_at_top_right,var(--primary)_0,transparent_55%)]"/>
+                        <CardHeader className="relative pb-3">
+                            <CardTitle className="flex items-center gap-2 text-sm font-semibold tracking-wide">
+      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Star className="h-4 w-4"/>
+      </span>
                                 Points summary
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="relative space-y-4">
                             <div className="grid gap-3 sm:grid-cols-3">
-                                <StatTile label="Current balance" value={fmtInt(points)} big/>
-                                <StatTile label="Last top up" value={formatLastTopup(history)}/>
+                                <StatTile
+                                    label="Current balance"
+                                    value={`${fmtInt(points)} pts`}
+                                    big
+                                    accent
+                                    icon={<Star className="h-4 w-4 text-amber-500"/>}
+                                />
+                                <StatTile
+                                    label="Last top up"
+                                    value={formatLastTopup(history)}
+                                />
                                 <StatTile
                                     label="Last activity"
-                                    value={history.length ? new Date(history[0].created_at).toLocaleString() : "—"}
+                                    value={lastActivity}
                                     icon={<CalendarClock className="h-4 w-4"/>}
                                 />
                             </div>
+
+                            <p className="text-xs text-muted-foreground">
+                                Points are used to generate AI itineraries, enhance destinations,
+                                and unlock pro-level planning tools in Itinero.
+                            </p>
+
+                            <p className="text-[11px] text-muted-foreground">
+                                Saving a trip or exporting a printable itinerary typically costs{" "}
+                                <span className="font-semibold">around 100+ points</span>, depending on
+                                the length and features used. For a full breakdown of how points are
+                                earned and spent,{" "}
+                                <Link
+                                    href="/rewards"
+                                    className="font-medium text-primary underline-offset-2 hover:underline"
+                                >
+                                    visit the Rewards page
+                                </Link>
+                                .
+                            </p>
                         </CardContent>
                     </Card>
 
                     {/* History table */}
-                    <Card className="border border-border bg-card/60 shadow-sm lg:col-span-3">
+                    <Card className="border border-border/70 bg-card/80 shadow-sm lg:col-span-3 rounded-3xl">
                         <CardHeader>
-                            <CardTitle>Top-up & activity history</CardTitle>
+                            <CardTitle className="flex items-center gap-2 text-sm font-semibold tracking-wide">
+                                Top-up &amp; activity history
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="rounded-xl border border-border overflow-hidden">
-                                <ScrollArea className="h-[420px] rounded-xl">
+                            <div className="overflow-hidden rounded-2xl border border-border/70 bg-background/60">
+                                <ScrollArea className="h-[420px] rounded-2xl">
                                     <div className="min-w-full overflow-x-auto">
                                         <table className="w-full text-sm">
                                             <thead
-                                                className="sticky top-0 z-10 bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-muted/40">
+                                                className="sticky top-0 z-10 bg-muted/70 text-xs uppercase tracking-[0.16em] text-muted-foreground backdrop-blur supports-[backdrop-filter]:bg-muted/60">
                                             <tr className="[&>th]:px-3 [&>th]:py-2 [&>th]:text-left">
                                                 <th>Date</th>
                                                 <th>Change</th>
@@ -259,31 +423,47 @@ export default async function ProfilePage() {
                                             <tbody className="[&>tr>td]:px-3 [&>tr>td]:py-2">
                                             {history.length ? (
                                                 history.map((r) => (
-                                                    <tr key={r.id} className="border-t border-border">
-                                                        <td className="whitespace-nowrap">
-                                                            {new Date(r.created_at).toLocaleString()}
+                                                    <tr
+                                                        key={r.id}
+                                                        className="border-t border-border/60"
+                                                    >
+                                                        <td className="whitespace-nowrap text-xs sm:text-sm">
+                                                            {formatDateTime(r.created_at)}
                                                         </td>
-                                                        <td className={r.delta >= 0 ? "text-emerald-600" : "text-red-600"}>
+                                                        <td
+                                                            className={
+                                                                r.delta >= 0
+                                                                    ? "text-emerald-600 dark:text-emerald-300"
+                                                                    : "text-red-600 dark:text-red-300"
+                                                            }
+                                                        >
                                                             <DeltaPill value={r.delta}/>
                                                         </td>
                                                         <td>
                                                             {r.reason ? (
-                                                                <Badge variant="outline" className="capitalize">
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="capitalize"
+                                                                >
                                                                     {r.reason}
                                                                 </Badge>
                                                             ) : (
                                                                 "—"
                                                             )}
                                                         </td>
-                                                        <td className="uppercase text-muted-foreground">
+                                                        <td className="text-xs uppercase text-muted-foreground">
                                                             {r.source ?? "—"}
                                                         </td>
                                                     </tr>
                                                 ))
                                             ) : (
                                                 <tr>
-                                                    <td colSpan={4} className="text-center text-muted-foreground">
-                                                        No history yet
+                                                    <td
+                                                        colSpan={4}
+                                                        className="py-10 text-center text-sm text-muted-foreground"
+                                                    >
+                                                        No activity yet. Top up or use points to see your
+                                                        history here.
                                                     </td>
                                                 </tr>
                                             )}

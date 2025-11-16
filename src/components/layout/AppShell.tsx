@@ -79,7 +79,7 @@ export default function AppShell({children, userEmail}: Props) {
             new Intl.NumberFormat(undefined, {
                 maximumFractionDigits: 0,
             }).format(n),
-        []
+        [],
     );
 
     // Check localStorage for preview whenever route changes
@@ -105,9 +105,12 @@ export default function AppShell({children, userEmail}: Props) {
 
             setLoadingPoints(true);
             try {
-                const {data: sumValue, error} = await sb.rpc("sum_points_for_user", {
-                    uid: userId,
-                });
+                const {data: sumValue, error} = await sb.rpc(
+                    "sum_points_for_user",
+                    {
+                        uid: userId,
+                    },
+                );
 
                 if (error) {
                     console.error("[refreshPoints] RPC error:", error);
@@ -124,7 +127,7 @@ export default function AppShell({children, userEmail}: Props) {
                 setLoadingPoints(false);
             }
         },
-        [sb]
+        [sb],
     );
 
     // Session init + auth listener
@@ -167,7 +170,7 @@ export default function AppShell({children, userEmail}: Props) {
                     table: "points_ledger",
                     filter: `user_id=eq.${uid}`,
                 },
-                () => void refreshPoints(uid)
+                () => void refreshPoints(uid),
             )
             .subscribe();
 
@@ -181,7 +184,7 @@ export default function AppShell({children, userEmail}: Props) {
                     table: "profiles",
                     filter: `id=eq.${uid}`,
                 },
-                () => void refreshPoints(uid)
+                () => void refreshPoints(uid),
             )
             .subscribe();
 
@@ -258,10 +261,12 @@ export default function AppShell({children, userEmail}: Props) {
     const ghsPreview =
         Math.round(pointsToBuy * POINT_UNIT_PRICE_GHS * 100) / 100;
 
+    const year = new Date().getFullYear();
+
     return (
         <TooltipProvider delayDuration={150}>
             <div
-                className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background/70 to-background text-foreground">
+                className="flex min-h-screen flex-col bg-gradient-to-b from-background via-background/70 to-background text-foreground">
                 {/* Header */}
                 <header
                     className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
@@ -284,7 +289,7 @@ export default function AppShell({children, userEmail}: Props) {
                                     <SheetHeader>
                                         <SheetTitle className="flex items-center gap-2">
                       <span
-                          className="grid h-8 w-8 place-items-center rounded-md bg-primary/90 text-primary-foreground shadow-sm">
+                          className="grid h-8 w-8 place-items-center rounded-md bg-primary/90 text-primary-foreground">
                         <Map className="h-4 w-4"/>
                       </span>
                                             Itinero
@@ -310,7 +315,7 @@ export default function AppShell({children, userEmail}: Props) {
                         Preview
                           {hasPreview && (
                               <span
-                                  className="ml-2 h-2 w-2 rounded-full bg-red-500 animate-pulse"
+                                  className="ml-2 h-2 w-2 animate-pulse rounded-full bg-red-500"
                                   aria-hidden
                               />
                           )}
@@ -362,21 +367,23 @@ export default function AppShell({children, userEmail}: Props) {
 
                         {/* Center: Desktop Nav */}
                         <nav className="hidden items-center gap-1 md:flex">
-
                             {/* Desktop: Preview */}
                             <NavItem href="/preview" active={pathname === "/preview"}>
                 <span className="inline-flex items-center">
                   Preview
                     {hasPreview && (
                         <span
-                            className="ml-2 h-2 w-2 rounded-full bg-emerald-500 animate-pulse"
+                            className="ml-2 h-2 w-2 animate-pulse rounded-full bg-emerald-500"
                             aria-hidden
                         />
                     )}
                 </span>
                             </NavItem>
 
-                            <NavItem href="/trips" active={pathname?.startsWith("/trips")}>
+                            <NavItem
+                                href="/trips"
+                                active={pathname?.startsWith("/trips")}
+                            >
                                 <Calendar className="mr-2 h-4 w-4"/>
                                 Trips
                             </NavItem>
@@ -416,7 +423,9 @@ export default function AppShell({children, userEmail}: Props) {
                                         {loadingPoints ? (
                                             <span className="inline-flex h-4 w-10 animate-pulse rounded-sm bg-muted"/>
                                         ) : (
-                                            <span className="tabular-nums">{fmtInt(points)}</span>
+                                            <span className="tabular-nums">
+                        {fmtInt(points)}
+                      </span>
                                         )}
                                         <span className="hidden sm:inline">pts</span>
                                     </Button>
@@ -450,7 +459,9 @@ export default function AppShell({children, userEmail}: Props) {
                                     >
                                         <Avatar className="h-8 w-8">
                                             <AvatarImage alt={userEmail ?? "User"}/>
-                                            <AvatarFallback>{initials(userEmail)}</AvatarFallback>
+                                            <AvatarFallback>
+                                                {initials(userEmail)}
+                                            </AvatarFallback>
                                         </Avatar>
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -468,11 +479,15 @@ export default function AppShell({children, userEmail}: Props) {
                                         </Badge>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator/>
-                                    <DropdownMenuItem onClick={() => router.push("/profile")}>
+                                    <DropdownMenuItem
+                                        onClick={() => router.push("/profile")}
+                                    >
                                         <User className="mr-2 h-4 w-4"/>
                                         Profile
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => router.push("/rewards")}>
+                                    <DropdownMenuItem
+                                        onClick={() => router.push("/rewards")}
+                                    >
                                         <Star className="mr-2 h-4 w-4"/>
                                         Rewards
                                     </DropdownMenuItem>
@@ -490,14 +505,113 @@ export default function AppShell({children, userEmail}: Props) {
                 {/* Main */}
                 <main
                     id="app-content"
-                    className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-10"
+                    className="mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6 md:py-10 lg:px-8"
                 >
                     {children}
                 </main>
 
                 {/* Footer */}
-                <footer className="mt-auto border-t border-border/60 py-6 text-center text-xs text-muted-foreground">
-                    © {new Date().getFullYear()} Itinero
+                <footer className="mt-auto border-t border-border/60 bg-background/80">
+                    <div
+                        className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-4 text-xs text-muted-foreground">
+                        {/* Top row */}
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            {/* Brand + tagline */}
+                            <div className="flex items-center gap-3">
+                                <div
+                                    className="grid h-8 w-8 place-items-center rounded-md bg-primary/90 text-primary-foreground">
+                                    <Map className="h-4 w-4"/>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold text-foreground">
+                                        Itinero
+                                    </p>
+                                    <p className="text-[11px] text-muted-foreground">
+                                        Plan smarter, wander farther.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Quick links */}
+                            <div className="flex flex-wrap items-center gap-3 text-[11px]">
+                                <FooterLink
+                                    href="/trips"
+                                    label="Trips"
+                                    active={pathname?.startsWith("/trips")}
+                                />
+                                <FooterLink
+                                    href="/preview"
+                                    label={
+                                        <span className="inline-flex items-center gap-1">
+                      Preview
+                                            {hasPreview && (
+                                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"/>
+                                            )}
+                    </span>
+                                    }
+                                    active={pathname === "/preview"}
+                                />
+                                <FooterLink
+                                    href="/rewards"
+                                    label="Rewards"
+                                    active={pathname === "/rewards"}
+                                />
+                                <FooterLink
+                                    href="/profile"
+                                    label="Profile"
+                                    active={pathname === "/profile"}
+                                />
+                            </div>
+
+                            {/* Status badge */}
+                            <div className="flex items-center justify-start gap-2 sm:justify-end">
+                <span className="hidden text-[11px] text-muted-foreground sm:inline">
+                  Rewards balance
+                </span>
+                                <div
+                                    className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2.5 py-1 text-[11px]">
+                                    <Star className="h-3 w-3 text-amber-500"/>
+                                    {loadingPoints ? (
+                                        <span className="inline-flex h-3 w-8 animate-pulse rounded-sm bg-muted"/>
+                                    ) : (
+                                        <span className="tabular-nums font-semibold text-foreground">
+                      {fmtInt(points)}
+                    </span>
+                                    )}
+                                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                    pts
+                  </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="h-px bg-border/60"/>
+
+                        {/* Bottom row */}
+                        <div
+                            className="flex flex-col gap-2 text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                            <p>
+                                © {year}{" "}
+                                <span className="font-medium text-foreground">
+                  Itinero
+                </span>
+                                . All rights reserved.
+                            </p>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <p className="flex items-center gap-1">
+                                    <span aria-hidden>❤️</span>
+                                    <span>Built for curious travellers.</span>
+                                </p>
+                                <Link
+                                    href="/about"
+                                    className="underline-offset-2 hover:text-foreground hover:underline"
+                                >
+                                    About Itinero
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
                 </footer>
 
                 {/* Top up dialog (POINTS → GHS) */}
@@ -537,7 +651,11 @@ export default function AppShell({children, userEmail}: Props) {
                                 <span className="font-semibold">
                   GHS {ghsPreview.toFixed(2)}
                 </span>
-                                <span className="text-muted-foreground"> via Paystack</span>.
+                                <span className="text-muted-foreground">
+                  {" "}
+                                    via Paystack
+                </span>
+                                .
                             </div>
                             <p className="text-xs text-muted-foreground">
                                 After a successful payment, your points balance will update
@@ -556,7 +674,9 @@ export default function AppShell({children, userEmail}: Props) {
                             <Button
                                 onClick={startTopup}
                                 disabled={
-                                    topupBusy || !Number(pointsInput) || Number(pointsInput) <= 0
+                                    topupBusy ||
+                                    !Number(pointsInput) ||
+                                    Number(pointsInput) <= 0
                                 }
                             >
                                 {topupBusy ? "Processing…" : "Confirm & Pay"}
@@ -585,7 +705,9 @@ function NavItem({
             className={cn(
                 "inline-flex items-center rounded-md px-3 py-1.5 text-sm transition",
                 "hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                active ? "bg-accent text-foreground shadow-sm" : "text-muted-foreground"
+                active
+                    ? "bg-accent text-foreground shadow-sm"
+                    : "text-muted-foreground",
             )}
             aria-current={active ? "page" : undefined}
         >
@@ -610,11 +732,35 @@ function MobileNavItem({
                 "inline-flex items-center rounded-md px-3 py-2 text-sm",
                 active
                     ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:bg-accent"
+                    : "text-muted-foreground hover:bg-accent",
             )}
             aria-current={active ? "page" : undefined}
         >
             {children}
+        </Link>
+    );
+}
+
+/* ---------- Footer link helper ---------- */
+
+function FooterLink({
+                        href,
+                        label,
+                        active,
+                    }: {
+    href: string;
+    label: React.ReactNode;
+    active?: boolean;
+}) {
+    return (
+        <Link
+            href={href}
+            className={cn(
+                "text-[11px] transition hover:text-foreground",
+                active ? "text-foreground font-medium" : "text-muted-foreground",
+            )}
+        >
+            {label}
         </Link>
     );
 }

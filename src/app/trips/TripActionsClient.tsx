@@ -383,21 +383,22 @@ export default function TripActionsClient({
             {/* Add item (opens per-day dialog) */}
             {days.length > 0 && (
                 <div className="relative">
-                    <Button size="sm" variant="secondary" onClick={() => openAddItem(days[0].date)}>
+                    <Button size="sm" variant="secondary" className={"cursor-pointer"}
+                            onClick={() => openAddItem(days[0].date)}>
                         <Plus className="mr-2 h-4 w-4"/> Add item
                     </Button>
                 </div>
             )}
 
             {/* Export / Share */}
-            <Button size="sm" variant="secondary" onClick={downloadICS}>
+            <Button size="sm" variant="secondary" onClick={downloadICS} className={"cursor-pointer"}>
                 <CalendarPlus className="mr-2 h-4 w-4"/> Calendar
             </Button>
 
             <TripPrintDialogClient tripId={tripId}/>
 
 
-            <Button size="sm" onClick={share}>
+            <Button size="sm" onClick={share} className={"cursor-pointer"}>
                 <Share2 className="mr-2 h-4 w-4"/> Share
             </Button>
 

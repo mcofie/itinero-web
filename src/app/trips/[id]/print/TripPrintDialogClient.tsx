@@ -45,7 +45,7 @@ export function TripPrintDialogClient({tripId}: TripPrintDialogClientProps) {
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="secondary" size="sm">
+                <Button variant="secondary" size="sm" className={"cursor-pointer"}>
                     <Printer className="mr-2 h-4 w-4"/>
                     Print itinerary
                 </Button>
