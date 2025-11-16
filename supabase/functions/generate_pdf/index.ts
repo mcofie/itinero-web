@@ -1,100 +1,166 @@
+// supabase/functions/generate-pdf/index.ts
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SRK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const PDF_BUCKET = Deno.env.get("PDF_BUCKET") ?? "pdfs";
 
 // Host that serves the print page (your Next.js app)
-const PRINT_HOST = Deno.env.get("PRINT_HOST")!; // e.g. https://your-next-app.vercel.app
+const PRINT_HOST = Deno.env.get("PRINT_HOST")!; // e.g. https://your-site.vercel.app
 
 // PDF microservice endpoint (must be full /api/pdf)
-const VERPDF = Deno.env.get("VERCEL_PDF_URL")!; // e.g. https://pdf-service-xxxxx.vercel.app/api/pdf
+const VERCEL_PDF_URL = Deno.env.get("VERCEL_PDF_URL")!; // e.g. https://pdf-service.vercel.app/api/pdf
 
 // Optional Bearer for microservice
-const VERPDF_TOKEN = Deno.env.get("VERCEL_PDF_TOKEN") ?? "";
+const VERCEL_PDF_TOKEN = Deno.env.get("VERCEL_PDF_TOKEN") ?? "";
 
-// Vercel Deployment Protection bypass token (used for BOTH hosts)
-const BYPASS = Deno.env.get("VERCEL_BYPASS_TOKEN") || "";
+// Optional Vercel deployment protection bypass token
+const VERPROT_BYPASS = Deno.env.get("VERCEL_BYPASS_TOKEN") ?? "";
 
 serve(async (req) => {
     try {
-        const { tripId } = await req.json();
+        // Basic auth: require a Supabase JWT (anon or user)
+        const authHeader = req.headers.get("authorization") ?? "";
+        if (!authHeader.toLowerCase().startsWith("bearer ")) {
+            return json({ error: "Missing authorization header" }, 401);
+        }
+
+        const supabase = createClient(SUPABASE_URL, SRK, {
+            global: { headers: { Authorization: authHeader } },
+        });
+
+        let body: { tripId?: string };
+        try {
+            body = (await req.json()) as { tripId?: string };
+        } catch {
+            return json({ error: "Invalid JSON body" }, 400);
+        }
+
+        const tripId = body.tripId;
         if (!tripId) return json({ error: "Missing tripId" }, 400);
 
-        const admin = createClient(SUPABASE_URL, SRK);
-
-        // read current version
-        const { data: t, error: tErr } = await admin
+        // 1) Load trip + pdf_version
+        const { data: trip, error: tripErr } = await supabase
             .schema("itinero")
             .from("trips")
-            .select("id,pdf_version")
+            .select("id, pdf_version")
             .eq("id", tripId)
             .single();
 
-        if (tErr || !t) return json({ error: "TRIP_NOT_FOUND" }, 404);
-        const version = t.pdf_version ?? 1;
+        if (tripErr || !trip) {
+            console.error("[generate-pdf] trip error", tripErr);
+            return json({ error: "TRIP_NOT_FOUND" }, 404);
+        }
 
-        // cache hit?
-        const { data: cached } = await admin
+        const version: number = (trip as any).pdf_version ?? 1;
+
+        // 2) Check for cached export
+        const { data: cached } = await supabase
+            .schema("itinero")
             .from("pdf_exports")
-            .select("path,byte_size,created_at")
+            .select("path, byte_size, created_at")
             .eq("trip_id", tripId)
             .eq("version", version)
             .maybeSingle();
 
         if (cached?.path) {
-            const signed = await sign(admin, cached.path);
-            return json({ ok: true, cached: true, url: signed, size: cached.byte_size });
+            const signed = await sign(supabase, cached.path);
+            return json({
+                ok: true,
+                cached: true,
+                url: signed,
+                size: cached.byte_size,
+            });
         }
 
-        // Build the absolute print URL (with print mode + protection bypass)
+        // 3) Build print URL
+        // NOTE: this hits your Next.js route: /trips/[id]/print
         const printUrl =
             `${PRINT_HOST}/trips/${encodeURIComponent(tripId)}/print?print=1` +
-            (BYPASS ? `&x-vercel-protection-bypass=${encodeURIComponent(BYPASS)}` : "");
+            (VERPROT_BYPASS
+                ? `&x-vercel-protection-bypass=${encodeURIComponent(VERPROT_BYPASS)}`
+                : "");
 
-        // Call the microservice: /api/pdf?url=<printUrl>
-        const serviceUrl = `${VERPDF}?url=${encodeURIComponent(printUrl)}`;
+        // 4) Call PDF microservice: /api/pdf?url=<printUrl>
+        const serviceUrl = `${VERCEL_PDF_URL}?url=${encodeURIComponent(printUrl)}`;
 
-        // Minimal diagnostics
-        console.log("[generate_pdf] serviceUrl:", serviceUrl);
+        const headers: HeadersInit = {
+            "User-Agent": "Supabase-EdgeFetch/1.0",
+        };
+        if (VERCEL_PDF_TOKEN) {
+            headers["Authorization"] = `Bearer ${VERCEL_PDF_TOKEN}`;
+        }
+        if (VERPROT_BYPASS) {
+            headers["Cookie"] = `__vercel_protection_bypass=${VERPROT_BYPASS}`;
+        }
 
-        const r = await fetch(serviceUrl, {
-            headers: {
-                ...(VERPDF_TOKEN ? { Authorization: `Bearer ${VERPDF_TOKEN}` } : {}),
-                ...(BYPASS ? { Cookie: `__vercel_protection_bypass=${BYPASS}` } : {}),
-                "User-Agent": "Supabase-EdgeFetch/1.0",
-            },
-            redirect: "follow",
-        });
+        console.log("[generate-pdf] calling pdf service", serviceUrl);
+
+        const r = await fetch(serviceUrl, { headers, redirect: "follow" });
 
         if (!r.ok) {
             const detail = await r.text();
-            console.error("[generate_pdf] service error", r.status, detail.slice(0, 500));
-            return json({ error: "PDF_SERVICE_FAILED", detail }, 502);
+            console.error(
+                "[generate-pdf] pdf service error",
+                r.status,
+                detail.slice(0, 300),
+            );
+            return json(
+                { error: "PDF_SERVICE_FAILED", status: r.status, detail },
+                502,
+            );
         }
 
-        const pdf = new Uint8Array(await r.arrayBuffer());
+        const buf = await r.arrayBuffer();
+        const pdf = new Uint8Array(buf);
 
+        // 5) Upload to storage
         const path = `trips/${tripId}/v${version}/${crypto.randomUUID()}.pdf`;
-        const { error: upErr } = await admin.storage
+        const { error: upErr } = await supabase.storage
             .from(PDF_BUCKET)
-            .upload(path, pdf, { contentType: "application/pdf", upsert: true });
+            .upload(path, pdf, {
+                contentType: "application/pdf",
+                upsert: true,
+            });
 
-        if (upErr) return json({ error: "UPLOAD_FAILED", detail: upErr.message }, 500);
+        if (upErr) {
+            console.error("[generate-pdf] upload error", upErr);
+            return json(
+                { error: "UPLOAD_FAILED", detail: upErr.message },
+                500,
+            );
+        }
 
-        const { error: insErr } = await admin.from("pdf_exports").insert({
-            trip_id: tripId,
-            version,
-            path,
-            byte_size: pdf.byteLength,
+        // 6) Insert cache record
+        const { error: insErr } = await supabase
+            .schema("itinero")
+            .from("pdf_exports")
+            .insert({
+                trip_id: tripId,
+                version,
+                path,
+                byte_size: pdf.byteLength,
+            });
+
+        if (insErr) {
+            console.warn("[generate-pdf] cache insert failed", insErr);
+            // Non-fatal
+        }
+
+        const signed = await sign(supabase, path);
+        return json({
+            ok: true,
+            cached: false,
+            url: signed,
+            size: pdf.byteLength,
         });
-        if (insErr) console.warn("[generate_pdf] cache insert failed", insErr);
-
-        const signed = await sign(admin, path);
-        return json({ ok: true, cached: false, url: signed, size: pdf.byteLength });
     } catch (e) {
-        return json({ error: "UNEXPECTED", detail: (e as Error)?.message }, 500);
+        console.error("[generate-pdf] unexpected", e);
+        return json(
+            { error: "UNEXPECTED", detail: (e as Error)?.message },
+            500,
+        );
     }
 });
 
@@ -105,8 +171,8 @@ function json(body: unknown, status = 200) {
     });
 }
 
-async function sign(admin: ReturnType<typeof createClient>, path: string) {
-    const { data, error } = await admin.storage
+async function sign(client: ReturnType<typeof createClient>, path: string) {
+    const { data, error } = await client.storage
         .from(PDF_BUCKET)
         .createSignedUrl(path, 60 * 60);
     if (error) throw new Error("SIGN_FAILED: " + error.message);

@@ -37,10 +37,17 @@
           "async": false,
           "exportedName": "setTripPublic",
           "filename": "src/app/actions/trips.ts"
+        },
+        "app/trips/[id]/print/page": {
+          "moduleId": "[project]/.next-internal/server/app/trips/[id]/print/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/actions/trips.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "setTripPublic",
+          "filename": "src/app/actions/trips.ts"
         }
       },
       "layer": {
-        "app/trips/[id]/page": "action-browser"
+        "app/trips/[id]/page": "action-browser",
+        "app/trips/[id]/print/page": "action-browser"
       },
       "filename": "src/app/actions/trips.ts",
       "exportedName": "setTripPublic"

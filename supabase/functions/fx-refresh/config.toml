@@ -1,0 +1,3 @@
+# supabase/functions/fx-refresh/config.toml
+[functions.fx-refresh]
+verify_jwt = false

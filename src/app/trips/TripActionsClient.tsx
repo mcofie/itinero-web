@@ -6,9 +6,24 @@ import {Button} from "@/components/ui/button";
 import {Input} from "@/components/ui/input";
 import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/components/ui/dialog";
 import {createClientBrowser} from "@/lib/supabase/browser";
-import {CalendarPlus, FileDown, Link as LinkIcon, Pencil, Plus, Share2, Trash2, Save, X, Loader2} from "lucide-react";
+import {
+    CalendarPlus,
+    FileDown,
+    Link as LinkIcon,
+    Pencil,
+    Plus,
+    Share2,
+    Trash2,
+    Save,
+    X,
+    Loader2,
+    Printer
+} from "lucide-react";
 import {useRouter} from "next/navigation";
 import ExportPdfButtonClient from "@/app/trips/[id]/ExportPdfButtonClient";
+import {PrintControls} from "@/app/trips/[id]/print/PrintControls";
+import Link from "next/link";
+import {TripPrintDialogClient} from "@/app/trips/[id]/print/TripPrintDialogClient";
 
 
 type UUID = string;
@@ -317,6 +332,19 @@ export default function TripActionsClient({
         }
     }
 
+    function TripPrintButton({tripId}: { tripId: string }) {
+        const href = `/trips/${encodeURIComponent(tripId)}/print?print=1`;
+
+        return (
+            <Button asChild size="sm" variant="outline">
+                <Link href={href} target="_blank" rel="noreferrer">
+                    <Printer className="mr-2 h-4 w-4"/>
+                    Print / PDF
+                </Link>
+            </Button>
+        );
+    }
+
 
     return (
         <div className="flex flex-wrap items-center gap-2">
@@ -365,10 +393,10 @@ export default function TripActionsClient({
             <Button size="sm" variant="secondary" onClick={downloadICS}>
                 <CalendarPlus className="mr-2 h-4 w-4"/> Calendar
             </Button>
-            <DownloadPdfButton tripId={tripId}/>
-            {/*<ExportPdfButtonClient*/}
-            {/*    tripId={tripId}*/}
-            {/*/>*/}
+
+            <TripPrintDialogClient tripId={tripId}/>
+
+
             <Button size="sm" onClick={share}>
                 <Share2 className="mr-2 h-4 w-4"/> Share
             </Button>
