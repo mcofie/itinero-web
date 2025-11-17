@@ -29,7 +29,7 @@ import {
     Globe,
     Plug,
     Phone,
-    CloudSun,
+    CloudSun, ChevronLeft, ChevronRight,
 } from "lucide-react";
 
 import {
@@ -1042,6 +1042,11 @@ function PaywallCountdownBadge({seconds}: { seconds: number }) {
 
 type ThemeMode = "light" | "dark";
 
+function formatPoints(n: number) {
+    return new Intl.NumberFormat().format(n);
+}
+
+
 function FullScreenPaywallOverlay({
                                       onBuy,
                                       onSave,
@@ -1059,96 +1064,278 @@ function FullScreenPaywallOverlay({
 }) {
     const insuff = typeof points === "number" && points < required;
 
+    const perks = [
+        {
+            label: "Full day-by-day schedule",
+            description: "See every stop laid out in a clean, time-based view.",
+            icon: <Sparkles className="h-4 w-4 text-primary"/>,
+        },
+        {
+            label: "Local insights & transport mapping",
+            description: "Smarter routing between sights with realistic travel times.",
+            icon: <MapIcon className="h-4 w-4 text-primary"/>,
+        },
+        {
+            label: "Printable PDF",
+            description: "Export a beautiful PDF for offline use or sharing.",
+            icon: <Download className="h-4 w-4 text-primary"/>,
+        },
+        {
+            label: "Shareable trip link",
+            description: "Send a live itinerary link to friends and co-travellers.",
+            icon: <Share2 className="h-4 w-4 text-primary"/>,
+        },
+        {
+            label: "Calendar export",
+            description: "Drop everything into your calendar in one click.",
+            icon: <CalendarDays className="h-4 w-4 text-primary"/>,
+        },
+        {
+            label: "7-day free edits",
+            description: "Regenerate, reorder and tweak your trip for a full week.",
+            icon: <PencilLine className="h-4 w-4 text-primary"/>,
+        },
+    ] as const;
+
+    const [activeIndex, setActiveIndex] = React.useState(0);
+    const scrollRef = React.useRef<HTMLDivElement | null>(null);
+
+    const scrollToIndex = (index: number) => {
+        if (!scrollRef.current) return;
+        const container = scrollRef.current;
+        const card = container.querySelector<HTMLElement>("[data-perk-card]");
+        const cardWidth = card ? card.offsetWidth + 16 : container.clientWidth * 0.85;
+
+        container.scrollTo({
+            left: cardWidth * index,
+            behavior: "smooth",
+        });
+        setActiveIndex(index);
+    };
+
+    const handleArrow = (direction: "prev" | "next") => {
+        if (direction === "prev") {
+            scrollToIndex(Math.max(0, activeIndex - 1));
+        } else {
+            scrollToIndex(Math.min(perks.length - 1, activeIndex + 1));
+        }
+    };
+
+    const handleScroll = () => {
+        if (!scrollRef.current) return;
+        const container = scrollRef.current;
+        const card = container.querySelector<HTMLElement>("[data-perk-card]");
+        const cardWidth = card ? card.offsetWidth + 16 : container.clientWidth * 0.85;
+        const idx = Math.round(container.scrollLeft / Math.max(1, cardWidth));
+        setActiveIndex(Math.min(perks.length - 1, Math.max(0, idx)));
+    };
+
     return (
         <div
             data-theme={forceTheme}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 dark:bg-black/75"
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm dark:bg-black/75"
             role="dialog"
             aria-modal="true"
         >
-            {/* Subtle background lighting */}
+            {/* Ambient glow */}
             <div
-                className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_50%_at_50%_0%,rgba(0,0,0,0.04),transparent_60%)] dark:bg-[radial-gradient(80%_50%_at_50%_0%,rgba(255,255,255,0.04),transparent_60%)]"/>
-            <div
-                className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.18),transparent_30%,transparent_70%,rgba(0,0,0,0.16))] dark:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.08),transparent_30%,transparent_70%,rgba(255,255,255,0.06))]"/>
+                className="pointer-events-none absolute inset-0 bg-[radial-gradient(90%_70%_at_50%_0%,rgba(59,130,246,0.22),transparent_55%),radial-gradient(80%_60%_at_0%_100%,rgba(236,72,153,0.18),transparent_55%)] opacity-50"/>
 
-            {/* Centered Panel */}
-            <div className="relative w-full max-w-2xl px-4">
-                <div className="rounded-3xl border border-border bg-card text-foreground shadow-2xl ring-1 ring-border">
+            {/* Panel */}
+            <div className="relative w-full max-w-3xl px-4">
+                <div
+                    className="overflow-hidden rounded-3xl border border-border/80 bg-card/95 text-foreground shadow-2xl ring-1 ring-border/80">
+                    {/* Thin top accent */}
+                    <div className="h-[3px] w-full bg-gradient-to-r from-primary via-amber-400 to-emerald-400"/>
+
                     <div className="px-5 py-6 sm:px-7 md:px-8 md:py-8">
-                        <div className="text-center">
-                            <Badge
-                                variant="secondary"
-                                className="mb-2 border border-border bg-muted text-foreground/80"
-                            >
-                                Preview limited
-                            </Badge>
+                        <div className="flex flex-col items-center gap-6">
+                            {/* Header */}
+                            <div className="w-full max-w-xl text-center">
+                                <Badge
+                                    variant="secondary"
+                                    className="mb-2 inline-flex items-center gap-1.5 border border-border bg-muted/80 text-[11px] font-medium uppercase tracking-wide text-foreground/80"
+                                >
+                                    <Sparkles className="h-3.5 w-3.5 text-primary"/>
+                                    Preview limited
+                                </Badge>
 
-                            <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
-                                Unlock the full itinerary
-                            </h2>
+                                <h2 className="text-balance text-2xl font-bold tracking-tight md:text-3xl">
+                                    Unlock the full itinerary
+                                </h2>
+                                <p className="mt-1 text-sm text-muted-foreground md:text-base">
+                                    Get the complete plan, smarter routing, export tools, and shareable links — all in
+                                    one tap.
+                                </p>
 
-                            <p className="mt-1 text-sm text-muted-foreground md:text-base">
-                                See every activity, get the printable PDF, shareable link, and calendar sync.
-                            </p>
-                        </div>
+                                <div
+                                    className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                                    <div
+                                        className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-1.5 shadow-sm">
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground/80">
+                      Required
+                    </span>
+                                        <span className="text-xs font-semibold tabular-nums">
+                      {formatPoints(required)} pts
+                    </span>
+                                    </div>
 
-                        {/* Perks */}
-                        <ul className="mx-auto mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            <Perk icon={<Sparkles className="h-4 w-4 text-primary"/>}>
-                                Full day-by-day schedule
-                            </Perk>
-                            <Perk icon={<MapIcon className="h-4 w-4 text-primary"/>}>
-                                Local insights & transport mapping
-                            </Perk>
-                            <Perk icon={<Download className="h-4 w-4 text-primary"/>}>
-                                Printable PDF
-                            </Perk>
-                            <Perk icon={<Share2 className="h-4 w-4 text-primary"/>}>
-                                Shareable trip link
-                            </Perk>
-                            <Perk icon={<CalendarDays className="h-4 w-4 text-primary"/>}>
-                                Calendar export
-                            </Perk>
-                            <Perk icon={<PencilLine className="h-4 w-4 text-primary"/>}>
-                                7-day free edits
-                            </Perk>
-                        </ul>
+                                    {typeof points === "number" && (
+                                        <div className="text-[11px]">
+                                            Balance:{" "}
+                                            <span
+                                                className={
+                                                    insuff
+                                                        ? "font-semibold text-red-500"
+                                                        : "font-semibold text-foreground"
+                                                }
+                                            >
+                        {formatPoints(points)} pts
+                      </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
-                        {/* CTAs */}
-                        <div className="mt-6 flex flex-col items-stretch gap-2">
-                            <Button
-                                className="w-full py-5 text-base md:py-6"
-                                onClick={onBuy}
-                                disabled={saving}
-                            >
-                                {saving ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                        Saving your trip…
-                                    </>
-                                ) : (
-                                    "Buy / Top up"
+                            {/* Perks band */}
+                            <div
+                                className="w-full max-w-xl rounded-2xl border border-border/70 bg-gradient-to-br from-background/90 via-muted/70 to-background/90 px-3 py-4 sm:px-4">
+                                <div className="mb-2 flex items-center justify-between gap-2">
+                                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                        What you&apos;ll unlock
+                                    </p>
+                                    <p className="hidden text-[11px] text-muted-foreground sm:inline">
+                                        Swipe or use arrows
+                                    </p>
+                                </div>
+
+                                <div className="relative">
+                                    {/* Arrows (desktop only) */}
+                                    <button
+                                        type="button"
+                                        onClick={() => handleArrow("prev")}
+                                        className="absolute left-0 top-1/2 z-10 hidden -translate-y-1/2 rounded-full border border-border/80 bg-background/90 p-1.5 shadow-sm hover:bg-background sm:inline-flex"
+                                        aria-label="Previous perk"
+                                    >
+                                        <ChevronLeft className="h-4 w-4 text-muted-foreground"/>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => handleArrow("next")}
+                                        className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 rounded-full border border-border/80 bg-background/90 p-1.5 shadow-sm hover:bg-background sm:inline-flex"
+                                        aria-label="Next perk"
+                                    >
+                                        <ChevronRight className="h-4 w-4 text-muted-foreground"/>
+                                    </button>
+
+                                    {/* Scroll container */}
+                                    <div
+                                        ref={scrollRef}
+                                        onScroll={handleScroll}
+                                        className="mt-1 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 pt-2 [-ms-overflow-style:none] [scrollbar-width:none]"
+                                        style={{scrollBehavior: "smooth"}}
+                                    >
+                                        <style jsx>{`
+                                            div::-webkit-scrollbar {
+                                                display: none;
+                                            }
+                                        `}</style>
+
+                                        {perks.map((perk, idx) => (
+                                            <div
+                                                key={perk.label}
+                                                data-perk-card
+                                                className="flex min-w-[82%] max-w-[82%] snap-center sm:min-w-[260px] sm:max-w-[260px]"
+                                            >
+                                                <Perk
+                                                    title={perk.label}
+                                                    description={perk.description}
+                                                    icon={perk.icon}
+                                                    active={idx === activeIndex}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Dots */}
+                                    <div className="mt-3 flex justify-center gap-1.5">
+                                        {perks.map((perk, idx) => (
+                                            <button
+                                                key={perk.label}
+                                                type="button"
+                                                onClick={() => scrollToIndex(idx)}
+                                                className={[
+                                                    "h-1.5 rounded-full transition-all duration-200",
+                                                    idx === activeIndex
+                                                        ? "w-5 bg-primary"
+                                                        : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/70",
+                                                ].join(" ")}
+                                                aria-label={`Go to perk ${idx + 1}`}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* CTAs */}
+                            <div className="mt-1 w-full max-w-xl space-y-2.5">
+                                <Button
+                                    className="w-full py-5 text-base md:py-6"
+                                    onClick={onBuy}
+                                    disabled={saving}
+                                >
+                                    {saving ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                            Saving your trip…
+                                        </>
+                                    ) : (
+                                        "Buy / Top up"
+                                    )}
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    className="w-full border-border py-5 text-base md:py-6"
+                                    onClick={onSave}
+                                    disabled={saving}
+                                >
+                                    Skip to Trip
+                                </Button>
+
+                                {/* Footer hint */}
+                                {typeof points === "number" && (
+                                    <p className="mt-2 text-center text-[11px] text-muted-foreground md:text-xs">
+                                        {insuff ? (
+                                            <>
+                                                You need{" "}
+                                                <span className="font-semibold">
+                          {formatPoints(required)} pts
+                        </span>{" "}
+                                                to save this trip. Current balance:{" "}
+                                                <span className="font-semibold text-red-500">
+                          {formatPoints(points)} pts
+                        </span>
+                                                .
+                                            </>
+                                        ) : (
+                                            <>
+                                                You have{" "}
+                                                <span className="font-semibold">
+                          {formatPoints(points)} pts
+                        </span>{" "}
+                                                — this trip is fully unlockable.
+                                            </>
+                                        )}
+                                    </p>
                                 )}
-                            </Button>
 
-                            <Button
-                                variant="outline"
-                                className="w-full py-5 text-base md:py-6 border-border"
-                                onClick={onSave}
-                                disabled={saving}
-                            >
-                                Skip to Trip
-                            </Button>
+                                <p className="mt-1 text-center text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                                    Powered by Itinero Points
+                                </p>
+                            </div>
                         </div>
-
-                        {typeof points === "number" && (
-                            <p className="mt-2 text-center text-xs text-muted-foreground md:text-sm">
-                                {insuff
-                                    ? `You need ${required} points to save. Current balance: ${points}.`
-                                    : `You have ${points} points — you’re good to go!`}
-                            </p>
-                        )}
                     </div>
                 </div>
             </div>
@@ -1156,15 +1343,49 @@ function FullScreenPaywallOverlay({
     );
 }
 
-/** Perk pill respects theme tokens */
-function Perk({children, icon}: { children: React.ReactNode; icon?: React.ReactNode }) {
+/** Vertical, layered perk card */
+function Perk({
+                  icon,
+                  title,
+                  description,
+                  active,
+              }: {
+    icon?: React.ReactNode;
+    title: string;
+    description: string;
+    active?: boolean;
+}) {
     return (
-        <li className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2">
-            {icon ?? <Check className="h-4 w-4 text-primary"/>}
-            <span className="text-sm text-foreground md:text-base">{children}</span>
-        </li>
+        <div
+            className={[
+                "relative flex w-full flex-col items-center gap-3 text-center",
+                "rounded-3xl border p-4 sm:p-5 transition-all duration-300",
+                "bg-card/80 backdrop-blur-sm border-border/80",
+                active
+                    ? "shadow-xl ring-1 ring-primary/50 bg-background/95 -translate-y-0.5"
+                    : "shadow-sm hover:shadow-md hover:bg-card/95",
+            ].join(" ")}
+        >
+            {/* Floating glow behind icon */}
+            <div className="relative -mt-7 mb-1">
+                {active && (
+                    <div
+                        className="pointer-events-none absolute inset-0 -z-10 h-16 w-16 rounded-3xl bg-primary/30 blur-xl opacity-70"/>
+                )}
+                <div
+                    className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-md backdrop-blur">
+                    {icon ?? <Sparkles className="h-6 w-6 text-primary"/>}
+                </div>
+            </div>
+
+            <div className="text-sm font-semibold tracking-tight">{title}</div>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+                {description}
+            </p>
+        </div>
     );
 }
+
 
 /* =========================
    Save flow

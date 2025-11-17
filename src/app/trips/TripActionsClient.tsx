@@ -92,7 +92,7 @@ export default function TripActionsClient({
                                               endDate,
                                               days,
                                               places,
-                                              useInputs: TripConfig
+                                              useInputs: TripConfig,
                                           }: Props) {
     const sb = createClientBrowser();
     const router = useRouter();
@@ -214,82 +214,6 @@ export default function TripActionsClient({
         });
     }
 
-    async function downloadTripPdf(tripId: string) {
-        const r = await fetch("/functions/v1/generate-pdf", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({tripId}),
-        });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || "PDF export failed");
-        // open signed URL
-        window.location.href = data.url;
-    }
-
-
-    function DownloadPdfButton({tripId}: { tripId: string }) {
-        const [loading, setLoading] = useState(false);
-
-        const onClick = async () => {
-            if (loading) return;
-            setLoading(true);
-            try {
-                // const res = await fetch(`/api/trips/${tripId}/pdf`, {
-                //     method: "GET",
-                //     credentials: "include", // carry auth cookies to the API route
-                // });
-                //
-                // if (!res.ok) {
-                //     const text = await res.text().catch(() => "");
-                //     throw new Error(text || `Failed with ${res.status}`);
-                // }
-                //
-                // const blob = await res.blob();
-                // const url = URL.createObjectURL(blob);
-                // const a = document.createElement("a");
-                // a.href = url;
-                // a.download = `trip-${tripId}.pdf`;
-                // document.body.appendChild(a);
-                // a.click();
-                // a.remove();
-                // URL.revokeObjectURL(url);
-
-                const r = await fetch("/functions/v1/generate_pdf", {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify({tripId}),
-                });
-                const data = await r.json();
-                if (!r.ok) throw new Error(data.error || "PDF export failed");
-                // open signed URL
-                window.location.href = data.url;
-
-
-            } catch (err) {
-                console.error("PDF download failed:", err);
-                alert("Failed to generate PDF. Please try again.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        return (
-            <Button size="sm" variant="secondary" onClick={onClick} disabled={loading} aria-busy={loading}>
-                {loading ? (
-                    <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                        Generating…
-                    </>
-                ) : (
-                    <>
-                        <FileDown className="mr-2 h-4 w-4"/>
-                        Download PDF
-                    </>
-                )}
-            </Button>
-        );
-    }
-
     async function confirmAddItem() {
         if (!addingForDate || !newBlock?.title) {
             setAddingForDate(null);
@@ -331,20 +255,6 @@ export default function TripActionsClient({
             setBusy(false);
         }
     }
-
-    function TripPrintButton({tripId}: { tripId: string }) {
-        const href = `/trips/${encodeURIComponent(tripId)}/print?print=1`;
-
-        return (
-            <Button asChild size="sm" variant="outline">
-                <Link href={href} target="_blank" rel="noreferrer">
-                    <Printer className="mr-2 h-4 w-4"/>
-                    Print / PDF
-                </Link>
-            </Button>
-        );
-    }
-
 
     return (
         <div className="flex flex-wrap items-center gap-2">

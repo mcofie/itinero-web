@@ -2,14 +2,25 @@
 "use client";
 
 import * as React from "react";
-import {useState, useMemo} from "react";
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {setTripPublic} from "@/app/actions/trips";
-import {Link as LinkIcon, Globe, Lock, Loader2} from "lucide-react";
-import {cn} from "@/lib/utils";
+import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { setTripPublic } from "@/app/actions/trips";
+import { Link as LinkIcon, Globe, Lock, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+type SetTripPublicResult = {
+    public_id: string | null;
+    public_url?: string | null;
+} | void;
 
 export default function PublicToggle({
                                          tripId,
@@ -20,38 +31,61 @@ export default function PublicToggle({
     publicId?: string | null;
     className?: string;
 }) {
+    // Keep a local copy so UI can react immediately
+    const [currentPublicId, setCurrentPublicId] = useState<string | null>(
+        publicId ?? null
+    );
     const [busy, setBusy] = useState(false);
-    const isPublic = !!publicId;
+    const [copied, setCopied] = useState(false);
+
+    const isPublic = !!currentPublicId;
 
     const shareUrl = useMemo(() => {
-        if (!isPublic) return "";
-        if (typeof window === "undefined") return `/t/${publicId}`;
-        return `${window.location.origin}/t/${publicId}`;
-    }, [isPublic, publicId]);
+        if (!isPublic || !currentPublicId) return "";
+        if (typeof window === "undefined") return `/t/${currentPublicId}`;
+        return `${window.location.origin}/t/${currentPublicId}`;
+    }, [isPublic, currentPublicId]);
 
     async function handleToggle() {
         if (!tripId || busy) return;
         setBusy(true);
+
         try {
-            await setTripPublic(tripId, !isPublic);
+            const result = (await setTripPublic(
+                tripId,
+                !isPublic
+            )) as SetTripPublicResult;
+
+            if (result && "public_id" in result) {
+                // Use the canonical value from the server
+                setCurrentPublicId(result.public_id);
+            } else {
+                // Fallback: reload to pick up latest state from server
+                if (typeof window !== "undefined") {
+                    window.location.reload();
+                }
+            }
         } finally {
             setBusy(false);
-            // hard-reload to pick updated public_id
-            // if (typeof window !== "undefined") window.location.reload();
         }
     }
 
     async function copy() {
+        if (!shareUrl) return;
         try {
             await navigator.clipboard.writeText(shareUrl);
+            setCopied(true);
+            // Hide after 1.5s
+            setTimeout(() => setCopied(false), 1500);
         } catch {
+            // optional: toast fallback
         }
     }
 
     return (
         <div
             className={cn(
-                "rounded-2xl backdrop-blur-sm p-4",
+                "rounded-2xl border border-border/70 bg-card/70 p-4 backdrop-blur-sm",
                 className
             )}
         >
@@ -59,16 +93,17 @@ export default function PublicToggle({
                 <div className="flex items-center gap-2">
                     {isPublic ? (
                         <Badge className="gap-1" variant="secondary">
-                            <Globe className="h-3.5 w-3.5"/>
+                            <Globe className="h-3.5 w-3.5" />
                             Public
                         </Badge>
                     ) : (
                         <Badge className="gap-1" variant="outline">
-                            <Lock className="h-3.5 w-3.5"/>
+                            <Lock className="h-3.5 w-3.5" />
                             Private
                         </Badge>
                     )}
-                    <div className="text-sm text-gray-300 dark:text-muted-foreground">
+
+                    <div className="text-sm text-muted-foreground">
                         {isPublic
                             ? "Anyone with the link can view this trip."
                             : "Only you can view this trip."}
@@ -78,7 +113,7 @@ export default function PublicToggle({
                 <Button onClick={handleToggle} disabled={busy} className="gap-1">
                     {busy ? (
                         <>
-                            <Loader2 className="h-4 w-4 animate-spin"/>
+                            <Loader2 className="h-4 w-4 animate-spin" />
                             Saving…
                         </>
                     ) : isPublic ? (
@@ -91,15 +126,37 @@ export default function PublicToggle({
 
             {isPublic && (
                 <div className="mt-4 space-y-2">
-                    <Label htmlFor="public-link" className="text-xs text-muted-foreground">
+                    <Label
+                        htmlFor="public-link"
+                        className="text-xs font-medium text-muted-foreground"
+                    >
                         Share link
                     </Label>
                     <div className="flex items-center gap-2">
-                        <Input id="public-link" className={"light: text-gray-300 border-dashed border-gray-400"} readOnly value={shareUrl}/>
-                        <Button type="button" variant="secondary" onClick={copy} className="gap-1">
-                            <LinkIcon className="h-4 w-4"/>
-                            Copy
-                        </Button>
+                        <Input
+                            id="public-link"
+                            readOnly
+                            value={shareUrl}
+                            className="border-dashed border-border/70 text-xs text-muted-foreground"
+                        />
+                        <TooltipProvider>
+                            <Tooltip open={copied}>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={copy}
+                                        className="gap-1"
+                                    >
+                                        <LinkIcon className="h-4 w-4" />
+                                        Copy
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="text-xs">
+                                    Copied!
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
                     </div>
                 </div>
             )}

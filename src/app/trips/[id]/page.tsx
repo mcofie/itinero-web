@@ -32,6 +32,7 @@ type TripRow = {
     currency: string | null;
     cover_url?: string | null;
     destination_id?: UUID | null;
+    public_id: string | null;
     inputs?:
         | {
         destinations?: { name: string; lat?: number; lng?: number }[];
@@ -654,7 +655,7 @@ export default async function TripIdPage({
                                 />
 
                                 <div className="">
-                                    <PublicToggle tripId={trip.id} publicId={tripId}/>
+                                    <PublicToggle tripId={trip.id} publicId={trip.public_id}/>
                                 </div>
                             </div>
                         </CardContent>

@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {WORLD_CURRENCIES} from "@/lib/currency-data";
+import {LodgingMapDialog, LodgingValue} from "@/components/landing/LodgingMapDialog";
 
 /* ---------------- date-only helpers ---------------- */
 type DateRangeValue = { from?: Date; to?: Date } | undefined;
@@ -143,6 +144,7 @@ export default function TripWizard() {
     const [step, setStep] = useState(0);
     const [busy, setBusy] = useState(false);
     const [authOpen, setAuthOpen] = useState(false);
+    const [lodgingPickerOpen, setLodgingPickerOpen] = React.useState(false);
 
     const [state, setState] = useState<RequestBody>({
         destinations: [{id: "", name: ""}],
@@ -573,20 +575,35 @@ export default function TripWizard() {
                         )}
 
                         {step === 6 && (
-                            <Slide key="step-lodging">
+                            <Slide slideKey="step-lodging">
                                 <FieldBlock
                                     label="Lodging (optional)"
                                     hint="We’ll try to start/end days near here"
                                     icon={Users}
                                 >
-                                    <Input
-                                        placeholder="Hotel or address"
-                                        value={state.lodging?.name || ""}
-                                        onChange={(e) =>
+                                    <LodgingMapDialog
+                                        value={state.lodging as LodgingValue | null}
+                                        onChange={(v) =>
                                             setState((s) => ({
                                                 ...s,
-                                                lodging: {name: e.target.value},
+                                                lodging: v
+                                                    ? {
+                                                        name: v.name ?? "",
+                                                        // If later you extend RequestBody.lodging,
+                                                        // you can also keep extra fields here:
+                                                        // lat: v.lat,
+                                                        // lng: v.lng,
+                                                    }
+                                                    : undefined,
                                             }))
+                                        }
+                                        center={
+                                            state.destinations?.[0]?.lat && state.destinations?.[0]?.lng
+                                                ? {
+                                                    lat: state.destinations[0].lat!,
+                                                    lng: state.destinations[0].lng!,
+                                                }
+                                                : undefined
                                         }
                                     />
                                 </FieldBlock>
@@ -755,6 +772,7 @@ function toPayload(s: RequestBody) {
         pace: s.pace,
         mode: s.mode,
         lodging: s.lodging?.name ? {name: s.lodging.name} : undefined,
+        currency: s.currency,
     } as const;
 }
 
@@ -896,7 +914,7 @@ function ReviewCard({
                     <SectionRow icon={<Footprints className="h-4 w-4"/>} label="Daily Budget"
                                 onEdit={() => onEditStep(2)}>
                         <div className="text-base font-medium">
-                            {data.budget_daily ? `$${data.budget_daily}/day` : "Not specified"}
+                            {data.budget_daily ? `${data.currency} ${data.budget_daily}/day` : "Not specified"}
                         </div>
                     </SectionRow>
 
