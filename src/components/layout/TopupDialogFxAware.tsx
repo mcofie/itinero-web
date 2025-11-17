@@ -61,6 +61,8 @@ export function TopupDialogFxAware({
     const disableConfirm =
         topupBusy || !Number.isFinite(numericPoints) || numericPoints <= 0;
 
+    console.log(userCurrency);
+
     return (
         <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
             <DialogContent className="sm:max-w-sm sm:rounded-2xl border-border">

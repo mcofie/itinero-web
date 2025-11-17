@@ -9,14 +9,6 @@ import {cn} from "@/lib/utils";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog";
-import {Input} from "@/components/ui/input";
-import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
@@ -51,9 +43,9 @@ import {
 } from "lucide-react";
 import {ThemeToggle} from "@/components/ThemeToggle";
 import {TopupDialogFxAware} from "@/components/layout/TopupDialogFxAware";
-import {useEffect, useMemo, useState} from "react";
 import {FxSnapshot} from "@/lib/fx/types";
 import {convertUsingSnapshot, getLatestFxSnapshot} from "@/lib/fx/fx";
+import {useEffect} from "react";
 
 type Props = {
     children: React.ReactNode;
@@ -75,15 +67,11 @@ export default function AppShell({children, userEmail}: Props) {
     const [pointsInput, setPointsInput] = React.useState<string>("");
     const [topupBusy, setTopupBusy] = React.useState(false);
 
-    // const [ghsPreview, setGhsPreview] = useState(0);
+    // user’s preferred planning currency (overwritten by profile)
+    const [userCurrency, setUserCurrency] = React.useState("GHS");
 
-    // 👉 whatever you already use as the user's planning currency
-    const [userCurrency, setUserCurrency] = useState("USD");
-
-    // 🔹 FX snapshot state
-    const [fxSnapshot, setFxSnapshot] = useState<FxSnapshot | null>(null);
-
-    // 🔔 Preview indicator state
+    // FX snapshot & preview indicator
+    const [fxSnapshot, setFxSnapshot] = React.useState<FxSnapshot | null>(null);
     const [hasPreview, setHasPreview] = React.useState(false);
 
     const fmtInt = React.useCallback(
@@ -94,44 +82,7 @@ export default function AppShell({children, userEmail}: Props) {
         [],
     );
 
-    // Derive 1 GHS -> userCurrency rate
-    const ghsToUserRate = useMemo(() => {
-        if (!fxSnapshot) return null;
-        const val = convertUsingSnapshot(fxSnapshot, 1, "GHS", userCurrency);
-        return val;
-    }, [fxSnapshot, userCurrency]);
-
-
-    // Fetch once on mount (or when base changes, if you ever change it)
-    useEffect(() => {
-        let cancelled = false;
-
-        (async () => {
-            const snap = await getLatestFxSnapshot("USD"); // or "GHS" or your default base
-            if (!cancelled) {
-                setFxSnapshot(snap);
-            }
-        })();
-
-        return () => {
-            cancelled = true;
-        };
-    }, []);
-
-
-    // Check localStorage for preview whenever route changes
-    React.useEffect(() => {
-        try {
-            if (typeof window !== "undefined") {
-                const raw = window.localStorage.getItem("itinero:latest_preview");
-                setHasPreview(!!raw);
-            }
-        } catch {
-            setHasPreview(false);
-        }
-    }, [pathname]);
-
-    // Consolidated refresh: use RPC; if it fails, keep current points
+    // -------- Points refresh (RPC) --------
     const refreshPoints = React.useCallback(
         async (userId: string | null) => {
             if (!userId) {
@@ -142,12 +93,9 @@ export default function AppShell({children, userEmail}: Props) {
 
             setLoadingPoints(true);
             try {
-                const {data: sumValue, error} = await sb.rpc(
-                    "sum_points_for_user",
-                    {
-                        uid: userId,
-                    },
-                );
+                const {data: sumValue, error} = await sb.rpc("sum_points_for_user", {
+                    uid: userId,
+                });
 
                 if (error) {
                     console.error("[refreshPoints] RPC error:", error);
@@ -167,7 +115,62 @@ export default function AppShell({children, userEmail}: Props) {
         [sb],
     );
 
-    // Session init + auth listener
+    // -------- preferred_currency from profile --------
+    const refreshPreferredCurrency = React.useCallback(
+        async (userId: string | null) => {
+            if (!userId) return;
+
+            try {
+                const {data, error} = await sb
+                    .schema("itinero")
+                    .from("profiles")
+                    .select("preferred_currency")
+                    .eq("id", userId)
+                    .maybeSingle<{ preferred_currency: string | null }>();
+
+                if (error) {
+                    console.error("[refreshPreferredCurrency] error:", error);
+                    return;
+                }
+
+                if (data?.preferred_currency) {
+                    const code = data.preferred_currency.toUpperCase();
+                    setUserCurrency(code);
+                } else {
+                    // fallback default
+                    setUserCurrency("USD");
+                }
+            } catch (e) {
+                console.error("[refreshPreferredCurrency] threw:", e);
+            }
+        },
+        [sb],
+    );
+
+    // -------- FX snapshot + derived GHS -> userCurrency --------
+    useEffect(() => {
+        const cancelled = {current: false};
+
+        (async () => {
+            const snap = await getLatestFxSnapshot("USD"); // or your base
+            if (!cancelled.current) {
+                setFxSnapshot(snap);
+            }
+        })();
+
+        return () => {
+            cancelled.current = true;
+        };
+    }, []);
+
+    const ghsToUserRate = React.useMemo(() => {
+        if (!fxSnapshot) return null;
+        // 1 GHS -> userCurrency
+        const val = convertUsingSnapshot(fxSnapshot, 1, "GHS", userCurrency);
+        return val;
+    }, [fxSnapshot, userCurrency]);
+
+    // -------- Session init + auth listener (single effect) --------
     React.useEffect(() => {
         let mounted = true;
 
@@ -177,23 +180,43 @@ export default function AppShell({children, userEmail}: Props) {
 
             const userId = auth?.user?.id ?? null;
             setUid(userId);
-            await refreshPoints(userId);
+
+            await Promise.all([
+                refreshPoints(userId),
+                refreshPreferredCurrency(userId),
+            ]);
         })();
 
         const {data: sub} = sb.auth.onAuthStateChange(async (_evt, sess) => {
             if (!mounted) return;
             const userId = sess?.user?.id ?? null;
             setUid(userId);
-            await refreshPoints(userId);
+
+            await Promise.all([
+                refreshPoints(userId),
+                refreshPreferredCurrency(userId),
+            ]);
         });
 
         return () => {
             mounted = false;
             sub?.subscription?.unsubscribe();
         };
-    }, [sb, refreshPoints]);
+    }, [sb, refreshPoints, refreshPreferredCurrency]);
 
-    // Live updates for points changes
+    // -------- Preview indicator (localStorage) --------
+    React.useEffect(() => {
+        try {
+            if (typeof window !== "undefined") {
+                const raw = window.localStorage.getItem("itinero:latest_preview");
+                setHasPreview(!!raw);
+            }
+        } catch {
+            setHasPreview(false);
+        }
+    }, [pathname]);
+
+    // -------- Live updates: points + preferred_currency --------
     React.useEffect(() => {
         if (!uid) return;
 
@@ -217,11 +240,14 @@ export default function AppShell({children, userEmail}: Props) {
                 "postgres_changes",
                 {
                     event: "*",
-                    schema: "public",
+                    schema: "itinero",
                     table: "profiles",
                     filter: `id=eq.${uid}`,
                 },
-                () => void refreshPoints(uid),
+                () => {
+                    void refreshPoints(uid);
+                    void refreshPreferredCurrency(uid);
+                },
             )
             .subscribe();
 
@@ -229,8 +255,9 @@ export default function AppShell({children, userEmail}: Props) {
             void sb.removeChannel(chLedger);
             void sb.removeChannel(chProfiles);
         };
-    }, [uid, sb, refreshPoints]);
+    }, [uid, sb, refreshPoints, refreshPreferredCurrency]);
 
+    // -------- Auth: logout --------
     const logout = React.useCallback(async () => {
         try {
             await sb.auth.signOut();
@@ -239,7 +266,7 @@ export default function AppShell({children, userEmail}: Props) {
         }
     }, [router, sb]);
 
-    // Top-up → quote → Paystack init
+    // -------- Top-up → quote → Paystack init --------
     const startTopup = React.useCallback(async () => {
         const pts = Number(pointsInput);
         if (!Number.isFinite(pts) || pts <= 0 || !uid || topupBusy) return;
@@ -651,8 +678,7 @@ export default function AppShell({children, userEmail}: Props) {
                     </div>
                 </footer>
 
-                {/* Top up dialog (POINTS → GHS) */}
-
+                {/* Top up dialog (POINTS → GHS, FX-aware) */}
                 <TopupDialogFxAware
                     topupOpen={topupOpen}
                     setTopupOpen={setTopupOpen}
@@ -662,8 +688,8 @@ export default function AppShell({children, userEmail}: Props) {
                     onPointsKeyDown={onPointsKeyDown}
                     startTopup={startTopup}
                     ghsPreview={ghsPreview}
-                    userCurrency={"USD"}        // or from user profile
-                    ghsToUserRate={ghsToUserRate} // e.g. 1 GHS -> ? userCurrency
+                    userCurrency={userCurrency}      // <- from profile.preferred_currency
+                    ghsToUserRate={ghsToUserRate}
                 />
             </div>
         </TooltipProvider>
@@ -723,7 +749,6 @@ function MobileNavItem({
 }
 
 /* ---------- Footer link helper ---------- */
-
 function FooterLink({
                         href,
                         label,

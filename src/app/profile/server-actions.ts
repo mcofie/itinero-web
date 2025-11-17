@@ -1,42 +1,54 @@
 // app/profile/server-actions.ts
 "use server";
 
-import {revalidatePath} from "next/cache";
-import {createClientServerRSC} from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { createClientServerRSC } from "@/lib/supabase/server";
 
 /**
  * Update basic profile fields.
- * RLS should ensure auth.uid() = id in public.profiles.
+ * RLS should ensure auth.uid() = id in itinero.profiles.
  */
 export async function saveProfileAction(formData: FormData) {
     const id = String(formData.get("id") || "");
     const full_name = String(formData.get("full_name") || "");
     const username = String(formData.get("username") || "");
 
+    const preferredRaw = formData.get("preferred_currency");
+    const preferred_currency =
+        typeof preferredRaw === "string" && preferredRaw.trim().length > 0
+            ? preferredRaw.trim().toUpperCase()
+            : null;
+
     if (!id) throw new Error("Missing user id");
 
     const sb = await createClientServerRSC();
 
-    // optional: ensure the caller is the same user
     const {
-        data: {user},
+        data: { user },
     } = await sb.auth.getUser();
     if (!user || user.id !== id) throw new Error("Not allowed");
 
-    const {error} = await sb
-        .schema('itinero')
+    const { error } = await sb
+        .schema("itinero")
         .from("profiles")
-        .update({full_name, username})
+        .update({
+            full_name,
+            username,
+            preferred_currency,
+        })
         .eq("id", id);
 
     if (error) throw new Error(error.message);
 
+    // Make sure the /profile RSC is fresh
     revalidatePath("/profile");
+
+    // ✅ allow the client to know it succeeded
+    return { success: true };
 }
 
 /**
  * Create a top-up row.
- * Suggested RLS on itinero.points_ledger to allow insert when user_id = auth.uid()
  */
 export async function topupPointsAction(formData: FormData) {
     const user_id = String(formData.get("user_id") || "");
@@ -50,11 +62,11 @@ export async function topupPointsAction(formData: FormData) {
     const sb = await createClientServerRSC();
 
     const {
-        data: {user},
+        data: { user },
     } = await sb.auth.getUser();
     if (!user || user.id !== user_id) throw new Error("Not allowed");
 
-    const {error} = await sb
+    const { error } = await sb
         .schema("itinero")
         .from("points_ledger")
         .insert({

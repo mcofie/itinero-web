@@ -9,11 +9,14 @@ export default function TripMakerLayout({ children }: { children: React.ReactNod
     // If you also want to show the email in AppShell:
     const sb = createClientBrowser();
     const [email, setEmail] = React.useState<string | null>(null);
+    const [preferredCurrency, setPreferredCurrency] = React.useState<string | null>(null);
+
 
     React.useEffect(() => {
         (async () => {
             const { data } = await sb.auth.getUser();
             setEmail(data.user?.email ?? null);
+            // setPreferredCurrency(data.user?.preferred)
         })();
     }, [sb]);
 

@@ -5,23 +5,16 @@ import {redirect} from "next/navigation";
 import {createClientServerRSC} from "@/lib/supabase/server";
 import AppShell from "@/components/layout/AppShell";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
 import {ScrollArea, ScrollBar} from "@/components/ui/scroll-area";
-import {CalendarClock, Star, User2, Wallet} from "lucide-react";
+import {CalendarClock, Star, User2} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-export const fetchCache = "default-no-store"; // Next 14+ only
+export const fetchCache = "default-no-store";
 
-import {
-    saveProfileAction,
-    topupPointsAction,
-} from "@/app/profile/server-actions";
 import Link from "next/link";
-import {PreferredCurrencyField} from "@/app/profile/PreferredCurrencyField";
+import {ProfileForm} from "@/app/profile/ProfileForm";
 
 type LedgerRow = {
     id: string;
@@ -38,17 +31,13 @@ type ProfileRow = {
     username: string | null;
     avatar_url: string | null;
     points_balance?: number | null;
-    preferred_currency?: string | null; // 👈 NEW
+    preferred_currency?: string | null;
 };
 
 function fmtInt(n: number) {
     return new Intl.NumberFormat().format(n);
 }
 
-/**
- * Month DD, YYYY - HH:MM:SS (24h)
- * e.g. January 03, 2025 - 14:05:09
- */
 function formatDateTime(raw: string | Date | null | undefined): string {
     if (!raw) return "—";
     const d = typeof raw === "string" ? new Date(raw) : raw;
@@ -105,7 +94,6 @@ function StatTile({
     value: React.ReactNode;
     big?: boolean;
     icon?: React.ReactNode;
-    /** extra emphasis */
     accent?: boolean;
 }) {
     return (
@@ -113,9 +101,7 @@ function StatTile({
             className={[
                 "relative overflow-hidden rounded-2xl border bg-card",
                 "border-border/70",
-                accent
-                    ? "shadow-md shadow-primary/10 ring-1 ring-primary/10"
-                    : "shadow-sm",
+                accent ? "shadow-md shadow-primary/10 ring-1 ring-primary/10" : "shadow-sm",
             ]
                 .filter(Boolean)
                 .join(" ")}
@@ -139,9 +125,7 @@ function StatTile({
                 <div className="mt-2 flex items-baseline gap-2">
                     <div
                         className={
-                            big
-                                ? "text-3xl font-bold tabular-nums"
-                                : "text-sm font-semibold tabular-nums"
+                            big ? "text-3xl font-bold tabular-nums" : "text-sm font-semibold tabular-nums"
                         }
                     >
                         {value}
@@ -155,7 +139,6 @@ function StatTile({
 export default async function ProfilePage() {
     const sb = await createClientServerRSC();
 
-    // Auth (server-side)
     const {
         data: {user},
     } = await sb.auth.getUser();
@@ -165,21 +148,20 @@ export default async function ProfilePage() {
     const userId = user.id;
     const email = user.email ?? null;
 
-    // Profile
     const {data: profileRow} = await sb
         .schema("itinero")
         .from("profiles")
-        .select("id, full_name, username, avatar_url, points_balance,preferred_currency")
+        .select(
+            "id, full_name, username, avatar_url, points_balance, preferred_currency",
+        )
         .eq("id", userId)
         .maybeSingle<ProfileRow>();
 
-    // Points (aggregate w/ fallback to profiles.points_balance)
     const {data: sumValue} = await sb.rpc("sum_points_for_user", {
         uid: userId,
     });
     const points = Number(sumValue ?? 0);
 
-    // History
     const {data: historyRows} = await sb
         .schema("itinero")
         .from("points_ledger")
@@ -223,33 +205,12 @@ export default async function ProfilePage() {
               </span>
                             <span className="text-xs text-muted-foreground">pts</span>
                         </Badge>
-
-                        {/* Topup (Server Action form) */}
-                        <form
-                            action={topupPointsAction}
-                            className="flex items-center gap-2"
-                        >
-                            <input type="hidden" name="user_id" value={userId}/>
-                            <Input
-                                name="amount"
-                                type="number"
-                                min={1}
-                                placeholder="Points"
-                                className="h-9 w-28"
-                                aria-label="Top up amount (points)"
-                                required
-                            />
-                            <Button type="submit" variant="outline" size="sm">
-                                <Wallet className="mr-2 h-4 w-4"/>
-                                Top up
-                            </Button>
-                        </form>
                     </div>
                 </div>
 
                 {/* Grid: Profile / Points / History */}
                 <div className="grid gap-5 lg:grid-cols-3">
-                    {/* Profile card — more prominent */}
+                    {/* Profile card */}
                     <Card
                         className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-br from-background via-background to-background lg:col-span-1 shadow-sm">
                         <div
@@ -306,65 +267,27 @@ export default async function ProfilePage() {
                                 </div>
                             </div>
 
-                            {/* Save profile (Server Action form) */}
-                            <form action={saveProfileAction} className="mt-2 grid gap-3">
-                                <input type="hidden" name="id" value={userId} />
-
-                                <div className="space-y-1">
-                                    <Label
-                                        className="text-xs font-medium text-muted-foreground"
-                                        htmlFor="full_name"
-                                    >
-                                        Full name
-                                    </Label>
-                                    <Input
-                                        id="full_name"
-                                        name="full_name"
-                                        defaultValue={profileRow?.full_name ?? ""}
-                                        placeholder="How should we call you?"
-                                    />
-                                </div>
-
-                                <div className="space-y-1">
-                                    <Label
-                                        className="text-xs font-medium text-muted-foreground"
-                                        htmlFor="username"
-                                    >
-                                        Username
-                                    </Label>
-                                    <Input
-                                        id="username"
-                                        name="username"
-                                        defaultValue={profileRow?.username ?? ""}
-                                        placeholder="Optional @username"
-                                    />
-                                </div>
-
-                                {/* ✅ NEW: preferred currency field */}
-                                <PreferredCurrencyField
-                                    initialCurrency={profileRow?.preferred_currency ?? null}
-                                />
-
-                                <div className="flex justify-end pt-1">
-                                    <Button size="sm" type="submit">
-                                        Save changes
-                                    </Button>
-                                </div>
-                            </form>
+                            {/* 🔁 Profile form (client) */}
+                            <ProfileForm
+                                userId={userId}
+                                fullName={profileRow?.full_name ?? null}
+                                username={profileRow?.username ?? null}
+                                preferredCurrency={profileRow?.preferred_currency ?? null}
+                            />
                         </CardContent>
                     </Card>
 
-                    {/* Points summary — more “dashboard-y” */}
+                    {/* Points summary */}
                     <Card
-                        className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/80 lg:col-span-2 shadow-sm"
-                    >
+                        className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/80 lg:col-span-2 shadow-sm">
                         <div
                             className="pointer-events-none absolute inset-0 opacity-[0.06] bg-[radial-gradient(circle_at_top_right,var(--primary)_0,transparent_55%)]"/>
                         <CardHeader className="relative pb-3">
                             <CardTitle className="flex items-center gap-2 text-sm font-semibold tracking-wide">
-      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-        <Star className="h-4 w-4"/>
-      </span>
+                <span
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Star className="h-4 w-4"/>
+                </span>
                                 Points summary
                             </CardTitle>
                         </CardHeader>
@@ -377,10 +300,7 @@ export default async function ProfilePage() {
                                     accent
                                     icon={<Star className="h-4 w-4 text-amber-500"/>}
                                 />
-                                <StatTile
-                                    label="Last top up"
-                                    value={formatLastTopup(history)}
-                                />
+                                <StatTile label="Last top up" value={formatLastTopup(history)}/>
                                 <StatTile
                                     label="Last activity"
                                     value={lastActivity}
@@ -389,8 +309,8 @@ export default async function ProfilePage() {
                             </div>
 
                             <p className="text-xs text-muted-foreground">
-                                Points are used to generate AI itineraries, enhance destinations,
-                                and unlock pro-level planning tools in Itinero.
+                                Points are used to generate AI itineraries, enhance destinations, and
+                                unlock pro-level planning tools in Itinero.
                             </p>
 
                             <p className="text-[11px] text-muted-foreground">
@@ -433,10 +353,7 @@ export default async function ProfilePage() {
                                             <tbody className="[&>tr>td]:px-3 [&>tr>td]:py-2">
                                             {history.length ? (
                                                 history.map((r) => (
-                                                    <tr
-                                                        key={r.id}
-                                                        className="border-t border-border/60"
-                                                    >
+                                                    <tr key={r.id} className="border-t border-border/60">
                                                         <td className="whitespace-nowrap text-xs sm:text-sm">
                                                             {formatDateTime(r.created_at)}
                                                         </td>
@@ -451,10 +368,7 @@ export default async function ProfilePage() {
                                                         </td>
                                                         <td>
                                                             {r.reason ? (
-                                                                <Badge
-                                                                    variant="outline"
-                                                                    className="capitalize"
-                                                                >
+                                                                <Badge variant="outline" className="capitalize">
                                                                     {r.reason}
                                                                 </Badge>
                                                             ) : (
@@ -472,8 +386,8 @@ export default async function ProfilePage() {
                                                         colSpan={4}
                                                         className="py-10 text-center text-sm text-muted-foreground"
                                                     >
-                                                        No activity yet. Top up or use points to see your
-                                                        history here.
+                                                        No activity yet. Top up or use points to see your history
+                                                        here.
                                                     </td>
                                                 </tr>
                                             )}
