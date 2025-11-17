@@ -1,8 +1,9 @@
 {
-  "64610": {
-    "id": 64610,
+  "[project]/src/components/landing/LodgingPickerMap.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/src/components/landing/LodgingPickerMap.tsx [app-client] (ecmascript, next/dynamic entry)",
     "files": [
-      "static/chunks/0cdd2bab70f3b12f.js"
+      "static/chunks/src_components_landing_LodgingPickerMap_tsx_bc991141._.js",
+      "static/chunks/src_components_landing_LodgingPickerMap_tsx_9876c700._.js"
     ]
   }
 }

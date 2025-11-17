@@ -21,6 +21,7 @@ import {
     topupPointsAction,
 } from "@/app/profile/server-actions";
 import Link from "next/link";
+import {PreferredCurrencyField} from "@/app/profile/PreferredCurrencyField";
 
 type LedgerRow = {
     id: string;
@@ -37,6 +38,7 @@ type ProfileRow = {
     username: string | null;
     avatar_url: string | null;
     points_balance?: number | null;
+    preferred_currency?: string | null; // 👈 NEW
 };
 
 function fmtInt(n: number) {
@@ -167,7 +169,7 @@ export default async function ProfilePage() {
     const {data: profileRow} = await sb
         .schema("itinero")
         .from("profiles")
-        .select("id, full_name, username, avatar_url, points_balance")
+        .select("id, full_name, username, avatar_url, points_balance,preferred_currency")
         .eq("id", userId)
         .maybeSingle<ProfileRow>();
 
@@ -306,7 +308,8 @@ export default async function ProfilePage() {
 
                             {/* Save profile (Server Action form) */}
                             <form action={saveProfileAction} className="mt-2 grid gap-3">
-                                <input type="hidden" name="id" value={userId}/>
+                                <input type="hidden" name="id" value={userId} />
+
                                 <div className="space-y-1">
                                     <Label
                                         className="text-xs font-medium text-muted-foreground"
@@ -321,6 +324,7 @@ export default async function ProfilePage() {
                                         placeholder="How should we call you?"
                                     />
                                 </div>
+
                                 <div className="space-y-1">
                                     <Label
                                         className="text-xs font-medium text-muted-foreground"
@@ -335,6 +339,12 @@ export default async function ProfilePage() {
                                         placeholder="Optional @username"
                                     />
                                 </div>
+
+                                {/* ✅ NEW: preferred currency field */}
+                                <PreferredCurrencyField
+                                    initialCurrency={profileRow?.preferred_currency ?? null}
+                                />
+
                                 <div className="flex justify-end pt-1">
                                     <Button size="sm" type="submit">
                                         Save changes

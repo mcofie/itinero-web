@@ -50,6 +50,10 @@ import {
     Crown,
 } from "lucide-react";
 import {ThemeToggle} from "@/components/ThemeToggle";
+import {TopupDialogFxAware} from "@/components/layout/TopupDialogFxAware";
+import {useEffect, useMemo, useState} from "react";
+import {FxSnapshot} from "@/lib/fx/types";
+import {convertUsingSnapshot, getLatestFxSnapshot} from "@/lib/fx/fx";
 
 type Props = {
     children: React.ReactNode;
@@ -71,6 +75,14 @@ export default function AppShell({children, userEmail}: Props) {
     const [pointsInput, setPointsInput] = React.useState<string>("");
     const [topupBusy, setTopupBusy] = React.useState(false);
 
+    // const [ghsPreview, setGhsPreview] = useState(0);
+
+    // 👉 whatever you already use as the user's planning currency
+    const [userCurrency, setUserCurrency] = useState("USD");
+
+    // 🔹 FX snapshot state
+    const [fxSnapshot, setFxSnapshot] = useState<FxSnapshot | null>(null);
+
     // 🔔 Preview indicator state
     const [hasPreview, setHasPreview] = React.useState(false);
 
@@ -81,6 +93,31 @@ export default function AppShell({children, userEmail}: Props) {
             }).format(n),
         [],
     );
+
+    // Derive 1 GHS -> userCurrency rate
+    const ghsToUserRate = useMemo(() => {
+        if (!fxSnapshot) return null;
+        const val = convertUsingSnapshot(fxSnapshot, 1, "GHS", userCurrency);
+        return val;
+    }, [fxSnapshot, userCurrency]);
+
+
+    // Fetch once on mount (or when base changes, if you ever change it)
+    useEffect(() => {
+        let cancelled = false;
+
+        (async () => {
+            const snap = await getLatestFxSnapshot("USD"); // or "GHS" or your default base
+            if (!cancelled) {
+                setFxSnapshot(snap);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
 
     // Check localStorage for preview whenever route changes
     React.useEffect(() => {
@@ -615,75 +652,19 @@ export default function AppShell({children, userEmail}: Props) {
                 </footer>
 
                 {/* Top up dialog (POINTS → GHS) */}
-                <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
-                    <DialogContent className="sm:max-w-sm">
-                        <DialogHeader>
-                            <DialogTitle>Top up points</DialogTitle>
-                        </DialogHeader>
 
-                        <div className="space-y-3">
-                            <div className="flex items-baseline justify-between">
-                                <label
-                                    htmlFor="pts"
-                                    className="text-xs text-muted-foreground"
-                                >
-                                    Points to buy
-                                </label>
-                                <span className="text-xs text-muted-foreground">
-                  1 pt = GHS {POINT_UNIT_PRICE_GHS.toFixed(2)}
-                </span>
-                            </div>
-
-                            <Input
-                                id="pts"
-                                type="number"
-                                inputMode="numeric"
-                                min={1}
-                                placeholder="e.g., 100"
-                                value={pointsInput}
-                                onChange={(e) => setPointsInput(e.target.value)}
-                                onKeyDown={onPointsKeyDown}
-                                aria-label="Points to purchase"
-                            />
-
-                            <div className="text-sm">
-                                You’ll be charged{" "}
-                                <span className="font-semibold">
-                  GHS {ghsPreview.toFixed(2)}
-                </span>
-                                <span className="text-muted-foreground">
-                  {" "}
-                                    via Paystack
-                </span>
-                                .
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                After a successful payment, your points balance will update
-                                automatically.
-                            </p>
-                        </div>
-
-                        <DialogFooter>
-                            <Button
-                                variant="ghost"
-                                onClick={() => setTopupOpen(false)}
-                                disabled={topupBusy}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={startTopup}
-                                disabled={
-                                    topupBusy ||
-                                    !Number(pointsInput) ||
-                                    Number(pointsInput) <= 0
-                                }
-                            >
-                                {topupBusy ? "Processing…" : "Confirm & Pay"}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                <TopupDialogFxAware
+                    topupOpen={topupOpen}
+                    setTopupOpen={setTopupOpen}
+                    topupBusy={topupBusy}
+                    pointsInput={pointsInput}
+                    setPointsInput={setPointsInput}
+                    onPointsKeyDown={onPointsKeyDown}
+                    startTopup={startTopup}
+                    ghsPreview={ghsPreview}
+                    userCurrency={"USD"}        // or from user profile
+                    ghsToUserRate={ghsToUserRate} // e.g. 1 GHS -> ? userCurrency
+                />
             </div>
         </TooltipProvider>
     );
