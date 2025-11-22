@@ -35,67 +35,125 @@ const staggerParent = {
 const staggerChild = {initial: {opacity: 0, y: 16}, whileInView: {opacity: 1, y: 0}, transition: {duration: .5}};
 
 /* ---------- data ---------- */
+// UPDATED: Cinematic Images for Supported Countries
+// app/page.tsx (Snippet of the updated SUPPORTED array)
+
+/* ---------- data ---------- */
+// UPDATED: Fixed broken images for Ghana, Tanzania, Dubai, and Rwanda
+// app/page.tsx
+
+/* ---------- data ---------- */
+// UPDATED: Fixed Rwanda image link
 const SUPPORTED = [
-    {flag: "🇬🇭", name: "Ghana"},
-    {flag: "🇰🇪", name: "Kenya"},
-    {flag: "🇿🇦", name: "South Africa"},
-    {flag: "🇹🇿", name: "Tanzania"},
-    {flag: "🇲🇦", name: "Morocco"},
-    {flag: "🇷🇼", name: "Rwanda"},
-    {flag: "🇹🇭", name: "Thailand"},
-    {flag: "🇦🇪", name: "Dubai"},
-    {flag: "🇹🇷", name: "Turkey"},
-    {flag: "🇫🇷", name: "France"},
-    {flag: "🇸🇬", name: "Singapore"},
-    {flag: "🇮🇹", name: "Italy"},
+    {
+        name: "Ghana",
+        image: "https://images.unsplash.com/photo-1587595431973-160d0d94add1?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "120+"
+    },
+    {
+        name: "Kenya",
+        image: "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "85+"
+    },
+    {
+        name: "South Africa",
+        image: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "200+"
+    },
+    {
+        name: "Tanzania",
+        image: "https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "90+"
+    },
+    {
+        name: "Morocco",
+        image: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "150+"
+    },
+    {
+        name: "Rwanda",
+        // Replaced with reliable Tea Plantation/Hillside shot
+        image: "https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "40+"
+    },
+    {
+        name: "Thailand",
+        image: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "300+"
+    },
+    {
+        name: "Dubai",
+        image: "https://images.unsplash.com/photo-1546412414-8035e1776c9a?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "180+"
+    },
+    {
+        name: "Turkey",
+        image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "110+"
+    },
+    {
+        name: "France",
+        image: "https://images.unsplash.com/photo-1431274172761-fca41d930114?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "400+"
+    },
+    {
+        name: "Singapore",
+        image: "https://images.unsplash.com/photo-1565967511849-76a60a516170?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "95+"
+    },
+    {
+        name: "Italy",
+        image: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?q=80&w=1000&auto=format&fit=crop",
+        itineraries: "320+"
+    },
 ];
 
-// Sticky Stack Data (Opaque Colors)
+// Sticky Stack Data with Images & Tints
 const WHY = [
     {
         icon: Users2,
         title: "Crowdsourced, rewarded info",
         desc: "Local tips and place details are contributed by travellers. Share quality updates and earn rewards.",
-        bgClass: "bg-indigo-50 dark:bg-slate-900",
-        borderClass: "border-indigo-200 dark:border-indigo-800",
-        textClass: "text-indigo-900 dark:text-indigo-300",
-        iconClass: "text-indigo-600",
+        // Indigo Tint
+        image: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?q=80&w=2670&auto=format&fit=crop",
+        tintClass: "bg-indigo-900/80",
+        iconClass: "text-indigo-300",
     },
     {
         icon: FileText,
         title: "Visa-ready PDFs in seconds",
         desc: "Generate a beautiful offline PDF itinerary for visa applications, hotel check-ins, and offline use.",
-        bgClass: "bg-rose-50 dark:bg-slate-900",
-        borderClass: "border-rose-200 dark:border-rose-800",
-        textClass: "text-rose-900 dark:text-rose-300",
-        iconClass: "text-rose-600",
+        // Rose Tint
+        image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2674&auto=format&fit=crop",
+        tintClass: "bg-rose-900/80",
+        iconClass: "text-rose-300",
     },
     {
         icon: Wallet,
         title: "Plan within your budget",
         desc: "Real-world prices for attractions and experiences, with per-day estimates so you never overspend.",
-        bgClass: "bg-amber-50 dark:bg-slate-900",
-        borderClass: "border-amber-200 dark:border-amber-800",
-        textClass: "text-amber-900 dark:text-amber-300",
-        iconClass: "text-amber-600",
+        // Amber Tint
+        image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=2574&auto=format&fit=crop",
+        tintClass: "bg-amber-900/80",
+        iconClass: "text-amber-300",
     },
     {
         icon: Share2,
         title: "Edit, remix, and share",
         desc: "Quickly modify plans and share with family and friends. Collaboration without chaos.",
-        bgClass: "bg-teal-50 dark:bg-slate-900",
-        borderClass: "border-teal-200 dark:border-teal-800",
-        textClass: "text-teal-900 dark:text-teal-300",
-        iconClass: "text-teal-600",
+        // Teal Tint
+        image: "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?q=80&w=2670&auto=format&fit=crop",
+        tintClass: "bg-teal-900/80",
+        iconClass: "text-teal-300",
     },
     {
         icon: CalendarPlus,
         title: "1-click calendar export",
         desc: "Send your day-by-day plan to your calendar so times, places, and notes are always with you.",
-        bgClass: "bg-cyan-50 dark:bg-slate-900",
-        borderClass: "border-cyan-200 dark:border-cyan-800",
-        textClass: "text-cyan-900 dark:text-cyan-300",
-        iconClass: "text-cyan-600",
+        // Cyan Tint
+        image: "https://images.unsplash.com/photo-1512453979798-5ea9ba6a80f6?q=80&w=2574&auto=format&fit=crop",
+        tintClass: "bg-cyan-900/80",
+        iconClass: "text-cyan-300",
     },
 ];
 
@@ -148,25 +206,38 @@ const StickyCard = ({
                     scale,
                     top: `calc(10vh + ${index * 25}px)`
                 }}
-                className={`relative flex flex-col h-[450px] md:h-[500px] w-full max-w-4xl rounded-3xl border p-8 md:p-12 shadow-xl origin-top
-                ${item.bgClass} ${item.borderClass}`}
+                className="relative flex flex-col h-[450px] md:h-[500px] w-full max-w-4xl rounded-3xl border border-white/10 p-8 md:p-12 shadow-2xl origin-top overflow-hidden"
             >
-                <div className="flex items-center justify-between mb-8">
-                    <div
-                        className={`p-4 rounded-2xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-sm ring-1 ring-black/5 ${item.iconClass}`}>
-                        <item.icon className="h-8 w-8"/>
+                {/* Background Image */}
+                <img
+                    src={item.image}
+                    alt={item.title}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                />
+
+                {/* Color Tint Overlay */}
+                <div className={`absolute inset-0 ${item.tintClass} backdrop-brightness-75`}/>
+
+                {/* Content Layer */}
+                <div className="relative z-10 flex flex-col h-full">
+                    <div className="flex items-center justify-between mb-8">
+                        <div
+                            className={`p-4 rounded-2xl bg-white/10 backdrop-blur-md shadow-lg ring-1 ring-white/20 ${item.iconClass}`}>
+                            <item.icon className="h-8 w-8 text-white"/>
+                        </div>
+                        <span className="text-6xl font-bold text-white/10">
+                            0{index + 1}
+                        </span>
                     </div>
-                    <span className={`text-6xl font-bold opacity-20 ${item.textClass}`}>
-                        0{index + 1}
-                    </span>
-                </div>
-                <div className="mt-auto">
-                    <h3 className={`text-3xl md:text-4xl font-bold mb-4 tracking-tight ${item.textClass}`}>
-                        {item.title}
-                    </h3>
-                    <p className="text-lg md:text-xl text-muted-foreground dark:text-gray-400 max-w-2xl leading-relaxed">
-                        {item.desc}
-                    </p>
+
+                    <div className="mt-auto">
+                        <h3 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight text-white drop-shadow-sm">
+                            {item.title}
+                        </h3>
+                        <p className="text-lg md:text-xl text-white/90 max-w-2xl leading-relaxed font-medium">
+                            {item.desc}
+                        </p>
+                    </div>
                 </div>
             </motion.div>
         </div>
@@ -195,7 +266,6 @@ export default function LandingPage() {
         offset: ['start start', 'end end']
     });
 
-    // Define travel tokens for the background
     const travelTokens = [
         {Icon: Plane, top: "10%", left: "5%", delay: 0},
         {Icon: MapPin, top: "25%", right: "10%", delay: 1},
@@ -310,51 +380,91 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Supported Countries */}
-            <section className="bg-background border-y border-border">
-                <div className="mx-auto w-full max-w-6xl px-6 py-14 text-center">
-                    <motion.div {...fadeUp(0)} className="flex flex-col items-center gap-3">
-                        <Globe2 className="h-8 w-8 text-primary"/>
-                        <h2 className="text-2xl md:text-3xl font-bold">Currently Supported Countries</h2>
-                        <p className="text-muted-foreground max-w-xl">
-                            We’re growing fast! You can plan and explore trips in these destinations today:
-                        </p>
+            {/* Supported Countries - CINEMATIC PORTAL */}
+            <section className="bg-background border-y border-border py-24">
+                <div className="mx-auto w-full max-w-6xl px-6">
+                    {/* Section Header */}
+                    <motion.div {...fadeUp(0)}
+                                className="flex flex-col md:flex-row items-end justify-between gap-6 mb-12">
+                        <div className="max-w-2xl">
+                            <div className="flex items-center gap-2 text-primary font-medium mb-2">
+                                <Globe2 className="h-5 w-5"/>
+                                <span>Global Coverage</span>
+                            </div>
+                            <h2 className="text-3xl md:text-4xl font-bold">Destinations ready for you</h2>
+                            <p className="mt-4 text-muted-foreground text-lg">
+                                Deep local data, pricing, and routing available for these regions.
+                            </p>
+                        </div>
+                        <Button variant="outline" className="hidden md:flex group">
+                            View all destinations
+                            <Plane className="ml-2 h-4 w-4 transition-transform group-hover:-rotate-45"/>
+                        </Button>
                     </motion.div>
 
-                    <motion.div
-                        variants={staggerParent}
-                        initial="initial"
-                        whileInView="whileInView"
-                        viewport={{once: true, amount: 0.2}}
-                        className="mt-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 place-items-center"
-                    >
-                        {SUPPORTED.map((c) => (
-                            <motion.div key={c.name} variants={staggerChild}>
-                                <div className="group flex flex-col items-center justify-center space-y-2">
-                                    <div
-                                        className="flex items-center justify-center h-20 w-20 rounded-full border border-border bg-card text-4xl shadow-sm
-                               transition-all duration-300 ease-out group-hover:scale-105 group-hover:shadow-md group-hover:border-primary"
-                                    >
-                                        {c.flag}
+                    {/* Cinematic Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                        {SUPPORTED.map((c, i) => (
+                            <motion.div
+                                key={c.name}
+                                initial={{opacity: 0, scale: 0.9}}
+                                whileInView={{opacity: 1, scale: 1}}
+                                viewport={{once: true}}
+                                transition={{delay: i * 0.05}}
+                                whileHover={{y: -5}}
+                                className="group relative aspect-[4/5] md:aspect-square overflow-hidden rounded-2xl cursor-pointer border border-border bg-muted"
+                            >
+                                {/* Background Image */}
+                                <img
+                                    src={c.image}
+                                    alt={c.name}
+                                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                />
+
+                                {/* Gradient Overlay (Visibility Improved) */}
+                                <div
+                                    className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"/>
+
+                                {/* Content */}
+                                <div className="absolute inset-0 p-5 flex flex-col justify-between text-white">
+                                    <div className="flex justify-end">
+                                         <span
+                                             className="px-2 py-1 rounded-md bg-white/20 backdrop-blur-md text-[10px] font-medium uppercase tracking-wider border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                                            {c.itineraries} Plans
+                                         </span>
                                     </div>
-                                    <span
-                                        className="text-sm font-medium text-muted-foreground mt-2 group-hover:text-primary transition-colors">
-                                        {c.name}
-                                    </span>
+
+                                    <div>
+                                        <h3 className="text-xl font-bold tracking-tight group-hover:translate-x-1 transition-transform drop-shadow-md">
+                                            {c.name}
+                                        </h3>
+                                        <div
+                                            className="h-0.5 w-0 bg-primary mt-2 group-hover:w-12 transition-all duration-300"/>
+                                    </div>
                                 </div>
                             </motion.div>
                         ))}
-                    </motion.div>
+                    </div>
 
-                    <motion.p {...fadeUp(0.1)} className="mt-10 text-sm text-muted-foreground">
-                        🌍 More destinations coming soon — including <strong>Japan</strong>, <strong>Uganda</strong>,
-                        and <strong>Malaysia</strong>.
-                    </motion.p>
+                    {/* Footer Note */}
+                    <motion.div {...fadeUp(0.2)}
+                                className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-2 text-sm text-muted-foreground bg-muted/30 p-4 rounded-full border border-border w-fit mx-auto">
+                        <span className="flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-primary"/>
+                            <strong>Coming soon:</strong> Japan, Uganda, and Malaysia.
+                        </span>
+                        <span className="hidden sm:inline text-border">|</span>
+                        <Link href="/request"
+                              className="hover:text-primary underline decoration-primary/30 underline-offset-4 transition-colors">
+                            Request a country
+                        </Link>
+                    </motion.div>
                 </div>
             </section>
 
             {/* Sticky Stack "Why Itinero" Section */}
             <section ref={stickyContainer} className="relative bg-primary/5 pt-24 pb-24 border-y border-border">
+                {/* Section Header */}
                 <div className="sticky top-0 z-10 px-6 py-8 mb-10 text-center">
                     <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
                         Why travellers love <span className="text-primary">Itinero</span>
@@ -364,6 +474,7 @@ export default function LandingPage() {
                     </p>
                 </div>
 
+                {/* Cards Container */}
                 <div className="mx-auto max-w-6xl px-6">
                     {WHY.map((item, i) => {
                         const targetScale = 1 - ((WHY.length - i) * 0.05);
@@ -381,9 +492,8 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* Guided & Curated Tours (Blurred Reveal, No Email, Q1 2026) */}
+            {/* Guided & Curated Tours */}
             <section className="relative py-24 overflow-hidden bg-background border-y border-border">
-                {/* Decorative Pattern */}
                 <div
                     className="absolute inset-0 opacity-[0.03] [mask-image:linear-gradient(to_bottom,transparent,black,transparent)]">
                     <div
@@ -391,7 +501,6 @@ export default function LandingPage() {
                 </div>
 
                 <div className="mx-auto w-full max-w-6xl px-6 relative z-10">
-                    {/* Centered Header */}
                     <motion.div {...fadeUp(0)} className="text-center max-w-3xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-2 text-primary font-semibold mb-3">
                             <Sparkles className="h-4 w-4"/>
@@ -406,7 +515,6 @@ export default function LandingPage() {
                         </p>
                     </motion.div>
 
-                    {/* Blurred Cards Grid */}
                     <div className="grid md:grid-cols-2 gap-8">
                         {[
                             {
@@ -432,7 +540,6 @@ export default function LandingPage() {
                                 transition={{delay: i * 0.2}}
                                 className="group relative h-64 overflow-hidden rounded-3xl border border-border bg-card shadow-sm"
                             >
-                                {/* Card Content (The "Tease") */}
                                 <div className="absolute inset-0 p-8 flex flex-col justify-between">
                                     <div className="flex justify-between items-start">
                                         <div
@@ -450,7 +557,6 @@ export default function LandingPage() {
                                             <h3 className="text-2xl font-bold">{card.title}</h3>
                                             <p className="text-muted-foreground">{card.subtitle}</p>
                                         </div>
-                                        {/* Mock UI Elements that get blurred */}
                                         <div className="flex gap-2 opacity-50">
                                             {card.mockData.map(tag => (
                                                 <span key={tag}
@@ -460,7 +566,6 @@ export default function LandingPage() {
                                     </div>
                                 </div>
 
-                                {/* The Blur Overlay */}
                                 <div
                                     className="absolute inset-0 bg-background/10 backdrop-blur-[6px] flex items-center justify-center opacity-100 transition-all duration-500 group-hover:backdrop-blur-[3px]">
                                     <div
