@@ -1,43 +1,5 @@
 {
-  "node": {
-    "40751d074d96d4be7d3c56956f2145c2796af27fbb": {
-      "workers": {
-        "app/profile/page": {
-          "moduleId": "35053",
-          "async": false,
-          "exportedName": "saveProfileAction",
-          "filename": "src/app/profile/server-actions.ts"
-        }
-      },
-      "layer": {
-        "app/profile/page": "action-browser"
-      },
-      "filename": "src/app/profile/server-actions.ts",
-      "exportedName": "saveProfileAction"
-    },
-    "604b6e97e1d660473472e5179ca207838946da9480": {
-      "workers": {
-        "app/trips/[id]/page": {
-          "moduleId": "19842",
-          "async": false,
-          "exportedName": "setTripPublic",
-          "filename": "src/app/actions/trips.ts"
-        },
-        "app/trips/[id]/print/page": {
-          "moduleId": "89072",
-          "async": false,
-          "exportedName": "setTripPublic",
-          "filename": "src/app/actions/trips.ts"
-        }
-      },
-      "layer": {
-        "app/trips/[id]/page": "action-browser",
-        "app/trips/[id]/print/page": "action-browser"
-      },
-      "filename": "src/app/actions/trips.ts",
-      "exportedName": "setTripPublic"
-    }
-  },
+  "node": {},
   "edge": {},
   "encryptionKey": "jysVyTbjUObxu5wsjowKmSEoguJYDe4ayKeISDQcPo4="
 }
