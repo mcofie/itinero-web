@@ -9,7 +9,7 @@ import TripWizard from "@/components/landing/TripWizard";
 import {
     Users2, FileText, Wallet, Share2, CalendarPlus, Plane, Sparkles,
     Globe2, Compass, MapPin, Clock, Luggage, Ticket, Camera,
-    Twitter, Instagram, Linkedin, Github, Mail, Lock
+    Twitter, Instagram, Linkedin, Github, Mail, Lock, ArrowRight
 } from "lucide-react";
 import {ThemeToggle} from "@/components/ThemeToggle";
 import {useRef} from "react";
@@ -580,18 +580,56 @@ export default function LandingPage() {
                 </div>
             </section>
 
-            {/* CTA */}
-            <section className="bg-primary/5 border-t border-border">
-                <motion.div {...fadeUp(0)} className="mx-auto w-full max-w-6xl px-6 py-14 text-center">
-                    <h2 className="text-2xl md:text-3xl font-bold">Start planning your next trip today</h2>
-                    <div className="mt-6 flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button asChild size="lg" className={primaryBtn}>
-                            <Link href="/trip-maker">Start new itinerary</Link>
+            {/* CTA Section */}
+            {/* CTA Section - Bold & High Contrast */}
+            <section className="relative overflow-hidden py-24 lg:py-32 bg-primary text-primary-foreground">
+                {/* Background Texture - Inverted for contrast on dark bg */}
+                <div className="absolute inset-0 -z-10 bg-[url('/grid-pattern.svg')] opacity-10 invert mix-blend-overlay" />
+
+                {/* Decorative Glow - Lighter for contrast */}
+                <div className="absolute left-1/2 top-1/2 -z-10 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/20 blur-[120px] pointer-events-none" />
+
+                <motion.div
+                    {...fadeUp(0)}
+                    className="relative z-10 mx-auto w-full max-w-4xl px-6 text-center"
+                >
+                    {/* Floating Icon - Inverted colors */}
+                    <div className="mb-6 flex justify-center">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-foreground/10 text-primary-foreground ring-1 ring-primary-foreground/20 shadow-lg shadow-black/10 backdrop-blur-sm">
+                            <Ticket className="h-8 w-8" />
+                        </div>
+                    </div>
+
+                    {/* Headline - Text color inherited from section, span made brighter white */}
+                    <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
+                        Start planning your next <br className="hidden sm:block" />
+                        <span className="text-white drop-shadow-sm">adventure today</span>
+                    </h2>
+
+                    {/* Subtext - Lighter opacity */}
+                    <p className="mx-auto mt-6 max-w-2xl text-lg text-primary-foreground/90 md:text-xl">
+                        Join thousands of travellers who have stopped stressing over spreadsheets
+                        and started enjoying the journey.
+                    </p>
+
+                    {/* Buttons - Inverted styles for dark background */}
+                    <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                        {/* Main button uses reversed colors (white bg, primary text) */}
+                        <Button asChild size="lg" className={`h-12 px-8 text-base bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-xl shadow-black/20 transition-all hover:scale-105`}>
+                            <Link href="/trip-maker">
+                                Start free itinerary <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
                         </Button>
-                        <Button asChild variant="outline" size="lg" className={`border ${outlineBtn}`}>
-                            <Link href="/pricing">See pricing</Link>
+                        {/* Outline button adjusted for dark bg */}
+                        <Button asChild variant="outline" size="lg" className={`h-12 px-8 text-base border-primary-foreground/30 bg-primary-foreground/5 text-primary-foreground hover:bg-primary-foreground/10 backdrop-blur-sm`}>
+                            <Link href="/pricing">View pricing</Link>
                         </Button>
                     </div>
+
+                    {/* Small print - Lighter opacity */}
+                    <p className="mt-6 text-sm text-primary-foreground/70">
+                        No credit card required • Free 14-day trial on Pro plans
+                    </p>
                 </motion.div>
             </section>
 
