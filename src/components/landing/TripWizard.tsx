@@ -26,9 +26,11 @@ import {
     Users,
     Car,
     Footprints,
+    Check,
+    Clock,
+    Wallet,
+    Pencil
 } from "lucide-react";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
-import {WORLD_CURRENCIES} from "@/lib/currency-data";
 import {LodgingMapDialog, LodgingValue} from "@/components/landing/LodgingMapDialog";
 
 /* ---------------- date-only helpers ---------------- */
@@ -62,7 +64,6 @@ type RequestBody = {
     mode: "walk" | "bike" | "car" | "transit";
     lodging?: Lodging;
     currency: string;
-
 };
 
 const DEFAULT_INTERESTS = [
@@ -83,58 +84,15 @@ const DEFAULT_INTERESTS = [
 ] as const;
 
 const STEPS = [
-    {key: "dest", label: "Destination", icon: MapPin},
-    {key: "dates", label: "Dates", icon: CalendarDays},
+    {key: "dest", label: "Where", icon: MapPin},
+    {key: "dates", label: "When", icon: CalendarDays},
     {key: "budget", label: "Budget", icon: Footprints},
-    {key: "interests", label: "Interests", icon: Sparkles},
-    {key: "pace", label: "Pace", icon: Footprints},
-    {key: "mode", label: "Transport", icon: Car},
-    {key: "lodging", label: "Lodging", icon: Users},
-    {key: "review", label: "Review", icon: Sparkles},
+    {key: "interests", label: "Vibe", icon: Sparkles},
+    {key: "pace", label: "Pace", icon: Clock},
+    {key: "mode", label: "Travel", icon: Car},
+    {key: "lodging", label: "Stay", icon: Users},
+    {key: "review", label: "Ready", icon: Check},
 ] as const;
-
-/* ================== DateRangePicker (theme-aware) ================== */
-function DateRangePicker({
-                             value,
-                             onChange,
-                             className = "",
-                             disablePast = true,
-                         }: {
-    value: DateRangeValue;
-    onChange: (range: DateRangeValue) => void;
-    className?: string;
-    disablePast?: boolean;
-}) {
-    const disabled = disablePast ? [{before: new Date()}] : undefined;
-    const selectedForCalendar: DateRange | undefined = value
-        ? {from: value.from!, to: value.to}
-        : undefined;
-
-    return (
-        <div className={className}>
-            <Calendar
-                mode="range"
-                numberOfMonths={2}
-                selected={selectedForCalendar}
-                onSelect={onChange}
-                disabled={disabled}
-                className="rounded-xl border bg-card p-3 md:p-4"
-                classNames={{
-                    months: "gap-3 md:gap-4",
-                    month: "space-y-3",
-                    head_cell: "text-xs font-medium text-muted-foreground",
-                    cell: "p-0 relative",
-                    day: "h-9 w-9 md:h-10 md:w-10 rounded-md aria-selected:opacity-100",
-                    day_selected:
-                        "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
-                    day_today: "bg-primary/10 text-primary",
-                    day_outside: "text-muted-foreground opacity-50",
-                    nav_button: "h-9 w-9 md:h-10 md:w-10",
-                }}
-            />
-        </div>
-    );
-}
 
 /* ================== Main Wizard ================== */
 export default function TripWizard() {
@@ -144,44 +102,33 @@ export default function TripWizard() {
     const [step, setStep] = useState(0);
     const [busy, setBusy] = useState(false);
     const [authOpen, setAuthOpen] = useState(false);
-    const [lodgingPickerOpen, setLodgingPickerOpen] = React.useState(false);
 
     const [state, setState] = useState<RequestBody>({
         destinations: [{id: "", name: ""}],
         start_date: "",
         end_date: "",
         budget_daily: "",
-        interests: ["beach", "culture", "food", "nature"],
+        interests: ["culture", "food"],
         pace: "balanced",
         mode: "car",
         lodging: {name: ""},
-        currency: "USD", // or pull from user profile / browser locale
+        currency: "USD",
     });
-
-    // keep calendar selection local (not required externally)
-    const [, setSelectedRange] = useState<DateRangeValue>(undefined);
 
     React.useEffect(() => {
         if (typeof window === "undefined") return;
-
         try {
             const stored = window.localStorage.getItem("itinero:currency");
-            const fallback = guessCurrencyFromLocale();
-            const code = (stored || fallback || "USD").toUpperCase();
-
-            setState((s) => ({
-                ...s,
-                currency: s.currency ?? code,
-            }));
-        } catch {
-            // ignore
+            const code = (stored || "USD").toUpperCase();
+            setState((s) => ({...s, currency: s.currency ?? code}));
+        } catch { /* ignore */
         }
     }, []);
 
+    // Auth listener
     useEffect(() => {
         const {data: sub} = sb.auth.onAuthStateChange(async (evt) => {
             if (evt === "SIGNED_IN") {
-                await sb.auth.getSession();
                 router.replace("/preview");
                 router.refresh();
             }
@@ -196,8 +143,6 @@ export default function TripWizard() {
         if (step === 1) return !!state.start_date && !!state.end_date;
         if (step === 2) return state.budget_daily === "" || Number(state.budget_daily) >= 0;
         if (step === 3) return state.interests.length > 0;
-        if (step === 4) return ["chill", "balanced", "packed"].includes(state.pace);
-        if (step === 5) return ["walk", "bike", "car", "transit"].includes(state.mode);
         return true;
     }, [step, state]);
 
@@ -217,18 +162,16 @@ export default function TripWizard() {
             const payload = toPayload(state);
             const {data, error} = await sb.functions.invoke("build_preview_itinerary", {body: payload});
 
-            localStorage.setItem("itinero:latest_preview", JSON.stringify(data));
             if (error) throw error;
 
-            const {
-                data: {user},
-            } = await sb.auth.getUser();
+            localStorage.setItem("itinero:latest_preview", JSON.stringify(data));
+
+            const {data: {user}} = await sb.auth.getUser();
 
             if (!user) {
                 setAuthOpen(true);
             } else {
-                router.replace("/preview");
-                router.refresh();
+                router.push("/preview");
             }
         } catch (e) {
             console.error(e);
@@ -236,41 +179,6 @@ export default function TripWizard() {
             setBusy(false);
         }
     };
-
-    const handleCurrencyChange = (code: string) => {
-        setState((s) => ({
-            ...s,
-            currency: code,
-        }));
-
-        try {
-            if (typeof window !== "undefined") {
-                window.localStorage.setItem("itinero:currency", code);
-            }
-        } catch {
-            // non-fatal
-        }
-    };
-
-    function updateDest(value: string) {
-        setState((s) => ({...s, destinations: [{name: value}]}));
-    }
-
-    function toggleInterest(tag: string) {
-        setState((s) => {
-            const set = new Set(s.interests);
-            if (set.has(tag)) set.delete(tag);
-            else set.add(tag);
-            return {...s, interests: Array.from(set)};
-        });
-    }
-
-    /* map state <-> calendar */
-    const selectedRange: DateRangeValue = useMemo(() => {
-        const from = parseDateOnlyString(state.start_date);
-        const to = parseDateOnlyString(state.end_date);
-        return from || to ? {from, to} : undefined;
-    }, [state.start_date, state.end_date]);
 
     const handleRangeChange = (range: DateRangeValue) => {
         if (!range) {
@@ -282,367 +190,281 @@ export default function TripWizard() {
         setState((s) => ({...s, start_date: from, end_date: to}));
     };
 
-    // display helpers
-    const fmtHuman = (s?: string) =>
-        s
-            ? new Date(s + "T00:00:00").toLocaleDateString(undefined, {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-            })
-            : "—";
+    const selectedRange: DateRangeValue = useMemo(() => {
+        const from = parseDateOnlyString(state.start_date);
+        const to = parseDateOnlyString(state.end_date);
+        return from || to ? {from, to} : undefined;
+    }, [state.start_date, state.end_date]);
 
-    const nightsBetween = (a?: string, b?: string) => {
-        if (!a || !b) return 0;
-        const d1 = new Date(a + "T00:00:00");
-        const d2 = new Date(b + "T00:00:00");
-        return Math.max(0, Math.round((d2.getTime() - d1.getTime()) / 86_400_000));
-    };
-
-    const selectedForCalendar: DateRange | undefined = selectedRange
-        ? {from: selectedRange.from, to: selectedRange.to}
-        : undefined;
+    const dateDisplay = state.start_date && state.end_date
+        ? `${fmtHuman(state.start_date)} - ${fmtHuman(state.end_date)}`
+        : "Select dates";
 
     return (
-        <div className="mx-auto w-full max-w-3xl">
-            <HeaderProgress
-                steps={STEPS.map((s) => ({label: s.label, icon: s.icon}))}
-                activeIndex={step}
-                onStepClick={jumpTo}
-                progress={progress}
-            />
+        <div className="w-full bg-slate-50/50 px-4 pt-6 pb-12 text-slate-900 dark:bg-slate-950 dark:text-white">
+            <div className="mx-auto w-full max-w-2xl">
 
-            {/* Theme-aware card wrapper */}
-            <div className="relative mt-6 rounded-b-2xl bg-card">
-                <div className="p-4 md:p-6">
-                    <AnimatePresence mode="wait">
-                        {step === 0 && (
-                            <Slide key="step-dest">
-                                <FieldBlock
-                                    label="Destination"
-                                    hint="Pick from our database or keep typing free text"
-                                    icon={MapPin}
-                                >
-                                    <DestinationField
-                                        value={state.destinations[0] ?? {name: ""}}
-                                        onChange={(dest) => setState((s) => ({...s, destinations: [dest]}))}
-                                    />
-                                </FieldBlock>
-                            </Slide>
-                        )}
+                {/* Header / Progress */}
+                <div className="mb-8 flex items-center justify-between px-2">
+                    <div className="flex items-center gap-2">
+                        <div
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+                            {step + 1}
+                        </div>
+                        <span
+                            className="text-sm font-semibold text-slate-600 uppercase tracking-wide dark:text-slate-400">
+                {STEPS[step].label}
+              </span>
+                    </div>
 
-                        {step === 1 && (
-                            <Slide key="step-dates">
-                                <FieldBlock label="Dates" hint="Select your travel window" icon={CalendarDays}>
-                                    <div className="grid gap-4">
-                                        {/* Mobile: 1 month */}
-                                        <div className="sm:hidden">
-                                            <Calendar
-                                                mode="range"
-                                                numberOfMonths={1}
-                                                selected={selectedForCalendar}
-                                                onSelect={handleRangeChange}
-                                                disabled={[{before: new Date()}]}
-                                                className="rounded-xl border bg-card p-3"
-                                                classNames={{
-                                                    months: "gap-2",
-                                                    month: "space-y-2",
-                                                    head_cell: "text-xs font-medium text-muted-foreground",
-                                                    cell: "p-0",
-                                                    day: "h-9 w-9 rounded-md aria-selected:opacity-100",
-                                                    day_selected: "bg-primary text-primary-foreground hover:bg-primary",
-                                                    day_today: "bg-primary/10 text-primary dark:text-primary-foreground/80",
-                                                    nav_button: "h-9 w-9",
-                                                }}
-                                            />
-                                        </div>
+                    {/* Segmented Progress Bar */}
+                    <div className="flex gap-1">
+                        {STEPS.map((_, i) => (
+                            <div
+                                key={i}
+                                className={cn(
+                                    "h-1.5 w-8 rounded-full transition-colors duration-300",
+                                    i <= step ? "bg-blue-600 dark:bg-blue-500" : "bg-slate-200 dark:bg-slate-800"
+                                )}
+                            />
+                        ))}
+                    </div>
+                </div>
 
-                                        {/* ≥sm & <lg: 2 months */}
-                                        <div className="hidden sm:block lg:hidden">
-                                            <Calendar
-                                                mode="range"
-                                                numberOfMonths={1}
-                                                selected={selectedForCalendar}
-                                                onSelect={handleRangeChange}
-                                                disabled={[{before: new Date()}]}
-                                                className="rounded-xl border bg-card p-3"
-                                                classNames={{
-                                                    months: "gap-3 md:gap-4",
-                                                    month: "space-y-3",
-                                                    head_cell: "text-xs font-medium text-muted-foreground",
-                                                    cell: "p-0",
-                                                    day: "h-9 w-9 md:h-10 md:w-10 rounded-md aria-selected:opacity-100",
-                                                    day_selected: "bg-primary text-primary-foreground hover:bg-primary",
-                                                    day_today: "bg-primary/10 text-primary dark:text-primary-foreground/80",
-                                                    nav_button: "h-9 w-9 md:h-10 md:w-10",
-                                                }}
-                                            />
-                                        </div>
+                {/* Main Card */}
+                <motion.div
+                    layout
+                    className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 flex flex-col dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
+                >
+                    <div className="p-6 md:p-8 flex-1">
+                        <AnimatePresence mode="wait">
 
-                                        {/* ≥lg: 3 months (nice for desktops) */}
-                                        <div className="hidden lg:block">
-                                            <Calendar
-                                                mode="range"
-                                                numberOfMonths={2}
-                                                selected={selectedForCalendar}
-                                                onSelect={handleRangeChange}
-                                                disabled={[{before: new Date()}]}
-                                                className="rounded-xl border p-4"
-                                                classNames={{
-                                                    months: "gap-2 xl:gap-4",
-                                                    month: "space-y-3",
-                                                    head_cell: "text-xs font-medium text-muted-foreground",
-                                                    cell: "p-0",
-                                                    day: "h-10 w-10 xl:h-11 xl:w-11 rounded-md aria-selected:opacity-100",
-                                                    day_selected: "bg-primary text-primary-foreground hover:bg-primary",
-                                                    day_today: "bg-primary/10 text-primary dark:text-primary-foreground/80",
-                                                    nav_button: "h-10 w-10",
-                                                }}
-                                            />
-                                        </div>
+                            {/* STEP 0: DESTINATION */}
+                            {step === 0 && (
+                                <Slide key="dest">
+                                    <FieldBlock label="Where do you want to go?" icon={MapPin}>
+                                        <DestinationField
+                                            value={state.destinations[0]}
+                                            onChange={(d) => setState((s) => ({...s, destinations: [d]}))}
+                                        />
+                                    </FieldBlock>
+                                </Slide>
+                            )}
 
-                                        {/* Selected summary */}
+                            {/* STEP 1: DATES */}
+                            {step === 1 && (
+                                <Slide key="dates">
+                                    <FieldBlock label="When are you traveling?" icon={CalendarDays} hint={dateDisplay}>
                                         <div
-                                            className="grid gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-2 text-sm">
-      <span className="rounded-full border px-2.5 py-1">
-        Start: <span className="font-medium">{fmtHuman(state.start_date)}</span>
-      </span>
-                                            <span className="rounded-full border px-2.5 py-1">
-        End: <span className="font-medium">{fmtHuman(state.end_date)}</span>
-      </span>
-                                            <span className="rounded-full bg-muted px-2.5 py-1">
-        Nights: <span className="font-medium">{nightsBetween(state.start_date, state.end_date)}</span>
-      </span>
-
-                                            {(state.start_date || state.end_date) && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRangeChange(undefined)}
-                                                    className="ml-0 sm:ml-1 text-primary underline-offset-2 hover:underline"
-                                                >
-                                                    Clear
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </FieldBlock>
-                            </Slide>
-                        )}
-
-                        {step === 2 && (
-                            <Slide>
-                                <FieldBlock
-                                    label="Daily budget"
-                                    hint="We’ll convert this into local activity costs and tell you if it’s enough."
-                                    icon={Footprints}
-                                >
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                        <div className="flex flex-1 items-center gap-2">
-                                            <Input
-                                                type="number"
-                                                min={0}
-                                                placeholder="e.g., 150"
-                                                value={String(state.budget_daily ?? "")}
-                                                onChange={(e) =>
-                                                    setState((s) => ({
-                                                        ...s,
-                                                        budget_daily:
-                                                            e.target.value === "" ? "" : Number(e.target.value),
-                                                    }))
-                                                }
+                                            className="flex justify-center rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                                            <Calendar
+                                                mode="range"
+                                                selected={selectedRange ? {
+                                                    from: selectedRange.from!,
+                                                    to: selectedRange.to
+                                                } : undefined}
+                                                onSelect={handleRangeChange}
+                                                disabled={[{before: new Date()}]}
+                                                className="bg-transparent"
+                                                classNames={{
+                                                    months: "gap-4",
+                                                    head_cell: "text-slate-400 font-normal text-[0.8rem]",
+                                                    day_selected: "bg-blue-600 text-white hover:bg-blue-700 focus:bg-blue-600 dark:bg-blue-600 dark:text-white",
+                                                    day_today: "bg-slate-100 text-slate-900 font-bold dark:bg-slate-800 dark:text-white",
+                                                    day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-slate-100 rounded-md dark:hover:bg-slate-800 dark:text-slate-200",
+                                                    caption: "flex justify-center pt-1 relative items-center text-slate-900 dark:text-white font-medium",
+                                                }}
                                             />
+                                        </div>
+                                    </FieldBlock>
+                                </Slide>
+                            )}
 
-                                            {/* New global currency selector with flags */}
+                            {/* STEP 2: BUDGET */}
+                            {step === 2 && (
+                                <Slide key="budget">
+                                    <FieldBlock label="What's your daily budget?" icon={Wallet}>
+                                        <div className="flex gap-4">
+                                            <div className="relative flex-1">
+                                                <div
+                                                    className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                    <span
+                                                        className="text-slate-500 dark:text-slate-400">{getCurrencyMeta(state.currency).symbol}</span>
+                                                </div>
+                                                <Input
+                                                    type="number"
+                                                    min={0}
+                                                    className="pl-8 h-12 rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
+                                                    placeholder="150"
+                                                    value={state.budget_daily}
+                                                    onChange={(e) => setState(s => ({
+                                                        ...s,
+                                                        budget_daily: e.target.value === "" ? "" : Number(e.target.value)
+                                                    }))}
+                                                />
+                                            </div>
                                             <CurrencySelect
-                                                value={state.currency ?? "USD"}
-                                                onChange={handleCurrencyChange}
+                                                value={state.currency}
+                                                onChange={(c) => setState(s => ({...s, currency: c}))}
                                             />
                                         </div>
 
-                                        {/* Subtle hint with symbol */}
-                                        <div className="text-xs text-muted-foreground">
-                                            Using{" "}
-                                            <span className="font-medium">
-          {getCurrencyMeta(state.currency).symbol} {state.currency}
-        </span>{" "}
-                                            as your planning currency.
+                                        <div className="mt-6 flex flex-wrap gap-3">
+                                            {[50, 150, 300, 500].map(amt => (
+                                                <button
+                                                    key={amt}
+                                                    type="button"
+                                                    onClick={() => setState(s => ({...s, budget_daily: amt}))}
+                                                    className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-blue-600 hover:text-blue-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-blue-500 dark:hover:text-blue-500"
+                                                >
+                                                    {getCurrencyMeta(state.currency).symbol}{amt}
+                                                </button>
+                                            ))}
                                         </div>
-                                    </div>
+                                    </FieldBlock>
+                                </Slide>
+                            )}
 
-                                    <div className="mt-3 flex flex-wrap gap-2">
-                                        {[50, 100, 150, 250].map((v) => (
-                                            <Button
-                                                key={v}
-                                                type="button"
-                                                size="sm"
-                                                variant="secondary"
-                                                className="rounded-full"
-                                                onClick={() =>
-                                                    setState((s) => ({
-                                                        ...s,
-                                                        budget_daily: v,
-                                                    }))
-                                                }
-                                            >
-                                                ≈ {getCurrencyMeta(state.currency).symbol}
-                                                {v}
-                                            </Button>
-                                        ))}
+                            {/* STEP 3: INTERESTS */}
+                            {step === 3 && (
+                                <Slide key="interests">
+                                    <FieldBlock label="What are you into?" icon={Sparkles} hint="Select at least one">
+                                        <div className="flex flex-wrap gap-3">
+                                            {DEFAULT_INTERESTS.map(tag => {
+                                                const active = state.interests.includes(tag);
+                                                return (
+                                                    <button
+                                                        key={tag}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const set = new Set(state.interests);
+                                                            if (set.has(tag)) set.delete(tag); else set.add(tag);
+                                                            setState(s => ({...s, interests: Array.from(set)}));
+                                                        }}
+                                                        className={cn(
+                                                            "rounded-full px-5 py-2.5 text-sm font-medium transition-all border",
+                                                            active
+                                                                ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200 dark:shadow-none"
+                                                                : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
+                                                        )}
+                                                    >
+                                                        {tag.charAt(0).toUpperCase() + tag.slice(1)}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </FieldBlock>
+                                </Slide>
+                            )}
 
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            variant="ghost"
-                                            className="rounded-full"
-                                            onClick={() =>
-                                                setState((s) => ({
+                            {/* STEP 4: PACE */}
+                            {step === 4 && (
+                                <Slide key="pace">
+                                    <FieldBlock label="Travel Pace" icon={Clock}>
+                                        <div className="grid gap-4 sm:grid-cols-3">
+                                            {(["chill", "balanced", "packed"] as const).map(opt => (
+                                                <SelectionCard
+                                                    key={opt}
+                                                    label={opt}
+                                                    selected={state.pace === opt}
+                                                    onClick={() => setState(s => ({...s, pace: opt}))}
+                                                    emoji={opt === "chill" ? "☕" : opt === "balanced" ? "⚖️" : "⚡"}
+                                                />
+                                            ))}
+                                        </div>
+                                    </FieldBlock>
+                                </Slide>
+                            )}
+
+                            {/* STEP 5: TRANSPORT */}
+                            {step === 5 && (
+                                <Slide key="mode">
+                                    <FieldBlock label="Primary Transport" icon={Car}>
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                                            {(["car", "transit", "walk", "bike"] as const).map(opt => (
+                                                <SelectionCard
+                                                    key={opt}
+                                                    label={opt}
+                                                    selected={state.mode === opt}
+                                                    onClick={() => setState(s => ({...s, mode: opt}))}
+                                                    emoji={opt === "car" ? "🚗" : opt === "transit" ? "🚆" : opt === "walk" ? "👟" : "🚲"}
+                                                />
+                                            ))}
+                                        </div>
+                                    </FieldBlock>
+                                </Slide>
+                            )}
+
+                            {/* STEP 6: LODGING */}
+                            {step === 6 && (
+                                <Slide key="lodging">
+                                    <FieldBlock label="Where are you staying?" icon={Users}
+                                                hint="Optional - we'll optimize routes from here">
+                                        <div
+                                            className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:bg-slate-800 dark:border-slate-700">
+                                            <LodgingMapDialog
+                                                value={state.lodging as LodgingValue | null}
+                                                onChange={(v) => setState(s => ({
                                                     ...s,
-                                                    budget_daily: "",
-                                                }))
-                                            }
-                                        >
-                                            Skip
-                                        </Button>
-                                    </div>
-                                </FieldBlock>
-                            </Slide>)}
-
-                        {step === 3 && (
-                            <Slide key="step-interests">
-                                <FieldBlock label="Interests" hint="Pick what excites you" icon={Sparkles}>
-                                    <div className="flex flex-wrap gap-2">
-                                        {DEFAULT_INTERESTS.map((tag) => (
-                                            <Button
-                                                key={tag}
-                                                type="button"
-                                                size="sm"
-                                                variant={state.interests.includes(tag) ? "default" : "secondary"}
-                                                className="rounded-full capitalize"
-                                                onClick={() => toggleInterest(tag)}
-                                            >
-                                                {tag}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </FieldBlock>
-                            </Slide>
-                        )}
-
-                        {step === 4 && (
-                            <Slide key="step-pace">
-                                <FieldBlock label="Pace" hint="How packed should your days feel?" icon={Footprints}>
-                                    <div className="flex flex-wrap gap-2">
-                                        {(["chill", "balanced", "packed"] as const).map((opt) => (
-                                            <Button
-                                                key={opt}
-                                                type="button"
-                                                size="sm"
-                                                variant={state.pace === opt ? "default" : "secondary"}
-                                                className="rounded-full capitalize"
-                                                onClick={() => setState((s) => ({...s, pace: opt}))}
-                                            >
-                                                {opt}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </FieldBlock>
-                            </Slide>
-                        )}
-
-                        {step === 5 && (
-                            <Slide key="step-mode">
-                                <FieldBlock
-                                    label="Transport mode"
-                                    hint="We’ll estimate travel time accordingly"
-                                    icon={Car}
-                                >
-                                    <div className="flex flex-wrap gap-2">
-                                        {(["walk", "bike", "car", "transit"] as const).map((opt) => (
-                                            <Button
-                                                key={opt}
-                                                type="button"
-                                                size="sm"
-                                                variant={state.mode === opt ? "default" : "secondary"}
-                                                className="rounded-full capitalize"
-                                                onClick={() => setState((s) => ({...s, mode: opt}))}
-                                            >
-                                                {opt}
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </FieldBlock>
-                            </Slide>
-                        )}
-
-                        {step === 6 && (
-                            <Slide slideKey="step-lodging">
-                                <FieldBlock
-                                    label="Lodging (optional)"
-                                    hint="We’ll try to start/end days near here"
-                                    icon={Users}
-                                >
-                                    <LodgingMapDialog
-                                        value={state.lodging as LodgingValue | null}
-                                        onChange={(v) =>
-                                            setState((s) => ({
-                                                ...s,
-                                                lodging: v
-                                                    ? {
-                                                        name: v.name ?? "",
-                                                        // If later you extend RequestBody.lodging,
-                                                        // you can also keep extra fields here:
-                                                        // lat: v.lat,
-                                                        // lng: v.lng,
-                                                    }
-                                                    : undefined,
-                                            }))
-                                        }
-                                        center={
-                                            state.destinations?.[0]?.lat && state.destinations?.[0]?.lng
-                                                ? {
+                                                    lodging: v ? {name: v.name ?? ""} : undefined
+                                                }))}
+                                                center={state.destinations[0].lat ? {
                                                     lat: state.destinations[0].lat!,
-                                                    lng: state.destinations[0].lng!,
-                                                }
-                                                : undefined
-                                        }
-                                    />
-                                </FieldBlock>
-                            </Slide>
-                        )}
+                                                    lng: state.destinations[0].lng!
+                                                } : undefined}
+                                            />
+                                        </div>
+                                    </FieldBlock>
+                                </Slide>
+                            )}
 
-                        {step === 7 && (
-                            <Slide key="step-review">
-                                <ReviewCard data={toPayload(state)} onEditStep={jumpTo} onGenerate={goNext}/>
-                            </Slide>
-                        )}
-                    </AnimatePresence>
+                            {/* STEP 7: REVIEW */}
+                            {step === 7 && (
+                                <Slide key="review">
+                                    <ReviewCard data={toPayload(state)} onEdit={jumpTo}/>
+                                </Slide>
+                            )}
 
-                    {/* Footer nav */}
-                    <div className="mt-6 flex items-center justify-between">
-                        <Button type="button" variant="ghost" onClick={goBack} disabled={step === 0 || busy}>
+                        </AnimatePresence>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div
+                        className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-6 py-4 mt-auto dark:bg-slate-900 dark:border-slate-800">
+                        <Button
+                            variant="ghost"
+                            onClick={goBack}
+                            disabled={step === 0 || busy}
+                            className="text-slate-500 hover:bg-slate-200/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                        >
                             <ChevronLeft className="mr-2 h-4 w-4"/> Back
                         </Button>
-                        <Button type="button" onClick={goNext} disabled={!isValid || busy}>
+
+                        <Button
+                            onClick={goNext}
+                            disabled={!isValid || busy}
+                            className={cn(
+                                "min-w-[120px] rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all dark:shadow-none",
+                                busy ? "opacity-80 bg-blue-700" : "bg-blue-600 hover:bg-blue-700 hover:-translate-y-0.5"
+                            )}
+                            size="lg"
+                        >
                             {busy ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Working…
-                                </>
+                                <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Generating...</>
                             ) : step === STEPS.length - 1 ? (
-                                "Generate preview"
+                                <>Create Itinerary <Sparkles className="ml-2 h-4 w-4"/></>
                             ) : (
-                                <>
-                                    Next <ChevronRight className="ml-1 h-4 w-4"/>
-                                </>
+                                <>Next <ChevronRight className="ml-2 h-4 w-4"/></>
                             )}
                         </Button>
                     </div>
-                </div>
+                </motion.div>
             </div>
 
             <AuthGateDialog
                 open={authOpen}
                 onOpenChange={setAuthOpen}
-                title="Sign in to save & share your trip"
+                title="Save your trip?"
                 postLogin={() => {
                 }}
             />
@@ -650,19 +472,76 @@ export default function TripWizard() {
     );
 }
 
-/* ================== Destination search ================== */
-function DestinationField({
-                              value,
-                              onChange,
-                          }: {
-    value: Destination;
-    onChange: (d: Destination) => void;
+/* ================== Sub-components ================== */
+
+function Slide({children}: { children: React.ReactNode }) {
+    return (
+        <motion.div
+            initial={{opacity: 0, x: 20}}
+            animate={{opacity: 1, x: 0}}
+            exit={{opacity: 0, x: -20}}
+            transition={{duration: 0.3, ease: "easeOut"}}
+            className="h-full flex flex-col justify-center"
+        >
+            {children}
+        </motion.div>
+    );
+}
+
+function FieldBlock({label, icon: Icon, hint, children}: {
+    label: string,
+    icon: any,
+    hint?: string,
+    children: React.ReactNode
 }) {
+    return (
+        <div className="space-y-6 w-full">
+            <div className="flex items-center gap-3">
+                <div
+                    className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
+                    <Icon className="h-6 w-6"/>
+                </div>
+                <div>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">{label}</h2>
+                    {hint && <p className="text-sm text-slate-500 dark:text-slate-400">{hint}</p>}
+                </div>
+            </div>
+            <div className="pt-2 w-full">
+                {children}
+            </div>
+        </div>
+    )
+}
+
+function SelectionCard({label, selected, onClick, emoji}: {
+    label: string,
+    selected: boolean,
+    onClick: () => void,
+    emoji: string
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={cn(
+                "flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-4 transition-all hover:scale-[1.02]",
+                selected
+                    ? "border-blue-600 bg-blue-50/50 text-blue-700 shadow-inner dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-500"
+                    : "border-slate-100 bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
+            )}
+        >
+            <span className="text-2xl">{emoji}</span>
+            <span className="font-bold capitalize">{label}</span>
+        </button>
+    )
+}
+
+// --- DESTINATION FIELD ---
+function DestinationField({value, onChange}: { value: Destination, onChange: (d: Destination) => void }) {
     const sb = createClientBrowser();
-    const [q, setQ] = useState<string>(value.name ?? "");
+    const [q, setQ] = useState(value.name);
     const [rows, setRows] = useState<Destination[]>([]);
-    const [open, setOpen] = useState<boolean>(false);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [open, setOpen] = useState(false);
 
     useEffect(() => {
         const term = q.trim();
@@ -670,101 +549,112 @@ function DestinationField({
             setRows([]);
             return;
         }
-        setLoading(true);
-        const t = setTimeout(async () => {
-            try {
-                const {data, error} = await sb
-                    .schema("itinero")
-                    .from("destinations")
-                    .select("id,name,lat,lng")
-                    .ilike("name", `%${term}%`)
-                    .order("name", {ascending: true})
-                    .limit(10);
 
-                if (!error && data) {
-                    setRows(
-                        data.map((r) => ({
-                            id: String(r.id),
-                            name: r.name as string,
-                            lat: typeof r.lat === "number" ? r.lat : undefined,
-                            lng: typeof r.lng === "number" ? r.lng : undefined,
-                        }))
-                    );
-                }
-            } finally {
-                setLoading(false);
-            }
-        }, 250);
+        const t = setTimeout(async () => {
+            const {data} = await sb
+                .schema("itinero")
+                .from("destinations")
+                .select("id,name,lat,lng")
+                .ilike("name", `%${term}%`)
+                .limit(5);
+            if (data) setRows(data.map(r => ({...r, id: String(r.id)})));
+        }, 300);
         return () => clearTimeout(t);
     }, [q, sb]);
 
-    useEffect(() => {
-        if (value?.name && value.name !== q) setQ(value.name);
-    }, [value?.name]); // keep input text in sync
-
-    const pick = (d: Destination) => {
-        onChange(d);
-        setQ(d.name);
-        setOpen(false);
-    };
-
     return (
-        <div className="relative">
+        <div className="relative w-full">
             <Input
-                placeholder="e.g., Accra"
                 value={q}
                 onChange={(e) => {
                     setQ(e.target.value);
                     setOpen(true);
-                    onChange({...value, id: undefined, lat: undefined, lng: undefined, name: e.target.value});
+                    onChange({...value, name: e.target.value, id: undefined});
                 }}
                 onFocus={() => setOpen(true)}
-                onBlur={() => {
-                    setTimeout(() => setOpen(false), 120);
-                }}
+                className="h-14 w-full rounded-2xl border-slate-200 bg-slate-50 pl-4 text-lg shadow-sm focus-visible:ring-blue-600 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
+                placeholder="e.g. Tokyo, Paris..."
             />
-
-            {open && (rows.length > 0 || loading) && (
-                <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-md border bg-popover shadow-sm">
-                    {loading ? (
-                        <div className="p-3 text-sm text-muted-foreground">Searching…</div>
-                    ) : (
-                        <ul className="max-h-64 overflow-auto divide-y">
-                            {rows.map((r) => (
-                                <li
-                                    key={r.id ?? r.name}
-                                    className="cursor-pointer px-3 py-2 text-sm hover:bg-accent"
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onClick={() => pick(r)}
-                                >
-                                    <div className="font-medium">{r.name}</div>
-                                    {typeof r.lat === "number" && typeof r.lng === "number" ? (
-                                        <div className="text-xs text-muted-foreground">
-                                            {r.lat.toFixed(3)}, {r.lng.toFixed(3)}
-                                        </div>
-                                    ) : null}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
+            {open && rows.length > 0 && (
+                <div
+                    className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl dark:bg-slate-900 dark:border-slate-800">
+                    {rows.map(r => (
+                        <button
+                            key={r.id}
+                            type="button"
+                            className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-slate-800"
+                            onClick={() => {
+                                onChange(r);
+                                setQ(r.name);
+                                setOpen(false);
+                            }}
+                        >
+                            <span className="font-medium text-slate-700 dark:text-slate-200">{r.name}</span>
+                            <span className="text-xs text-slate-400 dark:text-slate-500">Select</span>
+                        </button>
+                    ))}
                 </div>
             )}
         </div>
-    );
+    )
 }
 
-/* ================== Utilities & UI bits ================== */
+// --- REVIEW CARD ---
+function ReviewCard({data, onEdit}: { data: ReturnType<typeof toPayload>, onEdit: (i: number) => void }) {
+    return (
+        <div className="space-y-6 w-full">
+            <div
+                className="rounded-2xl bg-blue-50 p-6 text-center border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800">
+                <h3 className="text-lg font-bold text-blue-900 dark:text-blue-300">Ready to build?</h3>
+                <p className="text-blue-700 text-sm mt-1 dark:text-blue-400">Review your trip details below before we
+                    generate your itinerary.</p>
+            </div>
+
+            <div
+                className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 dark:divide-slate-800 dark:border-slate-800">
+                <ReviewRow label="Destination" value={data.destinations[0]?.name || "Not set"}
+                           onEdit={() => onEdit(0)}/>
+                <ReviewRow label="Dates" value={formatDateRange(data.start_date, data.end_date)}
+                           onEdit={() => onEdit(1)}/>
+                <ReviewRow label="Budget"
+                           value={data.budget_daily ? `${data.currency} ${data.budget_daily}/day` : "Not specified"}
+                           onEdit={() => onEdit(2)}/>
+                {/* Show ALL interests by joining them */}
+                <ReviewRow
+                    label="Vibe"
+                    value={data.interests.length > 0
+                        ? data.interests.map(i => i.charAt(0).toUpperCase() + i.slice(1)).join(", ")
+                        : "Not specified"}
+                    onEdit={() => onEdit(3)}
+                />
+                <ReviewRow label="Pace" value={data.pace.charAt(0).toUpperCase() + data.pace.slice(1)}
+                           onEdit={() => onEdit(4)}/>
+                <ReviewRow label="Mode" value={data.mode.charAt(0).toUpperCase() + data.mode.slice(1)}
+                           onEdit={() => onEdit(5)}/>
+                <ReviewRow label="Lodging" value={data.lodging?.name || "Not specified"} onEdit={() => onEdit(6)}/>
+            </div>
+        </div>
+    )
+}
+
+function ReviewRow({label, value, onEdit}: { label: string, value: string, onEdit: () => void }) {
+    return (
+        <div className="flex items-start justify-between p-4">
+            <div className="pr-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1 dark:text-slate-500">{label}</p>
+                <p className="font-medium text-slate-900 leading-relaxed dark:text-slate-200">{value}</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onEdit}
+                    className="h-8 text-blue-600 hover:text-blue-700 shrink-0 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20">Edit</Button>
+        </div>
+    )
+}
+
+// --- HELPERS (Payload & Formatting) ---
 function toPayload(s: RequestBody) {
     const d = s.destinations[0];
     return {
-        destinations: [
-            {
-                id: d?.id,
-                name: (d?.name ?? "").trim(),
-                lat: d?.lat,
-                lng: d?.lng,
-            },
-        ],
+        destinations: [{id: d?.id, name: (d?.name ?? "").trim(), lat: d?.lat, lng: d?.lng}],
         start_date: s.start_date,
         end_date: s.end_date,
         budget_daily: s.budget_daily === "" ? 0 : Number(s.budget_daily),
@@ -773,275 +663,14 @@ function toPayload(s: RequestBody) {
         mode: s.mode,
         lodging: s.lodging?.name ? {name: s.lodging.name} : undefined,
         currency: s.currency,
-    } as const;
+    };
 }
 
-type StepIcon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
-
-function HeaderProgress({
-                            steps,
-                            activeIndex,
-                            onStepClick,
-                            progress,
-                        }: {
-    steps: { label: string; icon: StepIcon }[];
-    activeIndex: number;
-    onStepClick?: (i: number) => void;
-    progress: number;
-}) {
-    return (
-        <div className="relative">
-            <div className="mb-3 flex items-center gap-2 overflow-x-auto">
-                {steps.map((s, i) => {
-                    const Icon = s.icon;
-                    const active = i === activeIndex;
-                    return (
-                        <button
-                            key={s.label}
-                            type="button"
-                            onClick={() => onStepClick?.(i)}
-                            className={cn(
-                                "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition",
-                                active
-                                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                                    : "bg-muted hover:bg-accent"
-                            )}
-                        >
-              <span
-                  className={cn(
-                      "grid h-5 w-5 place-items-center rounded-full text-[11px] font-medium",
-                      active ? "bg-primary-foreground text-primary" : "bg-background"
-                  )}
-              >
-                {i + 1}
-              </span>
-                            <Icon className="h-4 w-4 opacity-80"/> {s.label}
-                        </button>
-                    );
-                })}
-            </div>
-            <div className="h-1 w-full rounded-full bg-muted">
-                <div className="h-1 rounded-full bg-primary transition-[width]" style={{width: `${progress}%`}}/>
-            </div>
-        </div>
-    );
+function fmtHuman(s?: string) {
+    return s ? new Date(s + "T00:00:00").toLocaleDateString(undefined, {month: "short", day: "numeric"}) : "—";
 }
 
-function FieldBlock({
-                        label,
-                        hint,
-                        icon: Icon,
-                        children,
-                    }: {
-    label: string;
-    hint?: string;
-    icon?: StepIcon;
-    children: React.ReactNode;
-}) {
-    return (
-        <div className="space-y-3">
-            <div className="flex items-start gap-3">
-                {Icon && (
-                    <div className="mt-0.5 grid h-9 w-9 place-items-center rounded-xl bg-muted">
-                        <Icon className="h-4 w-4"/>
-                    </div>
-                )}
-                <div className="flex-1">
-                    <Label className="text-base">{label}</Label>
-                    {hint && <div className="mt-1 text-sm text-muted-foreground">{hint}</div>}
-                    {children}
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function Slide({
-                   children,
-                   slideKey,
-               }: {
-    children: React.ReactNode;
-    slideKey?: string;
-}) {
-    return (
-        <motion.div
-            key={slideKey} // this is fine – you're just *passing* it to motion.div
-            initial={{opacity: 0, x: 16}}
-            animate={{opacity: 1, x: 0}}
-            exit={{opacity: 0, x: -16}}
-            transition={{duration: 0.18, ease: "easeOut"}}
-            className="space-y-4"
-        >
-            {children}
-        </motion.div>
-    );
-}
-
-/* ---------------- Review Card ---------------- */
-function ReviewCard({
-                        data,
-                        onEditStep,
-                        onGenerate,
-                    }: {
-    data: ReturnType<typeof toPayload>;
-    onEditStep: (i: number) => void;
-    onGenerate: () => void;
-}) {
-    const chips = (data.interests || []).slice(0, 12);
-    return (
-        <div className="mx-auto max-w-2xl">
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                {/* soft gradient header */}
-                <div
-                    className="absolute inset-x-0 top-0 h-28 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent"/>
-                <div className="relative p-6">
-                    <div className="mb-4 flex items-center justify-between">
-                        <h2 className="text-xl font-semibold tracking-tight">Your Journey at a Glance</h2>
-                        <span className="text-xs text-muted-foreground">Review & confirm</span>
-                    </div>
-
-                    <SectionRow icon={<MapPin className="h-4 w-4"/>} label="Destination" onEdit={() => onEditStep(0)}>
-            <span
-                className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-lg font-semibold text-transparent">
-              {data.destinations?.[0]?.name || "—"}
-            </span>
-                    </SectionRow>
-
-                    <SectionRow icon={<CalendarDays className="h-4 w-4"/>} label="Dates" onEdit={() => onEditStep(1)}>
-                        <div className="text-base font-medium">{formatDateRange(data.start_date, data.end_date)}</div>
-                    </SectionRow>
-
-                    <SectionRow icon={<Footprints className="h-4 w-4"/>} label="Daily Budget"
-                                onEdit={() => onEditStep(2)}>
-                        <div className="text-base font-medium">
-                            {data.budget_daily ? `${data.currency} ${data.budget_daily}/day` : "Not specified"}
-                        </div>
-                    </SectionRow>
-
-                    <SectionRow icon={<Sparkles className="h-4 w-4"/>} label="Interests" onEdit={() => onEditStep(3)}>
-                        <div className="flex flex-wrap gap-2">
-                            {chips.length ? (
-                                chips.map((t) => (
-                                    <span key={t} className="rounded-full border px-2.5 py-1 text-xs capitalize">
-                    {emojiFor(t)} {t}
-                  </span>
-                                ))
-                            ) : (
-                                <span className="text-sm text-muted-foreground">None selected</span>
-                            )}
-                        </div>
-                    </SectionRow>
-
-                    <SectionRow icon={<Footprints className="h-4 w-4"/>} label="Pace & Transport"
-                                onEdit={() => onEditStep(4)}>
-                        <div className="flex flex-wrap gap-2">
-                            <span
-                                className="rounded-full bg-muted px-2.5 py-1 text-xs capitalize">Pace: {data.pace}</span>
-                            <span
-                                className="rounded-full bg-muted px-2.5 py-1 text-xs capitalize">Mode: {data.mode}</span>
-                        </div>
-                    </SectionRow>
-
-                    <SectionRow icon={<Users className="h-4 w-4"/>} label="Lodging" onEdit={() => onEditStep(6)}>
-                        <div className="text-base font-medium">{data.lodging?.name || "Not provided"}</div>
-                    </SectionRow>
-
-                    <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="text-xs text-muted-foreground">We’ll use this to generate a smart preview
-                            itinerary.
-                        </div>
-                        <div className="flex gap-2">
-                            <Button type="button" variant="secondary" onClick={() => onEditStep(0)}>
-                                Edit Trip
-                            </Button>
-                            <Button type="button" onClick={onGenerate}>
-                                Generate Itinerary
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function SectionRow({
-                        icon,
-                        label,
-                        onEdit,
-                        children,
-                    }: {
-    icon: React.ReactNode;
-    label: string;
-    onEdit?: () => void;
-    children: React.ReactNode;
-}) {
-    return (
-        <div className="grid grid-cols-[auto_1fr_auto] items-start gap-3 border-t border-border py-4 first:border-t-0">
-            <div className="mt-0.5 grid h-9 w-9 place-items-center rounded-xl bg-muted">{icon}</div>
-            <div>
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-                <div className="mt-1">{children}</div>
-            </div>
-            {onEdit ? (
-                <button onClick={onEdit} className="text-xs text-primary underline-offset-2 hover:underline">
-                    Edit
-                </button>
-            ) : (
-                <span/>
-            )}
-        </div>
-    );
-}
-
-/* ---------------- small helpers ---------------- */
 function formatDateRange(start?: string, end?: string) {
-    if (!start && !end) return "—";
-    const s = start ? new Date(start + "T00:00:00") : null;
-    const e = end ? new Date(end + "T00:00:00") : null;
-    const fmt = (d: Date) =>
-        d.toLocaleDateString(undefined, {day: "2-digit", month: "short", year: "numeric"});
-    if (s && e) return `${fmt(s)} → ${fmt(e)}`;
-    if (s) return fmt(s);
-    if (e) return fmt(e);
-    return "—";
-}
-
-function emojiFor(tag: string) {
-    const t = tag.toLowerCase();
-    if (t.includes("beach")) return "🌴";
-    if (t.includes("food") || t.includes("dining")) return "🍽";
-    if (t.includes("culture") || t.includes("museum")) return "🏛";
-    if (t.includes("music")) return "🎶";
-    if (t.includes("night")) return "🌙";
-    if (t.includes("shop")) return "🛍";
-    if (t.includes("hiking") || t.includes("trail")) return "🥾";
-    if (t.includes("wildlife") || t.includes("safari")) return "🦁";
-    if (t.includes("art")) return "🎨";
-    if (t.includes("sports")) return "🏅";
-    if (t.includes("wellness") || t.includes("spa")) return "💆";
-    if (t.includes("architecture")) return "🏗";
-    if (t.includes("festival") || t.includes("event")) return "🎉";
-    if (t.includes("nature") || t.includes("park")) return "🌿";
-    return "✨";
-}
-
-function guessCurrencyFromLocale(): string {
-    if (typeof window === "undefined") return "USD";
-
-    const locale = navigator.language || "en-US";
-
-    // super lightweight mapping – extend as you like
-    if (locale.startsWith("en-GH")) return "GHS";
-    if (locale.startsWith("en-KE")) return "KES";
-    if (locale.startsWith("en-NG")) return "NGN";
-    if (locale.startsWith("en-ZA")) return "ZAR";
-    if (locale.startsWith("fr-") || locale.startsWith("de-") || locale.startsWith("es-")) return "EUR";
-    if (locale.startsWith("en-GB")) return "GBP";
-    if (locale.startsWith("en-CA")) return "CAD";
-    if (locale.startsWith("en-AU")) return "AUD";
-    if (locale.startsWith("en-NZ")) return "NZD";
-    if (locale.startsWith("en-US")) return "USD";
-
-    return "USD";
+    if (!start || !end) return "Dates TBD";
+    return `${fmtHuman(start)} - ${fmtHuman(end)}`;
 }

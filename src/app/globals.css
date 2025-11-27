@@ -32,42 +32,41 @@
     --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* 🌞 LIGHT MODE — Blue landing theme */
+/* 🌞 LIGHT MODE — Premium Blue Theme */
 :root {
     --radius: 0.75rem;
 
     /* Backgrounds & text */
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.147 0.004 49.25);
+    --background: oklch(0.99 0.005 240); /* Slightly cooler white */
+    --foreground: oklch(0.13 0.02 255); /* Deep navy text */
 
-    /* Primary — vivid blue theme */
-    --primary: oklch(0.61 0.2 254.7); /* ≈ blue-600 */
-    --primary-foreground: oklch(0.985 0.001 106.423);
+    /* Primary — Vivid Electric Blue */
+    --primary: oklch(0.55 0.22 260); 
+    --primary-foreground: oklch(0.99 0 0);
 
     /* UI elements */
     --card: oklch(1 0 0);
     --card-foreground: var(--foreground);
-    --card-muted: var(--border);
     --popover: oklch(1 0 0);
     --popover-foreground: var(--foreground);
 
-    --secondary: oklch(0.97 0.001 106.424);
+    --secondary: oklch(0.96 0.01 255);
     --secondary-foreground: var(--foreground);
 
-    --muted: oklch(0.96 0.01 240);
-    --muted-foreground: oklch(0.553 0.013 58.071);
+    --muted: oklch(0.96 0.01 255);
+    --muted-foreground: oklch(0.5 0.04 255);
 
-    --accent: oklch(0.97 0.001 106.424);
-    --accent-foreground: var(--foreground);
+    --accent: oklch(0.95 0.02 255);
+    --accent-foreground: var(--primary);
 
     --destructive: oklch(0.577 0.245 27.325);
     --destructive-foreground: oklch(0.985 0.001 106.423);
 
-    --border: oklch(0.923 0.003 48.717);
+    --border: oklch(0.92 0.01 255);
     --input: var(--border);
     --ring: var(--primary);
 
-    /* Sidebar and charts (optional if using dashboard) */
+    /* Sidebar and charts */
     --sidebar: var(--background);
     --sidebar-foreground: var(--foreground);
     --sidebar-primary: var(--primary);
@@ -76,44 +75,36 @@
     --sidebar-accent-foreground: var(--accent-foreground);
     --sidebar-border: var(--border);
     --sidebar-ring: var(--ring);
-
-    /* Example chart palette */
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
 }
 
-/* 🌚 DARK MODE — Blue-tinted dark */
+/* 🌚 DARK MODE — Deep Space Theme */
 .dark {
-    --background: oklch(0.147 0.004 49.25);
-    --foreground: oklch(0.985 0.001 106.423);
+    --background: oklch(0.12 0.03 260); /* Deep navy background */
+    --foreground: oklch(0.98 0.005 240);
 
-    /* Blue primary in dark mode */
-    --primary: oklch(0.53 0.2 254.7); /* ≈ blue-500 */
-    --primary-foreground: oklch(0.985 0.001 106.423);
+    /* Primary — Glowing Cyan/Blue */
+    --primary: oklch(0.6 0.18 250);
+    --primary-foreground: oklch(0.99 0 0);
 
-    --card: oklch(0.2 0.01 250);
+    --card: oklch(0.15 0.03 260);
     --card-foreground: var(--foreground);
 
-
-    --popover: oklch(0.2 0.01 250);
+    --popover: oklch(0.15 0.03 260);
     --popover-foreground: var(--foreground);
 
-    --secondary: oklch(0.25 0.01 250);
+    --secondary: oklch(0.2 0.04 260);
     --secondary-foreground: var(--foreground);
 
-    --muted: oklch(0.25 0.01 250);
-    --muted-foreground: oklch(0.709 0.01 56.259);
+    --muted: oklch(0.2 0.04 260);
+    --muted-foreground: oklch(0.7 0.04 250);
 
-    --accent: oklch(0.25 0.01 250);
-    --accent-foreground: var(--foreground);
+    --accent: oklch(0.2 0.04 260);
+    --accent-foreground: var(--primary);
 
     --destructive: oklch(0.704 0.191 22.216);
     --destructive-foreground: var(--foreground);
 
-    --border: oklch(0.3 0.02 250);
+    --border: oklch(0.25 0.04 260);
     --input: var(--border);
     --ring: var(--primary);
 
@@ -125,31 +116,19 @@
     --sidebar-accent-foreground: var(--accent-foreground);
     --sidebar-border: var(--border);
     --sidebar-ring: var(--ring);
-
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
 }
 
 @layer components {
-    /* Make all Card components use the same themed border style */
     .card {
-        @apply border border-primary/40 dark:border-primary/30 bg-card shadow-sm transition-colors;
+        @apply border border-border bg-card shadow-sm transition-all duration-300;
     }
-
-    /* Optional: accent border for any bordered box */
-    .border-accent {
-        @apply border border-primary/40 dark:border-primary/30;
-    }
-
-    /* Optional: hoverable border effect */
-    .hover-border-accent {
-        @apply hover:border-primary/80 transition-colors;
+    
+    .glass {
+        @apply bg-background/60 backdrop-blur-md border border-white/10;
     }
 }
 
 html {
     transition: background-color 0.3s ease, color 0.3s ease;
+    scroll-behavior: smooth;
 }

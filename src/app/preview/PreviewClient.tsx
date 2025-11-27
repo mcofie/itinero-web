@@ -3,12 +3,12 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import {useRouter} from "next/navigation";
-import {useTheme} from "next-themes";
-import {createClientBrowser} from "@/lib/supabase/browser";
+import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import { createClientBrowser } from "@/lib/supabase/browser";
 
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
     Loader2,
     CalendarDays,
@@ -29,7 +29,9 @@ import {
     Globe,
     Plug,
     Phone,
-    CloudSun, ChevronLeft, ChevronRight,
+    CloudSun,
+    ChevronLeft,
+    ChevronRight, Wallet,
 } from "lucide-react";
 
 import {
@@ -39,9 +41,10 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
+import {cn} from "@/lib/utils";
 
 /* =========================
-   Types
+   Types (unchanged)
 ========================= */
 export type PreviewResponse = {
     trip_summary: {
@@ -141,10 +144,10 @@ const HERO_FALLBACK =
 function modeToIcon(mode?: string) {
     if (!mode) return null;
     const cl = "mr-1 h-3.5 w-3.5";
-    if (mode === "walk") return <Footprints className={cl}/>;
-    if (mode === "bike") return <Bike className={cl}/>;
-    if (mode === "car") return <Car className={cl}/>;
-    if (mode === "transit") return <Train className={cl}/>;
+    if (mode === "walk") return <Footprints className={cl} />;
+    if (mode === "bike") return <Bike className={cl} />;
+    if (mode === "car") return <Car className={cl} />;
+    if (mode === "transit") return <Train className={cl} />;
     return null;
 }
 
@@ -156,7 +159,12 @@ function emojiFor(tag: string) {
     if (t.includes("music")) return "🎶";
     if (t.includes("night")) return "🌙";
     if (t.includes("shop")) return "🛍️";
-    if (t.includes("hiking") || t.includes("trail") || t.includes("nature") || t.includes("park"))
+    if (
+        t.includes("hiking") ||
+        t.includes("trail") ||
+        t.includes("nature") ||
+        t.includes("park")
+    )
         return "🥾";
     if (t.includes("wildlife") || t.includes("safari")) return "🦁";
     if (t.includes("art")) return "🎨";
@@ -226,18 +234,20 @@ function whenLabel(w: "morning" | "afternoon" | "evening") {
 
 function whenBadgeClasses(w: "morning" | "afternoon" | "evening") {
     if (w === "morning") {
-        return "border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-300/70 dark:bg-amber-900/30 dark:text-amber-100";
+        return "bg-amber-50 text-amber-700 border-amber-100";
     }
     if (w === "afternoon") {
-        return "border border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-300/70 dark:bg-orange-900/30 dark:text-orange-100";
+        return "bg-orange-50 text-orange-700 border-orange-100";
     }
-    return "border border-indigo-200 bg-indigo-50 text-indigo-800 dark:border-indigo-300/70 dark:bg-indigo-900/30 dark:text-indigo-100";
+    return "bg-indigo-50 text-indigo-700 border-indigo-100";
 }
 
 /* =========================
    Client-only dynamic
 ========================= */
-const MapSection = dynamic(() => import("../t/[publicId]/MapSection"), {ssr: false});
+const MapSection = dynamic(() => import("../t/[publicId]/MapSection"), {
+    ssr: false,
+});
 
 /* =========================
    Main client component
@@ -251,14 +261,16 @@ export default function PreviewClient({
 }) {
     const sb = createClientBrowser();
     const router = useRouter();
-    const {resolvedTheme} = useTheme();
+    const { resolvedTheme } = useTheme();
     const isDark = (resolvedTheme ?? "dark") === "dark";
 
     // Client state
     const [preview, setPreview] = React.useState<PreviewResponse | null>(null);
     const [loading, setLoading] = React.useState(true);
 
-    const [points, setPoints] = React.useState<number | null>(initialPoints ?? null);
+    const [points, setPoints] = React.useState<number | null>(
+        initialPoints ?? null
+    );
     const [pointsBusy, setPointsBusy] = React.useState(false);
 
     const [activeDayIdx, setActiveDayIdx] = React.useState(0);
@@ -269,12 +281,15 @@ export default function PreviewClient({
     const [showPaywall, setShowPaywall] = React.useState<boolean>(false);
 
     // Destination meta override from DB
-    const [destMetaFromDb, setDestMetaFromDb] = React.useState<DestinationMetaLike | null>(null);
+    const [destMetaFromDb, setDestMetaFromDb] =
+        React.useState<DestinationMetaLike | null>(null);
 
     // Load preview from localStorage (client-only)
     React.useEffect(() => {
         const raw =
-            typeof window !== "undefined" ? localStorage.getItem("itinero:latest_preview") : null;
+            typeof window !== "undefined"
+                ? localStorage.getItem("itinero:latest_preview")
+                : null;
         if (raw) {
             try {
                 setPreview(JSON.parse(raw) as PreviewResponse);
@@ -291,7 +306,7 @@ export default function PreviewClient({
         (async () => {
             setPointsBusy(true);
             try {
-                const {data: rpcBalance} = await sb.rpc("get_points_balance");
+                const { data: rpcBalance } = await sb.rpc("get_points_balance");
                 if (typeof rpcBalance === "number") setPoints(rpcBalance);
             } finally {
                 setPointsBusy(false);
@@ -322,7 +337,7 @@ export default function PreviewClient({
     const inputs = React.useMemo(() => preview?.trip_summary?.inputs, [preview]);
     const tripTitle = React.useMemo(() => {
         const dest = inputs?.destinations?.[0]?.name;
-        return dest ? `${dest} — Your Trip Plan` : "Your Trip Plan";
+        return dest ? `${dest} Itinerary` : "Your Trip Plan";
     }, [inputs]);
 
     const modeIcon = modeToIcon(inputs?.mode);
@@ -335,9 +350,9 @@ export default function PreviewClient({
         const len = preview?.days?.length ?? 0;
         if (!len) return;
         if (activeDayIdx > len - 1) setActiveDayIdx(len - 1);
-    }, [preview?.days?.length]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [preview?.days?.length]);
 
-    // Fetch destination_history meta and normalise; override preview.destination_meta when present
+    // Fetch destination_history meta
     React.useEffect(() => {
         (async () => {
             const destId = inputs?.destinations?.[0]?.id;
@@ -346,7 +361,7 @@ export default function PreviewClient({
                 return;
             }
 
-            const {data, error} = await sb
+            const { data, error } = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select(
@@ -361,7 +376,9 @@ export default function PreviewClient({
                 return;
             }
 
-            const toArr = (v: string[] | string | null | undefined): string[] | undefined =>
+            const toArr = (
+                v: string[] | string | null | undefined
+            ): string[] | undefined =>
                 Array.isArray(v)
                     ? v
                     : typeof v === "string"
@@ -396,7 +413,6 @@ export default function PreviewClient({
 
             setDestMetaFromDb(hasAny ? normalized : null);
         })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sb, inputs?.destinations?.[0]?.id]);
 
     // Actions
@@ -420,8 +436,8 @@ export default function PreviewClient({
     if (loading) {
         return (
             <div className="mx-auto grid min-h-[40vh] max-w-4xl place-items-center">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin"/> Loading preview…
+                <div className="flex items-center gap-2 text-slate-500">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-600" /> Loading preview…
                 </div>
             </div>
         );
@@ -430,51 +446,37 @@ export default function PreviewClient({
     if (!preview) {
         return (
             <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-4 text-center">
-                <div
-                    className="relative w-full overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-card/90 via-background/80 to-background shadow-sm">
-                    {/* soft glow */}
-                    <div
-                        className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_80%_at_0%_0%,rgba(56,189,248,0.18),transparent_55%),radial-gradient(80%_80%_at_100%_100%,rgba(129,140,248,0.18),transparent_55%)] opacity-70"/>
+                <div className="relative w-full overflow-hidden rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm ring-8 ring-white/50">
+                        <Sparkles className="h-8 w-8 text-blue-600" />
+                    </div>
 
-                    <div className="relative z-10 px-6 py-7 sm:px-8 sm:py-9">
-                        <div
-                            className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground">
-                            <Sparkles className="h-3.5 w-3.5 text-primary"/>
-                            Preview your next adventure
-                        </div>
+                    <h2 className="text-xl font-bold text-slate-900">
+                        No preview available
+                    </h2>
 
-                        <h2 className="mt-3 text-xl font-semibold tracking-tight sm:text-2xl">
-                            No trip preview yet
-                        </h2>
+                    <p className="mt-2 text-sm text-slate-500">
+                        Start a new trip plan to see your itinerary preview here.
+                    </p>
 
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Use the trip maker to tell us where you’re going, for how long, and what you enjoy.
-                            We’ll build a smart day-by-day plan and show it here.
-                        </p>
+                    <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                        <Button
+                            size="lg"
+                            className="w-full rounded-xl bg-blue-600 text-white hover:bg-blue-700 sm:w-auto"
+                            onClick={() => router.push("/trip-maker")}
+                        >
+                            <CalendarDays className="mr-2 h-4 w-4" />
+                            Start Planning
+                        </Button>
 
-                        <div className="mt-5 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
-                            <Button
-                                size="lg"
-                                className="w-full sm:w-auto"
-                                onClick={() => router.push("/trip-maker")}
-                            >
-                                <CalendarDays className="mr-2 h-4 w-4"/>
-                                Start a new trip
-                            </Button>
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full border-border/70 text-xs text-muted-foreground sm:w-auto"
-                                onClick={() => router.push("/trips")}
-                            >
-                                View saved trips
-                            </Button>
-                        </div>
-
-                        <p className="mt-3 text-[11px] text-muted-foreground">
-                            Your latest generated plan will automatically appear here as a preview.
-                        </p>
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            className="w-full rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 sm:w-auto"
+                            onClick={() => router.push("/trips")}
+                        >
+                            View Saved Trips
+                        </Button>
                     </div>
                 </div>
             </div>
@@ -486,7 +488,9 @@ export default function PreviewClient({
         destMetaFromDb ?? preview.destination_meta ?? undefined;
 
     const placesWithCoords =
-        preview.places?.filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng)) ?? [];
+        preview.places?.filter(
+            (p) => Number.isFinite(p.lat) && Number.isFinite(p.lng)
+        ) ?? [];
 
     const lastActivity =
         preview.days && preview.days.length
@@ -495,312 +499,208 @@ export default function PreviewClient({
 
     return (
         <>
-            {/* HERO with rounded card */}
-            <section className="pt-4">
+            {/* HERO */}
+            <section className="relative bg-slate-50 pb-12 pt-8">
                 <div className="mx-auto w-full max-w-5xl px-4 md:max-w-6xl">
-                    <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-black/70 shadow-lg">
-                        <div className="relative h-[40svh] w-full sm:h-[44svh]">
+                    <div className="flex flex-col gap-8 md:flex-row md:items-center">
+                        {/* Cover Image - Rounded & Clean */}
+                        <div className="relative h-64 w-full overflow-hidden rounded-3xl shadow-lg md:h-80 md:w-1/2 lg:w-5/12">
                             <Image
                                 src={coverUrl}
                                 alt={tripTitle}
                                 priority
                                 fill
                                 className="object-cover"
-                                sizes="100vw"
+                                sizes="(max-width: 768px) 100vw, 50vw"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/40 to-black/75"/>
-
-                            <div className="absolute inset-x-0 bottom-0">
-                                <div className="px-4 pb-5 sm:px-6 md:px-8">
-                                    <div
-                                        className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-white/90 ring-1 ring-white/25 backdrop-blur">
-                                        <Sparkles className="h-3.5 w-3.5"/>
-                                        Preview itinerary
-                                    </div>
-
-                                    <h1 className="mt-2 text-pretty text-2xl font-bold tracking-tight text-white drop-shadow sm:text-3xl md:text-4xl">
-                                        {tripTitle}
-                                    </h1>
-
-                                    <div className="mt-1 flex flex-wrap items-center gap-2 text-white/90">
-                                        <p className="text-sm sm:text-base">
-                                            {formatDateRange(preview.trip_summary)}
-                                        </p>
-
-                                        {inputs?.destinations?.[0]?.name && (
-                                            <span
-                                                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
-                        <MapPin className="h-4 w-4 text-white/80"/>
-                        <span className="font-medium">
-                          {inputs.destinations[0].name}
-                        </span>
-                      </span>
-                                        )}
-                                        {modeIcon && (
-                                            <span
-                                                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
-                        {modeIcon}
-                                                <span className="font-medium">{inputs?.mode}</span>
-                      </span>
-                                        )}
-                                        {inputs?.pace && (
-                                            <span
-                                                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
-                        <Clock3 className="h-4 w-4 text-white/80"/>
-                        <span className="font-medium">pace: {inputs.pace}</span>
-                      </span>
-                                        )}
-                                        {typeof estTotal === "number" && (
-                                            <span
-                                                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20">
-                        <DollarSign className="h-4 w-4 text-white/80"/>
-                        <span className="font-medium">
-                          est. {preview.trip_summary.currency ?? "$"}
-                            {estTotal}
-                        </span>
-                      </span>
-                                        )}
-                                    </div>
-
-                                    {!!inputs?.interests?.length && (
-                                        <div className="mt-3">
-                                            <InterestChips interests={inputs!.interests!} pillTone="light"/>
-                                        </div>
-                                    )}
-                                </div>
+                            {/* Overlay Badge */}
+                            <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-900 backdrop-blur-md shadow-sm">
+                                <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                                Preview Mode
                             </div>
+                        </div>
+
+                        {/* Trip Details */}
+                        <div className="flex-1 space-y-4">
+                            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
+                                {tripTitle}
+                            </h1>
+
+                            <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-600">
+                     <span className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200">
+                        <CalendarDays className="h-4 w-4 text-slate-400" />
+                         {formatDateRange(preview.trip_summary)}
+                     </span>
+
+                                {typeof estTotal === "number" && (
+                                    <span className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200">
+                           <DollarSign className="h-4 w-4 text-emerald-600" />
+                           Est. {preview.trip_summary.currency ?? "$"}{estTotal}
+                        </span>
+                                )}
+
+                                {modeIcon && (
+                                    <span className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 capitalize">
+                           {modeIcon}
+                                        {inputs?.mode}
+                        </span>
+                                )}
+                            </div>
+
+                            {/* Interests */}
+                            {!!inputs?.interests?.length && (
+                                <div className="pt-2">
+                                    <InterestChips interests={inputs!.interests!} />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Main content: itinerary only (map moved to bottom) */}
-            <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:py-8 md:max-w-6xl">
-                <section className="overflow-hidden rounded-3xl border border-border/70 bg-card/80 shadow-sm">
-                    {/* Day picker header */}
-                    <div
-                        className="border-b border-border/60 bg-gradient-to-r from-background via-card to-background px-3 py-3 md:px-5 md:py-4">
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <div>
-                                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                                    Itinerary
-                                </div>
-                                <div className="mt-0.5 text-sm text-muted-foreground">
-                                    Day-by-day plan generated from your preferences.
-                                </div>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                <div
-                                    className="inline-flex items-center gap-1 rounded-full bg-muted/60 px-3 py-1 text-[11px] text-muted-foreground">
-                                    <CalendarDays className="h-3.5 w-3.5"/>
-                                    <span>{preview.trip_summary.total_days} days</span>
-                                </div>
-                                <div
-                                    className="inline-flex items-center gap-1 rounded-full bg-muted/60 px-3 py-1 text-[11px] text-muted-foreground">
-                                    <Clock3 className="h-3.5 w-3.5"/>
-                                    <span>Last updated: {lastActivity}</span>
-                                </div>
-                            </div>
-                        </div>
+            {/* Main Content Grid */}
+            <main className="mx-auto w-full max-w-5xl px-4 pb-20 md:max-w-6xl">
+                <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
 
-                        <div className="mt-4">
-                            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                                Jump to day
+                    {/* LEFT: Itinerary */}
+                    <div className="space-y-8">
+                        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                            {/* Day Picker Header */}
+                            <div className="bg-slate-50 border-b border-slate-100 px-6 py-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="font-bold text-slate-900 text-lg">Day by Day</h2>
+                                    <div className="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
+                                        {preview.trip_summary.total_days} Days Total
+                                    </div>
+                                </div>
+
+                                {/* Day Tabs */}
+                                <div className="flex flex-wrap gap-2">
+                                    {(preview.days || []).map((_, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setActiveDayIdx(i)}
+                                            className={cn(
+                                                "px-4 py-2 rounded-lg text-sm font-semibold transition-all",
+                                                activeDayIdx === i
+                                                    ? "bg-slate-900 text-white shadow-md"
+                                                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                                            )}
+                                        >
+                                            Day {i + 1}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="mt-2 flex flex-wrap gap-1">
-                                {(preview.days || []).map((_, i) => (
-                                    <Button
-                                        key={i}
-                                        size="sm"
-                                        variant={activeDayIdx === i ? "default" : "secondary"}
-                                        onClick={() => setActiveDayIdx(i)}
-                                        className="rounded-full px-3 text-xs"
-                                    >
-                                        Day {i + 1}
-                                    </Button>
-                                ))}
+
+                            {/* Day Content */}
+                            <div className="p-6">
+                                <ItineraryDay
+                                    dayIdx={activeDayIdx}
+                                    day={
+                                        preview.days?.[activeDayIdx] ?? {
+                                            date: preview.trip_summary.inputs?.start_date ?? "",
+                                            blocks: [],
+                                        }
+                                    }
+                                    placesById={new Map(preview.places.map((p) => [p.id, p]))}
+                                />
                             </div>
-                        </div>
+                        </section>
                     </div>
 
-                    {/* Day content */}
-                    <div className="p-2 md:p-3">
-                        <ItineraryDay
-                            dayIdx={activeDayIdx}
-                            day={
-                                preview.days?.[activeDayIdx] ?? {
-                                    date:
-                                        preview.trip_summary.inputs?.start_date ??
-                                        preview.trip_summary.start_date ??
-                                        "",
-                                    blocks: [],
-                                }
-                            }
-                            placesById={new Map(preview.places.map((p) => [p.id, p]))}
-                        />
+                    {/* RIGHT: Sidebar (Map & Info) */}
+                    <div className="space-y-6">
+                        {/* Map Card */}
+                        {placesWithCoords.length > 0 && (
+                            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                                <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                                    <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                        <MapIcon className="h-4 w-4 text-blue-600" /> Map View
+                                    </h3>
+                                </div>
+                                <div className="h-64 w-full bg-slate-100">
+                                    <MapSection
+                                        places={placesWithCoords.map((p) => ({
+                                            id: p.id,
+                                            name: p.name,
+                                            lat: p.lat!,
+                                            lng: p.lng!,
+                                        }))}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Destination Info */}
+                        {hasDestMeta(destinationMeta) && (
+                            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
+                                <h3 className="font-bold text-slate-900 text-sm">Local Guide</h3>
+
+                                {destinationMeta?.description && (
+                                    <div className="text-xs text-slate-600 leading-relaxed">
+                                        {destinationMeta.description.slice(0, 150)}...
+                                    </div>
+                                )}
+
+                                <div className="space-y-2">
+                                    <IconFact label="City" value={destinationMeta?.city} icon={MapPin} />
+                                    <IconFact label="Currency" value={destinationMeta?.currency_code} icon={DollarSign} />
+                                    <IconFact label="Weather" value={destinationMeta?.weather_desc} icon={CloudSun} />
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </section>
+                </div>
             </main>
 
-            {/* Destination knowledge */}
-            {hasDestMeta(destinationMeta) && (
-                <section className="mx-auto w-full max-w-5xl px-4 pt-2 pb-6 sm:pt-3 md:max-w-6xl">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div className="space-y-3 sm:col-span-2">
-                            {destinationMeta?.description && (
-                                <CollapsibleCard title="About" initialOpen={false}>
-                                    <p className="text-sm leading-relaxed text-muted-foreground">
-                                        {destinationMeta.description}
-                                    </p>
-                                </CollapsibleCard>
-                            )}
-                            {destinationMeta?.history && (
-                                <CollapsibleCard title="History" initialOpen={false}>
-                                    <p className="text-sm leading-relaxed text-muted-foreground">
-                                        {destinationMeta.history}
-                                    </p>
-                                </CollapsibleCard>
-                            )}
+            {/* Floating Paywall Countdown */}
+            {!showPaywall && paywallLeft > 0 && (
+                <div className="fixed bottom-6 right-6 z-50">
+                    <div className="flex items-center gap-3 rounded-full bg-slate-900 text-white px-5 py-2.5 shadow-xl">
+                        <div className="relative h-4 w-4">
+                            <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
+                                <path className="text-slate-700" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
+                                <path className="text-blue-500 transition-all duration-1000 ease-linear" strokeDasharray={`${(paywallLeft / 10) * 100}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
+                            </svg>
                         </div>
-
-                        <div className="sm:col-span-1">
-                            <CollapsibleCard title="Destination at a glance" initialOpen={false}>
-                                <IconFacts
-                                    facts={[
-                                        {label: "City", value: destinationMeta?.city, Icon: MapPin},
-                                        {
-                                            label: "Currency",
-                                            value: destinationMeta?.currency_code,
-                                            Icon: DollarSign,
-                                        },
-                                        {
-                                            label: "Plugs",
-                                            value: joinArr(destinationMeta?.plugs),
-                                            Icon: Plug,
-                                        },
-                                        {
-                                            label: "Languages",
-                                            value: joinArr(destinationMeta?.languages),
-                                            Icon: Globe,
-                                        },
-                                        {
-                                            label: "Getting around",
-                                            value: joinArr(destinationMeta?.transport),
-                                            Icon: MapPin,
-                                        },
-                                        {
-                                            label: "eSIM",
-                                            value: destinationMeta?.esim_provider,
-                                            Icon: Phone,
-                                        },
-                                        {
-                                            label: "Weather",
-                                            value: destinationMeta?.weather_desc,
-                                            Icon: CloudSun,
-                                        },
-                                    ]}
-                                />
-                            </CollapsibleCard>
-                        </div>
+                        <span className="text-xs font-bold">Free Preview: {paywallLeft}s</span>
                     </div>
-                </section>
+                </div>
             )}
 
-            {/* Map moved to bottom */}
-            {placesWithCoords.length > 0 && (
-                <section className="mx-auto w-full max-w-5xl px-4 pb-10 md:max-w-6xl">
-                    <div className="overflow-hidden rounded-3xl border border-border/70 bg-card/80 shadow-sm">
-                        <div className="flex items-center justify-between border-b border-border/60 px-4 py-3 sm:px-5">
-                            <div className="flex items-center gap-2 text-sm font-medium">
-                <span
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <MapIcon className="h-4 w-4"/>
-                </span>
-                                <span>Map overview</span>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                Showing {placesWithCoords.length} place
-                                {placesWithCoords.length === 1 ? "" : "s"}
-              </span>
-                        </div>
-                        <div className="h-[320px] sm:h-[380px]">
-                            <MapSection
-                                places={placesWithCoords.map((p) => ({
-                                    id: p.id,
-                                    name: p.name,
-                                    lat: p.lat!,
-                                    lng: p.lng!,
-                                }))}
-                            />
-                        </div>
-                    </div>
-                </section>
-            )}
-
-            <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
-                Previewed on Itinero — plan smarter, wander farther.
-            </footer>
-
-            {/* Countdown chip */}
-            {!showPaywall && paywallLeft > 0 && <PaywallCountdownBadge seconds={paywallLeft}/>}
-
-            {/* Theme-aware paywall */}
+            {/* Full Screen Paywall */}
             {showPaywall && (
                 <FullScreenPaywallOverlay
                     onBuy={handleBuy}
                     onSave={handleSave}
                     points={pointsBusy ? null : points}
                     required={requiredPoints}
-                    forceTheme={isDark ? "dark" : "light"}
                     saving={saving}
+                    forceTheme={isDark ? "dark" : "light"}
                 />
             )}
 
             {/* Not enough points dialog */}
             <Dialog open={insufficientOpen} onOpenChange={setInsufficientOpen}>
-                <DialogContent
-                    className={[
-                        "relative overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-xl ring-1 ring-border",
-                        "sm:max-w-sm",
-                    ].join(" ")}
-                >
-                    {/* subtle theme-adaptive top gradient */}
-                    <div
-                        className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.06),transparent)] dark:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.06),transparent)]"/>
-
-                    <DialogHeader className="space-y-1">
-                        <div
-                            className="inline-flex items-center gap-2 self-start rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs text-muted-foreground">
-                            Balance
+                <DialogContent className="sm:max-w-sm rounded-3xl border-slate-200 p-6">
+                    <DialogHeader>
+                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
+                            <Wallet className="h-6 w-6 text-amber-600" />
                         </div>
-                        <DialogTitle className="text-base font-semibold">Not enough points</DialogTitle>
+                        <DialogTitle className="text-lg font-bold text-slate-900">Not enough points</DialogTitle>
                     </DialogHeader>
 
-                    <div className="space-y-2 text-sm">
-                        <p>
-                            You need <strong>{requiredPoints}</strong> points to save a trip. You currently have{" "}
-                            <strong>{pointsBusy ? "…" : points ?? "—"}</strong>.
-                        </p>
-                        <p className="text-muted-foreground">Top up your points and try again.</p>
+                    <div className="space-y-3 text-center text-sm text-slate-600">
+                        <p>You need <strong className="text-slate-900">{requiredPoints} points</strong> to save this full itinerary.</p>
+                        <div className="rounded-xl bg-slate-50 p-3 font-medium border border-slate-100">
+                            Current Balance: {points ?? "..."} points
+                        </div>
                     </div>
 
-                    <DialogFooter className="gap-2 sm:gap-3">
-                        <Button
-                            variant="outline"
-                            className="border-border bg-background/60 text-foreground hover:bg-background"
-                            onClick={() => setInsufficientOpen(false)}
-                        >
-                            Close
-                        </Button>
-                        <Button
-                            className="bg-primary text-primary-foreground hover:bg-primary/90"
-                            onClick={() => {
-                                setInsufficientOpen(false);
-                                router.push("/rewards");
-                            }}
-                        >
-                            Top up
-                        </Button>
+                    <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                        <Button variant="outline" onClick={() => setInsufficientOpen(false)} className="rounded-xl border-slate-200">Cancel</Button>
+                        <Button className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold" onClick={() => router.push("/rewards")}>Get Points</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -811,581 +711,148 @@ export default function PreviewClient({
 /* =========================
    Helpers / UI bits
 ========================= */
-function ItineraryDay({
-                          dayIdx,
-                          day,
-                          placesById,
-                      }: {
-    dayIdx: number;
-    day: Day;
-    placesById: Map<string, Place>;
-}) {
-    const dayCost = React.useMemo(
-        () => Math.max(0, Math.round(day.blocks.reduce((acc, b) => acc + (b.est_cost || 0), 0))),
-        [day.blocks]
-    );
 
+function ItineraryDay({ dayIdx, day, placesById }: { dayIdx: number; day: Day; placesById: Map<string, Place>; }) {
     return (
-        <div className="space-y-5 p-3 md:p-4">
-            <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-end">
-                <div>
-                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                        Day {dayIdx + 1}
-                    </div>
-                    <div className="text-lg font-semibold">{formatISODate(day.date)}</div>
-                </div>
-                <div
-                    className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1 text-xs text-muted-foreground">
-                    est. day cost:
-                    <span className="font-semibold text-foreground">${dayCost}</span>
-                </div>
+        <div className="space-y-8">
+            <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                <div className="text-3xl font-bold text-slate-900">{formatISODate(day.date).split(',')[0]}</div>
+                <div className="h-1 w-1 rounded-full bg-slate-300"></div>
+                <div className="text-slate-500 font-medium">{formatISODate(day.date).split(',')[1]}</div>
             </div>
 
-            <div className="relative">
-                <div className="pointer-events-none absolute left-[18px] top-0 h-full w-[2px] rounded bg-border/70"/>
-                <div className="space-y-3">
-                    {day.blocks.map((b, i) => {
-                        const place = b.place_id ? placesById.get(b.place_id) : null;
-                        return (
-                            <div key={`${day.date}-${i}`} className="relative pl-7">
-                                <div
-                                    className="absolute left-[18px] top-5 h-3 w-3 -translate-x-1/2 rounded-full border border-primary/40 bg-primary/90 shadow-sm"/>
-                                <div
-                                    className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm transition hover:-translate-y-[1px] hover:shadow-md">
-                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <span
-                        className={[
-                            "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold",
-                            whenBadgeClasses(b.when),
-                        ].join(" ")}
-                    >
-                      {whenLabel(b.when)}
-                    </span>
+            <div className="relative pl-8 border-l-2 border-slate-100 space-y-8">
+                {day.blocks.map((b, i) => {
+                    const place = b.place_id ? placesById.get(b.place_id) : null;
+                    return (
+                        <div key={i} className="relative group">
+                            {/* Timeline Dot */}
+                            <div className={cn(
+                                "absolute -left-[39px] top-0 h-5 w-5 rounded-full border-4 border-white shadow-sm z-10",
+                                whenBadgeClasses(b.when).dot
+                            )} />
 
-                                        <div
-                                            className="flex flex-wrap gap-2 text-[11px] text-muted-foreground sm:w-auto">
-                                            <Metric label="Est." value={`$${b.est_cost ?? 0}`}/>
-                                            <Metric label="Duration" value={`${b.duration_min}m`}/>
-                                            <Metric label="Travel" value={`${b.travel_min_from_prev}m`}/>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-3 grid gap-3 md:grid-cols-3">
-                                        <div className="md:col-span-2">
-                                            <div className="text-base font-semibold">{b.title}</div>
-                                            {!!b.notes && (
-                                                <div className="mt-1 text-sm text-muted-foreground">
-                                                    {b.notes.length > 240 ? `${b.notes.slice(0, 240)}…` : b.notes}
-                                                </div>
-                                            )}
-                                            {place && (
-                                                <div className="mt-2 text-sm text-muted-foreground">
-                                                    <span className="font-medium text-foreground">{place.name}</span>
-                                                    {place.category && <span> • {place.category}</span>}
-                                                    {place.lat != null && place.lng != null && (
-                                                        <span className="ml-1">
-                              • {place.lat.toFixed(3)}, {place.lng.toFixed(3)}
+                            <div className="rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow">
+                                <div className="flex items-start justify-between gap-4 mb-3">
+                                    <div>
+                            <span className={cn("inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-2", whenBadgeClasses(b.when).badge)}>
+                               {b.when}
                             </span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
+                                        <h4 className="text-base font-bold text-slate-900">{b.title}</h4>
                                     </div>
-
-                                    {b.alternatives?.length ? (
-                                        <div className="mt-3">
-                                            <div className="text-xs text-muted-foreground">Alternatives</div>
-                                            <div className="mt-1 flex flex-wrap gap-2">
-                                                {b.alternatives.slice(0, 3).map((a) => (
-                                                    <span
-                                                        key={a.id ?? a.name}
-                                                        className="rounded-full border border-border/60 bg-background/70 px-2 py-1 text-xs"
-                                                    >
-                            {a.name} {a.est_cost ? `· ~$${a.est_cost}` : ""}
-                          </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ) : null}
-                                </div>
-                            </div>
-                        );
-                    })}
-
-                    {!day.blocks.length && (
-                        <div
-                            className="grid h-40 place-items-center rounded-2xl border bg-card/40 text-sm text-muted-foreground">
-                            No activities for this day yet.
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function Metric({label, value}: { label: string; value: string | number }) {
-    return (
-        <div
-            className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/80 px-2 py-0.5">
-            <span className="text-[11px] text-muted-foreground">{label}:</span>
-            <span className="text-[11px] font-semibold text-foreground">{value}</span>
-        </div>
-    );
-}
-
-function CollapsibleCard({
-                             title,
-                             children,
-                             initialOpen = false,
-                         }: {
-    title: string;
-    children: React.ReactNode;
-    initialOpen?: boolean;
-}) {
-    return (
-        <details
-            className="group rounded-2xl border border-border/60 bg-card/50 shadow-sm open:shadow-md"
-            open={initialOpen || undefined}
-        >
-            <summary
-                className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 sm:px-5"
-                style={{listStyle: "none"}}
-            >
-                <span className="text-sm font-semibold tracking-wide">{title}</span>
-                <ChevronDown
-                    className="h-4 w-4 transition-transform duration-200 ease-out group-open:rotate-180"
-                    aria-hidden
-                />
-            </summary>
-            <div className="border-t border-border/60 px-4 py-4 sm:px-5">{children}</div>
-        </details>
-    );
-}
-
-function IconFacts({
-                       facts,
-                   }: {
-    facts: Array<{
-        label: string;
-        value?: string | null;
-        Icon: React.ComponentType<{ className?: string }>;
-    }>;
-}) {
-    const rows = facts.filter((f) => f.value && String(f.value).trim().length > 0);
-    if (rows.length === 0) return null;
-
-    return (
-        <dl className="grid grid-cols-1 gap-2">
-            {rows.map(({label, value, Icon}) => (
-                <div
-                    key={label}
-                    className="flex items-center gap-3 rounded-lg border border-border/60 bg-background/40 px-3 py-2"
-                >
-          <span
-              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60">
-            <Icon className="h-4 w-4 text-muted-foreground"/>
-          </span>
-                    <div className="min-w-0">
-                        <dt className="text-xs text-muted-foreground">{label}</dt>
-                        <dd className="text-sm font-medium">{value}</dd>
-                    </div>
-                </div>
-            ))}
-        </dl>
-    );
-}
-
-function InterestChips({
-                           interests,
-                           pillTone = "light",
-                       }: {
-    interests: string[];
-    pillTone?: "light" | "default";
-}) {
-    const base =
-        pillTone === "light"
-            ? "border-white/30 bg-white/10 text-white"
-            : "border-border/60 bg-background/50 text-foreground";
-    return (
-        <ul className="flex flex-wrap gap-2">
-            {interests.map((raw) => {
-                const label = raw.replace(/\b\w/g, (m) => m.toUpperCase());
-                const emoji = emojiFor(raw);
-                return (
-                    <li
-                        key={raw}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm backdrop-blur ${base}`}
-                        title={label}
-                    >
-            <span aria-hidden className="text-base leading-none">
-              {emoji}
-            </span>
-                        <span className="leading-none">{label}</span>
-                    </li>
-                );
-            })}
-        </ul>
-    );
-}
-
-function PaywallCountdownBadge({seconds}: { seconds: number }) {
-    return (
-        <div className="fixed bottom-4 right-4 z-[55]">
-            <div
-                className="rounded-full border border-border/60 bg-background/90 px-3 py-1 text-sm text-foreground shadow-sm">
-                Paywall in <span className="font-semibold">{seconds}s</span>
-            </div>
-        </div>
-    );
-}
-
-type ThemeMode = "light" | "dark";
-
-function formatPoints(n: number) {
-    return new Intl.NumberFormat().format(n);
-}
-
-
-function FullScreenPaywallOverlay({
-                                      onBuy,
-                                      onSave,
-                                      points,
-                                      required,
-                                      forceTheme,
-                                      saving,
-                                  }: {
-    onBuy: () => void;
-    onSave: () => void;
-    points: number | null;
-    required: number;
-    forceTheme?: ThemeMode;
-    saving?: boolean;
-}) {
-    const insuff = typeof points === "number" && points < required;
-
-    const perks = [
-        {
-            label: "Full day-by-day schedule",
-            description: "See every stop laid out in a clean, time-based view.",
-            icon: <Sparkles className="h-4 w-4 text-primary"/>,
-        },
-        {
-            label: "Local insights & transport mapping",
-            description: "Smarter routing between sights with realistic travel times.",
-            icon: <MapIcon className="h-4 w-4 text-primary"/>,
-        },
-        {
-            label: "Printable PDF",
-            description: "Export a beautiful PDF for offline use or sharing.",
-            icon: <Download className="h-4 w-4 text-primary"/>,
-        },
-        {
-            label: "Shareable trip link",
-            description: "Send a live itinerary link to friends and co-travellers.",
-            icon: <Share2 className="h-4 w-4 text-primary"/>,
-        },
-        {
-            label: "Calendar export",
-            description: "Drop everything into your calendar in one click.",
-            icon: <CalendarDays className="h-4 w-4 text-primary"/>,
-        },
-        {
-            label: "7-day free edits",
-            description: "Regenerate, reorder and tweak your trip for a full week.",
-            icon: <PencilLine className="h-4 w-4 text-primary"/>,
-        },
-    ] as const;
-
-    const [activeIndex, setActiveIndex] = React.useState(0);
-    const scrollRef = React.useRef<HTMLDivElement | null>(null);
-
-    const scrollToIndex = (index: number) => {
-        if (!scrollRef.current) return;
-        const container = scrollRef.current;
-        const card = container.querySelector<HTMLElement>("[data-perk-card]");
-        const cardWidth = card ? card.offsetWidth + 16 : container.clientWidth * 0.85;
-
-        container.scrollTo({
-            left: cardWidth * index,
-            behavior: "smooth",
-        });
-        setActiveIndex(index);
-    };
-
-    const handleArrow = (direction: "prev" | "next") => {
-        if (direction === "prev") {
-            scrollToIndex(Math.max(0, activeIndex - 1));
-        } else {
-            scrollToIndex(Math.min(perks.length - 1, activeIndex + 1));
-        }
-    };
-
-    const handleScroll = () => {
-        if (!scrollRef.current) return;
-        const container = scrollRef.current;
-        const card = container.querySelector<HTMLElement>("[data-perk-card]");
-        const cardWidth = card ? card.offsetWidth + 16 : container.clientWidth * 0.85;
-        const idx = Math.round(container.scrollLeft / Math.max(1, cardWidth));
-        setActiveIndex(Math.min(perks.length - 1, Math.max(0, idx)));
-    };
-
-    return (
-        <div
-            data-theme={forceTheme}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm dark:bg-black/75"
-            role="dialog"
-            aria-modal="true"
-        >
-            {/* Ambient glow */}
-            <div
-                className="pointer-events-none absolute inset-0 bg-[radial-gradient(90%_70%_at_50%_0%,rgba(59,130,246,0.22),transparent_55%),radial-gradient(80%_60%_at_0%_100%,rgba(236,72,153,0.18),transparent_55%)] opacity-50"/>
-
-            {/* Panel */}
-            <div className="relative w-full max-w-3xl px-4">
-                <div
-                    className="overflow-hidden rounded-3xl border border-border/80 bg-card/95 text-foreground shadow-2xl ring-1 ring-border/80">
-                    {/* Thin top accent */}
-                    <div className="h-[3px] w-full bg-gradient-to-r from-primary via-amber-400 to-emerald-400"/>
-
-                    <div className="px-5 py-6 sm:px-7 md:px-8 md:py-8">
-                        <div className="flex flex-col items-center gap-6">
-                            {/* Header */}
-                            <div className="w-full max-w-xl text-center">
-                                <Badge
-                                    variant="secondary"
-                                    className="mb-2 inline-flex items-center gap-1.5 border border-border bg-muted/80 text-[11px] font-medium uppercase tracking-wide text-foreground/80"
-                                >
-                                    <Sparkles className="h-3.5 w-3.5 text-primary"/>
-                                    Preview limited
-                                </Badge>
-
-                                <h2 className="text-balance text-2xl font-bold tracking-tight md:text-3xl">
-                                    Unlock the full itinerary
-                                </h2>
-                                <p className="mt-1 text-sm text-muted-foreground md:text-base">
-                                    Get the complete plan, smarter routing, export tools, and shareable links — all in
-                                    one tap.
-                                </p>
-
-                                <div
-                                    className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                                    <div
-                                        className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background/70 px-3 py-1.5 shadow-sm">
-                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground/80">
-                      Required
-                    </span>
-                                        <span className="text-xs font-semibold tabular-nums">
-                      {formatPoints(required)} pts
-                    </span>
-                                    </div>
-
-                                    {typeof points === "number" && (
-                                        <div className="text-[11px]">
-                                            Balance:{" "}
-                                            <span
-                                                className={
-                                                    insuff
-                                                        ? "font-semibold text-red-500"
-                                                        : "font-semibold text-foreground"
-                                                }
-                                            >
-                        {formatPoints(points)} pts
-                      </span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Perks band */}
-                            <div
-                                className="w-full max-w-xl rounded-2xl border border-border/70 bg-gradient-to-br from-background/90 via-muted/70 to-background/90 px-3 py-4 sm:px-4">
-                                <div className="mb-2 flex items-center justify-between gap-2">
-                                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                                        What you&apos;ll unlock
-                                    </p>
-                                    <p className="hidden text-[11px] text-muted-foreground sm:inline">
-                                        Swipe or use arrows
-                                    </p>
-                                </div>
-
-                                <div className="relative">
-                                    {/* Arrows (desktop only) */}
-                                    <button
-                                        type="button"
-                                        onClick={() => handleArrow("prev")}
-                                        className="absolute left-0 top-1/2 z-10 hidden -translate-y-1/2 rounded-full border border-border/80 bg-background/90 p-1.5 shadow-sm hover:bg-background sm:inline-flex"
-                                        aria-label="Previous perk"
-                                    >
-                                        <ChevronLeft className="h-4 w-4 text-muted-foreground"/>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => handleArrow("next")}
-                                        className="absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 rounded-full border border-border/80 bg-background/90 p-1.5 shadow-sm hover:bg-background sm:inline-flex"
-                                        aria-label="Next perk"
-                                    >
-                                        <ChevronRight className="h-4 w-4 text-muted-foreground"/>
-                                    </button>
-
-                                    {/* Scroll container */}
-                                    <div
-                                        ref={scrollRef}
-                                        onScroll={handleScroll}
-                                        className="mt-1 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 pt-2 [-ms-overflow-style:none] [scrollbar-width:none]"
-                                        style={{scrollBehavior: "smooth"}}
-                                    >
-                                        <style jsx>{`
-                                            div::-webkit-scrollbar {
-                                                display: none;
-                                            }
-                                        `}</style>
-
-                                        {perks.map((perk, idx) => (
-                                            <div
-                                                key={perk.label}
-                                                data-perk-card
-                                                className="flex min-w-[82%] max-w-[82%] snap-center sm:min-w-[260px] sm:max-w-[260px]"
-                                            >
-                                                <Perk
-                                                    title={perk.label}
-                                                    description={perk.description}
-                                                    icon={perk.icon}
-                                                    active={idx === activeIndex}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Dots */}
-                                    <div className="mt-3 flex justify-center gap-1.5">
-                                        {perks.map((perk, idx) => (
-                                            <button
-                                                key={perk.label}
-                                                type="button"
-                                                onClick={() => scrollToIndex(idx)}
-                                                className={[
-                                                    "h-1.5 rounded-full transition-all duration-200",
-                                                    idx === activeIndex
-                                                        ? "w-5 bg-primary"
-                                                        : "w-2 bg-muted-foreground/40 hover:bg-muted-foreground/70",
-                                                ].join(" ")}
-                                                aria-label={`Go to perk ${idx + 1}`}
-                                            />
-                                        ))}
+                                    <div className="text-right text-xs font-medium text-slate-500">
+                                        <div>{b.duration_min} min</div>
+                                        {b.est_cost > 0 && <div className="text-emerald-600 font-bold mt-0.5">${b.est_cost}</div>}
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* CTAs */}
-                            <div className="mt-1 w-full max-w-xl space-y-2.5">
-                                <Button
-                                    className="w-full py-5 text-base md:py-6"
-                                    onClick={onBuy}
-                                    disabled={saving}
-                                >
-                                    {saving ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
-                                            Saving your trip…
-                                        </>
-                                    ) : (
-                                        "Buy / Top up"
-                                    )}
-                                </Button>
+                                {b.notes && <p className="text-sm text-slate-600 leading-relaxed mb-3">{b.notes}</p>}
 
-                                <Button
-                                    variant="outline"
-                                    className="w-full border-border py-5 text-base md:py-6"
-                                    onClick={onSave}
-                                    disabled={saving}
-                                >
-                                    Skip to Trip
-                                </Button>
-
-                                {/* Footer hint */}
-                                {typeof points === "number" && (
-                                    <p className="mt-2 text-center text-[11px] text-muted-foreground md:text-xs">
-                                        {insuff ? (
-                                            <>
-                                                You need{" "}
-                                                <span className="font-semibold">
-                          {formatPoints(required)} pts
-                        </span>{" "}
-                                                to save this trip. Current balance:{" "}
-                                                <span className="font-semibold text-red-500">
-                          {formatPoints(points)} pts
-                        </span>
-                                                .
-                                            </>
-                                        ) : (
-                                            <>
-                                                You have{" "}
-                                                <span className="font-semibold">
-                          {formatPoints(points)} pts
-                        </span>{" "}
-                                                — this trip is fully unlockable.
-                                            </>
-                                        )}
-                                    </p>
+                                {place && (
+                                    <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                        <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                                        <span className="font-medium text-slate-700">{place.name}</span>
+                                    </div>
                                 )}
-
-                                <p className="mt-1 text-center text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
-                                    Powered by Itinero Points
-                                </p>
                             </div>
+                        </div>
+                    )
+                })}
+
+                {day.blocks.length === 0 && (
+                    <div className="text-sm text-slate-400 italic pl-2">No scheduled activities.</div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function IconFact({ label, value, icon: Icon }: { label: string; value?: string | null; icon: any }) {
+    if (!value) return null;
+    return (
+        <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
+                <Icon className="h-4 w-4" />
+            </div>
+            <div>
+                <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">{label}</div>
+                <div className="text-xs font-medium text-slate-700">{value}</div>
+            </div>
+        </div>
+    )
+}
+
+function InterestChips({ interests }: { interests: string[] }) {
+    return (
+        <div className="flex flex-wrap gap-2">
+            {interests.map((raw) => (
+                <span key={raw} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm capitalize">
+          <span>{emojiFor(raw)}</span>
+                    {raw}
+        </span>
+            ))}
+        </div>
+    );
+}
+
+/* Styling Helpers */
+
+/* Full Screen Paywall Component */
+function FullScreenPaywallOverlay({ onBuy, onSave, points, required, saving, forceTheme }: any) {
+    return (
+        <div data-theme={forceTheme} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+            <div className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden">
+                <div className="relative h-40 bg-blue-600 overflow-hidden">
+                    <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20"></div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                        <Sparkles className="h-10 w-10 mb-2" />
+                        <h2 className="text-2xl font-bold">Unlock Full Itinerary</h2>
+                    </div>
+                </div>
+
+                <div className="p-8">
+                    <div className="grid gap-6 sm:grid-cols-2 mb-8">
+                        <PerkItem icon={MapIcon} title="Interactive Maps" desc="Navigate easily with pinned locations." />
+                        <PerkItem icon={Download} title="PDF Export" desc="Save offline for when signal drops." />
+                        <PerkItem icon={CalendarDays} title="Calendar Sync" desc="Add to Google/Apple Calendar." />
+                        <PerkItem icon={PencilLine} title="Edit & Customize" desc="Full control to tweak your plan." />
+                    </div>
+
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="flex items-center gap-2 text-sm font-medium text-slate-600 bg-slate-100 px-4 py-2 rounded-full">
+                            <span>Cost: {required} pts</span>
+                            <span className="text-slate-300">|</span>
+                            <span>You have: <span className={points < required ? "text-red-600 font-bold" : "text-emerald-600 font-bold"}>{points ?? "..."}</span> pts</span>
+                        </div>
+
+                        <div className="flex gap-3 w-full sm:w-auto">
+                            <Button size="lg" onClick={onBuy} className="flex-1 sm:flex-initial rounded-xl bg-slate-900 text-white hover:bg-slate-800">
+                                {points < required ? "Top Up Points" : "Unlock Now"}
+                            </Button>
+                            <Button size="lg" variant="outline" onClick={onSave} className="flex-1 sm:flex-initial rounded-xl border-slate-200">
+                                Save Draft
+                            </Button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    );
+    )
 }
 
-/** Vertical, layered perk card */
-function Perk({
-                  icon,
-                  title,
-                  description,
-                  active,
-              }: {
-    icon?: React.ReactNode;
-    title: string;
-    description: string;
-    active?: boolean;
-}) {
+function PerkItem({ icon: Icon, title, desc }: any) {
     return (
-        <div
-            className={[
-                "relative flex w-full flex-col items-center gap-3 text-center",
-                "rounded-3xl border p-4 sm:p-5 transition-all duration-300",
-                "bg-card/80 backdrop-blur-sm border-border/80",
-                active
-                    ? "shadow-xl ring-1 ring-primary/50 bg-background/95 -translate-y-0.5"
-                    : "shadow-sm hover:shadow-md hover:bg-card/95",
-            ].join(" ")}
-        >
-            {/* Floating glow behind icon */}
-            <div className="relative -mt-7 mb-1">
-                {active && (
-                    <div
-                        className="pointer-events-none absolute inset-0 -z-10 h-16 w-16 rounded-3xl bg-primary/30 blur-xl opacity-70"/>
-                )}
-                <div
-                    className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 shadow-md backdrop-blur">
-                    {icon ?? <Sparkles className="h-6 w-6 text-primary"/>}
-                </div>
+        <div className="flex gap-3">
+            <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                <Icon className="h-5 w-5" />
             </div>
-
-            <div className="text-sm font-semibold tracking-tight">{title}</div>
-            <p className="text-xs leading-relaxed text-muted-foreground">
-                {description}
-            </p>
+            <div>
+                <h4 className="font-bold text-slate-900 text-sm">{title}</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
+            </div>
         </div>
-    );
+    )
 }
-
 
 /* =========================
    Save flow
@@ -1413,13 +880,15 @@ async function saveDraftAsTrip(
     let pointsSpent = false;
 
     try {
-        const {data: auth} = await sbClient.auth.getUser();
+        const { data: auth } = await sbClient.auth.getUser();
         currentUserId = auth?.user?.id ?? undefined;
         if (!currentUserId) throw new Error("Not authenticated");
 
         // 1) Spend points via RPC, fallback to manual ledger insert
         try {
-            const {data: ok, error: rpcErr} = await sbClient.rpc("spend_points", {p_cost: COST});
+            const { data: ok, error: rpcErr } = await sbClient.rpc("spend_points", {
+                p_cost: COST,
+            });
             if (rpcErr) throw rpcErr;
             if (ok !== true) {
                 setInsufficientOpen(true);
@@ -1427,14 +896,14 @@ async function saveDraftAsTrip(
             }
             pointsSpent = true;
         } catch {
-            const {error: debitErr} = await sbClient
+            const { error: debitErr } = await sbClient
                 .schema("itinero")
                 .from("points_ledger")
                 .insert({
                     user_id: currentUserId,
                     delta: -COST,
                     reason: "save_trip",
-                    meta: {source: "web", at: new Date().toISOString()},
+                    meta: { source: "web", at: new Date().toISOString() },
                 });
             if (debitErr) {
                 setInsufficientOpen(true);
@@ -1452,7 +921,8 @@ async function saveDraftAsTrip(
         const tripRow = {
             user_id: currentUserId,
             title,
-            start_date: ins?.start_date ?? currentPreview.trip_summary.start_date ?? null,
+            start_date:
+                ins?.start_date ?? currentPreview.trip_summary.start_date ?? null,
             end_date: ins?.end_date ?? currentPreview.trip_summary.end_date ?? null,
             est_total_cost:
                 typeof currentPreview.trip_summary.est_total_cost === "number"
@@ -1463,7 +933,7 @@ async function saveDraftAsTrip(
             inputs: ins,
         };
 
-        const {data: tripInsert, error: tripErr} = await sbClient
+        const { data: tripInsert, error: tripErr } = await sbClient
             .schema("itinero")
             .from("trips")
             .insert(tripRow)
@@ -1510,7 +980,7 @@ async function saveDraftAsTrip(
         });
 
         if (items.length) {
-            const {error: itemsErr} = await sbClient
+            const { error: itemsErr } = await sbClient
                 .schema("itinero")
                 .from("itinerary_items")
                 .insert(items);
@@ -1519,7 +989,7 @@ async function saveDraftAsTrip(
 
         // 4) Refresh points balance
         try {
-            const {data: newBal} = await sbClient.rpc("get_points_balance");
+            const { data: newBal } = await sbClient.rpc("get_points_balance");
             if (typeof newBal === "number") setPoints(newBal);
         } catch {
             /* ignore */
@@ -1540,13 +1010,13 @@ async function saveDraftAsTrip(
         // Refund points if we successfully spent them but failed later
         if (pointsSpent) {
             try {
-                const {data: auth2} = await sbClient.auth.getUser();
+                const { data: auth2 } = await sbClient.auth.getUser();
                 const uid = auth2?.user?.id ?? null;
                 await sbClient.schema("itinero").from("points_ledger").insert({
                     user_id: uid,
                     delta: COST,
                     reason: "refund_save_trip_failed",
-                    meta: {source: "web", at: new Date().toISOString()},
+                    meta: { source: "web", at: new Date().toISOString() },
                 });
             } catch {
                 // swallow
@@ -1557,4 +1027,8 @@ async function saveDraftAsTrip(
     } finally {
         setSavingState(false);
     }
+}
+
+function formatPoints(n: number) {
+    return new Intl.NumberFormat().format(n);
 }

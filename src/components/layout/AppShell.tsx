@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {usePathname, useRouter} from "next/navigation";
-import {createClientBrowser} from "@/lib/supabase/browser";
-import {cn} from "@/lib/utils";
+import { usePathname, useRouter } from "next/navigation";
+import { createClientBrowser } from "@/lib/supabase/browser";
+import { cn } from "@/lib/utils";
 
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
     Tooltip,
     TooltipContent,
@@ -29,7 +29,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
     LogOut,
@@ -40,12 +40,18 @@ import {
     Plus,
     Menu,
     Crown,
+    Sparkles,
+    Globe,
+    Heart,
+    Plane,
+    Settings,
+    CreditCard
 } from "lucide-react";
-import {ThemeToggle} from "@/components/ThemeToggle";
-import {TopupDialogFxAware} from "@/components/layout/TopupDialogFxAware";
-import {FxSnapshot} from "@/lib/fx/types";
-import {convertUsingSnapshot, getLatestFxSnapshot} from "@/lib/fx/fx";
-import {useEffect} from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { TopupDialogFxAware } from "@/components/layout/TopupDialogFxAware";
+import { FxSnapshot } from "@/lib/fx/types";
+import { convertUsingSnapshot, getLatestFxSnapshot } from "@/lib/fx/fx";
+import { useEffect } from "react";
 
 type Props = {
     children: React.ReactNode;
@@ -54,7 +60,7 @@ type Props = {
 
 const POINT_UNIT_PRICE_GHS = 0.4; // 40 pesewas per point
 
-export default function AppShell({children, userEmail}: Props) {
+export default function AppShell({ children, userEmail }: Props) {
     const pathname = usePathname();
     const router = useRouter();
     const sb = React.useMemo(() => createClientBrowser(), []);
@@ -79,7 +85,7 @@ export default function AppShell({children, userEmail}: Props) {
             new Intl.NumberFormat(undefined, {
                 maximumFractionDigits: 0,
             }).format(n),
-        [],
+        []
     );
 
     // -------- Points refresh (RPC) --------
@@ -93,7 +99,7 @@ export default function AppShell({children, userEmail}: Props) {
 
             setLoadingPoints(true);
             try {
-                const {data: sumValue, error} = await sb.rpc("sum_points_for_user", {
+                const { data: sumValue, error } = await sb.rpc("sum_points_for_user", {
                     uid: userId,
                 });
 
@@ -112,7 +118,7 @@ export default function AppShell({children, userEmail}: Props) {
                 setLoadingPoints(false);
             }
         },
-        [sb],
+        [sb]
     );
 
     // -------- preferred_currency from profile --------
@@ -121,7 +127,7 @@ export default function AppShell({children, userEmail}: Props) {
             if (!userId) return;
 
             try {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("profiles")
                     .select("preferred_currency")
@@ -144,12 +150,12 @@ export default function AppShell({children, userEmail}: Props) {
                 console.error("[refreshPreferredCurrency] threw:", e);
             }
         },
-        [sb],
+        [sb]
     );
 
     // -------- FX snapshot + derived GHS -> userCurrency --------
     useEffect(() => {
-        const cancelled = {current: false};
+        const cancelled = { current: false };
 
         (async () => {
             const snap = await getLatestFxSnapshot("USD"); // or your base
@@ -175,7 +181,7 @@ export default function AppShell({children, userEmail}: Props) {
         let mounted = true;
 
         (async () => {
-            const {data: auth} = await sb.auth.getUser();
+            const { data: auth } = await sb.auth.getUser();
             if (!mounted) return;
 
             const userId = auth?.user?.id ?? null;
@@ -187,7 +193,7 @@ export default function AppShell({children, userEmail}: Props) {
             ]);
         })();
 
-        const {data: sub} = sb.auth.onAuthStateChange(async (_evt, sess) => {
+        const { data: sub } = sb.auth.onAuthStateChange(async (_evt, sess) => {
             if (!mounted) return;
             const userId = sess?.user?.id ?? null;
             setUid(userId);
@@ -230,7 +236,7 @@ export default function AppShell({children, userEmail}: Props) {
                     table: "points_ledger",
                     filter: `user_id=eq.${uid}`,
                 },
-                () => void refreshPoints(uid),
+                () => void refreshPoints(uid)
             )
             .subscribe();
 
@@ -247,7 +253,7 @@ export default function AppShell({children, userEmail}: Props) {
                 () => {
                     void refreshPoints(uid);
                     void refreshPreferredCurrency(uid);
-                },
+                }
             )
             .subscribe();
 
@@ -275,8 +281,8 @@ export default function AppShell({children, userEmail}: Props) {
         try {
             const qRes = await fetch("/api/points/quote", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({points: pts}),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ points: pts }),
             });
 
             if (!qRes.ok) {
@@ -288,7 +294,7 @@ export default function AppShell({children, userEmail}: Props) {
 
             const initRes = await fetch("/api/paystack/init", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     quoteId: q.quoteId,
                     email: userEmail ?? "user@example.com",
@@ -329,236 +335,121 @@ export default function AppShell({children, userEmail}: Props) {
 
     return (
         <TooltipProvider delayDuration={150}>
-            <div
-                className="flex min-h-screen flex-col bg-gradient-to-b from-background via-background/70 to-background text-foreground">
+            <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900 dark:bg-slate-950 dark:text-white dark:selection:bg-blue-900 dark:selection:text-white transition-colors duration-300">
+
                 {/* Header */}
-                <header
-                    className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50">
-                    <div
-                        className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                        {/* Left: Mobile menu + Brand */}
-                        <div className="flex items-center gap-2">
+                <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/80 backdrop-blur-md dark:bg-slate-950/80 dark:border-slate-800">
+                    <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+
+                        {/* Left: Brand & Mobile Menu */}
+                        <div className="flex items-center gap-3">
                             <Sheet>
                                 <SheetTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="md:hidden"
-                                        aria-label="Open menu"
-                                    >
-                                        <Menu className="h-5 w-5"/>
+                                    <Button variant="ghost" size="icon" className="md:hidden h-8 w-8 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+                                        <Menu className="h-4 w-4" />
                                     </Button>
                                 </SheetTrigger>
-                                <SheetContent side="left" className="w-80">
-                                    <SheetHeader>
-                                        <SheetTitle className="flex items-center gap-2">
-                      <span
-                          className="grid h-8 w-8 place-items-center rounded-md bg-primary/90 text-primary-foreground">
-                        <Map className="h-4 w-4"/>
+                                <SheetContent side="left" className="w-72 p-0 border-r-slate-200 dark:border-slate-800 dark:bg-slate-950">
+                                    <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+                                        <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
+                        <Plane className="h-4 w-4" />
                       </span>
                                             Itinero
-                                        </SheetTitle>
-                                    </SheetHeader>
-
-                                    <nav className="mt-6 grid gap-1">
-                                        <MobileNavItem
-                                            href="/trips"
-                                            active={pathname?.startsWith("/trips")}
-                                        >
-                                            <Calendar className="mr-2 h-4 w-4"/>
-                                            Trips
+                                        </Link>
+                                    </div>
+                                    <div className="p-4 flex flex-col gap-1">
+                                        <MobileNavItem href="/trips" active={pathname?.startsWith("/trips")}>
+                                            <Calendar className="mr-3 h-4 w-4" /> Trips
                                         </MobileNavItem>
-
-                                        {/* Mobile: Preview */}
-                                        <MobileNavItem
-                                            href="/preview"
-                                            active={pathname === "/preview"}
-                                        >
-                      <span className="flex items-center">
-                        <Calendar className="mr-2 h-4 w-4"/>
-                        Preview
-                          {hasPreview && (
-                              <span
-                                  className="ml-2 h-2 w-2 animate-pulse rounded-full bg-red-500"
-                                  aria-hidden
-                              />
-                          )}
-                      </span>
+                                        <MobileNavItem href="/preview" active={pathname === "/preview"}>
+                                            <Sparkles className="mr-3 h-4 w-4" />
+                                            Preview
+                                            {hasPreview && <span className="ml-auto h-2 w-2 rounded-full bg-blue-500 animate-pulse" />}
                                         </MobileNavItem>
-
-                                        <MobileNavItem
-                                            href="/profile"
-                                            active={pathname === "/profile"}
-                                        >
-                                            <User className="mr-2 h-4 w-4"/>
-                                            Profile
+                                        <MobileNavItem href="/rewards" active={pathname === "/rewards"}>
+                                            <Star className="mr-3 h-4 w-4" /> Rewards
                                         </MobileNavItem>
-                                        <MobileNavItem
-                                            href="/rewards"
-                                            active={pathname === "/rewards"}
-                                        >
-                                            <Star className="mr-2 h-4 w-4"/>
-                                            Rewards
+                                        <MobileNavItem href="/profile" active={pathname === "/profile"}>
+                                            <User className="mr-3 h-4 w-4" /> Profile
                                         </MobileNavItem>
-                                    </nav>
-
-                                    <div className="mt-6">
-                                        <Button
-                                            className="w-full gap-1"
-                                            onClick={() => router.push("/trip-maker")}
-                                        >
-                                            <Plus className="h-4 w-4"/>
-                                            New Trip
+                                    </div>
+                                    <div className="mt-auto p-4 border-t border-slate-100 dark:border-slate-800">
+                                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600" onClick={() => router.push("/trip-maker")}>
+                                            <Plus className="mr-2 h-4 w-4" /> New Trip
                                         </Button>
                                     </div>
                                 </SheetContent>
                             </Sheet>
 
-                            <Link
-                                href="/trips"
-                                className="group flex items-center gap-2 text-sm font-semibold"
-                            >
-                <span
-                    className="grid h-9 w-9 place-items-center rounded-md bg-primary/90 text-primary-foreground shadow-sm transition group-hover:scale-[1.02]">
-                  <Map className="h-4 w-4"/>
+                            <Link href="/trips" className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
+                <span className="hidden md:flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
+                  <Plane className="h-4 w-4" />
                 </span>
-                                <span
-                                    className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-base text-transparent">
-                  Itinero
-                </span>
+                                <span className="hidden sm:inline-block">Itinero</span>
                             </Link>
                         </div>
 
                         {/* Center: Desktop Nav */}
-                        <nav className="hidden items-center gap-1 md:flex">
-                            {/* Desktop: Preview */}
+                        <nav className="hidden md:flex items-center gap-1">
                             <NavItem href="/preview" active={pathname === "/preview"}>
-                <span className="inline-flex items-center">
-                  Preview
-                    {hasPreview && (
-                        <span
-                            className="ml-2 h-2 w-2 animate-pulse rounded-full bg-emerald-500"
-                            aria-hidden
-                        />
-                    )}
-                </span>
+                                Preview
+                                {hasPreview && <span className="ml-1.5 h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />}
                             </NavItem>
-
-                            <NavItem
-                                href="/trips"
-                                active={pathname?.startsWith("/trips")}
-                            >
-                                <Calendar className="mr-2 h-4 w-4"/>
-                                Trips
-                            </NavItem>
-
-                            <Button
-                                size="sm"
-                                className="ml-1 gap-1"
-                                onClick={() => router.push("/trip-maker")}
-                                aria-label="Create new trip"
-                                title="Create new trip"
-                            >
-                                <Plus className="h-4 w-4"/>
-                                New Trip
-                            </Button>
-
-                            <NavItem href="/profile" active={pathname === "/profile"}>
-                                <User className="mr-2 h-4 w-4"/>
-                                Profile
-                            </NavItem>
+                            <NavItem href="/trips" active={pathname?.startsWith("/trips")}>Trips</NavItem>
+                            <NavItem href="/rewards" active={pathname === "/rewards"}>Rewards</NavItem>
                         </nav>
 
-                        {/* Right: Theme + Points + User */}
-                        <div className="flex items-center gap-1">
-                            <ThemeToggle/>
+                        {/* Right: Actions */}
+                        <div className="flex items-center gap-2">
+                            <div className="hidden sm:flex">
+                                <Button variant="ghost" size="sm" className="h-9 w-9 rounded-full p-0 text-slate-600 hover:bg-slate-100 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400" onClick={() => router.push("/trip-maker")} title="New Trip">
+                                    <Plus className="h-5 w-5" />
+                                </Button>
+                            </div>
+
+                            <div className="h-4 w-px bg-slate-200 hidden sm:block dark:bg-slate-800"></div>
 
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        className="gap-1"
-                                        onClick={() => router.push("/rewards")}
-                                        title="View rewards"
-                                        aria-label="View rewards"
-                                    >
-                                        <Star className="h-4 w-4"/>
-                                        {loadingPoints ? (
-                                            <span className="inline-flex h-4 w-10 animate-pulse rounded-sm bg-muted"/>
-                                        ) : (
-                                            <span className="tabular-nums">
-                        {fmtInt(points)}
-                      </span>
-                                        )}
-                                        <span className="hidden sm:inline">pts</span>
+                                    <Button variant="ghost" size="sm" className="h-9 rounded-full gap-2 px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" onClick={() => setTopupOpen(true)}>
+                                        <span className="text-sm font-semibold tabular-nums">{loadingPoints ? "..." : fmtInt(points)}</span>
+                                        <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent side="bottom">
-                                    Your rewards balance
-                                </TooltipContent>
+                                <TooltipContent>Your Balance</TooltipContent>
                             </Tooltip>
-
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="gap-1 border-border"
-                                onClick={() => {
-                                    setPointsInput("");
-                                    setTopupOpen(true);
-                                }}
-                                aria-label="Top up points"
-                            >
-                                <Plus className="h-4 w-4"/>
-                                Top up
-                            </Button>
 
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="ml-1 px-2"
-                                        aria-label="Open user menu"
-                                    >
-                                        <Avatar className="h-8 w-8">
-                                            <AvatarImage alt={userEmail ?? "User"}/>
-                                            <AvatarFallback>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full p-0 ml-1 ring-2 ring-transparent hover:ring-slate-100 dark:hover:ring-slate-800">
+                                        <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700">
+                                            <AvatarImage src="" />
+                                            <AvatarFallback className="bg-slate-100 text-slate-600 font-bold text-xs dark:bg-slate-800 dark:text-slate-300">
                                                 {initials(userEmail)}
                                             </AvatarFallback>
                                         </Avatar>
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align="end"
-                                    className="w-64 border-border"
-                                >
-                                    <DropdownMenuLabel className="flex items-center justify-between gap-2">
-                    <span className="truncate">
-                      {userEmail ?? "Signed in"}
-                    </span>
-                                        <Badge variant="secondary" className="gap-1">
-                                            <Crown className="h-3 w-3"/>
-                                            {loadingPoints ? "…" : fmtInt(points)}
-                                        </Badge>
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator/>
-                                    <DropdownMenuItem
-                                        onClick={() => router.push("/profile")}
-                                    >
-                                        <User className="mr-2 h-4 w-4"/>
-                                        Profile
+                                <DropdownMenuContent align="end" className="w-56 rounded-xl p-1 border-slate-100 shadow-lg dark:bg-slate-900 dark:border-slate-800">
+                                    <div className="px-2 py-2 mb-1">
+                                        <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{userEmail}</p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">Free Plan</p>
+                                    </div>
+                                    <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
+                                    <DropdownMenuItem onClick={() => router.push("/profile")} className="rounded-lg cursor-pointer text-slate-600 focus:text-blue-600 focus:bg-blue-50 dark:text-slate-300 dark:focus:bg-slate-800 dark:focus:text-blue-400">
+                                        <User className="mr-2 h-4 w-4" /> Profile
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() => router.push("/rewards")}
-                                    >
-                                        <Star className="mr-2 h-4 w-4"/>
-                                        Rewards
+                                    <DropdownMenuItem onClick={() => router.push("/pricing")} className="rounded-lg cursor-pointer text-slate-600 focus:text-blue-600 focus:bg-blue-50 dark:text-slate-300 dark:focus:bg-slate-800 dark:focus:text-blue-400">
+                                        <CreditCard className="mr-2 h-4 w-4" /> Billing
                                     </DropdownMenuItem>
-                                    <DropdownMenuSeparator/>
-                                    <DropdownMenuItem onClick={logout}>
-                                        <LogOut className="mr-2 h-4 w-4"/>
-                                        Logout
+                                    <div className="flex items-center justify-between px-2 py-1.5 text-slate-600 dark:text-slate-300">
+                                        <span className="text-sm">Theme</span>
+                                        <ThemeToggle />
+                                    </div>
+                                    <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
+                                    <DropdownMenuItem onClick={logout} className="rounded-lg cursor-pointer text-rose-600 focus:text-rose-700 focus:bg-rose-50 dark:text-rose-400 dark:focus:bg-rose-900/20">
+                                        <LogOut className="mr-2 h-4 w-4" /> Log out
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -566,119 +457,34 @@ export default function AppShell({children, userEmail}: Props) {
                     </div>
                 </header>
 
-                {/* Main */}
-                <main
-                    id="app-content"
-                    className="mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6 md:py-10 lg:px-8"
-                >
+                {/* Main Content */}
+                <main className="flex-1 w-full">
                     {children}
                 </main>
 
                 {/* Footer */}
-                <footer className="mt-auto border-t border-border/60 bg-background/80">
-                    <div
-                        className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-4 text-xs text-muted-foreground">
-                        {/* Top row */}
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            {/* Brand + tagline */}
-                            <div className="flex items-center gap-3">
-                                <div
-                                    className="grid h-8 w-8 place-items-center rounded-md bg-primary/90 text-primary-foreground">
-                                    <Map className="h-4 w-4"/>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-semibold text-foreground">
-                                        Itinero
-                                    </p>
-                                    <p className="text-[11px] text-muted-foreground">
-                                        Plan smarter, wander farther.
-                                    </p>
-                                </div>
+                <footer className="border-t border-slate-200 bg-white py-12 dark:bg-slate-950 dark:border-slate-800">
+                    <div className="mx-auto max-w-6xl px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                            <div className="flex h-6 w-6 items-center justify-center rounded bg-slate-900 text-white dark:bg-white dark:text-slate-900">
+                                <Plane className="h-3 w-3" />
                             </div>
-
-                            {/* Quick links */}
-                            <div className="flex flex-wrap items-center gap-3 text-[11px]">
-                                <FooterLink
-                                    href="/trips"
-                                    label="Trips"
-                                    active={pathname?.startsWith("/trips")}
-                                />
-                                <FooterLink
-                                    href="/preview"
-                                    label={
-                                        <span className="inline-flex items-center gap-1">
-                      Preview
-                                            {hasPreview && (
-                                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"/>
-                                            )}
-                    </span>
-                                    }
-                                    active={pathname === "/preview"}
-                                />
-                                <FooterLink
-                                    href="/rewards"
-                                    label="Rewards"
-                                    active={pathname === "/rewards"}
-                                />
-                                <FooterLink
-                                    href="/profile"
-                                    label="Profile"
-                                    active={pathname === "/profile"}
-                                />
-                            </div>
-
-                            {/* Status badge */}
-                            <div className="flex items-center justify-start gap-2 sm:justify-end">
-                <span className="hidden text-[11px] text-muted-foreground sm:inline">
-                  Rewards balance
-                </span>
-                                <div
-                                    className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2.5 py-1 text-[11px]">
-                                    <Star className="h-3 w-3 text-amber-500"/>
-                                    {loadingPoints ? (
-                                        <span className="inline-flex h-3 w-8 animate-pulse rounded-sm bg-muted"/>
-                                    ) : (
-                                        <span className="tabular-nums font-semibold text-foreground">
-                      {fmtInt(points)}
-                    </span>
-                                    )}
-                                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                    pts
-                  </span>
-                                </div>
-                            </div>
+                            Itinero
                         </div>
-
-                        {/* Divider */}
-                        <div className="h-px bg-border/60"/>
-
-                        {/* Bottom row */}
-                        <div
-                            className="flex flex-col gap-2 text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                            <p>
-                                © {year}{" "}
-                                <span className="font-medium text-foreground">
-                  Itinero
-                </span>
-                                . All rights reserved.
-                            </p>
-                            <div className="flex flex-wrap items-center gap-3">
-                                <p className="flex items-center gap-1">
-                                    <span aria-hidden>❤️</span>
-                                    <span>Built for curious travellers.</span>
-                                </p>
-                                <Link
-                                    href="/about"
-                                    className="underline-offset-2 hover:text-foreground hover:underline"
-                                >
-                                    About Itinero
-                                </Link>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">
+                            © {year} Itinero Inc. All rights reserved.
+                        </div>
+                        <div className="flex gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
+                            <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Terms</Link>
+                            <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Privacy</Link>
+                            <div className="flex items-center gap-1 text-slate-400 cursor-default">
+                                Made with <Heart className="h-3 w-3 text-rose-500 fill-rose-500" />
                             </div>
                         </div>
                     </div>
                 </footer>
 
-                {/* Top up dialog (POINTS → GHS, FX-aware) */}
+                {/* Top up dialog */}
                 <TopupDialogFxAware
                     topupOpen={topupOpen}
                     setTopupOpen={setTopupOpen}
@@ -688,7 +494,7 @@ export default function AppShell({children, userEmail}: Props) {
                     onPointsKeyDown={onPointsKeyDown}
                     startTopup={startTopup}
                     ghsPreview={ghsPreview}
-                    userCurrency={userCurrency}      // <- from profile.preferred_currency
+                    userCurrency={userCurrency}
                     ghsToUserRate={ghsToUserRate}
                 />
             </div>
@@ -696,7 +502,7 @@ export default function AppShell({children, userEmail}: Props) {
     );
 }
 
-/* ---------- Nav items ---------- */
+/* ---------- Nav Items ---------- */
 function NavItem({
                      href,
                      active,
@@ -710,13 +516,11 @@ function NavItem({
         <Link
             href={href}
             className={cn(
-                "inline-flex items-center rounded-md px-3 py-1.5 text-sm transition",
-                "hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "relative px-4 py-2 text-sm font-medium transition-all rounded-full",
                 active
-                    ? "bg-accent text-foreground shadow-sm"
-                    : "text-muted-foreground",
+                    ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
             )}
-            aria-current={active ? "page" : undefined}
         >
             {children}
         </Link>
@@ -736,37 +540,13 @@ function MobileNavItem({
         <Link
             href={href}
             className={cn(
-                "inline-flex items-center rounded-md px-3 py-2 text-sm",
+                "flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors",
                 active
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:bg-accent",
+                    ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
             )}
-            aria-current={active ? "page" : undefined}
         >
             {children}
-        </Link>
-    );
-}
-
-/* ---------- Footer link helper ---------- */
-function FooterLink({
-                        href,
-                        label,
-                        active,
-                    }: {
-    href: string;
-    label: React.ReactNode;
-    active?: boolean;
-}) {
-    return (
-        <Link
-            href={href}
-            className={cn(
-                "text-[11px] transition hover:text-foreground",
-                active ? "text-foreground font-medium" : "text-muted-foreground",
-            )}
-        >
-            {label}
         </Link>
     );
 }

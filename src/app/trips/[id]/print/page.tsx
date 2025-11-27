@@ -102,8 +102,6 @@ type DestinationHistoryRow = {
 };
 
 /* ---------------- helpers ---------------- */
-
-// Stable date formatting (UTC to avoid server TZ drift)
 const STABLE_DATE_LOCALE = "en-GB";
 const STABLE_DATE_TIMEZONE = "UTC";
 const STABLE_DTF = new Intl.DateTimeFormat(STABLE_DATE_LOCALE, {
@@ -178,9 +176,11 @@ function chip(label: string) {
                 display: "inline-block",
                 padding: "4px 10px",
                 borderRadius: 999,
-                background: "rgba(15,23,42,0.06)",
-                border: "1px solid rgba(15,23,42,0.08)",
-                fontSize: 12,
+                background: "#f1f5f9",
+                border: "1px solid #e2e8f0",
+                fontSize: 11,
+                color: "#475569",
+                fontWeight: 500,
             }}
         >
       {label}
@@ -188,16 +188,9 @@ function chip(label: string) {
     );
 }
 
-function whenPretty(w: DayBlock["when"]) {
-    return w.charAt(0).toUpperCase() + w.slice(1);
-}
-
-function whenEmoji(w: DayBlock["when"]) {
-    return w === "morning" ? "🌅" : w === "afternoon" ? "🌞" : "🌙";
-}
-
 function whenLabel(w: DayBlock["when"]) {
-    return `${whenEmoji(w)} ${whenPretty(w)}`;
+    const map = {morning: "🌅 Morning", afternoon: "🌞 Afternoon", evening: "🌙 Evening"};
+    return map[w] || w;
 }
 
 function parseInputs(inputs: unknown): Record<string, unknown> | null {
@@ -230,17 +223,6 @@ function emojiForInterest(raw: string): string {
     if (/(hike|trek|trail|mountain)/.test(s)) return "🥾";
     if (/(beach|coast|island)/.test(s)) return "🏖️";
     if (/(shopping|mall|market)/.test(s)) return "🛍️";
-    if (/(adventure|extreme)/.test(s)) return "⚡";
-    if (/(photo|photography)/.test(s)) return "📸";
-    if (/(coffee|cafe)/.test(s)) return "☕";
-    if (/(wine|brew|beer)/.test(s)) return "🍷";
-    if (/(family|kids|child)/.test(s)) return "👨‍👩‍👧‍👦";
-    if (/(wildlife|safari|animal)/.test(s)) return "🐘";
-    if (/(music|concert|live)/.test(s)) return "🎶";
-    if (/(architecture|design|building)/.test(s)) return "🏗️";
-    if (/(wellness|spa|relax|yoga)/.test(s)) return "🧘";
-    if (/(festival|event)/.test(s)) return "🎪";
-    if (/(culture|local)/.test(s)) return "🌍";
     return "⭐";
 }
 
@@ -403,13 +385,11 @@ export default async function TripPrintPage({
     const interests = getInterests(trip.inputs);
     const lodging = getLodging(trip.inputs);
 
-    // Absolute hero URL (ensure public access for headless)
     const hero =
         trip.cover_url && trip.cover_url.startsWith("http")
             ? trip.cover_url
             : "https://images.unsplash.com/photo-1589556045897-c444ffa0a6ff?auto=format&fit=crop&q=80&w=2000";
 
-    // Optional share QR
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
     const shareUrl = siteUrl ? `${siteUrl}/t/${trip.public_id}` : "";
     const qr = shareUrl
@@ -423,568 +403,347 @@ export default async function TripPrintPage({
         <html lang="en">
         <head>
             <meta charSet="utf-8"/>
-            <meta name="robots" content="noindex, nofollow"/>
             <title>{trip.title ?? "Trip"} – Printable</title>
-
-            {/* Speed up image fetching */}
             <link rel="preconnect" href="https://images.unsplash.com" crossOrigin=""/>
-            <link rel="dns-prefetch" href="//images.unsplash.com"/>
-            {/* If you serve images from Supabase storage, preconnect that too:
-         <link rel="preconnect" href="https://<project>.supabase.co" crossOrigin="" /> */}
 
-            {/* Preload hero so Chromium starts fetching immediately */}
-            <link rel="preload" as="image" href={hero}/>
-
-            {/* Print CSS */}
             <style>{`
-          /* Page setup */
-          @page { size: A4; margin: 16mm; }
-          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          html, body { height: 100%; }
+          @page { size: A4; margin: 15mm; }
+          * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          html, body { margin: 0; padding: 0; height: 100%; }
           body {
-            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-            color: var(--ink, #0f172a);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #1e293b;
             background: white;
-            counter-reset: page;
+            font-size: 12px;
+            line-height: 1.5;
           }
 
-          :root {
-            --ink: #0f172a;
-            --muted: #475569;
-            --line: rgba(15,23,42,0.12);
+          h1, h2, h3, h4 { margin: 0; font-weight: 700; color: #0f172a; }
+          h1 { font-size: 36px; letter-spacing: -0.03em; line-height: 1.1; }
+          h2 { font-size: 20px; margin-bottom: 12px; letter-spacing: -0.01em; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+          h3 { font-size: 14px; margin-bottom: 6px; color: #334155; text-transform: uppercase; letter-spacing: 0.05em; }
+          p { margin: 0 0 10px 0; color: #475569; }
+
+          .container { max-width: 190mm; margin: 0 auto; }
+          
+          /* Specific page breaks */
+          .page-break { page-break-after: always; }
+
+          /* Cover Page */
+          .cover-hero {
+            position: relative;
+            height: 120mm;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 10mm;
+            background-color: #f1f5f9;
+          }
+          .cover-img { width: 100%; height: 100%; object-fit: cover; }
+          .cover-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 60%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 12mm;
+            color: white;
+          }
+          .cover-hero h1 { color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+          .cover-meta { display: flex; gap: 8px; margin-bottom: 8px; }
+          .cover-badge { 
+            background: rgba(255,255,255,0.2); 
+            backdrop-filter: blur(4px); 
+            border: 1px solid rgba(255,255,255,0.3); 
+            color: white; 
+            padding: 4px 10px; 
+            border-radius: 99px; 
+            font-size: 10px; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.05em;
           }
 
-          img { max-width: 100%; height: auto; }
+          /* Stats Grid */
+          .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 10mm; }
+          .stat-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; background: #f8fafc; }
+          .stat-label { font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-bottom: 2px; }
+          .stat-val { font-size: 14px; font-weight: 700; color: #0f172a; }
 
-          /* Layout primitives */
-          .container { max-width: 730px; margin: 0 auto; }
-          .page { page-break-after: always; }
-          .page:last-child { page-break-after: auto; }
-
-          .cover { position: relative; min-height: calc(100vh - 32mm); border-radius: 20px; overflow: hidden; }
-          .cover-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
-          .cover-tint { position: absolute; inset: 0; background: rgba(0,0,0,0.28); }
-          .cover-inner { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; padding: 28mm 0 0 0; }
-          .glass { background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.35); backdrop-filter: blur(6px); }
-
-          h1 { font-size: 40px; line-height: 1.1; margin: 0; color: white; }
-          h2 { font-size: 22px; margin: 0 0 8px; }
-          h3 { font-size: 16px; margin: 16px 0 6px; }
-          p, li, td, th, small { font-size: 12.5px; line-height: 1.6; }
-          p, li { orphans: 3; widows: 3; hyphens: auto; }
-
-          .muted { color: var(--muted); }
-          .tiny { font-size: 11px; }
-          .chips { display: flex; gap: 8px; flex-wrap: wrap; }
-
-          .card { border: 1px solid var(--line); border-radius: 14px; padding: 16px; background: white; box-shadow: none !important; }
-          .stat, .toc-item, .kbyg-item, .day-table, .badge { box-shadow: none !important; filter: none !important; }
-
-          .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-          .stat { border: 1px dashed rgba(15,23,42,0.18); border-radius: 12px; padding: 10px 12px; background: rgba(15,23,42,0.02); }
-          .stat .k { font-weight: 600; font-size: 12px; color: #334155; }
-          .stat .v { font-weight: 700; font-size: 14px; }
-
-          .toc { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
-          .toc-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
-
-          .kbyg-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
-          .kbyg-item { border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
-          .kbyg-k { font-size: 11.5px; color: #334155; display: inline-flex; align-items: center; gap: 6px; }
-          .kbyg-v { font-weight: 600; }
-
-          .section-title { display:flex; align-items:center; gap:8px; margin-top:18px; }
-          .rule { height:1px; background: var(--line); border:0; margin:6px 0 0; }
-
-          .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.08); font-size: 11.5px; }
-
-          /* Day table */
-          .day-table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 12px; border: 1px solid var(--line); table-layout: fixed; }
-          thead { display: table-header-group; } /* repeat headers */
-          .day-table thead th { background: rgba(15,23,42,0.04); font-weight: 600; color: #334155; border-bottom: 1px solid rgba(15,23,42,0.1); }
-          .day-table th, .day-table td { padding: 10px 12px; text-align: left; vertical-align: middle; font-size: 12.5px; }
-          .day-table tbody tr:nth-child(odd) td { background: rgba(15,23,42,0.02); }
-          .day-table tbody tr td { border-bottom: 1px solid var(--line); }
-          .day-table tbody tr:last-child td { border-bottom: none; }
-
-          .place-cell-title { font-weight: 600; }
-          .place-cell-sub { color: #64748b; font-size: 11px; margin-top: 2px; word-break: break-word; hyphens: auto; }
-
-          /* WHEN badges */
-          .when-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: 11.5px; border: 1px solid transparent; }
-          .when-badge.morning { background: #fff7cc; border-color: #fde68a; color: #92400e; }
-          .when-badge.afternoon { background: #ffe8d6; border-color: #fed7aa; color: #9a3412; }
-          .when-badge.evening { background: #eae8ff; border-color: #c7d2fe; color: #3730a3; }
-
-          /* Footer with page numbers */
-          .footer { position: fixed; bottom: 6mm; left: 0; right: 0; color: var(--muted); font-size: 11px; }
-          .footer .inner { max-width: 730px; margin: 0 auto; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
-          .pageno:after { counter-increment: page; content: counter(page); }
-
-          /* Break control */
-          .avoid-break-inside { break-inside: avoid; page-break-inside: avoid; }
-          .avoid-break-after { break-after: avoid; page-break-after: avoid; }
-          .section { margin: 14px 0 0; }
-
-          /* Hide helper UI in the exported PDF */
-          .no-print {
-            /* visible on screen only */
+          /* Info Grid (2 Columns) */
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12mm; }
+          
+          /* KBYG Grid */
+          .kbyg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+          .kbyg-card { display: flex; gap: 8px; align-items: flex-start; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9; }
+          .kbyg-icon { font-size: 16px; }
+          
+          /* Timeline / Itinerary */
+          .day-block { 
+             margin-bottom: 12mm; 
+             break-inside: avoid; 
+             border: 1px solid #e2e8f0;
+             border-radius: 12px;
+             overflow: hidden;
           }
-
-          @media print {
-            .no-print {
-              display: none !important;
-            }
+          
+          .day-header { 
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: baseline; 
           }
+          .day-title { font-size: 16px; font-weight: 700; color: #0f172a; }
+          .day-meta { font-size: 11px; color: #64748b; font-weight: 500; }
+
+          .timeline-table { width: 100%; border-collapse: collapse; }
+          .timeline-table th { background: white; border-bottom: 1px solid #e2e8f0; padding: 8px 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #94a3b8; }
+          .timeline-table td { padding: 10px 12px; vertical-align: top; border-bottom: 1px solid #f1f5f9; }
+          .timeline-table tr:last-child td { border-bottom: none; }
+
+          .event-time { font-family: monospace; font-size: 11px; color: #64748b; font-weight: 600; }
+          .event-title { font-weight: 600; color: #0f172a; font-size: 13px; }
+          .event-details { font-size: 11px; color: #64748b; margin-top: 2px; }
+          .event-notes { margin-top: 4px; font-size: 11px; font-style: italic; color: #475569; background: #fffbeb; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+
+          /* Footer */
+          .global-footer { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            height: 10mm;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #94a3b8;
+            background: white;
+            padding-top: 2mm;
+          }
+          .page-number:after { content: "Page " counter(page); }
         `}</style>
 
-            {/* Mark hero-ready when the probe loads */}
             <script
                 dangerouslySetInnerHTML={{
                     __html: `
-              (function(){
-                function markReady(){ document.documentElement.setAttribute('data-hero-ready','1'); }
-                var img = document.getElementById('hero-probe');
-                if (!img) { markReady(); return; }
-                if (img.complete && img.naturalWidth > 0) { markReady(); return; }
-                img.addEventListener('load', markReady, { once: true });
-                img.addEventListener('error', markReady, { once: true });
-              })();
+              if (new URLSearchParams(window.location.search).get("print") === "1") {
+                window.addEventListener("load", () => setTimeout(window.print, 500));
+              }
             `,
                 }}
             />
         </head>
         <body>
-        {/* Hidden probe ensures the background actually fetches */}
-        <img id="hero-probe" src={hero} alt="" style={{display: "none"}}/>
-
-        {/* 🔽 Auto-print when ?print=1 is present */}
-        <script
-            dangerouslySetInnerHTML={{
-                __html: `
-              (function () {
-                try {
-                  var params = new URLSearchParams(window.location.search || "");
-                  if (params.get("print") === "1") {
-                    window.addEventListener("load", function () {
-                      setTimeout(function () {
-                        window.print();
-                      }, 500);
-                    });
-                  }
-                } catch (e) {
-                  console && console.warn && console.warn("[print] auto-print failed", e);
-                }
-              })();
-            `,
-            }}
-        />
-        {/* 🔼 End auto-print script */}
-
-        {/* -------- Cover Page -------- */}
-        <div className="page">
-            <div className="container">
-                <div className="cover">
-                    <div className="cover-bg" style={{backgroundImage: `url('${hero}')`}}/>
-                    <div className="cover-tint"/>
-                    <div className="cover-inner">
-                        <div style={{padding: "18mm", color: "white"}}>
-                            <div className="chips" style={{marginBottom: 10}}>
-                    <span
-                        className="badge"
-                        style={{
-                            background: "rgba(255,255,255,0.18)",
-                            color: "white",
-                            borderColor: "rgba(255,255,255,0.35)",
-                        }}
-                    >
-                      Saved Itinerary
-                    </span>
-                                <span
-                                    className="badge"
-                                    style={{
-                                        background: "rgba(255,255,255,0.18)",
-                                        color: "white",
-                                        borderColor: "rgba(255,255,255,0.35)",
-                                    }}
-                                >
-                      {destinationName}
-                    </span>
-                            </div>
-                            <h1>{trip.title ?? "Untitled Trip"}</h1>
-                            <p className="tiny" style={{color: "rgba(255,255,255,0.9)", marginTop: 10}}>
-                                {dateRange}
-                            </p>
-
-                            <div style={{height: 22}}/>
-
-                            <div
-                                className="glass"
-                                style={{
-                                    borderRadius: 14,
-                                    padding: 14,
-                                    display: "inline-flex",
-                                    gap: 10,
-                                    alignItems: "center",
-                                }}
-                            >
-                    <span
-                        className="badge"
-                        style={{
-                            background: "rgba(255,255,255,0.22)",
-                            color: "white",
-                            borderColor: "rgba(255,255,255,0.45)",
-                        }}
-                    >
-                      {days.length} day{days.length === 1 ? "" : "s"}
-                    </span>
-                                <span
-                                    className="badge"
-                                    style={{
-                                        background: "rgba(255,255,255,0.22)",
-                                        color: "white",
-                                        borderColor: "rgba(255,255,255,0.45)",
-                                    }}
-                                >
-                      Est. {money(trip.est_total_cost, trip.currency)}
-                    </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footer (shows on every page) */}
-                <div className="footer">
-                    <div className="inner">
-                        <span>{trip.title ?? "Trip"}</span>
-                        <span className="pageno"/>
-                        <span className="tiny">Printed {new Date().toISOString().slice(0, 10)}</span>
-                    </div>
-                </div>
-            </div>
+        <div className="global-footer">
+            <span>{trip.title}</span>
+            <span className="page-number"></span>
         </div>
 
-        {/* -------- Summary Page -------- */}
-        <div className="page">
-            <div className="container">
-                <h2>Trip Summary</h2>
-                <p className="muted" style={{marginTop: 2}}>
-                    A quick overview of your itinerary details and the day-by-day plan.
-                </p>
-
-                {/* Top Stats */}
-                <div
-                    className="section card avoid-break-inside"
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: qr ? "1fr auto" : "1fr",
-                        alignItems: "center",
-                        gap: 12,
-                    }}
-                >
-                    <div>
-                        <div className="stats">
-                            <div className="stat">
-                                <div className="k">Duration</div>
-                                <div className="v">
-                                    {days.length} day{days.length === 1 ? "" : "s"}
-                                </div>
-                            </div>
-                            <div className="stat">
-                                <div className="k">Destination</div>
-                                <div className="v">{destinationName}</div>
-                            </div>
-                            <div className="stat">
-                                <div className="k">Est. Total Cost</div>
-                                <div className="v">{money(totalCost, trip.currency)}</div>
-                            </div>
-                        </div>
-
-                        <div style={{height: 10}}/>
-                        <div className="chips">
-                            {chip(dateRange)}
-                            {chip(`${totalBlocks} planned activit${totalBlocks === 1 ? "y" : "ies"}`)}
-                        </div>
+        {/* --- Page 1: Cover & Context --- */}
+        <div className="container page-break">
+            <div className="cover-hero">
+                <img src={hero} className="cover-img" alt="Cover"/>
+                <div className="cover-overlay">
+                    <div className="cover-meta">
+                        <span className="cover-badge">Itinerary</span>
+                        <span className="cover-badge">{destinationName}</span>
                     </div>
+                    <h1>{trip.title || "Untitled Trip"}</h1>
+                    <p style={{color: "rgba(255,255,255,0.9)", marginTop: "4px", fontSize: "14px"}}>
+                        {dateRange}
+                    </p>
+                </div>
+            </div>
 
-                    {qr && (
-                        <img
-                            src={qr}
-                            alt="Trip QR"
-                            width={60}
-                            height={60}
-                            style={{borderRadius: 8, border: "1px solid var(--line)"}}
-                        />
+            {/* Key Stats */}
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <div className="stat-label">Duration</div>
+                    <div className="stat-val">{days.length} days</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">Est. Cost</div>
+                    <div className="stat-val">{money(totalCost, trip.currency)}</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">Activities</div>
+                    <div className="stat-val">{totalBlocks}</div>
+                </div>
+                <div className="stat-card">
+                    <div className="stat-label">City</div>
+                    <div className="stat-val" style={{fontSize: 12, lineHeight: 1.2}}>{destinationName}</div>
+                </div>
+            </div>
+
+            {/* Context Grid: About & KBYG */}
+            <div className="info-grid">
+                {/* Left Column: Narrative */}
+                <div>
+                    {(aboutText || historyText) && (
+                        <div style={{marginBottom: "8mm"}}>
+                            <h3>About {destinationName}</h3>
+                            {aboutText && <p style={{marginBottom: "8px"}}>{aboutText}</p>}
+                            {historyText && (
+                                <>
+                                    <h3>History</h3>
+                                    <p>{historyText}</p>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {lodging && (
+                        <div>
+                            <h3>🏨 Accommodation</h3>
+                            <div style={{
+                                background: "#f8fafc",
+                                padding: "10px",
+                                borderRadius: "8px",
+                                border: "1px solid #e2e8f0"
+                            }}>
+                                <div style={{fontWeight: 600}}>{lodging.name}</div>
+                                <div className="tiny muted">Check app for details</div>
+                            </div>
+                        </div>
                     )}
                 </div>
 
-                {/* Lodging */}
-                {lodging && (
-                    <div className="section card avoid-break-inside">
-                        <div className="section-title">
-                            <h3 style={{margin: 0}}>Where You’re Staying</h3>
-                        </div>
-                        <hr className="rule"/>
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                gap: 12,
-                            }}
-                        >
-                            <div>
-                                <div style={{fontWeight: 700}}>{lodging.name}</div>
-                                <div className="tiny muted">Check your app for directions &amp; check-in info</div>
+                {/* Right Column: KBYG & Sources */}
+                <div>
+                    {kbyg && (
+                        <div style={{marginBottom: "8mm"}}>
+                            <h3>Know Before You Go</h3>
+                            <div className="kbyg-grid">
+                                {kbyg.currency && (
+                                    <div className="kbyg-card">
+                                        <span className="kbyg-icon">💱</span>
+                                        <div>
+                                            <div className="tiny muted">Currency</div>
+                                            <div style={{fontWeight: 600}}>{kbyg.currency}</div>
+                                        </div>
+                                    </div>
+                                )}
+                                {kbyg.weather && (
+                                    <div className="kbyg-card">
+                                        <span className="kbyg-icon">🌤️</span>
+                                        <div>
+                                            <div className="tiny muted">Weather</div>
+                                            <div
+                                                style={{fontWeight: 600}}>{typeof kbyg.weather === 'object' && (kbyg.weather as any).summary ? (kbyg.weather as any).summary : '—'}</div>
+                                        </div>
+                                    </div>
+                                )}
+                                {kbyg.plugs && (
+                                    <div className="kbyg-card">
+                                        <span className="kbyg-icon">🔌</span>
+                                        <div>
+                                            <div className="tiny muted">Plugs</div>
+                                            <div style={{fontWeight: 600}}>{kbyg.plugs}</div>
+                                        </div>
+                                    </div>
+                                )}
+                                {kbyg.getting_around && (
+                                    <div className="kbyg-card">
+                                        <span className="kbyg-icon">🚌</span>
+                                        <div>
+                                            <div className="tiny muted">Transport</div>
+                                            <div style={{
+                                                fontWeight: 600,
+                                                fontSize: 10
+                                            }}>{kbyg.getting_around.split(',')[0]}</div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* Interests */}
-                {interests.length > 0 && (
-                    <div className="section card avoid-break-inside">
-                        <div className="section-title">
-                            <h3 style={{margin: 0}}>Your Interests</h3>
-                        </div>
-                        <hr className="rule"/>
-                        <div className="chips" style={{marginTop: 8}}>
-                            {interests.map((i) => (
-                                <span
-                                    key={i}
-                                    className="badge"
-                                    style={{display: "inline-flex", gap: 6, alignItems: "center"}}
-                                >
-                      <span aria-hidden="true">{emojiForInterest(i)}</span>
-                      <span>{i}</span>
-                    </span>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Destination: About / History */}
-                {(aboutText || historyText) && (
-                    <div className="section card avoid-break-inside">
-                        <div className="section-title">
-                            <h3 style={{margin: 0}}>About the Destination</h3>
-                        </div>
-                        <hr className="rule"/>
-                        {aboutText && <p style={{marginTop: 8}}>{aboutText}</p>}
-                        {historyText && (
-                            <>
-                                <h3 style={{marginTop: 14}}>A Brief History</h3>
-                                <p>{historyText}</p>
-                            </>
-                        )}
-                    </div>
-                )}
-
-                {/* KBYG */}
-                {kbyg && (
-                    <div className="section card avoid-break-inside">
-                        <div className="section-title">
-                            <h3 style={{margin: 0}}>Know Before You Go</h3>
-                        </div>
-                        <hr className="rule"/>
-                        <div className="kbyg-grid" style={{marginTop: 8}}>
-                            {kbyg.currency && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("currency")}</span>
-                                        <span>Currency</span>
-                                    </div>
-                                    <div className="kbyg-v">{kbyg.currency}</div>
-                                </div>
-                            )}
-                            {kbyg.plugs && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("plugs")}</span>
-                                        <span>Power Plugs</span>
-                                    </div>
-                                    <div className="kbyg-v">{kbyg.plugs}</div>
-                                </div>
-                            )}
-                            {kbyg.languages && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("languages")}</span>
-                                        <span>Languages</span>
-                                    </div>
-                                    <div className="kbyg-v">
-                                        {Array.isArray(kbyg.languages) ? kbyg.languages.join(", ") : kbyg.languages}
-                                    </div>
-                                </div>
-                            )}
-                            {kbyg.getting_around && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("getting_around")}</span>
-                                        <span>Getting Around</span>
-                                    </div>
-                                    <div className="kbyg-v">{kbyg.getting_around}</div>
-                                </div>
-                            )}
-                            {kbyg.esim && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("esim")}</span>
-                                        <span>eSIM</span>
-                                    </div>
-                                    <div className="kbyg-v">{kbyg.esim}</div>
-                                </div>
-                            )}
-                            {kbyg.primary_city && (
-                                <div className="kbyg-item">
-                                    <div className="kbyg-k">
-                                        <span aria-hidden="true">{kbygEmoji("primary_city")}</span>
-                                        <span>Primary City</span>
-                                    </div>
-                                    <div className="kbyg-v">{kbyg.primary_city}</div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Sources */}
-                {sources && sources.length > 0 && (
-                    <div className="section card avoid-break-inside">
-                        <div className="section-title">
-                            <h3 style={{margin: 0}}>Sources</h3>
-                        </div>
-                        <hr className="rule"/>
-                        <ul style={{paddingLeft: 18, marginTop: 8}}>
-                            {sources.slice(0, 8).map((s, i) => (
-                                <li key={i} className="tiny" style={{wordBreak: "break-word"}}>
-                                    {s}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-
-                {/* TOC */}
-                <div className="section avoid-break-inside">
-                    <h3>Table of Contents</h3>
-                    <div className="toc">
-                        {days.map((d, i) => (
-                            <div className="toc-item" key={i}>
-                                <div style={{fontWeight: 600}}>Day {i + 1}</div>
-                                <div className="muted tiny">{formatDate(d.date)}</div>
-                                <div className="tiny" style={{marginTop: 6}}>
-                                    {d.blocks.length} activit{d.blocks.length === 1 ? "y" : "ies"}
-                                </div>
+                    {/* Interests Chips */}
+                    {interests.length > 0 && (
+                        <div>
+                            <h3>Interests</h3>
+                            <div style={{display: "flex", flexWrap: "wrap", gap: "6px"}}>
+                                {interests.map((i) => (
+                                    <span key={i} style={{
+                                        fontSize: "11px",
+                                        background: "#f1f5f9",
+                                        padding: "4px 8px",
+                                        borderRadius: "6px",
+                                        border: "1px solid #e2e8f0"
+                                    }}>
+                                    {emojiForInterest(i)} {i}
+                                </span>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="footer">
-                    <div className="inner">
-                        <span>Summary</span>
-                        <span className="pageno"/>
-                        <span className="tiny">Printed {new Date().toISOString().slice(0, 10)}</span>
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
 
-        {/* -------- Day-by-Day Pages -------- */}
-        {days.map((d, idx) => {
-            const dayDuration = sum(d.blocks, (b) => b.duration_min);
-            const dayTravel = sum(d.blocks, (b) => b.travel_min_from_prev);
-            const dayCost = sum(d.blocks, (b) => b.est_cost);
+        {/* --- Itinerary Section --- */}
+        <div className="container" style={{marginTop: "0"}}>
+            <h2 style={{marginBottom: '16px', borderBottom: 'none'}}>Detailed Itinerary</h2>
 
-            return (
-                <div className="page" key={idx}>
-                    <div className="container">
-                        <div
-                            className="day-head"
-                            style={{
-                                display: "flex",
-                                alignItems: "baseline",
-                                justifyContent: "space-between",
-                                marginBottom: 8,
-                            }}
-                        >
-                            <h2 style={{margin: 0}}>Day {idx + 1}</h2>
-                            <div className="tiny muted" style={{display: "flex", gap: 12}}>
-                                <span>{formatDate(d.date)}</span>
-                                <span>•</span>
-                                <span>Activities: {d.blocks.length}</span>
-                                <span>•</span>
-                                <span>Duration: {fmtHoursMin(dayDuration)}</span>
-                                <span>•</span>
-                                <span>Travel: {fmtHoursMin(dayTravel)}</span>
-                                <span>•</span>
-                                <span>Est: {money(dayCost, trip.currency)}</span>
-                            </div>
+            {days.map((day, idx) => {
+                const dayCost = sum(day.blocks, (b) => b.est_cost);
+
+                return (
+                    <div key={idx} className="day-block">
+                        <div className="day-header">
+                            <span className="day-title">Day {idx + 1} · {formatDate(day.date)}</span>
+                            <span
+                                className="day-meta">{day.blocks.length} Stops · Est. {money(dayCost, trip.currency)}</span>
                         </div>
 
-                        {/* lock column widths */}
-                        <table className="day-table avoid-break-inside">
-                            <colgroup>
-                                <col style={{width: "20%"}}/>
-                                {/* When */}
-                                <col style={{width: "34%"}}/>
-                                {/* Place */}
-                                <col style={{width: "16%"}}/>
-                                {/* Duration */}
-                                <col style={{width: "16%"}}/>
-                                {/* Travel */}
-                                <col style={{width: "14%"}}/>
-                                {/* Notes */}
-                            </colgroup>
+                        <table className="timeline-table">
                             <thead>
                             <tr>
-                                <th>🕒 When</th>
-                                <th>📍 Place</th>
-                                <th>⏱️ Duration</th>
-                                <th>🚗 Travel</th>
-                                <th>📝 Notes</th>
+                                <th style={{width: '15%'}}>Time</th>
+                                <th style={{width: '40%'}}>Activity</th>
+                                <th style={{width: '45%'}}>Details</th>
                             </tr>
                             </thead>
                             <tbody>
-                            {d.blocks.map((b) => (
-                                <tr key={b.id ?? `${b.order_index}-${b.title}`}>
+                            {day.blocks.map(b => (
+                                <tr key={b.id || b.title}>
                                     <td>
-                                        <span className={`when-badge ${b.when}`}>{whenLabel(b.when)}</span>
+                                        <div className="event-time">{whenLabel(b.when)}</div>
+                                        <div style={{
+                                            fontSize: '10px',
+                                            color: '#94a3b8',
+                                            marginTop: 2
+                                        }}>{minutes(b.duration_min)}</div>
                                     </td>
                                     <td>
-                                        <div className="place-cell-title">{placeName(b.place_id)}</div>
-                                        <div className="place-cell-sub">{b.title}</div>
+                                        <div className="event-title">{b.title}</div>
+                                        {b.place_id && (
+                                            <div className="event-details"
+                                                 style={{display: 'flex', alignItems: 'center', gap: 4}}>
+                                                <span>📍</span> {placeName(b.place_id)}
+                                            </div>
+                                        )}
                                     </td>
-                                    <td>{minutes(b.duration_min)}</td>
-                                    <td>{minutes(b.travel_min_from_prev)}</td>
-                                    <td className="tiny">
-                                        {b.notes ? b.notes : <span className="muted">—</span>}
+                                    <td>
+                                        <div className="event-details">
+                                            {b.est_cost > 0 && <span>Cost: {money(b.est_cost, trip.currency)}</span>}
+                                            {b.travel_min_from_prev > 0 && <span
+                                                style={{marginLeft: 8}}>🚗 {minutes(b.travel_min_from_prev)} travel</span>}
+                                        </div>
+                                        {b.notes && <div className="event-notes">{b.notes}</div>}
                                     </td>
                                 </tr>
                             ))}
                             </tbody>
                         </table>
-
-                        <div className="section card avoid-break-inside">
-                            <div className="tiny muted">
-                                Tip: keep some buffer between activities to account for local conditions and traffic.
-                            </div>
-                        </div>
-
-                        <div className="footer">
-                            <div className="inner">
-                    <span>
-                      {trip.title ?? "Trip"} • Day {idx + 1}
-                    </span>
-                                <span className="pageno"/>
-                                <span className="tiny">Printed {new Date().toISOString().slice(0, 10)}</span>
-                            </div>
-                        </div>
                     </div>
-                </div>
-            );
-        })}
+                )
+            })}
+        </div>
         </body>
         </html>
     );

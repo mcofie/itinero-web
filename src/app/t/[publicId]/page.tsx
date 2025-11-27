@@ -1,4 +1,3 @@
-// app/t/[publicId]/page.tsx
 import * as React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -14,10 +13,19 @@ import {
     CloudSun,
     ChevronDown,
     User2,
+    CalendarDays,
+    Sparkles,
+    CreditCard,
+    Wallet,
+    Info,
+    Plane
 } from "lucide-react";
 import MapSection from "@/app/t/[publicId]/MapSection";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-/* ---------------- Types ---------------- */
+/* ---------------- Types (Preserved) ---------------- */
 
 type TripSummary = Record<string, unknown> | null;
 
@@ -128,7 +136,6 @@ type ProfileRow =
 }
     | null;
 
-/** New: raw row from itinero.itinerary_items */
 type ItineraryItemRow =
     | {
     id: string;
@@ -139,12 +146,12 @@ type ItineraryItemRow =
     est_cost?: number | null;
     duration_min?: number | null;
     travel_min_from_prev?: number | null;
-    date?: string | null; // ISO timestamp
-    when?: string | null; // optional friendly label if you store one
+    date?: string | null;
+    when?: string | null;
 }
     | null;
 
-/* ---------------- Coercion helpers ---------------- */
+/* ---------------- Helpers ---------------- */
 
 function asPlaceArray(u: unknown): PlaceLite[] {
     if (!Array.isArray(u)) return [];
@@ -169,7 +176,7 @@ function isObject(x: unknown): x is Record<string, unknown> {
 
 function hasKey<T extends string>(
     obj: Record<string, unknown>,
-    key: T,
+    key: T
 ): obj is Record<T, unknown> & typeof obj {
     return Object.prototype.hasOwnProperty.call(obj, key);
 }
@@ -181,7 +188,6 @@ function coercePayload(u: unknown): DestinationHistoryPayload {
     if (typeof u.about === "string") out.about = u.about;
     if (typeof u.history === "string") out.history = u.history;
 
-    // Safely read u.kbyg without `any`
     if (hasKey(u, "kbyg") && isObject(u.kbyg)) {
         const k = u.kbyg as Record<string, unknown>;
         const kbyg: ItineroKBYG = {};
@@ -263,471 +269,6 @@ function buildMetaFromHistory(h: DestinationHistoryRow | null | undefined) {
     };
 }
 
-/* ---------------- Metadata (SEO) ---------------- */
-
-export async function generateMetadata({
-                                           params,
-                                       }: {
-    params: { publicId: string };
-}): Promise<Metadata> {
-    const sb = await createClientServerRSC();
-
-    const { data: trip } = await sb
-        .schema("itinero")
-        .from("trips")
-        .select("title, cover_url, start_date, end_date, destination_id")
-        .eq("public_id", params.publicId)
-        .maybeSingle();
-
-    let ogImage =
-        trip?.cover_url ||
-        "https://images.unsplash.com/photo-1526772662000-3b5ec3a7fe05ff?q=80&w=1600&auto=format&fit=crop";
-
-    if (trip?.destination_id) {
-        const { data: dest } = await sb
-            .schema("itinero")
-            .from("destinations")
-            .select("id,current_history_id")
-            .eq("id", trip.destination_id)
-            .maybeSingle<DestinationRow>();
-
-        if (dest?.current_history_id) {
-            const { data: hist } = await sb
-                .schema("itinero")
-                .from("destination_history")
-                .select("id,backdrop_image_url")
-                .eq("id", dest.current_history_id)
-                .maybeSingle<DestinationHistoryRow>();
-            if (hist?.backdrop_image_url) ogImage = hist.backdrop_image_url;
-        }
-    }
-
-    const title = trip?.title ? `${trip.title} • Itinero` : "Shared Trip • Itinero";
-    const description =
-        trip?.start_date || trip?.end_date
-            ? `Travel dates: ${formatDateRange(
-                trip?.start_date ?? undefined,
-                trip?.end_date ?? undefined,
-            )}`
-            : "View this shared itinerary on Itinero.";
-
-    return {
-        title,
-        description,
-        openGraph: {
-            title,
-            description,
-            images: [{ url: ogImage, width: 1600, height: 840 }],
-        },
-        twitter: { card: "summary_large_image", title, description, images: [ogImage] },
-    };
-}
-
-/* ---------------- Page ---------------- */
-
-export default async function PublicTripPage({
-                                                 params,
-                                             }: {
-    params: { publicId: string };
-}) {
-    const sb = await createClientServerRSC();
-
-    // Load trip (include user_id for owner)
-    const { data, error } = await sb
-        .schema("itinero")
-        .from("trips")
-        .select("*")
-        .eq("public_id", params.publicId)
-        .maybeSingle<TripRowLoose>();
-
-    if (error || !data) notFound();
-
-    // Fetch owner profile (optional, fail-soft)
-    let owner: ProfileRow = null;
-    if (data.user_id) {
-        const { data: o } = await sb
-            .schema("itinero")
-            .from("profiles")
-            .select("id,full_name,avatar_url,username")
-            .eq("id", data.user_id)
-            .maybeSingle<ProfileRow>();
-        owner = o ?? null;
-    }
-
-    // Destination history
-    let dest: DestinationRow = null;
-    let hist: DestinationHistoryRow = null;
-
-    if (data.destination_id) {
-        const { data: dRow } = await sb
-            .schema("itinero")
-            .from("destinations")
-            .select("id,name,current_history_id")
-            .eq("id", data.destination_id)
-            .maybeSingle<DestinationRow>();
-        dest = dRow ?? null;
-
-        if (dest?.current_history_id) {
-            const { data: hRow } = await sb
-                .schema("itinero")
-                .from("destination_history")
-                .select(
-                    "id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution",
-                )
-                .eq("id", dest.current_history_id)
-                .maybeSingle<DestinationHistoryRow>();
-            hist = hRow ?? null;
-        }
-    }
-
-    const { meta: destMeta, heroUrl, attribution } = buildMetaFromHistory(hist);
-
-    const title = (data.title ?? "Shared Trip").trim();
-    const dateRange = formatDateRange(
-        data.start_date ?? undefined,
-        data.end_date ?? undefined,
-    );
-
-    // Prefer destination_history backdrop over trip.cover_url
-    const cover =
-        data.cover_url ||
-        heroUrl ||
-        "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1600&auto=format&fit=crop";
-
-    // Tolerant parsing for trip content
-    const tripSummary: TripSummary = (data.trip_summary as TripSummary) ?? null;
-
-    // ===== NEW: Pull itinerary from itinero.itinerary_items =====
-    const { data: itemsRows } = await sb
-        .schema("itinero")
-        .from("itinerary_items")
-        .select(
-            "id,trip_id,place_id,title,notes,est_cost,duration_min,travel_min_from_prev,when, date",
-        )
-        .eq("trip_id", data.id)
-        .order("date", { ascending: true, nullsFirst: true })
-        .returns<ItineraryItemRow[]>();
-
-    const items = Array.isArray(itemsRows)
-        ? (itemsRows.filter(Boolean) as NonNullable<ItineraryItemRow>[])
-        : [];
-
-    // Collect place ids used by itinerary items
-    const placeIds = Array.from(
-        new Set(items.map((it) => it.place_id).filter(Boolean)),
-    ) as string[];
-
-    // Fetch details for places referenced in itinerary
-    let placeDetails: PlaceDetail[] = [];
-    if (placeIds.length > 0) {
-        const { data: placeRows } = await sb
-            .schema("itinero")
-            .from("places")
-            .select("id,name,category,lat,lng,description")
-            .in("id", placeIds)
-            .returns<PlaceDetail[]>();
-        placeDetails = placeRows ?? [];
-    }
-
-    // Build Day[] structure for the client component (group by date)
-    const days: Day[] =
-        items.length > 0
-            ? buildDaysFromItems(items)
-            : fallbackDaysFromTrip(data.days);
-
-    // Build PlaceLite[] from fetched placeDetails (fallback to legacy if any)
-    const places: PlaceLite[] =
-        (placeDetails?.length
-            ? placeDetails.map(({ id, name, category }) => ({
-                id,
-                name,
-                category: category ?? null,
-            }))
-            : asPlaceArray(data.places)) ?? [];
-
-    // Owner pill content
-    const ownerName =
-        (owner?.full_name && owner.full_name.trim()) ||
-        (owner?.username && `@${owner.username}`) ||
-        null;
-    const ownerAvatar = owner?.avatar_url || null;
-
-    // Interests (top, non-collapsible)
-    const interests = extractInterests(data.inputs, tripSummary);
-
-    return (
-        <div className="min-h-dvh bg-background text-foreground">
-            {/* HERO */}
-            <section className="relative h-[40svh] w-full overflow-hidden sm:h-[44svh]">
-                <Image
-                    src={cover}
-                    alt={title}
-                    priority
-                    fill
-                    className="object-cover"
-                    sizes="100vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/35 to-black/60" />
-                <div className="absolute inset-x-0 bottom-0">
-                    <div className="mx-auto w-full max-w-5xl px-4 pb-5 md:max-w-6xl">
-                        <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-white/90 ring-1 ring-white/20 backdrop-blur">
-                            View-only share
-                        </div>
-
-                        <h1 className="mt-2 text-pretty text-2xl font-bold tracking-tight text-white drop-shadow sm:text-3xl md:text-4xl">
-                            {title}
-                        </h1>
-
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-white/90">
-                            <p className="text-sm sm:text-base">{dateRange}</p>
-
-                            {/* Owner pill */}
-                            {ownerName && (
-                                <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-2.5 py-1 text-xs ring-1 ring-white/20 backdrop-blur">
-                  <span className="relative inline-block h-5 w-5 overflow-hidden rounded-full bg-white/20">
-                    {ownerAvatar ? (
-                        <Image
-                            src={ownerAvatar}
-                            alt={ownerName}
-                            fill
-                            sizes="24px"
-                            className="object-cover"
-                        />
-                    ) : (
-                        <User2 className="absolute inset-0 m-auto h-4 w-4 text-white/80" />
-                    )}
-                  </span>
-                  <span className="font-medium">{ownerName}</span>
-                </span>
-                            )}
-                        </div>
-
-                        {/* Interests (top, not collapsible) */}
-                        {interests.length > 0 && (
-                            <div className="mt-3">
-                                <InterestChips interests={interests} pillTone="light" />
-                            </div>
-                        )}
-
-                        {attribution && (
-                            <p className="mt-1 text-[11px] text-white/75">{attribution}</p>
-                        )}
-                    </div>
-                </div>
-            </section>
-
-            {/* ===== MAIN PRIORITY: Itinerary first (built from itinerary_items) ===== */}
-            <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:py-8 md:max-w-6xl">
-                <PublicItineraryClient
-                    currency={data.currency ?? "USD"}
-                    estTotalCost={coerceNumber(data.est_total_cost)}
-                    tripSummary={tripSummary}
-                    days={days}
-                    places={places}
-                    placeDetails={placeDetails}
-                />
-            </main>
-
-            {/* Destination knowledge (collapsible) — AFTER itinerary */}
-            {(destMeta?.description ||
-                destMeta?.history ||
-                destMeta?.currency_code ||
-                destMeta?.plugs ||
-                destMeta?.languages ||
-                destMeta?.transport ||
-                destMeta?.esim_provider ||
-                destMeta?.city ||
-                destMeta?.weather_desc) && (
-                <section className="mx-auto w-full max-w-5xl px-4 pt-2 pb-8 sm:pt-3 md:max-w-6xl">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        {/* About / History */}
-                        <div className="space-y-3 sm:col-span-2">
-                            {destMeta?.description && (
-                                <CollapsibleCard title="About">
-                                    <p className="text-sm leading-relaxed text-muted-foreground">
-                                        {destMeta.description}
-                                    </p>
-                                </CollapsibleCard>
-                            )}
-                            {destMeta?.history && (
-                                <CollapsibleCard title="History">
-                                    <p className="text-sm leading-relaxed text-muted-foreground">
-                                        {destMeta.history}
-                                    </p>
-                                </CollapsibleCard>
-                            )}
-                        </div>
-
-                        {/* Know before you go (icons) */}
-                        <div className="sm:col-span-1">
-                            <CollapsibleCard title="Destination at a glance">
-                                <IconFacts
-                                    facts={[
-                                        { label: "City", value: destMeta?.city, Icon: MapPin },
-                                        {
-                                            label: "Currency",
-                                            value: destMeta?.currency_code,
-                                            Icon: DollarSign,
-                                        },
-                                        {
-                                            label: "Plugs",
-                                            value: joinArr(destMeta?.plugs),
-                                            Icon: Plug,
-                                        },
-                                        {
-                                            label: "Languages",
-                                            value: joinArr(destMeta?.languages),
-                                            Icon: Globe,
-                                        },
-                                        {
-                                            label: "Getting around",
-                                            value: joinArr(destMeta?.transport),
-                                            Icon: MapPin,
-                                        },
-                                        {
-                                            label: "eSIM",
-                                            value: destMeta?.esim_provider,
-                                            Icon: Phone,
-                                        },
-                                        {
-                                            label: "Weather",
-                                            value: destMeta?.weather_desc,
-                                            Icon: CloudSun,
-                                        },
-                                    ]}
-                                />
-                            </CollapsibleCard>
-                        </div>
-                    </div>
-                </section>
-            )}
-
-            {/* Map (collapsible) — plots all places with coordinates via Leaflet */}
-            {placeDetails.length > 0 && (
-                <section className="mx-auto w-full max-w-5xl px-4 pt-2 pb-8 sm:pt-3 md:max-w-6xl">
-                    <CollapsibleCard title="Map of places" initialOpen={false}>
-                        {/* additional wrapper to enforce bounds inside details */}
-                        <div className="relative isolate overflow-hidden rounded-xl border border-border/60">
-                            <MapSection places={placeDetails} />
-                        </div>
-                    </CollapsibleCard>
-                </section>
-            )}
-
-            {/* Footer */}
-            <footer className="border-t border-border/60 py-8 text-center text-xs text-muted-foreground">
-                Shared via Itinero — plan smarter, wander farther.
-            </footer>
-        </div>
-    );
-}
-
-/* ---------------- Presentational bits ---------------- */
-
-function CollapsibleCard({
-                             title,
-                             children,
-                             /** renamed from defaultOpen */
-                             initialOpen = false,
-                         }: {
-    title: string;
-    children: React.ReactNode;
-    initialOpen?: boolean;
-}) {
-    return (
-        <details
-            className="group rounded-2xl border border-border/40 bg-card/70"
-            open={initialOpen || undefined}
-        >
-            <summary
-                className="flex cursor-pointer items-center justify-between gap-2 px-4 py-3 sm:px-5"
-                style={{ listStyle: "none" }}
-            >
-                <span className="text-sm font-semibold tracking-wide">{title}</span>
-                <ChevronDown
-                    className="h-4 w-4 transition-transform duration-200 ease-out group-open:rotate-180"
-                    aria-hidden
-                />
-            </summary>
-            <div className="border-t border-border/40 px-4 py-4 sm:px-5">
-                {children}
-            </div>
-        </details>
-    );
-}
-
-function IconFacts({
-                       facts,
-                   }: {
-    facts: Array<{
-        label: string;
-        value?: string | null;
-        Icon: React.ComponentType<{ className?: string }>;
-    }>;
-}) {
-    const rows = facts.filter(
-        (f) => f.value && String(f.value).trim().length > 0,
-    );
-    if (rows.length === 0) return null;
-
-    return (
-        <dl className="grid grid-cols-1 gap-2">
-            {rows.map(({ label, value, Icon }) => (
-                <div
-                    key={label}
-                    className="flex items-center gap-3 rounded-xl border border-border/30 bg-muted/40 px-3 py-2"
-                >
-          <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-background/80">
-            <Icon className="h-4 w-4 text-muted-foreground" />
-          </span>
-                    <div className="min-w-0">
-                        <dt className="text-xs text-muted-foreground">{label}</dt>
-                        <dd className="text-sm font-medium">{value}</dd>
-                    </div>
-                </div>
-            ))}
-        </dl>
-    );
-}
-
-/* ===== Interests UI (top, non-collapsible) ===== */
-
-function InterestChips({
-                           interests,
-                           pillTone = "light",
-                       }: {
-    interests: string[];
-    /** "light" = for dark hero, "default" = for normal sections */
-    pillTone?: "light" | "default";
-}) {
-    const base =
-        pillTone === "light"
-            ? "border-white/30 bg-white/10 text-white"
-            : "border-border/60 bg-background/50 text-foreground";
-    return (
-        <ul className="flex flex-wrap gap-2">
-            {interests.map((raw) => {
-                const label = titleCase(raw);
-                const emoji = interestEmoji(raw);
-                return (
-                    <li
-                        key={raw}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm backdrop-blur ${base}`}
-                        title={label}
-                    >
-            <span aria-hidden className="text-base leading-none">
-              {emoji}
-            </span>
-                        <span className="leading-none">{label}</span>
-                    </li>
-                );
-            })}
-        </ul>
-    );
-}
-
-/* ---------------- Server helpers ---------------- */
-
 function formatDateRange(start?: string, end?: string) {
     if (!start && !end) return "—";
     const s = start ? new Date(start + "T00:00:00") : null;
@@ -758,7 +299,7 @@ function joinArr(arr?: string[]) {
 
 function extractInterests(
     inputsRaw: unknown,
-    tripSummary: TripSummary,
+    tripSummary: TripSummary
 ): string[] {
     const fromInputs = parseInterestsFrom(inputsRaw);
     if (fromInputs.length > 0) return fromInputs;
@@ -770,7 +311,6 @@ function extractInterests(
 }
 
 function parseInterestsFrom(maybe: unknown): string[] {
-    // Accept JSON string or object; avoid `any`
     let obj: unknown = maybe;
     if (typeof maybe === "string") {
         try {
@@ -811,10 +351,8 @@ function titleCase(s: string): string {
     return s.replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-/** Basic, friendly emoji map with fuzzy keys */
 function interestEmoji(s: string): string {
     const k = normalizeInterest(s);
-
     const map: Array<[RegExp, string]> = [
         [/food|cuisine|restaurant|street food|eat|dining/, "🍽️"],
         [/coffee|café|cafe|tea/, "☕"],
@@ -839,17 +377,11 @@ function interestEmoji(s: string): string {
         [/markets?|farmers|farmer|fresh/, "🧺"],
         [/street art|murals?/, "🎨"],
     ];
-
     for (const [re, emoji] of map) if (re.test(k)) return emoji;
     return "✨";
 }
 
-/* ===== NEW: Build days from itinerary_items (with graceful fallback) ===== */
-
-function buildDaysFromItems(
-    items: NonNullable<ItineraryItemRow>[],
-): Day[] {
-    // Group by YYYY-MM-DD (use local time to be consistent with UI expectations)
+function buildDaysFromItems(items: NonNullable<ItineraryItemRow>[]): Day[] {
     const byDate = new Map<string, DayBlock[]>();
 
     for (const it of items) {
@@ -870,14 +402,13 @@ function buildDaysFromItems(
         byDate.set(dateKey, list);
     }
 
-    // Order dates ascending; within a date they are already ordered by date from the query
     const out: Day[] = Array.from(byDate.entries())
         .sort(([a], [b]) =>
             a === "unscheduled"
                 ? 1
                 : b === "unscheduled"
                     ? -1
-                    : a.localeCompare(b),
+                    : a.localeCompare(b)
         )
         .map(([date, blocks]) => ({
             date: date === "unscheduled" ? null : date,
@@ -888,7 +419,6 @@ function buildDaysFromItems(
 }
 
 function fallbackDaysFromTrip(daysRaw: unknown): Day[] {
-    // Keep existing behaviour if there are no itinerary_items yet
     return asDayArray(daysRaw);
 }
 
@@ -947,4 +477,430 @@ function toTimeRangeLabel(start: Date, durationMin: number | null): string {
 function safeNum(n: unknown): number | null {
     const v = Number(n);
     return Number.isFinite(v) ? v : null;
+}
+
+/* ---------------- Metadata ---------------- */
+
+export async function generateMetadata({
+                                           params,
+                                       }: {
+    params: { publicId: string };
+}): Promise<Metadata> {
+    const sb = await createClientServerRSC();
+
+    const { data: trip } = await sb
+        .schema("itinero")
+        .from("trips")
+        .select("title, cover_url, start_date, end_date, destination_id")
+        .eq("public_id", params.publicId)
+        .maybeSingle();
+
+    let ogImage =
+        trip?.cover_url ||
+        "https://images.unsplash.com/photo-1526772662000-3b5ec3a7fe05ff?q=80&w=1600&auto=format&fit=crop";
+
+    if (trip?.destination_id) {
+        const { data: dest } = await sb
+            .schema("itinero")
+            .from("destinations")
+            .select("id,current_history_id")
+            .eq("id", trip.destination_id)
+            .maybeSingle<DestinationRow>();
+
+        if (dest?.current_history_id) {
+            const { data: hist } = await sb
+                .schema("itinero")
+                .from("destination_history")
+                .select("id,backdrop_image_url")
+                .eq("id", dest.current_history_id)
+                .maybeSingle<DestinationHistoryRow>();
+            if (hist?.backdrop_image_url) ogImage = hist.backdrop_image_url;
+        }
+    }
+
+    const title = trip?.title ? `${trip.title} • Itinero` : "Shared Trip • Itinero";
+    const description =
+        trip?.start_date || trip?.end_date
+            ? `Travel dates: ${formatDateRange(
+                trip?.start_date ?? undefined,
+                trip?.end_date ?? undefined
+            )}`
+            : "View this shared itinerary on Itinero.";
+
+    return {
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            images: [{ url: ogImage, width: 1600, height: 840 }],
+        },
+        twitter: { card: "summary_large_image", title, description, images: [ogImage] },
+    };
+}
+
+/* ---------------- Main Page Component ---------------- */
+
+export default async function PublicTripPage({
+                                                 params,
+                                             }: {
+    params: { publicId: string };
+}) {
+    const sb = await createClientServerRSC();
+
+    const { data, error } = await sb
+        .schema("itinero")
+        .from("trips")
+        .select("*")
+        .eq("public_id", params.publicId)
+        .maybeSingle<TripRowLoose>();
+
+    if (error || !data) notFound();
+
+    let owner: ProfileRow = null;
+    if (data.user_id) {
+        const { data: o } = await sb
+            .schema("itinero")
+            .from("profiles")
+            .select("id,full_name,avatar_url,username")
+            .eq("id", data.user_id)
+            .maybeSingle<ProfileRow>();
+        owner = o ?? null;
+    }
+
+    let dest: DestinationRow = null;
+    let hist: DestinationHistoryRow = null;
+
+    if (data.destination_id) {
+        const { data: dRow } = await sb
+            .schema("itinero")
+            .from("destinations")
+            .select("id,name,current_history_id")
+            .eq("id", data.destination_id)
+            .maybeSingle<DestinationRow>();
+        dest = dRow ?? null;
+
+        if (dest?.current_history_id) {
+            const { data: hRow } = await sb
+                .schema("itinero")
+                .from("destination_history")
+                .select(
+                    "id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution"
+                )
+                .eq("id", dest.current_history_id)
+                .maybeSingle<DestinationHistoryRow>();
+            hist = hRow ?? null;
+        }
+    }
+
+    const { meta: destMeta, heroUrl } = buildMetaFromHistory(hist);
+
+    const title = (data.title ?? "Shared Trip").trim();
+    const dateRange = formatDateRange(
+        data.start_date ?? undefined,
+        data.end_date ?? undefined
+    );
+
+    const cover =
+        data.cover_url ||
+        heroUrl ||
+        "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1600&auto=format&fit=crop";
+
+    const tripSummary: TripSummary = (data.trip_summary as TripSummary) ?? null;
+
+    const { data: itemsRows } = await sb
+        .schema("itinero")
+        .from("itinerary_items")
+        .select(
+            "id,trip_id,place_id,title,notes,est_cost,duration_min,travel_min_from_prev,when, date"
+        )
+        .eq("trip_id", data.id)
+        .order("date", { ascending: true, nullsFirst: true })
+        .returns<ItineraryItemRow[]>();
+
+    const items = Array.isArray(itemsRows)
+        ? (itemsRows.filter(Boolean) as NonNullable<ItineraryItemRow>[])
+        : [];
+
+    const placeIds = Array.from(
+        new Set(items.map((it) => it.place_id).filter(Boolean))
+    ) as string[];
+
+    let placeDetails: PlaceDetail[] = [];
+    if (placeIds.length > 0) {
+        const { data: placeRows } = await sb
+            .schema("itinero")
+            .from("places")
+            .select("id,name,category,lat,lng,description")
+            .in("id", placeIds)
+            .returns<PlaceDetail[]>();
+        placeDetails = placeRows ?? [];
+    }
+
+    const days: Day[] =
+        items.length > 0
+            ? buildDaysFromItems(items)
+            : fallbackDaysFromTrip(data.days);
+
+    const places: PlaceLite[] =
+        (placeDetails?.length
+            ? placeDetails.map(({ id, name, category }) => ({
+                id,
+                name,
+                category: category ?? null,
+            }))
+            : asPlaceArray(data.places)) ?? [];
+
+    const ownerName =
+        (owner?.full_name && owner.full_name.trim()) ||
+        (owner?.username && `@${owner.username}`) ||
+        null;
+    const ownerAvatar = owner?.avatar_url || null;
+
+    const interests = extractInterests(data.inputs, tripSummary);
+
+    return (
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+            {/* 1. HERO SECTION (Immersive) */}
+            <header className="relative h-[45vh] md:h-[55vh] w-full overflow-hidden">
+                <Image
+                    src={cover}
+                    alt={title}
+                    fill
+                    priority
+                    className="object-cover"
+                    sizes="100vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90" />
+
+                {/* Top Nav */}
+                <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-30">
+                    <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-white hover:text-blue-100 transition-colors">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-blue-600">
+                            <Plane className="h-4 w-4" />
+                        </div>
+                        Itinero
+                    </Link>
+                    <Button asChild variant="secondary" className="rounded-full bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border border-white/10 font-semibold">
+                        <Link href="/trip-maker">Create Your Own</Link>
+                    </Button>
+                </div>
+
+                {/* Hero Content Layer */}
+                <div className="absolute inset-x-0 bottom-0 z-20 pb-10 md:pb-16">
+                    <div className="mx-auto max-w-6xl px-6 flex flex-col items-start gap-5">
+                        <div className="flex flex-wrap gap-3 items-center">
+                            <Badge variant="secondary" className="rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 hover:bg-white/20">
+                                <CalendarDays className="w-3.5 h-3.5 mr-1.5" />
+                                {dateRange}
+                            </Badge>
+                            {dest?.name && (
+                                <Badge variant="secondary" className="rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 hover:bg-white/20">
+                                    <Globe className="w-3.5 h-3.5 mr-1.5" />
+                                    {dest.name}
+                                </Badge>
+                            )}
+                        </div>
+
+                        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white drop-shadow-sm max-w-4xl leading-[1.1]">
+                            {title}
+                        </h1>
+
+                        <div className="flex items-center gap-4 pt-2">
+                            {ownerName && (
+                                <div className="flex items-center gap-3 pr-6 border-r border-white/20">
+                                    <div className="relative h-10 w-10 rounded-full overflow-hidden bg-white/10 ring-2 ring-white/20">
+                                        {ownerAvatar ? (
+                                            <Image src={ownerAvatar} alt={ownerName} fill className="object-cover" />
+                                        ) : (
+                                            <User2 className="h-5 w-5 text-white absolute inset-0 m-auto" />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <p className="text-white font-semibold text-sm">{ownerName}</p>
+                                        <p className="text-white/60 text-xs">Curator</p>
+                                    </div>
+                                </div>
+                            )}
+                            <div className="text-white/80 text-xs font-medium tracking-wide">
+                                SHARED ITINERARY
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            {/* 2. MAIN CONTENT WRAPPER (Floating Up) */}
+            <div className="relative z-10 -mt-8 mx-auto max-w-6xl px-4 sm:px-6 pb-20 space-y-8">
+
+                {/* A. INTRO & STATS GRID (Bento Style) */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* Left: Overview / Description */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {(destMeta?.description || interests.length > 0) && (
+                            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
+                                {interests.length > 0 && (
+                                    <div className="mb-8">
+                                        <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Trip Vibe</h3>
+                                        <InterestChips interests={interests} pillTone="default" />
+                                    </div>
+                                )}
+                                {destMeta?.description && (
+                                    <div className="prose prose-slate max-w-none">
+                                        <h3 className="text-lg font-bold text-slate-900 mb-2">About this trip</h3>
+                                        <p className="text-slate-600 leading-relaxed text-base">{destMeta.description}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right: Know Before You Go (Stats) */}
+                    <div className="lg:col-span-1 flex flex-col gap-4">
+
+                        {/* Budget Card */}
+                        {data.est_total_cost && (
+                            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col gap-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                                        <Wallet className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Est. Budget</span>
+                                </div>
+                                <p className="text-3xl font-extrabold text-slate-900">{data.currency || '$'}{data.est_total_cost.toLocaleString()}</p>
+                                <p className="text-xs text-slate-500">Estimated total based on activities</p>
+                            </div>
+                        )}
+
+                        {/* Quick Facts Grid */}
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 space-y-4">
+                            <h3 className="font-bold text-slate-900 text-sm border-b border-slate-100 pb-3">Local Guide</h3>
+                            <div className="space-y-3">
+                                <InfoItem icon={MapPin} label="City" value={destMeta?.city} />
+                                <InfoItem icon={DollarSign} label="Currency" value={destMeta?.currency_code} />
+                                <InfoItem icon={CloudSun} label="Weather" value={destMeta?.weather_desc} />
+                                <InfoItem icon={Plug} label="Plugs" value={joinArr(destMeta?.plugs)} />
+                                <InfoItem icon={Phone} label="eSIM" value={destMeta?.esim_provider} />
+                                <InfoItem icon={Globe} label="Language" value={joinArr(destMeta?.languages)} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* B. ITINERARY TIMELINE */}
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between px-2">
+                        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                                <CalendarDays className="w-5 h-5" />
+                            </div>
+                            Itinerary
+                        </h2>
+                    </div>
+
+                    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                        <PublicItineraryClient
+                            currency={data.currency ?? "USD"}
+                            estTotalCost={coerceNumber(data.est_total_cost)}
+                            tripSummary={tripSummary}
+                            days={days}
+                            places={places}
+                            placeDetails={placeDetails}
+                        />
+                    </div>
+                </div>
+
+                {/* C. EXPLORE MAP (Footer Area) */}
+                {placeDetails.length > 0 && (
+                    <div className="space-y-6 pt-8">
+                        <div className="flex items-center gap-3 px-2">
+                            <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                <MapPin className="w-5 h-5" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-900">Explore the Area</h2>
+                        </div>
+
+                        <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-sm h-[450px] bg-slate-100 relative">
+                            <MapSection places={placeDetails} />
+                            <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold shadow-md border border-slate-100 pointer-events-none z-[1000] text-slate-700 flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                {placeDetails.length} Locations
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+            </div>
+
+            {/* Footer */}
+            <footer className="border-t border-slate-200 bg-white py-12 text-center">
+                <div className="mx-auto max-w-md px-6 space-y-4">
+                    <div className="flex items-center justify-center gap-2 font-bold text-xl tracking-tight text-blue-600">
+               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+                  <Plane className="h-4 w-4" />
+               </span>
+                        Itinero
+                    </div>
+                    <p className="text-sm text-slate-500">
+                        Plan your next adventure in minutes.
+                    </p>
+                    <Button asChild className="rounded-full bg-slate-900 text-white hover:bg-slate-800 px-6 mt-4">
+                        <Link href="/trip-maker">Start Planning Free</Link>
+                    </Button>
+                    <p className="text-xs text-slate-400 pt-8">
+                        © {new Date().getFullYear()} Itinero Inc.
+                    </p>
+                </div>
+            </footer>
+        </div>
+    );
+}
+
+/* ---------------- UI Components ---------------- */
+
+function InfoItem({ icon: Icon, label, value }: { icon: any, label: string, value?: string | null }) {
+    if (!value) return null;
+    return (
+        <div className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
+            <div className="mt-0.5 text-slate-400">
+                <Icon className="w-4 h-4" />
+            </div>
+            <div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{label}</div>
+                <div className="text-sm font-medium text-slate-700 leading-snug">{value}</div>
+            </div>
+        </div>
+    )
+}
+
+function InterestChips({
+                           interests,
+                           pillTone = "light",
+                       }: {
+    interests: string[];
+    pillTone?: "light" | "default";
+}) {
+    const isLight = pillTone === "light";
+    const containerClass = isLight
+        ? "bg-white/10 border-white/20 text-white hover:bg-white/20"
+        : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200";
+
+    return (
+        <ul className="flex flex-wrap gap-2">
+            {interests.map((raw) => {
+                const label = titleCase(raw);
+                const emoji = interestEmoji(raw);
+                return (
+                    <li
+                        key={raw}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors cursor-default ${containerClass}`}
+                    >
+                        <span>{emoji}</span>
+                        <span>{label}</span>
+                    </li>
+                );
+            })}
+        </ul>
+    );
 }

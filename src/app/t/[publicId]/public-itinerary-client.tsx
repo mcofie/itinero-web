@@ -9,7 +9,9 @@ import {
     X,
     ArrowUpRight,
     CalendarDays,
+    Check
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /* ---------- Types ---------- */
 
@@ -94,35 +96,36 @@ export default function PublicItineraryClient({
             : computeEstimatedCostFallback(days);
 
     return (
-        <section className="space-y-6">
-            {/* Trip stats */}
-            <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card/70 to-card/40 p-4 sm:p-5 shadow-sm">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <section className="space-y-8">
+
+            {/* Trip stats - Clean White Card */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {/* Days */}
-                    <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/60 px-3 py-3">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60">
-              <CalendarDays className="h-5 w-5 text-muted-foreground" />
-            </span>
+                    <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all hover:border-slate-200 hover:bg-white hover:shadow-sm">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                            <CalendarDays className="h-6 w-6" />
+                        </div>
                         <div className="min-w-0">
-                            <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                                Trip length
+                            <div className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">
+                                Trip Length
                             </div>
-                            <div className="text-lg font-semibold leading-tight">
+                            <div className="text-xl font-bold text-slate-900 leading-none">
                                 {totalDays} {totalDays === 1 ? "day" : "days"}
                             </div>
                         </div>
                     </div>
 
                     {/* Cost */}
-                    <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/60 px-3 py-3">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60">
-              <DollarSign className="h-5 w-5 text-muted-foreground" />
-            </span>
+                    <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all hover:border-slate-200 hover:bg-white hover:shadow-sm">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                            <DollarSign className="h-6 w-6" />
+                        </div>
                         <div className="min-w-0">
-                            <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                                Estimated cost
+                            <div className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">
+                                Estimated Cost
                             </div>
-                            <div className="text-lg font-semibold leading-tight">
+                            <div className="text-xl font-bold text-slate-900 leading-none">
                                 {displayCost !== null ? formatMoney(displayCost, currency) : "—"}
                             </div>
                         </div>
@@ -130,33 +133,35 @@ export default function PublicItineraryClient({
                 </div>
             </div>
 
-            {/* Tabs header */}
-            <div
-                role="tablist"
-                aria-label="Itinerary days"
-                className="no-scrollbar -mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1"
-            >
-                {days.map((day, i) => {
-                    const selected = i === active;
-                    return (
-                        <button
-                            key={day.date ?? `unscheduled-${i}`}
-                            role="tab"
-                            aria-selected={selected}
-                            aria-controls={`day-panel-${i}`}
-                            id={`day-tab-${i}`}
-                            onClick={() => setActive(i)}
-                            className={[
-                                "snap-start whitespace-nowrap rounded-full border px-3 py-1.5 text-sm transition",
-                                selected
-                                    ? "border-primary/50 bg-primary/10 text-primary"
-                                    : "border-border/60 bg-background/60 text-foreground hover:bg-accent",
-                            ].join(" ")}
-                        >
-                            {dayLabel(i, day)}
-                        </button>
-                    );
-                })}
+            {/* Tabs header - Pill Style */}
+            <div className="overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+                <div
+                    role="tablist"
+                    aria-label="Itinerary days"
+                    className="flex w-max gap-2 rounded-full bg-slate-100/80 p-1"
+                >
+                    {days.map((day, i) => {
+                        const selected = i === active;
+                        return (
+                            <button
+                                key={day.date ?? `unscheduled-${i}`}
+                                role="tab"
+                                aria-selected={selected}
+                                aria-controls={`day-panel-${i}`}
+                                id={`day-tab-${i}`}
+                                onClick={() => setActive(i)}
+                                className={cn(
+                                    "rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200",
+                                    selected
+                                        ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200"
+                                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/50"
+                                )}
+                            >
+                                {dayLabel(i, day)}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* Active day panel */}
@@ -165,7 +170,7 @@ export default function PublicItineraryClient({
                     role="tabpanel"
                     id={`day-panel-${active}`}
                     aria-labelledby={`day-tab-${active}`}
-                    className="focus-visible:outline-none"
+                    className="focus-visible:outline-none animate-in fade-in slide-in-from-bottom-2 duration-300"
                 >
                     <DayCard
                         day={days[active]}
@@ -175,8 +180,12 @@ export default function PublicItineraryClient({
                     />
                 </div>
             ) : (
-                <div className="rounded-xl border border-border/60 bg-card/50 p-4 text-sm text-muted-foreground">
-                    No itinerary days yet.
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center">
+                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
+                        <CalendarDays className="h-6 w-6" />
+                    </div>
+                    <p className="text-slate-900 font-semibold">No items planned</p>
+                    <p className="text-slate-500 text-sm">This day is currently empty.</p>
                 </div>
             )}
         </section>
@@ -199,14 +208,17 @@ function DayCard({
     const label = day.date ? friendlyDate(day.date) : "Unscheduled";
 
     return (
-        <article className="rounded-2xl border border-border/60 bg-card/50 shadow-sm">
-            <header className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3 sm:px-5">
-                <h3 className="text-sm font-semibold tracking-wide">{label}</h3>
+        <article className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <header className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4 bg-slate-50/50">
+                <h3 className="text-base font-bold text-slate-900">{label}</h3>
+                <span className="text-xs font-medium text-slate-500 bg-white px-2.5 py-1 rounded-md border border-slate-200">
+           {day.blocks.length} Activities
+        </span>
             </header>
 
-            <div className="divide-y divide-border/60">
+            <div className="divide-y divide-slate-100">
                 {day.blocks.length === 0 && (
-                    <div className="px-4 py-4 text-sm text-muted-foreground sm:px-5">
+                    <div className="px-6 py-8 text-center text-sm text-slate-500 italic">
                         No items for this day.
                     </div>
                 )}
@@ -262,68 +274,78 @@ function ItineraryItemRow({
         };
     }, [open]);
 
-    const chips: Array<{ icon: React.ReactNode; label: string }> = [];
+    const chips: Array<{ icon: React.ReactNode; label: string; color: string }> = [];
 
-    if (isFiniteNum(block.est_cost))
+    if (isFiniteNum(block.est_cost) && block.est_cost! > 0)
         chips.push({
-            icon: <DollarSign className="h-3.5 w-3.5" />,
+            icon: <DollarSign className="h-3 w-3" />,
             label: formatMoney(block.est_cost!, currency),
+            color: "text-emerald-700 bg-emerald-50 border-emerald-100",
         });
 
-    if (isFiniteNum(block.duration_min))
+    if (isFiniteNum(block.duration_min) && block.duration_min! > 0)
         chips.push({
-            icon: <Clock className="h-3.5 w-3.5" />,
+            icon: <Clock className="h-3 w-3" />,
             label: formatMinutes(block.duration_min!),
+            color: "text-slate-600 bg-slate-50 border-slate-200",
         });
 
-    if (isFiniteNum(block.travel_min_from_prev))
+    if (isFiniteNum(block.travel_min_from_prev) && block.travel_min_from_prev! > 0)
         chips.push({
-            icon: <CarFront className="h-3.5 w-3.5" />,
-            label: `${block.travel_min_from_prev} min travel`,
+            icon: <CarFront className="h-3 w-3" />,
+            label: `${block.travel_min_from_prev}m travel`,
+            color: "text-slate-500 bg-white border-slate-200",
         });
+
+    const whenUi = getWhenUi(block.when as any);
 
     return (
-        <div className="px-4 py-3 sm:px-5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                {/* Left: when + place + notes */}
-                <div className="min-w-0 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                        {block.when && (
-                            <span className="inline-flex items-center rounded-md border border-border/60 px-2.5 py-0.5 text-xs text-muted-foreground">
-                {block.when}
+        <div className="px-6 py-5 hover:bg-slate-50/50 transition-colors group">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+
+                {/* Left: Time + Title + Place */}
+                <div className="flex gap-4 min-w-0">
+                    {/* Time Indicator */}
+                    <div className={cn("flex-shrink-0 w-12 flex flex-col items-center gap-1 pt-1")}>
+              <span className={cn("h-8 w-8 rounded-full flex items-center justify-center text-sm bg-white border border-slate-200 shadow-sm", whenUi.text)}>
+                 {whenUi.emoji}
               </span>
-                        )}
+                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">{block.when}</span>
                     </div>
 
-                    {/* Place (clickable to open popover) */}
-                    {place && (
-                        <div className="mt-0.5">
-                            <button
-                                ref={anchorRef}
-                                id={buttonId(place.id)}
-                                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                                onClick={() => setOpen((v) => !v)}
-                                aria-expanded={open}
-                                aria-controls={open ? popId(anchorRef.current!) : undefined}
-                            >
-                                <MapPin className="h-4 w-4" />
-                                <span>{place.name}</span>
-                            </button>
-                        </div>
-                    )}
+                    <div className="space-y-1.5 flex-1">
+                        <h4 className="text-base font-bold text-slate-900 leading-tight">{block.title || "Untitled Activity"}</h4>
 
-                    {block.notes && (
-                        <p className="text-sm text-muted-foreground">{block.notes}</p>
-                    )}
+                        {block.notes && (
+                            <p className="text-sm text-slate-600 leading-relaxed max-w-xl">{block.notes}</p>
+                        )}
+
+                        {/* Place Button */}
+                        {place && (
+                            <div className="pt-1">
+                                <button
+                                    ref={anchorRef}
+                                    id={buttonId(place.id)}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors border border-blue-100"
+                                    onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+                                    aria-expanded={open}
+                                    aria-controls={open ? popId(anchorRef.current!) : undefined}
+                                >
+                                    <MapPin className="h-3.5 w-3.5" />
+                                    <span>{place.name}</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Right: chips */}
+                {/* Right: Stats Chips */}
                 {chips.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0 md:justify-end pl-16 md:pl-0">
                         {chips.map((c, i) => (
                             <span
                                 key={i}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-xs"
+                                className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium", c.color)}
                             >
                 {c.icon}
                                 <span>{c.label}</span>
@@ -369,7 +391,7 @@ function Popover({
             position: "fixed",
             top: rect.bottom + 8,
             left: Math.min(rect.left, window.innerWidth - 340),
-            width: Math.min(320, window.innerWidth - 16),
+            width: Math.min(320, window.innerWidth - 32), // Adjusted width constraint
             zIndex: 50,
         });
     }, [anchorId]);
@@ -379,23 +401,23 @@ function Popover({
     return (
         <div
             id={popIdByAnchor(anchorId)}
-            className="overflow-hidden rounded-xl border border-border/60 bg-popover shadow-lg"
+            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-100"
             style={style}
             role="dialog"
             aria-label={`${place.name} details`}
         >
             {/* Header */}
-            <div className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-2">
+            <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3 bg-slate-50/50">
                 <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold">{place.name}</div>
+                    <div className="truncate text-sm font-bold text-slate-900">{place.name}</div>
                     {detail?.category && (
-                        <div className="truncate text-xs text-muted-foreground">
+                        <div className="truncate text-xs font-medium text-slate-500 mt-0.5">
                             {detail.category}
                         </div>
                     )}
                 </div>
                 <button
-                    className="rounded p-1 text-muted-foreground hover:bg-accent"
+                    className="rounded-full p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors"
                     onClick={onClose}
                     aria-label="Close"
                 >
@@ -404,9 +426,9 @@ function Popover({
             </div>
 
             {/* Body */}
-            <div className="space-y-3 p-3">
+            <div className="p-4 space-y-3">
                 {detail?.photo_url && (
-                    <div className="relative h-40 w-full overflow-hidden rounded-lg">
+                    <div className="relative h-40 w-full overflow-hidden rounded-xl border border-slate-100">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={detail.photo_url}
@@ -416,22 +438,25 @@ function Popover({
                     </div>
                 )}
                 {detail?.description && (
-                    <div className="text-xs text-muted-foreground">{detail.description}</div>
+                    <div className="text-xs text-slate-600 leading-relaxed">{detail.description}</div>
                 )}
                 {detail?.address && (
-                    <div className="text-sm text-muted-foreground">{detail.address}</div>
+                    <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                        <MapPin className="h-3 w-3 shrink-0 mt-0.5 text-slate-400" />
+                        <span>{detail.address}</span>
+                    </div>
                 )}
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-2 border-t border-border/60 p-3">
+            <div className="border-t border-slate-100 bg-slate-50/30 p-3">
                 <a
                     href={gmapsHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 transition-all shadow-sm active:scale-95"
                 >
-                    Open in Google Maps
+                    View on Google Maps
                     <ArrowUpRight className="h-4 w-4" />
                 </a>
             </div>
@@ -444,12 +469,11 @@ function Popover({
 function dayLabel(index: number, day: Day) {
     // Day N • Mon, 11 Nov (or “Unscheduled”)
     const left = `Day ${index + 1}`;
-    if (!day.date) return `${left} • Unscheduled`;
+    if (!day.date) return `${left}`;
     const d = new Date(`${day.date}T00:00:00`);
     const right = d.toLocaleDateString(undefined, {
         weekday: "short",
-        day: "2-digit",
-        month: "short",
+        day: "numeric",
     });
     return `${left} • ${right}`;
 }
@@ -492,10 +516,9 @@ function formatMinutes(min: number) {
 function friendlyDate(ymd: string) {
     const d = new Date(`${ymd}T00:00:00`);
     return d.toLocaleDateString(undefined, {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "2-digit",
+        weekday: "long",
+        month: "long",
+        day: "numeric",
     });
 }
 
@@ -537,4 +560,16 @@ function computeEstimatedCostFallback(days: Day[]) {
         }
     }
     return total || null;
+}
+
+function getWhenUi(
+    when: "morning" | "afternoon" | "evening"
+): { emoji: string; text: string } {
+    if (when === "morning") {
+        return { emoji: "🌅", text: "text-amber-600" };
+    }
+    if (when === "afternoon") {
+        return { emoji: "☀️", text: "text-orange-600" };
+    }
+    return { emoji: "🌙", text: "text-indigo-600" };
 }

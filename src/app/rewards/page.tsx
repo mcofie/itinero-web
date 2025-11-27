@@ -1,4 +1,3 @@
-// src/app/rewards/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -11,7 +10,7 @@ import {Button} from "@/components/ui/button";
 import {Progress} from "@/components/ui/progress";
 import {Separator} from "@/components/ui/separator";
 import {
-    Plane, Award, ShieldCheck, MapPin, Camera, Edit3, Trash2, Users, Info,
+    Plane, Award, ShieldCheck, MapPin, Camera, Edit3, Trash2, Users, Info, Check
 } from "lucide-react";
 import {ThemeToggle} from "@/components/ThemeToggle";
 
@@ -199,310 +198,358 @@ export default function RewardsPage() {
             .map((k) => ({category: k as Activity["category"], items: map.get(k)!}));
     }, []);
 
-    // Helpers for primary-styled buttons
-    const primaryBtn = "bg-primary hover:bg-primary/90 text-primary-foreground";
-    const outlineBtn = "border-border";
-
     return (
-        <main className="min-h-screen flex flex-col bg-background text-foreground">
-            {/* ===== Header (match landing tokens) ===== */}
-            <header className="sticky top-0 z-30 w-full border-b border-border bg-background/80 backdrop-blur-md">
-                <div className="mx-auto w-full max-w-6xl px-6 py-4 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2 font-semibold text-lg tracking-tight">
-            <span className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">
+        <div
+            className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 dark:bg-slate-950 dark:text-white dark:selection:bg-blue-900 dark:selection:text-white transition-colors duration-300">
+
+            {/* ===== Header ===== */}
+            <header
+                className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/80 backdrop-blur-md dark:bg-slate-950/80 dark:border-slate-800">
+                <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+                    <Link href="/"
+                          className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
+            <span
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
               <Plane className="h-4 w-4"/>
             </span>
                         Itinero
                     </Link>
-                    <nav className="flex items-center gap-2">
-                        <Link href="/pricing" className="hidden sm:block">
-                            <Button variant="ghost" className="font-semibold">Pricing</Button>
-                        </Link>
-                        <Link href="/login">
-                            <Button variant="ghost">Log in</Button>
-                        </Link>
+                    <nav className="flex items-center gap-4">
+                        <Link href="/login"
+                              className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors dark:text-slate-400 dark:hover:text-white">Log
+                            in</Link>
                         <Link href="/signup">
-                            <Button className={primaryBtn}>Sign up</Button>
+                            <Button
+                                className="rounded-full bg-blue-600 px-6 font-semibold text-white hover:bg-blue-700 shadow-md shadow-blue-600/20 dark:bg-blue-500 dark:hover:bg-blue-600">Sign
+                                up</Button>
                         </Link>
                         <ThemeToggle/>
                     </nav>
                 </div>
             </header>
 
-            {/* ===== Hero band (tokenized) ===== */}
-            <section className="border-y border-border bg-gradient-to-b from-primary/10 via-background to-background">
-                <div className="mx-auto w-full max-w-6xl px-6 py-14 md:py-20">
-                    <div className="mx-auto max-w-3xl text-center">
-                        <Badge variant="secondary" className="mb-3 gap-1">
-                            <Award className="h-3.5 w-3.5"/>
-                            Itinero Rewards
-                        </Badge>
-                        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05] text-primary">
-                            Earn points by improving travel for everyone.
+            <main>
+                {/* ===== Hero Section ===== */}
+                <section className="relative overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32 text-center px-6">
+                    {/* Background Blobs */}
+                    <div
+                        className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none">
+                        <div
+                            className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-blue-50/80 blur-3xl mix-blend-multiply opacity-70 animate-blob dark:bg-blue-900/20 dark:mix-blend-screen"></div>
+                    </div>
+
+                    <div className="relative mx-auto max-w-3xl">
+                        <div
+                            className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1 text-sm font-medium text-blue-700 mb-6 backdrop-blur-sm dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
+                            <Award className="h-4 w-4"/>
+                            <span>Community Rewards</span>
+                        </div>
+
+                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl mb-6 dark:text-white">
+                            Earn points by improving <br className="hidden sm:block"/>
+                            <span
+                                className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">travel for everyone.</span>
                         </h1>
-                        <p className="mt-4 text-lg md:text-xl text-muted-foreground">
+
+                        <p className="mx-auto max-w-2xl text-lg text-slate-600 mb-10 leading-relaxed dark:text-slate-400">
                             Help keep places trusted & up-to-date. Contribute verified data, photos, and fixes — unlock
                             perks as you go.
                         </p>
 
-                        <div
-                            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card/70 px-3 py-2 text-sm ring-4 ring-primary/10">
-                            <Info className="h-4 w-4 text-muted-foreground"/>
-                            <span>Points are awarded after automated & human checks pass.</span>
-                        </div>
-
-                        <div className="mt-6 flex items-center justify-center gap-3">
-                            <Button asChild size="lg" className={primaryBtn}>
-                                <Link href="/signup">Start contributing</Link>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <Button size="lg"
+                                    className="rounded-full bg-blue-600 px-8 font-bold text-white shadow-lg hover:bg-blue-700 transition-all dark:bg-blue-500 dark:hover:bg-blue-600"
+                                    asChild>
+                                <Link href="/signup">Start Contributing</Link>
                             </Button>
-                            <Button
-                                asChild
-                                variant="outline"
-                                size="lg"
-                                className={`border ${outlineBtn}`}
-                            >
-                                <Link href="/about">See contributor guide</Link>
+                            <Button size="lg" variant="outline"
+                                    className="rounded-full border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                                    asChild>
+                                <Link href="/about">Contributor Guide</Link>
                             </Button>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* ===== Tier summary ===== */}
-            <section className="mx-auto w-full max-w-6xl px-6 py-10">
-                <div className="mb-10 grid gap-4 md:grid-cols-3">
-                    <Card className="md:col-span-2 border border-border">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-base">Your progress</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex items-end justify-between">
-                                <div>
-                                    <div className="text-3xl font-semibold tabular-nums">{points.toLocaleString()} pts
-                                    </div>
-                                    <div className="mt-1 text-sm text-muted-foreground">
-                                        Tier: <span className="font-medium">{tier.name}</span>
-                                    </div>
-                                </div>
-                                <div className="text-right text-sm text-muted-foreground">
-                                    {nextTier ? (
-                                        <>
-                                            Next: <span className="font-medium">{nextTier.name}</span>{" "}
-                                            <span
-                                                className="ml-1">({(nextTier.min - points).toLocaleString()} pts left)</span>
-                                        </>
-                                    ) : (
-                                        <>Top tier reached 🎉</>
-                                    )}
-                                </div>
-                            </div>
-                            <Progress value={progressPct} className="mt-3"/>
-                        </CardContent>
-                        <CardFooter className="flex flex-wrap gap-2">
-                            {TIERS.map((t) => (
-                                <Badge
-                                    key={t.key}
-                                    variant={t.key === tier.key ? "default" : "secondary"}
-                                    className="rounded-full"
-                                >
-                                    {t.name} {t.key === tier.key && "• current"}
-                                </Badge>
-                            ))}
-                        </CardFooter>
-                    </Card>
-
-                    <Card className="border border-border">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-base">How it works</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-2"><MapPin
-                                className="h-4 w-4 text-primary"/> Contribute reliable info.
-                            </div>
-                            <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/> We
-                                verify accuracy.
-                            </div>
-                            <div className="flex items-center gap-2"><Award className="h-4 w-4 text-primary"/> Earn
-                                points & unlock perks.
-                            </div>
-                        </CardContent>
-                        <CardFooter className="flex gap-2">
-                            <Button size="sm" className={primaryBtn}>Add a place</Button>
-                            <Button size="sm" variant="outline" className={`border ${outlineBtn}`}>
-                                Verify updates
-                            </Button>
-                        </CardFooter>
-                    </Card>
-                </div>
-            </section>
-
-            {/* ===== Ways to earn ===== */}
-            <section className="mx-auto w-full max-w-6xl px-6">
-                <h2 className="text-2xl font-semibold tracking-tight">Ways to earn</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Points are credited when contributions pass automated and human checks. Some items have daily caps
-                    to keep things fair.
-                </p>
-
-                <div className="mt-5 space-y-8">
-                    {grouped.map(({category, items}) => (
-                        <Card key={category} className="border border-border">
-                            <CardHeader className="pb-3">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        {categoryIcon(category)}
-                                        <CardTitle className="text-base">{category}</CardTitle>
-                                    </div>
-                                    <Badge variant="outline">
-                                        {items.reduce((a, b) => a + b.points, 0)} pts potential
-                                    </Badge>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="divide-y divide-border">
-                                {items.map((a) => (
-                                    <div key={a.id} className="grid gap-2 py-4 md:grid-cols-[1fr_auto] md:items-center">
-                                        <div>
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <span className="font-medium">{a.label}</span>
-                                                {a.capPerDay ? (
-                                                    <Badge variant="secondary"
-                                                           className="h-5 rounded-full px-2 text-[10px]">
-                                                        max {a.capPerDay}/day
-                                                    </Badge>
-                                                ) : null}
-                                            </div>
-                                            <p className="mt-1 text-sm text-muted-foreground">{a.desc}</p>
-                                            {a.note && (
-                                                <p className="mt-1 text-xs text-muted-foreground/90">{a.note}</p>
-                                            )}
-                                        </div>
-                                        <div className="text-right md:pl-6">
-                                            <div className="text-lg font-semibold tabular-nums">{a.points} pts</div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            </section>
-
-            {/* ===== Rules / Trust ===== */}
-            <section className="mx-auto w-full max-w-6xl px-6 mt-10">
-                <Card className="border border-border">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-base">Trust & fair use</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-sm space-y-2 text-muted-foreground">
-                        <div>
-                            <span className="font-medium text-foreground">Verification: </span>
-                            We use duplicate detection, EXIF checks, temporal signals, and peer review. Points may be
-                            revoked for inaccurate or low-effort submissions.
-                        </div>
-                        <div>
-                            <span className="font-medium text-foreground">Original media only: </span>
-                            No AI/stock/borrowed content. We may request proof for edge cases.
-                        </div>
-                        <div>
-                            <span className="font-medium text-foreground">Appeals: </span>
-                            If you think a contribution was misjudged, you can appeal within 7 days.
-                        </div>
-                    </CardContent>
-                    <CardFooter className="flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm" className={`border ${outlineBtn}`}>
-                            Read full policy
-                        </Button>
-                        <Button size="sm" className={primaryBtn}>
-                            Appeal a decision
-                        </Button>
-                    </CardFooter>
-                </Card>
-            </section>
-
-            {/* ===== Tiers & perks ===== */}
-            <section className="mx-auto w-full max-w-6xl px-6 mt-10">
-                <h2 className="text-2xl font-semibold tracking-tight">Tiers & perks</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Unlock more recognition and benefits as your impact grows.
-                </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    {TIERS.map((t) => (
+                {/* ===== Progress / Tier ===== */}
+                <section className="mx-auto w-full max-w-6xl px-6 -mt-12 relative z-10 mb-20">
+                    <div className="grid gap-6 md:grid-cols-3">
+                        {/* Progress Card */}
                         <Card
-                            key={t.key}
-                            className={t.key === tier.key
-                                ? "border border-border ring-1 ring-primary/30"
-                                : "border border-border"}
-                        >
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base flex items-center justify-between">
-                                    {t.name}
-                                    <Badge variant={t.key === tier.key ? "default" : "secondary"}>
-                                        {t.min.toLocaleString()}+
-                                    </Badge>
-                                </CardTitle>
+                            className="md:col-span-2 border-slate-200 shadow-xl shadow-blue-900/5 rounded-3xl overflow-hidden dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
+                            <CardHeader
+                                className="pb-2 bg-slate-50/50 border-b border-slate-100 dark:bg-slate-800/50 dark:border-slate-800">
+                                <CardTitle className="text-base font-semibold text-slate-900 dark:text-white">Your
+                                    Current Progress</CardTitle>
                             </CardHeader>
-                            <CardContent className="text-sm text-muted-foreground space-y-1">
-                                {t.perks.map((p, i) => (
-                                    <div key={i}>• {p}</div>
-                                ))}
+                            <CardContent className="pt-6">
+                                <div className="flex items-end justify-between mb-4">
+                                    <div>
+                                        <div
+                                            className="text-4xl font-extrabold text-blue-600 tabular-nums dark:text-blue-400">{points.toLocaleString()}
+                                            <span
+                                                className="text-lg font-medium text-slate-400 dark:text-slate-500">pts</span>
+                                        </div>
+                                        <div
+                                            className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">Current
+                                            Tier: <span className="text-slate-900 dark:text-white">{tier.name}</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        {nextTier ? (
+                                            <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                                                Next: <span
+                                                className="text-blue-600 dark:text-blue-400">{nextTier.name}</span>
+                                                <br/>
+                                                <span
+                                                    className="text-xs text-slate-400 dark:text-slate-600">{nextTier.min - points} pts to go</span>
+                                            </div>
+                                        ) : (
+                                            <div
+                                                className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Top
+                                                Tier Reached! 🎉</div>
+                                        )}
+                                    </div>
+                                </div>
+                                <Progress value={progressPct}
+                                          className="h-3 rounded-full bg-slate-100 dark:bg-slate-800"
+                                          indicatorClassName="bg-blue-600 dark:bg-blue-500"/>
+
+                                <div className="mt-6 flex flex-wrap gap-2">
+                                    {TIERS.map((t) => (
+                                        <Badge
+                                            key={t.key}
+                                            variant="secondary"
+                                            className={`rounded-full px-3 py-1 border ${
+                                                t.key === tier.key
+                                                    ? "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
+                                                    : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700"
+                                            }`}
+                                        >
+                                            {t.name} {t.key === tier.key && "• Current"}
+                                        </Badge>
+                                    ))}
+                                </div>
                             </CardContent>
                         </Card>
-                    ))}
-                </div>
-            </section>
 
-            <Separator className="my-10 mx-6 max-w-6xl self-center"/>
-
-            {/* ===== CTA strip ===== */}
-            <section className="mx-auto w-full max-w-6xl px-6 pb-16">
-                <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
-                    <p className="text-sm text-muted-foreground">
-                        Ready to contribute? Start with a nearby place, or verify a recent update.
-                    </p>
-                    <div className="flex gap-2">
-                        <Button className={primaryBtn}>Add a place</Button>
-                        <Button variant="outline" className={`border ${outlineBtn}`}>
-                            Verify updates
-                        </Button>
+                        {/* Quick Actions Card */}
+                        <Card
+                            className="border-slate-200 shadow-xl shadow-blue-900/5 rounded-3xl flex flex-col dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
+                            <CardHeader
+                                className="pb-2 bg-slate-50/50 border-b border-slate-100 dark:bg-slate-800/50 dark:border-slate-800">
+                                <CardTitle className="text-base font-semibold text-slate-900 dark:text-white">Quick
+                                    Actions</CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-6 flex-1 space-y-3">
+                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                    <div
+                                        className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                                        <MapPin className="h-4 w-4"/></div>
+                                    <span>Add a new place</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                    <div
+                                        className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
+                                        <ShieldCheck className="h-4 w-4"/></div>
+                                    <span>Verify details</span>
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                    <div
+                                        className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
+                                        <Award className="h-4 w-4"/></div>
+                                    <span>Review edits</span>
+                                </div>
+                            </CardContent>
+                            <CardFooter className="pt-0 pb-6 px-6 gap-3">
+                                <Button
+                                    className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold dark:bg-blue-500 dark:hover:bg-blue-600">Add
+                                    Place</Button>
+                                <Button variant="outline"
+                                        className="flex-1 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">Verify</Button>
+                            </CardFooter>
+                        </Card>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            {/* ===== Footer ===== */}
-            <footer className="mt-auto border-t border-border bg-background">
-                <div
-                    className="mx-auto w-full max-w-6xl px-6 py-8 text-sm text-muted-foreground flex items-center justify-between">
-                    <div>© {new Date().getFullYear()} Itinero</div>
-                    <div className="flex gap-4">
-                        <Link href="/pricing">Pricing</Link>
-                        <Link href="/rewards">Rewards</Link>
-                        <Link href="/about">About</Link>
-                        <Link href="/terms">Terms</Link>
+                {/* ===== Ways to Earn List ===== */}
+                <section className="mx-auto w-full max-w-4xl px-6 pb-24">
+                    <h2 className="text-2xl font-bold text-slate-900 mb-2 dark:text-white">Ways to earn</h2>
+                    <p className="text-slate-500 mb-8 max-w-2xl dark:text-slate-400">Points are awarded after automated
+                        & human checks pass. High quality contributions earn more.</p>
+
+                    <div className="space-y-8">
+                        {grouped.map(({category, items}) => (
+                            <div key={category}
+                                 className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+                                <div
+                                    className="px-6 py-4 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between dark:bg-slate-800/50 dark:border-slate-800">
+                                    <div className="flex items-center gap-3">
+                                        {categoryIcon(category)}
+                                        <h3 className="font-bold text-slate-900 dark:text-white">{category}</h3>
+                                    </div>
+                                    <span
+                                        className="text-xs font-semibold text-slate-400 uppercase tracking-wider dark:text-slate-500">Potential Earnings</span>
+                                </div>
+                                <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                                    {items.map((item) => (
+                                        <div key={item.id}
+                                             className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/30">
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span
+                                                        className="font-medium text-slate-900 dark:text-slate-200">{item.label}</span>
+                                                    {item.capPerDay && (
+                                                        <span
+                                                            className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">Max {item.capPerDay}/day</span>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-slate-500 dark:text-slate-400">{item.desc}</p>
+                                                {item.note &&
+                                                    <p className="text-xs text-slate-400 italic mt-0.5 dark:text-slate-500">{item.note}</p>}
+                                            </div>
+                                            <div className="text-right shrink-0">
+                                                <span
+                                                    className="text-lg font-bold text-slate-900 dark:text-white">{item.points}</span>
+                                                <span
+                                                    className="text-xs font-medium text-slate-400 dark:text-slate-500">pts</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                </div>
-            </footer>
-        </main>
+                </section>
+
+                {/* ===== Tiers & Perks ===== */}
+                <section
+                    className="bg-slate-50 py-24 border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+                    <div className="mx-auto max-w-6xl px-6">
+                        <div className="text-center max-w-2xl mx-auto mb-16">
+                            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Tiers & Perks</h2>
+                            <p className="text-slate-500 mt-4 dark:text-slate-400">Unlock more recognition, features,
+                                and benefits as your impact on the community grows.</p>
+                        </div>
+
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                            {TIERS.map((t) => (
+                                <div key={t.key}
+                                     className={`p-6 rounded-3xl border shadow-sm flex flex-col ${t.key === tier.key ? 'bg-white border-blue-500 ring-4 ring-blue-500/10 relative overflow-hidden dark:bg-slate-900 dark:ring-blue-500/20' : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800'}`}>
+                                    {t.key === tier.key &&
+                                        <div className="absolute top-0 left-0 w-full h-1.5 bg-blue-500"></div>}
+
+                                    <div className="mb-6">
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t.name}</h3>
+                                        <span
+                                            className="inline-block mt-1 text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">{t.min.toLocaleString()}+ pts</span>
+                                    </div>
+
+                                    <ul className="space-y-3 flex-1 mb-6">
+                                        {t.perks.map((p, i) => (
+                                            <li key={i}
+                                                className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300">
+                                                <Check className="h-4 w-4 text-blue-500 shrink-0 mt-0.5"/>
+                                                <span>{p}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800">
+                                        <p className="text-xs text-slate-400 font-medium dark:text-slate-500">
+                                            {t.key === 'explorer' ? 'Start here' : `Reach ${t.min} points`}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* ===== Trust ===== */}
+                <section className="mx-auto w-full max-w-4xl px-6 py-24 text-center">
+                    <h2 className="text-2xl font-bold text-slate-900 mb-8 dark:text-white">Trust & Fair Play</h2>
+                    <div className="grid md:grid-cols-3 gap-8 text-left">
+                        <div className="space-y-3">
+                            <div
+                                className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-2 dark:bg-blue-900/20 dark:text-blue-400">
+                                <ShieldCheck className="h-5 w-5"/></div>
+                            <h3 className="font-bold text-slate-900 dark:text-white">Verification</h3>
+                            <p className="text-sm text-slate-500 leading-relaxed dark:text-slate-400">We use duplicate
+                                detection, EXIF checks, and peer review. Points may be revoked for inaccuracies.</p>
+                        </div>
+                        <div className="space-y-3">
+                            <div
+                                className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-2 dark:bg-emerald-900/20 dark:text-emerald-400">
+                                <Camera className="h-5 w-5"/></div>
+                            <h3 className="font-bold text-slate-900 dark:text-white">Original Content</h3>
+                            <p className="text-sm text-slate-500 leading-relaxed dark:text-slate-400">Only original
+                                photos and text. No AI-generated content, stock photos, or borrowed reviews.</p>
+                        </div>
+                        <div className="space-y-3">
+                            <div
+                                className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-2 dark:bg-amber-900/20 dark:text-amber-400">
+                                <Info className="h-5 w-5"/></div>
+                            <h3 className="font-bold text-slate-900 dark:text-white">Appeals</h3>
+                            <p className="text-sm text-slate-500 leading-relaxed dark:text-slate-400">Think a
+                                contribution was misjudged? You can appeal any rejection within 7 days.</p>
+                        </div>
+                    </div>
+                </section>
+
+                {/* ===== Footer ===== */}
+                <footer className="border-t border-slate-200 bg-white py-12 dark:bg-slate-950 dark:border-slate-800">
+                    <div
+                        className="mx-auto max-w-6xl px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                            <div className="h-6 w-6 rounded bg-slate-900 dark:bg-white"></div>
+                            Itinero
+                        </div>
+                        <div className="text-sm text-slate-500 dark:text-slate-400">
+                            © {new Date().getFullYear()} Itinero Inc. All rights reserved.
+                        </div>
+                        <div className="flex gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
+                            <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400">Terms</Link>
+                            <Link href="/privacy"
+                                  className="hover:text-blue-600 dark:hover:text-blue-400">Privacy</Link>
+                        </div>
+                    </div>
+                </footer>
+
+            </main>
+        </div>
     );
 }
 
 /* ============== Small helpers ============== */
 
 function categoryIcon(cat: Activity["category"]) {
-    const cls = "h-4 w-4 text-primary";
+    const cls = "h-5 w-5 text-blue-600 dark:text-blue-400";
+    const wrap = "h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100 dark:bg-blue-900/20 dark:border-blue-900/50";
+
+    let icon;
     switch (cat) {
         case "Places":
-            return <MapPin className={cls}/>;
+            icon = <MapPin className={cls}/>;
+            break;
         case "Verification":
-            return <ShieldCheck className={cls}/>;
+            icon = <ShieldCheck className={cls}/>;
+            break;
         case "Media":
-            return <Camera className={cls}/>;
+            icon = <Camera className={cls}/>;
+            break;
         case "Edits":
-            return <Edit3 className={cls}/>;
+            icon = <Edit3 className={cls}/>;
+            break;
         case "Cleanup":
-            return <Trash2 className={cls}/>;
+            icon = <Trash2 className={cls}/>;
+            break;
         case "Community":
-            return <Users className={cls}/>;
+            icon = <Users className={cls}/>;
+            break;
         default:
-            return <Award className={cls}/>;
+            icon = <Award className={cls}/>;
     }
+
+    return <div className={wrap}>{icon}</div>;
 }
