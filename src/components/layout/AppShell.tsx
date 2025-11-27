@@ -106,7 +106,8 @@ export default function AppShell({children, userEmail}: Props) {
         }
 
         setUid(null);
-        router.replace("/");
+        router.refresh(); // <--- FIX: Forces Server Components to recognize logout
+        router.replace("/login"); // <--- Redirects specifically to login
     }, [router, sb]);
 
     // -------- Points refresh (RPC) --------

@@ -5,6 +5,8 @@
   "/api/points/quote/route": "app/api/points/quote/route.js",
   "/api/rewards/verify/route": "app/api/rewards/verify/route.js",
   "/auth/callback/page": "app/auth/callback/page.js",
+  "/checkout/page": "app/checkout/page.js",
+  "/destinations/page": "app/destinations/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/login/page": "app/login/page.js",
   "/page": "app/page.js",

@@ -29,6 +29,8 @@ import {
     Phone,
     CloudSun,
     Wallet,
+    X,
+    ExternalLink, SmartphoneNfc,
 } from "lucide-react";
 
 import {
@@ -41,9 +43,8 @@ import {
 import {cn} from "@/lib/utils";
 
 /* =========================
-   Types (Preserved)
+   Types
 ========================= */
-// ... (Keep existing types as is)
 export type PreviewResponse = {
     trip_summary: {
         total_days: number;
@@ -119,7 +120,6 @@ type DestinationMetaLike = {
     city?: string;
 };
 
-/* For destination_history row normalisation */
 type DestinationHistoryRow = {
     destination_id?: string;
     description?: string | null;
@@ -133,9 +133,8 @@ type DestinationHistoryRow = {
     weather_desc?: string | null;
 };
 
-
 /* =========================
-   Constants / utils
+   Constants / Utils
 ========================= */
 const HERO_FALLBACK =
     "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1600&auto=format&fit=crop";
@@ -215,17 +214,6 @@ function hasDestMeta(meta?: DestinationMetaLike) {
     );
 }
 
-/* When badge helpers */
-function whenEmoji(w: "morning" | "afternoon" | "evening") {
-    if (w === "morning") return "🌅";
-    if (w === "afternoon") return "🌞";
-    return "🌙";
-}
-
-function whenLabel(w: "morning" | "afternoon" | "evening") {
-    return `${whenEmoji(w)} ${w.charAt(0).toUpperCase() + w.slice(1)}`;
-}
-
 function whenBadgeClasses(w: "morning" | "afternoon" | "evening") {
     if (w === "morning") {
         return {
@@ -253,7 +241,7 @@ const MapSection = dynamic(() => import("@/app/trips/share/[publicId]/MapSection
 });
 
 /* =========================
-   Main client component
+   Main Component
 ========================= */
 export default function PreviewClient({
                                           requiredPoints,
@@ -285,7 +273,7 @@ export default function PreviewClient({
     const [destMetaFromDb, setDestMetaFromDb] =
         React.useState<DestinationMetaLike | null>(null);
 
-    // Load preview from localStorage (client-only, hardened)
+    // Load preview from localStorage
     React.useEffect(() => {
         if (typeof window === "undefined") return;
 
@@ -313,16 +301,14 @@ export default function PreviewClient({
         }
     }, []);
 
-    // Refresh points (client) if unknown from server
+    // Refresh points
     React.useEffect(() => {
         if (points !== null) return;
         (async () => {
             setPointsBusy(true);
             try {
                 const {data: rpcBalance, error} = await sb.rpc("get_points_balance");
-                if (error) {
-                    console.error("[PreviewClient] get_points_balance error:", error);
-                }
+                if (error) console.error("[PreviewClient] get_points_balance error:", error);
                 if (typeof rpcBalance === "number") setPoints(rpcBalance);
             } catch (e) {
                 console.error("[PreviewClient] get_points_balance threw:", e);
@@ -360,8 +346,10 @@ export default function PreviewClient({
 
     const modeIcon = modeToIcon(inputs?.mode);
     const estTotal = preview?.trip_summary.est_total_cost ?? 0;
-
+    const currency = preview?.trip_summary.currency ?? "USD";
     const coverUrl = inputs?.destinations?.[0]?.cover_url || HERO_FALLBACK;
+
+    const locationName = inputs?.destinations?.[0]?.name ?? "Destination";
 
     // Clamp day on data change
     React.useEffect(() => {
@@ -391,7 +379,6 @@ export default function PreviewClient({
                     .maybeSingle<DestinationHistoryRow>();
 
                 if (error || !data) {
-                    if (error) console.error("[PreviewClient] destination_history query error:", error);
                     setDestMetaFromDb(null);
                     return;
                 }
@@ -518,7 +505,6 @@ export default function PreviewClient({
                                 className="object-cover"
                                 sizes="(max-width: 768px) 100vw, 50vw"
                             />
-                            {/* Overlay Badge */}
                             <div
                                 className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-900 backdrop-blur-md shadow-sm dark:bg-slate-900/90 dark:text-white">
                                 <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"/>
@@ -544,8 +530,7 @@ export default function PreviewClient({
                                     <span
                                         className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                     <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400"/>
-                    Est. {preview.trip_summary.currency ?? "$"}
-                                        {estTotal}
+                    Est. {currency} {estTotal}
                   </span>
                                 )}
 
@@ -558,7 +543,6 @@ export default function PreviewClient({
                                 )}
                             </div>
 
-                            {/* Interests */}
                             {!!inputs?.interests?.length && (
                                 <div className="pt-2">
                                     <InterestChips interests={inputs!.interests!}/>
@@ -588,8 +572,6 @@ export default function PreviewClient({
                                         {preview.trip_summary.total_days} Days Total
                                     </div>
                                 </div>
-
-                                {/* Day Tabs */}
                                 <div className="flex flex-wrap gap-2">
                                     {(preview.days || []).map((_, i) => (
                                         <button
@@ -622,14 +604,14 @@ export default function PreviewClient({
                                         }
                                     }
                                     placesById={new Map(preview.places.map((p) => [p.id, p]))}
+                                    currency={currency}
                                 />
                             </div>
                         </section>
                     </div>
 
-                    {/* RIGHT: Sidebar (Map & Info) */}
+                    {/* RIGHT: Sidebar */}
                     <div className="space-y-6">
-                        {/* Map Card */}
                         {placesWithCoords.length > 0 && (
                             <div
                                 className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
@@ -652,33 +634,38 @@ export default function PreviewClient({
                             </div>
                         )}
 
-                        {/* Destination Info */}
                         {hasDestMeta(destinationMeta) && (
                             <div
                                 className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4 dark:bg-slate-900 dark:border-slate-800">
                                 <h3 className="font-bold text-slate-900 text-sm dark:text-white">Local Guide</h3>
-
                                 {destinationMeta?.description && (
                                     <div className="text-xs text-slate-600 leading-relaxed dark:text-slate-400">
                                         {destinationMeta.description.slice(0, 150)}...
                                     </div>
                                 )}
-
                                 <div className="space-y-2">
-                                    <IconFact
-                                        label="City"
-                                        value={destinationMeta?.city}
-                                        icon={MapPin}
-                                    />
-                                    <IconFact
-                                        label="Currency"
-                                        value={destinationMeta?.currency_code}
-                                        icon={DollarSign}
-                                    />
+                                    <IconFact label="City" value={destinationMeta?.city} icon={MapPin}/>
+                                    <IconFact label="Currency" value={destinationMeta?.currency_code}
+                                              icon={DollarSign}/>
+
+                                    {/* Interactive Weather */}
                                     <IconFact
                                         label="Weather"
                                         value={destinationMeta?.weather_desc}
                                         icon={CloudSun}
+                                        href={`https://www.google.com/search?q=weather+${encodeURIComponent(locationName)}`}
+                                    />
+
+                                    <IconFact label="Plugs" value={joinArr(destinationMeta?.plugs)} icon={Plug}/>
+                                    <IconFact label="Transport" value={joinArr(destinationMeta?.transport)}
+                                              icon={Train}/>
+
+                                    {/* Interactive eSIM */}
+                                    <IconFact
+                                        label="eSIM"
+                                        value={destinationMeta?.esim_provider || "Find eSIM"}
+                                        icon={SmartphoneNfc} // Make sure SmartphoneNfc is imported, or use Phone
+                                        href="https://www.airalo.com/"
                                     />
                                 </div>
                             </div>
@@ -711,9 +698,7 @@ export default function PreviewClient({
                                 />
                             </svg>
                         </div>
-                        <span className="text-xs font-bold">
-              Free Preview: {paywallLeft}s
-            </span>
+                        <span className="text-xs font-bold">Free Preview: {paywallLeft}s</span>
                     </div>
                 </div>
             )}
@@ -723,6 +708,7 @@ export default function PreviewClient({
                 <FullScreenPaywallOverlay
                     onBuy={handleBuy}
                     onSave={handleSave}
+                    onClose={() => setShowPaywall(false)}
                     points={pointsBusy ? null : points}
                     required={requiredPoints}
                     saving={saving}
@@ -746,9 +732,9 @@ export default function PreviewClient({
 
                     <div className="space-y-3 text-center text-sm text-slate-600 dark:text-slate-400">
                         <p>
-                            You need{" "}
-                            <strong className="text-slate-900 dark:text-white">{requiredPoints} points</strong>{" "}
-                            to save this full itinerary.
+                            You need <strong
+                            className="text-slate-900 dark:text-white">{requiredPoints} points</strong> to save this
+                            full itinerary.
                         </p>
                         <div
                             className="rounded-xl bg-slate-50 p-3 font-medium border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
@@ -785,10 +771,12 @@ function ItineraryDay({
                           dayIdx,
                           day,
                           placesById,
+                          currency,
                       }: {
     dayIdx: number;
     day: Day;
     placesById: Map<string, Place>;
+    currency: string;
 }) {
     const formatted = formatISODate(day.date);
     const [weekday, rest] = formatted.split(",");
@@ -836,7 +824,7 @@ function ItineraryDay({
                                         <div>{b.duration_min} min</div>
                                         {b.est_cost > 0 && (
                                             <div className="text-emerald-600 font-bold mt-0.5 dark:text-emerald-400">
-                                                ${b.est_cost}
+                                                {currency} {b.est_cost}
                                             </div>
                                         )}
                                     </div>
@@ -861,12 +849,6 @@ function ItineraryDay({
                         </div>
                     );
                 })}
-
-                {day.blocks.length === 0 && (
-                    <div className="text-sm text-slate-400 italic pl-2 dark:text-slate-600">
-                        No scheduled activities.
-                    </div>
-                )}
             </div>
         </div>
     );
@@ -876,26 +858,45 @@ function IconFact({
                       label,
                       value,
                       icon: Icon,
+                      href,
                   }: {
     label: string;
     value?: string | null;
     icon: any;
+    href?: string;
 }) {
     if (!value) return null;
-    return (
-        <div className="flex items-center gap-3">
-            <div
-                className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
-                <Icon className="h-4 w-4"/>
+
+    const Content = (
+        <div className={cn("flex items-start gap-3 group", href && "cursor-pointer")}>
+            <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center border transition-colors shrink-0",
+                href ? "bg-blue-50 border-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400"
+                    : "bg-slate-50 border-slate-100 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
+            )}>
+                <Icon className="w-4 h-4"/>
             </div>
-            <div>
-                <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
-                    {label}
+            <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                    <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
+                        {label}
+                    </div>
+                    {href && <ExternalLink
+                        className="h-3 w-3 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"/>}
                 </div>
                 <div className="text-xs font-medium text-slate-700 dark:text-slate-300">{value}</div>
             </div>
         </div>
     );
+
+    if (href) {
+        return (
+            <a href={href} target="_blank" rel="noopener noreferrer"
+               className="block hover:bg-slate-50/50 dark:hover:bg-slate-800/30 -mx-2 px-2 py-1 rounded-xl transition-colors">
+                {Content}
+            </a>
+        )
+    }
+    return Content;
 }
 
 function InterestChips({interests}: { interests: string[] }) {
@@ -918,6 +919,7 @@ function InterestChips({interests}: { interests: string[] }) {
 function FullScreenPaywallOverlay({
                                       onBuy,
                                       onSave,
+                                      onClose,
                                       points,
                                       required,
                                       saving,
@@ -925,20 +927,34 @@ function FullScreenPaywallOverlay({
                                   }: {
     onBuy: () => void;
     onSave: () => void;
+    onClose: () => void;
     points: number | null;
     required: number;
     saving: boolean;
     forceTheme: "dark" | "light";
 }) {
     const hasEnough = points !== null && points >= required;
+    const router = useRouter();
+
+    const handlePrimaryAction = () => {
+        if (hasEnough) {
+            onBuy();
+        } else {
+            router.push(`/checkout?points=${Math.max(10, required)}`);
+        }
+    };
 
     return (
         <div
             data-theme={forceTheme}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 dark:bg-black/80"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 dark:bg-black/80 animate-in fade-in duration-300"
         >
             <div
-                className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-800">
+                className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-800 relative">
+                <button onClick={onClose}
+                        className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors">
+                    <X className="h-5 w-5"/>
+                </button>
                 <div className="relative h-40 bg-blue-600 overflow-hidden dark:bg-blue-700">
                     <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20"></div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
@@ -949,26 +965,11 @@ function FullScreenPaywallOverlay({
 
                 <div className="p-8">
                     <div className="grid gap-6 sm:grid-cols-2 mb-8">
-                        <PerkItem
-                            icon={MapIcon}
-                            title="Interactive Maps"
-                            desc="Navigate easily with pinned locations."
-                        />
-                        <PerkItem
-                            icon={Download}
-                            title="PDF Export"
-                            desc="Save offline for when signal drops."
-                        />
-                        <PerkItem
-                            icon={CalendarDays}
-                            title="Calendar Sync"
-                            desc="Add to Google/Apple Calendar."
-                        />
-                        <PerkItem
-                            icon={PencilLine}
-                            title="Edit & Customize"
-                            desc="Full control to tweak your plan."
-                        />
+                        <PerkItem icon={MapIcon} title="Interactive Maps"
+                                  desc="Navigate easily with pinned locations."/>
+                        <PerkItem icon={Download} title="PDF Export" desc="Save offline for when signal drops."/>
+                        <PerkItem icon={CalendarDays} title="Calendar Sync" desc="Add to Google/Apple Calendar."/>
+                        <PerkItem icon={PencilLine} title="Edit & Customize" desc="Full control to tweak your plan."/>
                     </div>
 
                     <div className="flex flex-col items-center gap-4">
@@ -996,15 +997,20 @@ function FullScreenPaywallOverlay({
                         <div className="flex gap-3 w-full sm:w-auto">
                             <Button
                                 size="lg"
-                                onClick={onBuy}
+                                onClick={handlePrimaryAction}
                                 disabled={saving}
                                 className="flex-1 sm:flex-initial rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                             >
-                                {saving
-                                    ? "Processing..."
-                                    : hasEnough
-                                        ? "Unlock Now"
-                                        : "Top Up Points"}
+                                {saving ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                        Processing...
+                                    </>
+                                ) : hasEnough ? (
+                                    "Unlock Now"
+                                ) : (
+                                    "Top Up Points"
+                                )}
                             </Button>
                             <Button
                                 size="lg"
@@ -1045,6 +1051,9 @@ function PerkItem({
         </div>
     );
 }
+
+// ... (Keep your saveDraftAsTrip logic at the bottom) ...
+
 
 /* =========================
    Save flow
@@ -1111,11 +1120,40 @@ async function saveDraftAsTrip(
             pointsSpent = true;
         }
 
-        // 2) Insert trip
+        // 2) Prepare trip insert
         const ins = currentPreview.trip_summary?.inputs;
         const title = ins?.destinations?.[0]?.name
             ? `${ins.destinations[0].name} Trip`
             : "Trip";
+
+        const destinationId = ins?.destinations?.[0]?.id ?? null;
+
+        // NEW: get cover_url from destinations table as source of truth
+        let coverUrlFromDest: string | null = null;
+        if (destinationId) {
+            try {
+                const {data: destRow, error: destErr} = await sbClient
+                    .schema("itinero")
+                    .from("destinations")
+                    .select("cover_url")
+                    .eq("id", destinationId)
+                    .maybeSingle<{ cover_url: string | null }>();
+
+                if (destErr) {
+                    console.error(
+                        "[saveDraftAsTrip] destinations cover_url lookup error:",
+                        destErr
+                    );
+                } else if (destRow) {
+                    coverUrlFromDest = destRow.cover_url ?? null;
+                }
+            } catch (e) {
+                console.error(
+                    "[saveDraftAsTrip] destinations cover_url lookup threw:",
+                    e
+                );
+            }
+        }
 
         const tripRow = {
             user_id: currentUserId,
@@ -1128,8 +1166,10 @@ async function saveDraftAsTrip(
                     ? currentPreview.trip_summary.est_total_cost
                     : null,
             currency: currentPreview.trip_summary.currency ?? null,
-            destination_id: ins?.destinations?.[0]?.id ?? null,
+            destination_id: destinationId,
             inputs: ins,
+            // Prefer DB value, fall back to preview input, then null
+            cover_url: coverUrlFromDest ?? ins?.destinations?.[0]?.cover_url ?? null,
         };
 
         const {data: tripInsert, error: tripErr} = await sbClient

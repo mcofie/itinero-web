@@ -200,6 +200,7 @@ export default function TripWizard() {
     const goNext = async () => {
         if (!isValid || busy) return;
 
+        // Still handle steps normally
         if (step < STEPS.length - 1) {
             setStep((s) => s + 1);
             return;
@@ -208,22 +209,25 @@ export default function TripWizard() {
         setBusy(true);
         try {
             const payload = toPayload(state);
+            console.log("[TripWizard] invoking build_preview_itinerary with payload:", payload);
 
-            const {data, error} = await sb.functions.invoke(
-                "build_preview_itinerary",
-                {body: payload}
-            );
+            const {data, error} = await sb.functions.invoke("build_preview_itinerary", {
+                body: payload,
+            });
 
             if (error) {
                 console.error("[build_preview_itinerary] error:", error);
+
+                // Only treat *real* token/JWT problems as fatal
                 if (isTokenError(error)) {
                     await resetAuthAndStorage();
                     return;
                 }
+
                 throw error;
             }
 
-            // store preview safely
+            // --- store preview safely ---
             try {
                 if (typeof window !== "undefined") {
                     window.localStorage.setItem(
@@ -232,26 +236,51 @@ export default function TripWizard() {
                     );
                 }
             } catch (e) {
-                console.error("[TripWizard] localStorage.setItem(latest_preview) failed:", e);
+                console.error(
+                    "[TripWizard] localStorage.setItem(latest_preview) failed:",
+                    e
+                );
             }
 
-            const {data: userData, error: userError} = await sb.auth.getUser();
+            // --- try to get user; "no session" is NOT fatal ---
+            let user = null;
+            try {
+                const {data: userData, error: userError} = await sb.auth.getUser();
 
-            if (userError) {
-                console.error("[TripWizard auth.getUser] error:", userError);
-                if (isTokenError(userError)) {
+                if (userError) {
+                    // This one just means "anonymous user" – we *expect* this for logged-out trips
+                    if ((userError as any).name === "AuthSessionMissingError") {
+                        console.info(
+                            "[TripWizard auth.getUser] no active session; treating as anonymous user"
+                        );
+                    } else {
+                        console.error("[TripWizard auth.getUser] error:", userError);
+
+                        if (isTokenError(userError)) {
+                            await resetAuthAndStorage();
+                            return;
+                        }
+                    }
+                }
+
+                user = userData?.user ?? null;
+            } catch (e) {
+                console.error("[TripWizard auth.getUser] threw:", e);
+                if (isTokenError(e)) {
                     await resetAuthAndStorage();
                     return;
                 }
             }
 
-            const user = userData?.user;
-
+            // --- decide what to do next based on user presence ---
             if (!user) {
+                // No session is a *normal* path: open auth gate
                 setAuthOpen(true);
-            } else {
-                router.push("/preview");
+                return;
             }
+
+            // Logged in → go to preview
+            router.push("/preview");
         } catch (e) {
             console.error("[TripWizard goNext] threw:", e);
             if (isTokenError(e)) {
