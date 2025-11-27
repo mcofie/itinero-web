@@ -1,6 +1,8 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/admin/itinero/page": "app/admin/itinero/page.js",
+  "/api/paystack/init/route": "app/api/paystack/init/route.js",
+  "/api/points/quote/route": "app/api/points/quote/route.js",
   "/auth/callback/page": "app/auth/callback/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/login/page": "app/login/page.js",

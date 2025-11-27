@@ -3,12 +3,12 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
-import { createClientBrowser } from "@/lib/supabase/browser";
+import {useRouter} from "next/navigation";
+import {useTheme} from "next-themes";
+import {getSupabaseBrowser} from "@/lib/supabase/browser-singleton";
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
+import {Badge} from "@/components/ui/badge";
 import {
     Loader2,
     CalendarDays,
@@ -31,7 +31,8 @@ import {
     Phone,
     CloudSun,
     ChevronLeft,
-    ChevronRight, Wallet,
+    ChevronRight,
+    Wallet,
 } from "lucide-react";
 
 import {
@@ -44,7 +45,7 @@ import {
 import {cn} from "@/lib/utils";
 
 /* =========================
-   Types (unchanged)
+   Types
 ========================= */
 export type PreviewResponse = {
     trip_summary: {
@@ -144,10 +145,10 @@ const HERO_FALLBACK =
 function modeToIcon(mode?: string) {
     if (!mode) return null;
     const cl = "mr-1 h-3.5 w-3.5";
-    if (mode === "walk") return <Footprints className={cl} />;
-    if (mode === "bike") return <Bike className={cl} />;
-    if (mode === "car") return <Car className={cl} />;
-    if (mode === "transit") return <Train className={cl} />;
+    if (mode === "walk") return <Footprints className={cl}/>;
+    if (mode === "bike") return <Bike className={cl}/>;
+    if (mode === "car") return <Car className={cl}/>;
+    if (mode === "transit") return <Train className={cl}/>;
     return null;
 }
 
@@ -234,12 +235,21 @@ function whenLabel(w: "morning" | "afternoon" | "evening") {
 
 function whenBadgeClasses(w: "morning" | "afternoon" | "evening") {
     if (w === "morning") {
-        return "bg-amber-50 text-amber-700 border-amber-100";
+        return {
+            dot: "bg-amber-400",
+            badge: "bg-amber-50 text-amber-700 border-amber-100",
+        };
     }
     if (w === "afternoon") {
-        return "bg-orange-50 text-orange-700 border-orange-100";
+        return {
+            dot: "bg-orange-400",
+            badge: "bg-orange-50 text-orange-700 border-orange-100",
+        };
     }
-    return "bg-indigo-50 text-indigo-700 border-indigo-100";
+    return {
+        dot: "bg-indigo-400",
+        badge: "bg-indigo-50 text-indigo-700 border-indigo-100",
+    };
 }
 
 /* =========================
@@ -259,9 +269,9 @@ export default function PreviewClient({
     requiredPoints: number;
     initialPoints: number | null;
 }) {
-    const sb = createClientBrowser();
+    const sb = getSupabaseBrowser();
     const router = useRouter();
-    const { resolvedTheme } = useTheme();
+    const {resolvedTheme} = useTheme();
     const isDark = (resolvedTheme ?? "dark") === "dark";
 
     // Client state
@@ -284,20 +294,36 @@ export default function PreviewClient({
     const [destMetaFromDb, setDestMetaFromDb] =
         React.useState<DestinationMetaLike | null>(null);
 
-    // Load preview from localStorage (client-only)
+    // Load preview from localStorage (client-only, hardened)
     React.useEffect(() => {
-        const raw =
-            typeof window !== "undefined"
-                ? localStorage.getItem("itinero:latest_preview")
-                : null;
-        if (raw) {
+        if (typeof window === "undefined") return;
+
+        setLoading(true);
+        try {
+            const raw = window.localStorage.getItem("itinero:latest_preview");
+            if (!raw) {
+                setPreview(null);
+                return;
+            }
+
             try {
-                setPreview(JSON.parse(raw) as PreviewResponse);
-            } catch {
+                const parsed = JSON.parse(raw) as PreviewResponse;
+                setPreview(parsed);
+            } catch (e) {
+                console.error(
+                    "[PreviewClient] Failed to parse itinero:latest_preview:",
+                    e
+                );
+                // Remove corrupted value to avoid perma-broken state
+                window.localStorage.removeItem("itinero:latest_preview");
                 setPreview(null);
             }
+        } catch (e) {
+            console.error("[PreviewClient] localStorage access error:", e);
+            setPreview(null);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }, []);
 
     // Refresh points (client) if unknown from server
@@ -306,15 +332,20 @@ export default function PreviewClient({
         (async () => {
             setPointsBusy(true);
             try {
-                const { data: rpcBalance } = await sb.rpc("get_points_balance");
+                const {data: rpcBalance, error} = await sb.rpc("get_points_balance");
+                if (error) {
+                    console.error("[PreviewClient] get_points_balance error:", error);
+                }
                 if (typeof rpcBalance === "number") setPoints(rpcBalance);
+            } catch (e) {
+                console.error("[PreviewClient] get_points_balance threw:", e);
             } finally {
                 setPointsBusy(false);
             }
         })();
     }, [points, sb]);
 
-    // Countdown to paywall (10s)
+    // Countdown to paywall (10s, visualized as 10 "ticks")
     React.useEffect(() => {
         if (showPaywall) return;
         let left = 10;
@@ -327,7 +358,7 @@ export default function PreviewClient({
                 window.clearInterval(timer);
                 setShowPaywall(true);
             }
-        }, 2000);
+        }, 1000);
 
         return () => {
             window.clearInterval(timer);
@@ -350,7 +381,7 @@ export default function PreviewClient({
         const len = preview?.days?.length ?? 0;
         if (!len) return;
         if (activeDayIdx > len - 1) setActiveDayIdx(len - 1);
-    }, [preview?.days?.length]);
+    }, [preview?.days?.length, activeDayIdx]);
 
     // Fetch destination_history meta
     React.useEffect(() => {
@@ -361,57 +392,71 @@ export default function PreviewClient({
                 return;
             }
 
-            const { data, error } = await sb
-                .schema("itinero")
-                .from("destination_history")
-                .select(
-                    "description, history, city, currency_code, plugs, languages, transport, esim_provider, weather_desc"
-                )
-                .eq("destination_id", destId)
-                .limit(1)
-                .maybeSingle<DestinationHistoryRow>();
+            try {
+                const {data, error} = await sb
+                    .schema("itinero")
+                    .from("destination_history")
+                    .select(
+                        "description, history, city, currency_code, plugs, languages, transport, esim_provider, weather_desc"
+                    )
+                    .eq("destination_id", destId)
+                    .limit(1)
+                    .maybeSingle<DestinationHistoryRow>();
 
-            if (error || !data) {
-                setDestMetaFromDb(null);
-                return;
-            }
+                if (error || !data) {
+                    if (error) {
+                        console.error(
+                            "[PreviewClient] destination_history query error:",
+                            error
+                        );
+                    }
+                    setDestMetaFromDb(null);
+                    return;
+                }
 
-            const toArr = (
-                v: string[] | string | null | undefined
-            ): string[] | undefined =>
-                Array.isArray(v)
-                    ? v
-                    : typeof v === "string"
+                const toArr = (
+                    v: string[] | string | null | undefined
+                ): string[] | undefined =>
+                    Array.isArray(v)
                         ? v
-                            .split(",")
-                            .map((s) => s.trim())
-                            .filter(Boolean)
-                        : undefined;
+                        : typeof v === "string"
+                            ? v
+                                .split(",")
+                                .map((s) => s.trim())
+                                .filter(Boolean)
+                            : undefined;
 
-            const normalized: DestinationMetaLike = {
-                description: data.description ?? undefined,
-                history: data.history ?? undefined,
-                city: data.city ?? undefined,
-                currency_code: data.currency_code ?? undefined,
-                plugs: toArr(data.plugs),
-                languages: toArr(data.languages),
-                transport: toArr(data.transport),
-                esim_provider: data.esim_provider ?? undefined,
-                weather_desc: data.weather_desc ?? undefined,
-            };
+                const normalized: DestinationMetaLike = {
+                    description: data.description ?? undefined,
+                    history: data.history ?? undefined,
+                    city: data.city ?? undefined,
+                    currency_code: data.currency_code ?? undefined,
+                    plugs: toArr(data.plugs),
+                    languages: toArr(data.languages),
+                    transport: toArr(data.transport),
+                    esim_provider: data.esim_provider ?? undefined,
+                    weather_desc: data.weather_desc ?? undefined,
+                };
 
-            const hasAny =
-                normalized.description ||
-                normalized.history ||
-                normalized.city ||
-                normalized.currency_code ||
-                (normalized.plugs && normalized.plugs.length) ||
-                (normalized.languages && normalized.languages.length) ||
-                (normalized.transport && normalized.transport.length) ||
-                normalized.esim_provider ||
-                normalized.weather_desc;
+                const hasAny =
+                    normalized.description ||
+                    normalized.history ||
+                    normalized.city ||
+                    normalized.currency_code ||
+                    (normalized.plugs && normalized.plugs.length) ||
+                    (normalized.languages && normalized.languages.length) ||
+                    (normalized.transport && normalized.transport.length) ||
+                    normalized.esim_provider ||
+                    normalized.weather_desc;
 
-            setDestMetaFromDb(hasAny ? normalized : null);
+                setDestMetaFromDb(hasAny ? normalized : null);
+            } catch (e) {
+                console.error(
+                    "[PreviewClient] destination_history query threw:",
+                    e
+                );
+                setDestMetaFromDb(null);
+            }
         })();
     }, [sb, inputs?.destinations?.[0]?.id]);
 
@@ -437,7 +482,8 @@ export default function PreviewClient({
         return (
             <div className="mx-auto grid min-h-[40vh] max-w-4xl place-items-center">
                 <div className="flex items-center gap-2 text-slate-500">
-                    <Loader2 className="h-5 w-5 animate-spin text-blue-600" /> Loading preview…
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-600"/> Loading
+                    preview…
                 </div>
             </div>
         );
@@ -446,9 +492,11 @@ export default function PreviewClient({
     if (!preview) {
         return (
             <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-4 text-center">
-                <div className="relative w-full overflow-hidden rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
-                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm ring-8 ring-white/50">
-                        <Sparkles className="h-8 w-8 text-blue-600" />
+                <div
+                    className="relative w-full overflow-hidden rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+                    <div
+                        className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm ring-8 ring-white/50">
+                        <Sparkles className="h-8 w-8 text-blue-600"/>
                     </div>
 
                     <h2 className="text-xl font-bold text-slate-900">
@@ -465,7 +513,7 @@ export default function PreviewClient({
                             className="w-full rounded-xl bg-blue-600 text-white hover:bg-blue-700 sm:w-auto"
                             onClick={() => router.push("/trip-maker")}
                         >
-                            <CalendarDays className="mr-2 h-4 w-4" />
+                            <CalendarDays className="mr-2 h-4 w-4"/>
                             Start Planning
                         </Button>
 
@@ -503,8 +551,9 @@ export default function PreviewClient({
             <section className="relative bg-slate-50 pb-12 pt-8">
                 <div className="mx-auto w-full max-w-5xl px-4 md:max-w-6xl">
                     <div className="flex flex-col gap-8 md:flex-row md:items-center">
-                        {/* Cover Image - Rounded & Clean */}
-                        <div className="relative h-64 w-full overflow-hidden rounded-3xl shadow-lg md:h-80 md:w-1/2 lg:w-5/12">
+                        {/* Cover Image */}
+                        <div
+                            className="relative h-64 w-full overflow-hidden rounded-3xl shadow-lg md:h-80 md:w-1/2 lg:w-5/12">
                             <Image
                                 src={coverUrl}
                                 alt={tripTitle}
@@ -514,8 +563,9 @@ export default function PreviewClient({
                                 sizes="(max-width: 768px) 100vw, 50vw"
                             />
                             {/* Overlay Badge */}
-                            <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-900 backdrop-blur-md shadow-sm">
-                                <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                            <div
+                                className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-900 backdrop-blur-md shadow-sm">
+                                <Sparkles className="h-3.5 w-3.5 text-blue-600"/>
                                 Preview Mode
                             </div>
                         </div>
@@ -527,30 +577,33 @@ export default function PreviewClient({
                             </h1>
 
                             <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-600">
-                     <span className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200">
-                        <CalendarDays className="h-4 w-4 text-slate-400" />
-                         {formatDateRange(preview.trip_summary)}
-                     </span>
+                <span className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200">
+                  <CalendarDays className="h-4 w-4 text-slate-400"/>
+                    {formatDateRange(preview.trip_summary)}
+                </span>
 
                                 {typeof estTotal === "number" && (
-                                    <span className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200">
-                           <DollarSign className="h-4 w-4 text-emerald-600" />
-                           Est. {preview.trip_summary.currency ?? "$"}{estTotal}
-                        </span>
+                                    <span
+                                        className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200">
+                    <DollarSign className="h-4 w-4 text-emerald-600"/>
+                    Est. {preview.trip_summary.currency ?? "$"}
+                                        {estTotal}
+                  </span>
                                 )}
 
                                 {modeIcon && (
-                                    <span className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 capitalize">
-                           {modeIcon}
+                                    <span
+                                        className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 capitalize">
+                    {modeIcon}
                                         {inputs?.mode}
-                        </span>
+                  </span>
                                 )}
                             </div>
 
                             {/* Interests */}
                             {!!inputs?.interests?.length && (
                                 <div className="pt-2">
-                                    <InterestChips interests={inputs!.interests!} />
+                                    <InterestChips interests={inputs!.interests!}/>
                                 </div>
                             )}
                         </div>
@@ -561,15 +614,17 @@ export default function PreviewClient({
             {/* Main Content Grid */}
             <main className="mx-auto w-full max-w-5xl px-4 pb-20 md:max-w-6xl">
                 <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-
                     {/* LEFT: Itinerary */}
                     <div className="space-y-8">
                         <section className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                             {/* Day Picker Header */}
                             <div className="bg-slate-50 border-b border-slate-100 px-6 py-4">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h2 className="font-bold text-slate-900 text-lg">Day by Day</h2>
-                                    <div className="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
+                                    <h2 className="font-bold text-slate-900 text-lg">
+                                        Day by Day
+                                    </h2>
+                                    <div
+                                        className="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
                                         {preview.trip_summary.total_days} Days Total
                                     </div>
                                 </div>
@@ -599,7 +654,10 @@ export default function PreviewClient({
                                     dayIdx={activeDayIdx}
                                     day={
                                         preview.days?.[activeDayIdx] ?? {
-                                            date: preview.trip_summary.inputs?.start_date ?? "",
+                                            date:
+                                                preview.trip_summary.inputs?.start_date ??
+                                                preview.trip_summary.start_date ??
+                                                "",
                                             blocks: [],
                                         }
                                     }
@@ -616,7 +674,7 @@ export default function PreviewClient({
                             <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                                 <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                                     <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                                        <MapIcon className="h-4 w-4 text-blue-600" /> Map View
+                                        <MapIcon className="h-4 w-4 text-blue-600"/> Map View
                                     </h3>
                                 </div>
                                 <div className="h-64 w-full bg-slate-100">
@@ -644,9 +702,21 @@ export default function PreviewClient({
                                 )}
 
                                 <div className="space-y-2">
-                                    <IconFact label="City" value={destinationMeta?.city} icon={MapPin} />
-                                    <IconFact label="Currency" value={destinationMeta?.currency_code} icon={DollarSign} />
-                                    <IconFact label="Weather" value={destinationMeta?.weather_desc} icon={CloudSun} />
+                                    <IconFact
+                                        label="City"
+                                        value={destinationMeta?.city}
+                                        icon={MapPin}
+                                    />
+                                    <IconFact
+                                        label="Currency"
+                                        value={destinationMeta?.currency_code}
+                                        icon={DollarSign}
+                                    />
+                                    <IconFact
+                                        label="Weather"
+                                        value={destinationMeta?.weather_desc}
+                                        icon={CloudSun}
+                                    />
                                 </div>
                             </div>
                         )}
@@ -660,11 +730,26 @@ export default function PreviewClient({
                     <div className="flex items-center gap-3 rounded-full bg-slate-900 text-white px-5 py-2.5 shadow-xl">
                         <div className="relative h-4 w-4">
                             <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
-                                <path className="text-slate-700" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
-                                <path className="text-blue-500 transition-all duration-1000 ease-linear" strokeDasharray={`${(paywallLeft / 10) * 100}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
+                                <path
+                                    className="text-slate-700"
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                />
+                                <path
+                                    className="text-blue-500 transition-all duration-1000 ease-linear"
+                                    strokeDasharray={`${(paywallLeft / 10) * 100}, 100`}
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                />
                             </svg>
                         </div>
-                        <span className="text-xs font-bold">Free Preview: {paywallLeft}s</span>
+                        <span className="text-xs font-bold">
+              Free Preview: {paywallLeft}s
+            </span>
                     </div>
                 </div>
             )}
@@ -686,21 +771,38 @@ export default function PreviewClient({
                 <DialogContent className="sm:max-w-sm rounded-3xl border-slate-200 p-6">
                     <DialogHeader>
                         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
-                            <Wallet className="h-6 w-6 text-amber-600" />
+                            <Wallet className="h-6 w-6 text-amber-600"/>
                         </div>
-                        <DialogTitle className="text-lg font-bold text-slate-900">Not enough points</DialogTitle>
+                        <DialogTitle className="text-lg font-bold text-slate-900">
+                            Not enough points
+                        </DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-3 text-center text-sm text-slate-600">
-                        <p>You need <strong className="text-slate-900">{requiredPoints} points</strong> to save this full itinerary.</p>
+                        <p>
+                            You need{" "}
+                            <strong className="text-slate-900">{requiredPoints} points</strong>{" "}
+                            to save this full itinerary.
+                        </p>
                         <div className="rounded-xl bg-slate-50 p-3 font-medium border border-slate-100">
                             Current Balance: {points ?? "..."} points
                         </div>
                     </div>
 
                     <DialogFooter className="gap-2 sm:gap-0 mt-4">
-                        <Button variant="outline" onClick={() => setInsufficientOpen(false)} className="rounded-xl border-slate-200">Cancel</Button>
-                        <Button className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold" onClick={() => router.push("/rewards")}>Get Points</Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setInsufficientOpen(false)}
+                            className="rounded-xl border-slate-200"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                            onClick={() => router.push("/rewards")}
+                        >
+                            Get Points
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -712,81 +814,131 @@ export default function PreviewClient({
    Helpers / UI bits
 ========================= */
 
-function ItineraryDay({ dayIdx, day, placesById }: { dayIdx: number; day: Day; placesById: Map<string, Place>; }) {
+function ItineraryDay({
+                          dayIdx,
+                          day,
+                          placesById,
+                      }: {
+    dayIdx: number;
+    day: Day;
+    placesById: Map<string, Place>;
+}) {
+    const formatted = formatISODate(day.date);
+    const [weekday, rest] = formatted.split(",");
+
     return (
         <div className="space-y-8">
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-                <div className="text-3xl font-bold text-slate-900">{formatISODate(day.date).split(',')[0]}</div>
+                <div className="text-3xl font-bold text-slate-900">{weekday}</div>
                 <div className="h-1 w-1 rounded-full bg-slate-300"></div>
-                <div className="text-slate-500 font-medium">{formatISODate(day.date).split(',')[1]}</div>
+                <div className="text-slate-500 font-medium">{rest}</div>
             </div>
 
             <div className="relative pl-8 border-l-2 border-slate-100 space-y-8">
                 {day.blocks.map((b, i) => {
                     const place = b.place_id ? placesById.get(b.place_id) : null;
+                    const badgeClasses = whenBadgeClasses(b.when);
+
                     return (
                         <div key={i} className="relative group">
                             {/* Timeline Dot */}
-                            <div className={cn(
-                                "absolute -left-[39px] top-0 h-5 w-5 rounded-full border-4 border-white shadow-sm z-10",
-                                whenBadgeClasses(b.when).dot
-                            )} />
+                            <div
+                                className={cn(
+                                    "absolute -left-[39px] top-0 h-5 w-5 rounded-full border-4 border-white shadow-sm z-10",
+                                    badgeClasses.dot
+                                )}
+                            />
 
-                            <div className="rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow">
+                            <div
+                                className="rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow">
                                 <div className="flex items-start justify-between gap-4 mb-3">
                                     <div>
-                            <span className={cn("inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-2", whenBadgeClasses(b.when).badge)}>
-                               {b.when}
-                            </span>
-                                        <h4 className="text-base font-bold text-slate-900">{b.title}</h4>
+                    <span
+                        className={cn(
+                            "inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-2",
+                            badgeClasses.badge
+                        )}
+                    >
+                      {b.when}
+                    </span>
+                                        <h4 className="text-base font-bold text-slate-900">
+                                            {b.title}
+                                        </h4>
                                     </div>
                                     <div className="text-right text-xs font-medium text-slate-500">
                                         <div>{b.duration_min} min</div>
-                                        {b.est_cost > 0 && <div className="text-emerald-600 font-bold mt-0.5">${b.est_cost}</div>}
+                                        {b.est_cost > 0 && (
+                                            <div className="text-emerald-600 font-bold mt-0.5">
+                                                ${b.est_cost}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                {b.notes && <p className="text-sm text-slate-600 leading-relaxed mb-3">{b.notes}</p>}
+                                {b.notes && (
+                                    <p className="text-sm text-slate-600 leading-relaxed mb-3">
+                                        {b.notes}
+                                    </p>
+                                )}
 
                                 {place && (
-                                    <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                        <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                                        <span className="font-medium text-slate-700">{place.name}</span>
+                                    <div
+                                        className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                        <MapPin className="h-3.5 w-3.5 text-slate-400"/>
+                                        <span className="font-medium text-slate-700">
+                      {place.name}
+                    </span>
                                     </div>
                                 )}
                             </div>
                         </div>
-                    )
+                    );
                 })}
 
                 {day.blocks.length === 0 && (
-                    <div className="text-sm text-slate-400 italic pl-2">No scheduled activities.</div>
+                    <div className="text-sm text-slate-400 italic pl-2">
+                        No scheduled activities.
+                    </div>
                 )}
             </div>
         </div>
     );
 }
 
-function IconFact({ label, value, icon: Icon }: { label: string; value?: string | null; icon: any }) {
+function IconFact({
+                      label,
+                      value,
+                      icon: Icon,
+                  }: {
+    label: string;
+    value?: string | null;
+    icon: any;
+}) {
     if (!value) return null;
     return (
         <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
-                <Icon className="h-4 w-4" />
+            <div
+                className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
+                <Icon className="h-4 w-4"/>
             </div>
             <div>
-                <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">{label}</div>
+                <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                    {label}
+                </div>
                 <div className="text-xs font-medium text-slate-700">{value}</div>
             </div>
         </div>
-    )
+    );
 }
 
-function InterestChips({ interests }: { interests: string[] }) {
+function InterestChips({interests}: { interests: string[] }) {
     return (
         <div className="flex flex-wrap gap-2">
             {interests.map((raw) => (
-                <span key={raw} className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm capitalize">
+                <span
+                    key={raw}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm capitalize"
+                >
           <span>{emojiFor(raw)}</span>
                     {raw}
         </span>
@@ -795,41 +947,104 @@ function InterestChips({ interests }: { interests: string[] }) {
     );
 }
 
-/* Styling Helpers */
-
 /* Full Screen Paywall Component */
-function FullScreenPaywallOverlay({ onBuy, onSave, points, required, saving, forceTheme }: any) {
+function FullScreenPaywallOverlay({
+                                      onBuy,
+                                      onSave,
+                                      points,
+                                      required,
+                                      saving,
+                                      forceTheme,
+                                  }: {
+    onBuy: () => void;
+    onSave: () => void;
+    points: number | null;
+    required: number;
+    saving: boolean;
+    forceTheme: "dark" | "light";
+}) {
+    const hasEnough = points !== null && points >= required;
+
     return (
-        <div data-theme={forceTheme} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+        <div
+            data-theme={forceTheme}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4"
+        >
             <div className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden">
                 <div className="relative h-40 bg-blue-600 overflow-hidden">
                     <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20"></div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                        <Sparkles className="h-10 w-10 mb-2" />
+                        <Sparkles className="h-10 w-10 mb-2"/>
                         <h2 className="text-2xl font-bold">Unlock Full Itinerary</h2>
                     </div>
                 </div>
 
                 <div className="p-8">
                     <div className="grid gap-6 sm:grid-cols-2 mb-8">
-                        <PerkItem icon={MapIcon} title="Interactive Maps" desc="Navigate easily with pinned locations." />
-                        <PerkItem icon={Download} title="PDF Export" desc="Save offline for when signal drops." />
-                        <PerkItem icon={CalendarDays} title="Calendar Sync" desc="Add to Google/Apple Calendar." />
-                        <PerkItem icon={PencilLine} title="Edit & Customize" desc="Full control to tweak your plan." />
+                        <PerkItem
+                            icon={MapIcon}
+                            title="Interactive Maps"
+                            desc="Navigate easily with pinned locations."
+                        />
+                        <PerkItem
+                            icon={Download}
+                            title="PDF Export"
+                            desc="Save offline for when signal drops."
+                        />
+                        <PerkItem
+                            icon={CalendarDays}
+                            title="Calendar Sync"
+                            desc="Add to Google/Apple Calendar."
+                        />
+                        <PerkItem
+                            icon={PencilLine}
+                            title="Edit & Customize"
+                            desc="Full control to tweak your plan."
+                        />
                     </div>
 
                     <div className="flex flex-col items-center gap-4">
-                        <div className="flex items-center gap-2 text-sm font-medium text-slate-600 bg-slate-100 px-4 py-2 rounded-full">
+                        <div
+                            className="flex items-center gap-2 text-sm font-medium text-slate-600 bg-slate-100 px-4 py-2 rounded-full">
                             <span>Cost: {required} pts</span>
                             <span className="text-slate-300">|</span>
-                            <span>You have: <span className={points < required ? "text-red-600 font-bold" : "text-emerald-600 font-bold"}>{points ?? "..."}</span> pts</span>
+                            <span>
+                You have:{" "}
+                                <span
+                                    className={
+                                        points === null
+                                            ? "font-bold"
+                                            : hasEnough
+                                                ? "text-emerald-600 font-bold"
+                                                : "text-red-600 font-bold"
+                                    }
+                                >
+                  {points ?? "..."}
+                </span>{" "}
+                                pts
+              </span>
                         </div>
 
                         <div className="flex gap-3 w-full sm:w-auto">
-                            <Button size="lg" onClick={onBuy} className="flex-1 sm:flex-initial rounded-xl bg-slate-900 text-white hover:bg-slate-800">
-                                {points < required ? "Top Up Points" : "Unlock Now"}
+                            <Button
+                                size="lg"
+                                onClick={onBuy}
+                                disabled={saving}
+                                className="flex-1 sm:flex-initial rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+                            >
+                                {saving
+                                    ? "Processing..."
+                                    : hasEnough
+                                        ? "Unlock Now"
+                                        : "Top Up Points"}
                             </Button>
-                            <Button size="lg" variant="outline" onClick={onSave} className="flex-1 sm:flex-initial rounded-xl border-slate-200">
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                onClick={onSave}
+                                disabled={saving}
+                                className="flex-1 sm:flex-initial rounded-xl border-slate-200"
+                            >
                                 Save Draft
                             </Button>
                         </div>
@@ -837,28 +1052,36 @@ function FullScreenPaywallOverlay({ onBuy, onSave, points, required, saving, for
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
-function PerkItem({ icon: Icon, title, desc }: any) {
+function PerkItem({
+                      icon: Icon,
+                      title,
+                      desc,
+                  }: {
+    icon: any;
+    title: string;
+    desc: string;
+}) {
     return (
         <div className="flex gap-3">
             <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
-                <Icon className="h-5 w-5" />
+                <Icon className="h-5 w-5"/>
             </div>
             <div>
                 <h4 className="font-bold text-slate-900 text-sm">{title}</h4>
                 <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
             </div>
         </div>
-    )
+    );
 }
 
 /* =========================
    Save flow
 ========================= */
 async function saveDraftAsTrip(
-    sbClient: ReturnType<typeof createClientBrowser>,
+    sbClient: ReturnType<typeof getSupabaseBrowser>,
     currentPreview: PreviewResponse,
     requiredPoints: number,
     points: number | null,
@@ -880,33 +1103,40 @@ async function saveDraftAsTrip(
     let pointsSpent = false;
 
     try {
-        const { data: auth } = await sbClient.auth.getUser();
+        const {data: auth, error: userErr} = await sbClient.auth.getUser();
+        if (userErr) {
+            console.error("[saveDraftAsTrip] auth.getUser error:", userErr);
+        }
         currentUserId = auth?.user?.id ?? undefined;
         if (!currentUserId) throw new Error("Not authenticated");
 
         // 1) Spend points via RPC, fallback to manual ledger insert
         try {
-            const { data: ok, error: rpcErr } = await sbClient.rpc("spend_points", {
+            const {data: ok, error: rpcErr} = await sbClient.rpc("spend_points", {
                 p_cost: COST,
             });
             if (rpcErr) throw rpcErr;
             if (ok !== true) {
                 setInsufficientOpen(true);
+                setSavingState(false);
                 return;
             }
             pointsSpent = true;
-        } catch {
-            const { error: debitErr } = await sbClient
+        } catch (e) {
+            console.error("[saveDraftAsTrip] spend_points RPC failed, fallback:", e);
+            const {error: debitErr} = await sbClient
                 .schema("itinero")
                 .from("points_ledger")
                 .insert({
                     user_id: currentUserId,
                     delta: -COST,
                     reason: "save_trip",
-                    meta: { source: "web", at: new Date().toISOString() },
+                    meta: {source: "web", at: new Date().toISOString()},
                 });
             if (debitErr) {
+                console.error("[saveDraftAsTrip] manual debit failed:", debitErr);
                 setInsufficientOpen(true);
+                setSavingState(false);
                 return;
             }
             pointsSpent = true;
@@ -933,7 +1163,7 @@ async function saveDraftAsTrip(
             inputs: ins,
         };
 
-        const { data: tripInsert, error: tripErr } = await sbClient
+        const {data: tripInsert, error: tripErr} = await sbClient
             .schema("itinero")
             .from("trips")
             .insert(tripRow)
@@ -970,7 +1200,9 @@ async function saveDraftAsTrip(
                     place_id: b.place_id ?? null,
                     title: b.title,
                     est_cost: Number.isFinite(b.est_cost) ? b.est_cost : null,
-                    duration_min: Number.isFinite(b.duration_min) ? b.duration_min : null,
+                    duration_min: Number.isFinite(b.duration_min)
+                        ? b.duration_min
+                        : null,
                     travel_min_from_prev: Number.isFinite(b.travel_min_from_prev)
                         ? b.travel_min_from_prev
                         : null,
@@ -980,7 +1212,7 @@ async function saveDraftAsTrip(
         });
 
         if (items.length) {
-            const { error: itemsErr } = await sbClient
+            const {error: itemsErr} = await sbClient
                 .schema("itinero")
                 .from("itinerary_items")
                 .insert(items);
@@ -989,16 +1221,16 @@ async function saveDraftAsTrip(
 
         // 4) Refresh points balance
         try {
-            const { data: newBal } = await sbClient.rpc("get_points_balance");
+            const {data: newBal} = await sbClient.rpc("get_points_balance");
             if (typeof newBal === "number") setPoints(newBal);
-        } catch {
-            /* ignore */
+        } catch (e) {
+            console.error("[saveDraftAsTrip] refresh balance failed:", e);
         }
 
         // 5) Clear preview from localStorage after successful save
         try {
             if (typeof window !== "undefined") {
-                localStorage.removeItem("itinero:latest_preview");
+                window.localStorage.removeItem("itinero:latest_preview");
             }
         } catch {
             // non-fatal
@@ -1010,25 +1242,20 @@ async function saveDraftAsTrip(
         // Refund points if we successfully spent them but failed later
         if (pointsSpent) {
             try {
-                const { data: auth2 } = await sbClient.auth.getUser();
+                const {data: auth2} = await sbClient.auth.getUser();
                 const uid = auth2?.user?.id ?? null;
                 await sbClient.schema("itinero").from("points_ledger").insert({
                     user_id: uid,
                     delta: COST,
                     reason: "refund_save_trip_failed",
-                    meta: { source: "web", at: new Date().toISOString() },
+                    meta: {source: "web", at: new Date().toISOString()},
                 });
             } catch {
                 // swallow
             }
         }
-        // eslint-disable-next-line no-console
         console.error("Save trip failed:", err);
     } finally {
         setSavingState(false);
     }
-}
-
-function formatPoints(n: number) {
-    return new Intl.NumberFormat().format(n);
 }

@@ -2,16 +2,16 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, MapPin, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { createClientBrowser } from "@/lib/supabase/browser";
+import {useState, useEffect, useRef} from "react";
+import {useRouter} from "next/navigation";
+import {Plus, MapPin, Loader2} from "lucide-react";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import {Textarea} from "@/components/ui/textarea";
+import {Separator} from "@/components/ui/separator";
+import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/components/ui/dialog";
+import {createClientBrowser} from "@/lib/supabase/browser";
 
 type UUID = string;
 type When = "morning" | "afternoon" | "evening";
@@ -128,7 +128,7 @@ export function AddItemUnderDay({
 
                 // Try RPC first when we have a location
                 if (typeof destinationLat === "number" && typeof destinationLng === "number") {
-                    const { data, error } = await sb
+                    const {data, error} = await sb
                         .schema("itinero")
                         .rpc("find_places_near", {
                             lat: destinationLat,
@@ -158,7 +158,7 @@ export function AddItemUnderDay({
                         query = query.overlaps("tags", preferenceTags);
                     }
 
-                    const { data, error } = await query;
+                    const {data, error} = await query;
                     if (!error && Array.isArray(data)) {
                         results = data as PlaceLite[];
                     }
@@ -218,7 +218,7 @@ export function AddItemUnderDay({
                 payload.day_index = dayIndex;
             }
 
-            const { error } = await sb.schema("itinero").from("itinerary_items").insert(payload);
+            const {error} = await sb.schema("itinero").from("itinerary_items").insert(payload);
             if (error) throw error;
 
             setOpen(false);
@@ -230,145 +230,156 @@ export function AddItemUnderDay({
 
     return (
         <>
-            <Separator className="my-3" />
+            <Separator className="my-3"/>
             <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="mr-2 h-4 w-4"/>
                 Add item
             </Button>
 
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="sm:max-w-lg">
+                <DialogContent className="sm:max-w-lg overflow-visible">
                     <DialogHeader>
                         <DialogTitle>Add itinerary item</DialogTitle>
                     </DialogHeader>
 
-                    <div className="grid gap-3">
-                        {/* Place-aware title */}
-                        <div className="grid gap-1.5">
-                            <Label>Title (search places near you)</Label>
+                    <div className="grid gap-4 py-2">
 
-                            {/* 1) The visible search box */}
-                            <Input
-                                placeholder="Search a place e.g. Labadi Beach"
-                                value={placeQuery}
-                                onChange={(e) => {
-                                    setPlaceQuery(e.target.value);
-                                    setSelectedPlace(null); // unselect when user types again
-                                }}
-                                onKeyDown={(e) => {
-                                    // Enter with no selection => copy query to title
-                                    if (e.key === "Enter" && !selectedPlace && placeQuery) {
-                                        setTitle(placeQuery);
-                                    }
-                                }}
-                            />
+                        {/* --- SMART LOCATION/TITLE INPUT --- */}
+                        <div className="grid gap-2 relative z-50">
+                            <Label>Activity or Location</Label>
+                            <div className="relative">
+                                <Input
+                                    placeholder="e.g. Visit Labadi Beach"
+                                    value={placeQuery} // We map the input directly to the query
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setPlaceQuery(val);
+                                        setTitle(val); // Default the title to what they type
+                                        setSelectedPlace(null); // Clear specific location until selected
+                                    }}
+                                    className={selectedPlace ? "pl-9" : ""} // Make room for icon if selected
+                                />
 
-                            {/* 2) Results list */}
-                            <div className="rounded-md border bg-background">
-                                {placeLoading ? (
-                                    <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Searching…
+                                {/* Visual indicator that a Place is locked in */}
+                                {selectedPlace && (
+                                    <div className="absolute left-3 top-2.5 text-primary animate-in fade-in zoom-in">
+                                        <MapPin className="h-4 w-4"/>
                                     </div>
-                                ) : placeResults.length > 0 ? (
-                                    <ul className="max-h-56 overflow-auto">
-                                        {placeResults.map((p) => {
-                                            const active = selectedPlace?.id === p.id;
-                                            return (
-                                                <li key={p.id}>
-                                                    <button
-                                                        type="button"
-                                                        className={`flex w-full items-start gap-2 px-3 py-2 text-left hover:bg-muted/60 ${
-                                                            active ? "bg-muted" : ""
-                                                        }`}
-                                                        onClick={() => {
-                                                            setSelectedPlace(p);
-                                                            setTitle(p.name || "");
-                                                            setPlaceQuery(p.name || "");
-                                                        }}
-                                                    >
-                            <span className="mt-0.5 rounded-sm bg-primary/10 p-1 text-primary">
-                              <MapPin className="h-3.5 w-3.5" />
-                            </span>
-                                                        <span className="flex-1">
-                              <span className="block text-sm font-medium">{p.name}</span>
-                                                            {p.city || p.country || typeof p.distance_km === "number" ? (
-                                                                <span className="block text-xs text-muted-foreground">
-                                  {[p.city, p.country].filter(Boolean).join(", ")}
-                                                                    {typeof p.distance_km === "number" ? ` • ${p.distance_km.toFixed(1)} km` : ""}
-                                </span>
-                                                            ) : null}
-                            </span>
-                                                    </button>
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                ) : placeQuery ? (
-                                    <div className="px-3 py-2 text-sm text-muted-foreground">No matches. Keep typing…</div>
-                                ) : (
-                                    <div className="px-3 py-2 text-sm text-muted-foreground">
-                                        {typeof destinationLat === "number" && typeof destinationLng === "number"
-                                            ? "Type to search nearby places…"
-                                            : "Add location to get better suggestions, or type to search…"}
+                                )}
+
+                                {/* --- FLOATING RESULTS LIST --- */}
+                                {/* Only show if we have results OR are loading, AND we haven't just selected something */}
+                                {(placeLoading || (placeResults.length > 0 && !selectedPlace)) && (
+                                    <div
+                                        className="absolute top-full mt-1 w-full rounded-md border bg-popover shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1">
+                                        {placeLoading ? (
+                                            <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
+                                                <Loader2 className="h-4 w-4 animate-spin"/>
+                                                Finding places...
+                                            </div>
+                                        ) : (
+                                            <ul className="max-h-60 overflow-y-auto">
+                                                {placeResults.map((p) => (
+                                                    <li key={p.id}>
+                                                        <button
+                                                            type="button"
+                                                            className="flex w-full items-start gap-3 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors"
+                                                            onClick={() => {
+                                                                setSelectedPlace(p);
+                                                                setTitle(p.name || "");
+                                                                setPlaceQuery(p.name || ""); // Lock the input text
+                                                            }}
+                                                        >
+                                                            <div
+                                                                className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                                                <MapPin className="h-3.5 w-3.5"/>
+                                                            </div>
+                                                            <div className="flex-1">
+                          <span className="block text-sm font-medium leading-none mb-1">
+                            {p.name}
+                          </span>
+                                                                <span
+                                                                    className="block text-xs text-muted-foreground line-clamp-1">
+                            {[p.city, p.country].filter(Boolean).join(", ")}
+                                                                    {typeof p.distance_km === "number" && ` • ${p.distance_km.toFixed(1)} km`}
+                          </span>
+                                                            </div>
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
                                     </div>
                                 )}
                             </div>
+                        </div>
 
-                            {/* 3) Freeform title (editable after select) */}
-                            <div className="grid gap-1.5">
-                                <Label className="text-xs text-muted-foreground">Or override the title</Label>
-                                <Input
-                                    placeholder="e.g. Jamestown walking tour"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                />
+                        {/* --- TIME & DURATION ROW --- */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label>When</Label>
+                                <WhenSelect value={when} onValueChange={setWhen}/>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Duration (min)</Label>
+                                <div className="relative">
+                                    <Input
+                                        type="number"
+                                        inputMode="numeric"
+                                        placeholder="90"
+                                        value={durationMin}
+                                        onChange={(e) => setDurationMin(e.target.value)}
+                                    />
+                                    <span
+                                        className="absolute right-3 top-2.5 text-xs text-muted-foreground pointer-events-none">
+              min
+            </span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* When + Cost */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="grid gap-1.5">
-                                <Label>When</Label>
-                                <WhenSelect value={when} onValueChange={setWhen} />
-                            </div>
-                            <div className="grid gap-1.5">
-                                <Label>Estimated cost</Label>
+                        {/* --- COST & NOTES --- */}
+                        <div className="grid gap-2">
+                            <Label>Estimated cost</Label>
+                            <div className="relative">
+             <span className="absolute left-3 top-2.5 text-muted-foreground text-sm font-medium">
+              GHS
+            </span>
                                 <Input
+                                    className="pl-12" // Make room for currency
                                     type="number"
                                     inputMode="decimal"
-                                    placeholder="e.g. 10"
+                                    placeholder="0.00"
                                     value={estCost}
                                     onChange={(e) => setEstCost(e.target.value)}
                                 />
                             </div>
                         </div>
 
-                        {/* Duration */}
-                        <div className="grid gap-1.5">
-                            <Label>Duration (min)</Label>
-                            <Input
-                                type="number"
-                                inputMode="numeric"
-                                placeholder="e.g. 90"
-                                value={durationMin}
-                                onChange={(e) => setDurationMin(e.target.value)}
+                        <div className="grid gap-2">
+                            <Label>Notes</Label>
+                            <Textarea
+                                className="resize-none"
+                                rows={3}
+                                placeholder="Any booking details or reminders..."
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
                             />
                         </div>
 
-                        {/* Notes */}
-                        <div className="grid gap-1.5">
-                            <Label>Notes</Label>
-                            <Textarea rows={3} placeholder="Optional notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
-                        </div>
                     </div>
 
-                    <DialogFooter className="gap-2">
+                    <DialogFooter className="gap-2 pt-2">
                         <Button variant="ghost" onClick={() => setOpen(false)} disabled={busy}>
                             Cancel
                         </Button>
-                        <Button onClick={onCreate} disabled={busy}>
-                            {busy ? "Adding…" : "Add item"}
+                        <Button onClick={onCreate} disabled={busy || !title}>
+                            {busy ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                    Adding...
+                                </>
+                            ) : "Add Item"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

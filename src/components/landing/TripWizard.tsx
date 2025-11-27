@@ -13,7 +13,7 @@ import {Label} from "@/components/ui/label";
 import {Calendar} from "@/components/ui/calendar";
 import {cn} from "@/lib/utils";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
-import {createClientBrowser} from "@/lib/supabase/browser";
+import {getSupabaseBrowser} from "@/lib/supabase/browser-singleton";
 
 import {DateRange} from "react-day-picker";
 import {
@@ -29,9 +29,12 @@ import {
     Check,
     Clock,
     Wallet,
-    Pencil
+    Pencil,
 } from "lucide-react";
-import {LodgingMapDialog, LodgingValue} from "@/components/landing/LodgingMapDialog";
+import {
+    LodgingMapDialog,
+    LodgingValue,
+} from "@/components/landing/LodgingMapDialog";
 
 /* ---------------- date-only helpers ---------------- */
 type DateRangeValue = { from?: Date; to?: Date } | undefined;
@@ -96,7 +99,7 @@ const STEPS = [
 
 /* ================== Main Wizard ================== */
 export default function TripWizard() {
-    const sb = createClientBrowser();
+    const sb = getSupabaseBrowser();
     const router = useRouter();
 
     const [step, setStep] = useState(0);
@@ -115,17 +118,59 @@ export default function TripWizard() {
         currency: "USD",
     });
 
+    // ---------- helper: reset auth + localStorage when session is broken ----------
+    const resetAuthAndStorage = React.useCallback(async () => {
+        if (typeof window !== "undefined") {
+            try {
+                for (const key of Object.keys(window.localStorage)) {
+                    if (
+                        key.startsWith("sb-") || // supabase auth keys
+                        key.startsWith("supabase.") ||
+                        key.startsWith("itinero:")
+                    ) {
+                        window.localStorage.removeItem(key);
+                    }
+                }
+            } catch (e) {
+                console.error("[TripWizard resetAuthAndStorage] localStorage error:", e);
+            }
+        }
+
+        try {
+            await sb.auth.signOut();
+        } catch (e) {
+            console.error("[TripWizard resetAuthAndStorage] signOut error:", e);
+        }
+
+        // For this wizard, send them back to landing/home so they can start fresh
+        router.replace("/");
+    }, [router, sb]);
+
+    const isTokenError = (err: unknown) => {
+        const anyErr = err as any;
+        const msg: string = anyErr?.message ?? "";
+        const status: number | undefined = anyErr?.status ?? anyErr?.code;
+
+        return (
+            status === 401 ||
+            /jwt|token|expired|unauthorized/i.test(msg ?? "") ||
+            anyErr?.name === "AuthSessionMissingError"
+        );
+    };
+
+    // load preferred currency from localStorage (safe)
     React.useEffect(() => {
         if (typeof window === "undefined") return;
         try {
             const stored = window.localStorage.getItem("itinero:currency");
             const code = (stored || "USD").toUpperCase();
             setState((s) => ({...s, currency: s.currency ?? code}));
-        } catch { /* ignore */
+        } catch (e) {
+            console.error("[TripWizard] reading itinero:currency failed:", e);
         }
     }, []);
 
-    // Auth listener
+    // Auth listener (wizard-specific)
     useEffect(() => {
         const {data: sub} = sb.auth.onAuthStateChange(async (evt) => {
             if (evt === "SIGNED_IN") {
@@ -133,7 +178,9 @@ export default function TripWizard() {
                 router.refresh();
             }
         });
-        return () => sub.subscription.unsubscribe();
+        return () => {
+            sub?.subscription?.unsubscribe();
+        };
     }, [sb, router]);
 
     const progress = ((step + 1) / STEPS.length) * 100;
@@ -141,7 +188,8 @@ export default function TripWizard() {
     const isValid = useMemo(() => {
         if (step === 0) return state.destinations[0]?.name.trim().length > 1;
         if (step === 1) return !!state.start_date && !!state.end_date;
-        if (step === 2) return state.budget_daily === "" || Number(state.budget_daily) >= 0;
+        if (step === 2)
+            return state.budget_daily === "" || Number(state.budget_daily) >= 0;
         if (step === 3) return state.interests.length > 0;
         return true;
     }, [step, state]);
@@ -160,13 +208,44 @@ export default function TripWizard() {
         setBusy(true);
         try {
             const payload = toPayload(state);
-            const {data, error} = await sb.functions.invoke("build_preview_itinerary", {body: payload});
 
-            if (error) throw error;
+            const {data, error} = await sb.functions.invoke(
+                "build_preview_itinerary",
+                {body: payload}
+            );
 
-            localStorage.setItem("itinero:latest_preview", JSON.stringify(data));
+            if (error) {
+                console.error("[build_preview_itinerary] error:", error);
+                if (isTokenError(error)) {
+                    await resetAuthAndStorage();
+                    return;
+                }
+                throw error;
+            }
 
-            const {data: {user}} = await sb.auth.getUser();
+            // store preview safely
+            try {
+                if (typeof window !== "undefined") {
+                    window.localStorage.setItem(
+                        "itinero:latest_preview",
+                        JSON.stringify(data)
+                    );
+                }
+            } catch (e) {
+                console.error("[TripWizard] localStorage.setItem(latest_preview) failed:", e);
+            }
+
+            const {data: userData, error: userError} = await sb.auth.getUser();
+
+            if (userError) {
+                console.error("[TripWizard auth.getUser] error:", userError);
+                if (isTokenError(userError)) {
+                    await resetAuthAndStorage();
+                    return;
+                }
+            }
+
+            const user = userData?.user;
 
             if (!user) {
                 setAuthOpen(true);
@@ -174,7 +253,10 @@ export default function TripWizard() {
                 router.push("/preview");
             }
         } catch (e) {
-            console.error(e);
+            console.error("[TripWizard goNext] threw:", e);
+            if (isTokenError(e)) {
+                await resetAuthAndStorage();
+            }
         } finally {
             setBusy(false);
         }
@@ -196,14 +278,14 @@ export default function TripWizard() {
         return from || to ? {from, to} : undefined;
     }, [state.start_date, state.end_date]);
 
-    const dateDisplay = state.start_date && state.end_date
-        ? `${fmtHuman(state.start_date)} - ${fmtHuman(state.end_date)}`
-        : "Select dates";
+    const dateDisplay =
+        state.start_date && state.end_date
+            ? `${fmtHuman(state.start_date)} - ${fmtHuman(state.end_date)}`
+            : "Select dates";
 
     return (
         <div className="w-full bg-slate-50/50 px-4 pt-6 pb-12 text-slate-900 dark:bg-slate-950 dark:text-white">
             <div className="mx-auto w-full max-w-2xl">
-
                 {/* Header / Progress */}
                 <div className="mb-8 flex items-center justify-between px-2">
                     <div className="flex items-center gap-2">
@@ -213,8 +295,8 @@ export default function TripWizard() {
                         </div>
                         <span
                             className="text-sm font-semibold text-slate-600 uppercase tracking-wide dark:text-slate-400">
-                {STEPS[step].label}
-              </span>
+              {STEPS[step].label}
+            </span>
                     </div>
 
                     {/* Segmented Progress Bar */}
@@ -224,7 +306,9 @@ export default function TripWizard() {
                                 key={i}
                                 className={cn(
                                     "h-1.5 w-8 rounded-full transition-colors duration-300",
-                                    i <= step ? "bg-blue-600 dark:bg-blue-500" : "bg-slate-200 dark:bg-slate-800"
+                                    i <= step
+                                        ? "bg-blue-600 dark:bg-blue-500"
+                                        : "bg-slate-200 dark:bg-slate-800"
                                 )}
                             />
                         ))}
@@ -238,14 +322,15 @@ export default function TripWizard() {
                 >
                     <div className="p-6 md:p-8 flex-1">
                         <AnimatePresence mode="wait">
-
                             {/* STEP 0: DESTINATION */}
                             {step === 0 && (
                                 <Slide key="dest">
                                     <FieldBlock label="Where do you want to go?" icon={MapPin}>
                                         <DestinationField
                                             value={state.destinations[0]}
-                                            onChange={(d) => setState((s) => ({...s, destinations: [d]}))}
+                                            onChange={(d) =>
+                                                setState((s) => ({...s, destinations: [d]}))
+                                            }
                                         />
                                     </FieldBlock>
                                 </Slide>
@@ -254,25 +339,37 @@ export default function TripWizard() {
                             {/* STEP 1: DATES */}
                             {step === 1 && (
                                 <Slide key="dates">
-                                    <FieldBlock label="When are you traveling?" icon={CalendarDays} hint={dateDisplay}>
+                                    <FieldBlock
+                                        label="When are you traveling?"
+                                        icon={CalendarDays}
+                                        hint={dateDisplay}
+                                    >
                                         <div
                                             className="flex justify-center rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
                                             <Calendar
                                                 mode="range"
-                                                selected={selectedRange ? {
-                                                    from: selectedRange.from!,
-                                                    to: selectedRange.to
-                                                } : undefined}
+                                                selected={
+                                                    selectedRange
+                                                        ? {
+                                                            from: selectedRange.from!,
+                                                            to: selectedRange.to,
+                                                        }
+                                                        : undefined
+                                                }
                                                 onSelect={handleRangeChange}
                                                 disabled={[{before: new Date()}]}
                                                 className="bg-transparent"
                                                 classNames={{
                                                     months: "gap-4",
-                                                    head_cell: "text-slate-400 font-normal text-[0.8rem]",
-                                                    day_selected: "bg-blue-600 text-white hover:bg-blue-700 focus:bg-blue-600 dark:bg-blue-600 dark:text-white",
-                                                    day_today: "bg-slate-100 text-slate-900 font-bold dark:bg-slate-800 dark:text-white",
+                                                    head_cell:
+                                                        "text-slate-400 font-normal text-[0.8rem]",
+                                                    day_selected:
+                                                        "bg-blue-600 text-white hover:bg-blue-700 focus:bg-blue-600 dark:bg-blue-600 dark:text-white",
+                                                    day_today:
+                                                        "bg-slate-100 text-slate-900 font-bold dark:bg-slate-800 dark:text-white",
                                                     day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-slate-100 rounded-md dark:hover:bg-slate-800 dark:text-slate-200",
-                                                    caption: "flex justify-center pt-1 relative items-center text-slate-900 dark:text-white font-medium",
+                                                    caption:
+                                                        "flex justify-center pt-1 relative items-center text-slate-900 dark:text-white font-medium",
                                                 }}
                                             />
                                         </div>
@@ -288,8 +385,9 @@ export default function TripWizard() {
                                             <div className="relative flex-1">
                                                 <div
                                                     className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                                    <span
-                                                        className="text-slate-500 dark:text-slate-400">{getCurrencyMeta(state.currency).symbol}</span>
+                          <span className="text-slate-500 dark:text-slate-400">
+                            {getCurrencyMeta(state.currency).symbol}
+                          </span>
                                                 </div>
                                                 <Input
                                                     type="number"
@@ -297,27 +395,37 @@ export default function TripWizard() {
                                                     className="pl-8 h-12 rounded-xl border-slate-200 bg-slate-50 focus-visible:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
                                                     placeholder="150"
                                                     value={state.budget_daily}
-                                                    onChange={(e) => setState(s => ({
-                                                        ...s,
-                                                        budget_daily: e.target.value === "" ? "" : Number(e.target.value)
-                                                    }))}
+                                                    onChange={(e) =>
+                                                        setState((s) => ({
+                                                            ...s,
+                                                            budget_daily:
+                                                                e.target.value === ""
+                                                                    ? ""
+                                                                    : Number(e.target.value),
+                                                        }))
+                                                    }
                                                 />
                                             </div>
                                             <CurrencySelect
                                                 value={state.currency}
-                                                onChange={(c) => setState(s => ({...s, currency: c}))}
+                                                onChange={(c) =>
+                                                    setState((s) => ({...s, currency: c}))
+                                                }
                                             />
                                         </div>
 
                                         <div className="mt-6 flex flex-wrap gap-3">
-                                            {[50, 150, 300, 500].map(amt => (
+                                            {[50, 150, 300, 500].map((amt) => (
                                                 <button
                                                     key={amt}
                                                     type="button"
-                                                    onClick={() => setState(s => ({...s, budget_daily: amt}))}
+                                                    onClick={() =>
+                                                        setState((s) => ({...s, budget_daily: amt}))
+                                                    }
                                                     className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-blue-600 hover:text-blue-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-blue-500 dark:hover:text-blue-500"
                                                 >
-                                                    {getCurrencyMeta(state.currency).symbol}{amt}
+                                                    {getCurrencyMeta(state.currency).symbol}
+                                                    {amt}
                                                 </button>
                                             ))}
                                         </div>
@@ -328,9 +436,13 @@ export default function TripWizard() {
                             {/* STEP 3: INTERESTS */}
                             {step === 3 && (
                                 <Slide key="interests">
-                                    <FieldBlock label="What are you into?" icon={Sparkles} hint="Select at least one">
+                                    <FieldBlock
+                                        label="What are you into?"
+                                        icon={Sparkles}
+                                        hint="Select at least one"
+                                    >
                                         <div className="flex flex-wrap gap-3">
-                                            {DEFAULT_INTERESTS.map(tag => {
+                                            {DEFAULT_INTERESTS.map((tag) => {
                                                 const active = state.interests.includes(tag);
                                                 return (
                                                     <button
@@ -338,8 +450,12 @@ export default function TripWizard() {
                                                         type="button"
                                                         onClick={() => {
                                                             const set = new Set(state.interests);
-                                                            if (set.has(tag)) set.delete(tag); else set.add(tag);
-                                                            setState(s => ({...s, interests: Array.from(set)}));
+                                                            if (set.has(tag)) set.delete(tag);
+                                                            else set.add(tag);
+                                                            setState((s) => ({
+                                                                ...s,
+                                                                interests: Array.from(set),
+                                                            }));
                                                         }}
                                                         className={cn(
                                                             "rounded-full px-5 py-2.5 text-sm font-medium transition-all border",
@@ -350,7 +466,7 @@ export default function TripWizard() {
                                                     >
                                                         {tag.charAt(0).toUpperCase() + tag.slice(1)}
                                                     </button>
-                                                )
+                                                );
                                             })}
                                         </div>
                                     </FieldBlock>
@@ -362,13 +478,21 @@ export default function TripWizard() {
                                 <Slide key="pace">
                                     <FieldBlock label="Travel Pace" icon={Clock}>
                                         <div className="grid gap-4 sm:grid-cols-3">
-                                            {(["chill", "balanced", "packed"] as const).map(opt => (
+                                            {(["chill", "balanced", "packed"] as const).map((opt) => (
                                                 <SelectionCard
                                                     key={opt}
                                                     label={opt}
                                                     selected={state.pace === opt}
-                                                    onClick={() => setState(s => ({...s, pace: opt}))}
-                                                    emoji={opt === "chill" ? "☕" : opt === "balanced" ? "⚖️" : "⚡"}
+                                                    onClick={() =>
+                                                        setState((s) => ({...s, pace: opt}))
+                                                    }
+                                                    emoji={
+                                                        opt === "chill"
+                                                            ? "☕"
+                                                            : opt === "balanced"
+                                                                ? "⚖️"
+                                                                : "⚡"
+                                                    }
                                                 />
                                             ))}
                                         </div>
@@ -381,15 +505,27 @@ export default function TripWizard() {
                                 <Slide key="mode">
                                     <FieldBlock label="Primary Transport" icon={Car}>
                                         <div className="grid gap-4 sm:grid-cols-2">
-                                            {(["car", "transit", "walk", "bike"] as const).map(opt => (
-                                                <SelectionCard
-                                                    key={opt}
-                                                    label={opt}
-                                                    selected={state.mode === opt}
-                                                    onClick={() => setState(s => ({...s, mode: opt}))}
-                                                    emoji={opt === "car" ? "🚗" : opt === "transit" ? "🚆" : opt === "walk" ? "👟" : "🚲"}
-                                                />
-                                            ))}
+                                            {(["car", "transit", "walk", "bike"] as const).map(
+                                                (opt) => (
+                                                    <SelectionCard
+                                                        key={opt}
+                                                        label={opt}
+                                                        selected={state.mode === opt}
+                                                        onClick={() =>
+                                                            setState((s) => ({...s, mode: opt}))
+                                                        }
+                                                        emoji={
+                                                            opt === "car"
+                                                                ? "🚗"
+                                                                : opt === "transit"
+                                                                    ? "🚆"
+                                                                    : opt === "walk"
+                                                                        ? "👟"
+                                                                        : "🚲"
+                                                        }
+                                                    />
+                                                )
+                                            )}
                                         </div>
                                     </FieldBlock>
                                 </Slide>
@@ -398,20 +534,31 @@ export default function TripWizard() {
                             {/* STEP 6: LODGING */}
                             {step === 6 && (
                                 <Slide key="lodging">
-                                    <FieldBlock label="Where are you staying?" icon={Users}
-                                                hint="Optional - we'll optimize routes from here">
+                                    <FieldBlock
+                                        label="Where are you staying?"
+                                        icon={Users}
+                                        hint="Optional - we'll optimize routes from here"
+                                    >
                                         <div
                                             className="rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:bg-slate-800 dark:border-slate-700">
                                             <LodgingMapDialog
                                                 value={state.lodging as LodgingValue | null}
-                                                onChange={(v) => setState(s => ({
-                                                    ...s,
-                                                    lodging: v ? {name: v.name ?? ""} : undefined
-                                                }))}
-                                                center={state.destinations[0].lat ? {
-                                                    lat: state.destinations[0].lat!,
-                                                    lng: state.destinations[0].lng!
-                                                } : undefined}
+                                                onChange={(v) =>
+                                                    setState((s) => ({
+                                                        ...s,
+                                                        lodging: v
+                                                            ? {name: v.name ?? ""}
+                                                            : undefined,
+                                                    }))
+                                                }
+                                                center={
+                                                    state.destinations[0].lat
+                                                        ? {
+                                                            lat: state.destinations[0].lat!,
+                                                            lng: state.destinations[0].lng!,
+                                                        }
+                                                        : undefined
+                                                }
                                             />
                                         </div>
                                     </FieldBlock>
@@ -424,7 +571,6 @@ export default function TripWizard() {
                                     <ReviewCard data={toPayload(state)} onEdit={jumpTo}/>
                                 </Slide>
                             )}
-
                         </AnimatePresence>
                     </div>
 
@@ -445,16 +591,24 @@ export default function TripWizard() {
                             disabled={!isValid || busy}
                             className={cn(
                                 "min-w-[120px] rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all dark:shadow-none",
-                                busy ? "opacity-80 bg-blue-700" : "bg-blue-600 hover:bg-blue-700 hover:-translate-y-0.5"
+                                busy
+                                    ? "opacity-80 bg-blue-700"
+                                    : "bg-blue-600 hover:bg-blue-700 hover:-translate-y-0.5"
                             )}
                             size="lg"
                         >
                             {busy ? (
-                                <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Generating...</>
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Generating...
+                                </>
                             ) : step === STEPS.length - 1 ? (
-                                <>Create Itinerary <Sparkles className="ml-2 h-4 w-4"/></>
+                                <>
+                                    Create Itinerary <Sparkles className="ml-2 h-4 w-4"/>
+                                </>
                             ) : (
-                                <>Next <ChevronRight className="ml-2 h-4 w-4"/></>
+                                <>
+                                    Next <ChevronRight className="ml-2 h-4 w-4"/>
+                                </>
                             )}
                         </Button>
                     </div>
@@ -488,11 +642,16 @@ function Slide({children}: { children: React.ReactNode }) {
     );
 }
 
-function FieldBlock({label, icon: Icon, hint, children}: {
-    label: string,
-    icon: any,
-    hint?: string,
-    children: React.ReactNode
+function FieldBlock({
+                        label,
+                        icon: Icon,
+                        hint,
+                        children,
+                    }: {
+    label: string;
+    icon: any;
+    hint?: string;
+    children: React.ReactNode;
 }) {
     return (
         <div className="space-y-6 w-full">
@@ -502,22 +661,31 @@ function FieldBlock({label, icon: Icon, hint, children}: {
                     <Icon className="h-6 w-6"/>
                 </div>
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">{label}</h2>
-                    {hint && <p className="text-sm text-slate-500 dark:text-slate-400">{hint}</p>}
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                        {label}
+                    </h2>
+                    {hint && (
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                            {hint}
+                        </p>
+                    )}
                 </div>
             </div>
-            <div className="pt-2 w-full">
-                {children}
-            </div>
+            <div className="pt-2 w-full">{children}</div>
         </div>
-    )
+    );
 }
 
-function SelectionCard({label, selected, onClick, emoji}: {
-    label: string,
-    selected: boolean,
-    onClick: () => void,
-    emoji: string
+function SelectionCard({
+                           label,
+                           selected,
+                           onClick,
+                           emoji,
+                       }: {
+    label: string;
+    selected: boolean;
+    onClick: () => void;
+    emoji: string;
 }) {
     return (
         <button
@@ -533,12 +701,18 @@ function SelectionCard({label, selected, onClick, emoji}: {
             <span className="text-2xl">{emoji}</span>
             <span className="font-bold capitalize">{label}</span>
         </button>
-    )
+    );
 }
 
 // --- DESTINATION FIELD ---
-function DestinationField({value, onChange}: { value: Destination, onChange: (d: Destination) => void }) {
-    const sb = createClientBrowser();
+function DestinationField({
+                              value,
+                              onChange,
+                          }: {
+    value: Destination;
+    onChange: (d: Destination) => void;
+}) {
+    const sb = getSupabaseBrowser();
     const [q, setQ] = useState(value.name);
     const [rows, setRows] = useState<Destination[]>([]);
     const [open, setOpen] = useState(false);
@@ -551,14 +725,27 @@ function DestinationField({value, onChange}: { value: Destination, onChange: (d:
         }
 
         const t = setTimeout(async () => {
-            const {data} = await sb
-                .schema("itinero")
-                .from("destinations")
-                .select("id,name,lat,lng")
-                .ilike("name", `%${term}%`)
-                .limit(5);
-            if (data) setRows(data.map(r => ({...r, id: String(r.id)})));
+            try {
+                const {data, error} = await sb
+                    .schema("itinero")
+                    .from("destinations")
+                    .select("id,name,lat,lng")
+                    .ilike("name", `%${term}%`)
+                    .limit(5);
+
+                if (error) {
+                    console.error("[DestinationField] destinations query error:", error);
+                    return;
+                }
+
+                if (data) {
+                    setRows(data.map((r) => ({...r, id: String(r.id)})));
+                }
+            } catch (e) {
+                console.error("[DestinationField] destinations query threw:", e);
+            }
         }, 300);
+
         return () => clearTimeout(t);
     }, [q, sb]);
 
@@ -578,7 +765,7 @@ function DestinationField({value, onChange}: { value: Destination, onChange: (d:
             {open && rows.length > 0 && (
                 <div
                     className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl dark:bg-slate-900 dark:border-slate-800">
-                    {rows.map(r => (
+                    {rows.map((r) => (
                         <button
                             key={r.id}
                             type="button"
@@ -589,72 +776,135 @@ function DestinationField({value, onChange}: { value: Destination, onChange: (d:
                                 setOpen(false);
                             }}
                         >
-                            <span className="font-medium text-slate-700 dark:text-slate-200">{r.name}</span>
-                            <span className="text-xs text-slate-400 dark:text-slate-500">Select</span>
+              <span className="font-medium text-slate-700 dark:text-slate-200">
+                {r.name}
+              </span>
+                            <span className="text-xs text-slate-400 dark:text-slate-500">
+                Select
+              </span>
                         </button>
                     ))}
                 </div>
             )}
         </div>
-    )
+    );
 }
 
 // --- REVIEW CARD ---
-function ReviewCard({data, onEdit}: { data: ReturnType<typeof toPayload>, onEdit: (i: number) => void }) {
+function ReviewCard({
+                        data,
+                        onEdit,
+                    }: {
+    data: ReturnType<typeof toPayload>;
+    onEdit: (i: number) => void;
+}) {
     return (
         <div className="space-y-6 w-full">
             <div
                 className="rounded-2xl bg-blue-50 p-6 text-center border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800">
-                <h3 className="text-lg font-bold text-blue-900 dark:text-blue-300">Ready to build?</h3>
-                <p className="text-blue-700 text-sm mt-1 dark:text-blue-400">Review your trip details below before we
-                    generate your itinerary.</p>
+                <h3 className="text-lg font-bold text-blue-900 dark:text-blue-300">
+                    Ready to build?
+                </h3>
+                <p className="text-blue-700 text-sm mt-1 dark:text-blue-400">
+                    Review your trip details below before we generate your itinerary.
+                </p>
             </div>
 
             <div
                 className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white dark:bg-slate-900 dark:divide-slate-800 dark:border-slate-800">
-                <ReviewRow label="Destination" value={data.destinations[0]?.name || "Not set"}
-                           onEdit={() => onEdit(0)}/>
-                <ReviewRow label="Dates" value={formatDateRange(data.start_date, data.end_date)}
-                           onEdit={() => onEdit(1)}/>
-                <ReviewRow label="Budget"
-                           value={data.budget_daily ? `${data.currency} ${data.budget_daily}/day` : "Not specified"}
-                           onEdit={() => onEdit(2)}/>
-                {/* Show ALL interests by joining them */}
+                <ReviewRow
+                    label="Destination"
+                    value={data.destinations[0]?.name || "Not set"}
+                    onEdit={() => onEdit(0)}
+                />
+                <ReviewRow
+                    label="Dates"
+                    value={formatDateRange(data.start_date, data.end_date)}
+                    onEdit={() => onEdit(1)}
+                />
+                <ReviewRow
+                    label="Budget"
+                    value={
+                        data.budget_daily
+                            ? `${data.currency} ${data.budget_daily}/day`
+                            : "Not specified"
+                    }
+                    onEdit={() => onEdit(2)}
+                />
                 <ReviewRow
                     label="Vibe"
-                    value={data.interests.length > 0
-                        ? data.interests.map(i => i.charAt(0).toUpperCase() + i.slice(1)).join(", ")
-                        : "Not specified"}
+                    value={
+                        data.interests.length > 0
+                            ? data.interests
+                                .map((i) => i.charAt(0).toUpperCase() + i.slice(1))
+                                .join(", ")
+                            : "Not specified"
+                    }
                     onEdit={() => onEdit(3)}
                 />
-                <ReviewRow label="Pace" value={data.pace.charAt(0).toUpperCase() + data.pace.slice(1)}
-                           onEdit={() => onEdit(4)}/>
-                <ReviewRow label="Mode" value={data.mode.charAt(0).toUpperCase() + data.mode.slice(1)}
-                           onEdit={() => onEdit(5)}/>
-                <ReviewRow label="Lodging" value={data.lodging?.name || "Not specified"} onEdit={() => onEdit(6)}/>
+                <ReviewRow
+                    label="Pace"
+                    value={data.pace.charAt(0).toUpperCase() + data.pace.slice(1)}
+                    onEdit={() => onEdit(4)}
+                />
+                <ReviewRow
+                    label="Mode"
+                    value={data.mode.charAt(0).toUpperCase() + data.mode.slice(1)}
+                    onEdit={() => onEdit(5)}
+                />
+                <ReviewRow
+                    label="Lodging"
+                    value={data.lodging?.name || "Not specified"}
+                    onEdit={() => onEdit(6)}
+                />
             </div>
         </div>
-    )
+    );
 }
 
-function ReviewRow({label, value, onEdit}: { label: string, value: string, onEdit: () => void }) {
+function ReviewRow({
+                       label,
+                       value,
+                       onEdit,
+                   }: {
+    label: string;
+    value: string;
+    onEdit: () => void;
+}) {
     return (
         <div className="flex items-start justify-between p-4">
             <div className="pr-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1 dark:text-slate-500">{label}</p>
-                <p className="font-medium text-slate-900 leading-relaxed dark:text-slate-200">{value}</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1 dark:text-slate-500">
+                    {label}
+                </p>
+                <p className="font-medium text-slate-900 leading-relaxed dark:text-slate-200">
+                    {value}
+                </p>
             </div>
-            <Button variant="ghost" size="sm" onClick={onEdit}
-                    className="h-8 text-blue-600 hover:text-blue-700 shrink-0 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20">Edit</Button>
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={onEdit}
+                className="h-8 text-blue-600 hover:text-blue-700 shrink-0 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+            >
+                Edit
+            </Button>
         </div>
-    )
+    );
 }
 
 // --- HELPERS (Payload & Formatting) ---
 function toPayload(s: RequestBody) {
     const d = s.destinations[0];
     return {
-        destinations: [{id: d?.id, name: (d?.name ?? "").trim(), lat: d?.lat, lng: d?.lng}],
+        destinations: [
+            {
+                id: d?.id,
+                name: (d?.name ?? "").trim(),
+                lat: d?.lat,
+                lng: d?.lng,
+            },
+        ],
         start_date: s.start_date,
         end_date: s.end_date,
         budget_daily: s.budget_daily === "" ? 0 : Number(s.budget_daily),
@@ -667,7 +917,12 @@ function toPayload(s: RequestBody) {
 }
 
 function fmtHuman(s?: string) {
-    return s ? new Date(s + "T00:00:00").toLocaleDateString(undefined, {month: "short", day: "numeric"}) : "—";
+    return s
+        ? new Date(s + "T00:00:00").toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+        })
+        : "—";
 }
 
 function formatDateRange(start?: string, end?: string) {

@@ -1,19 +1,24 @@
 import * as React from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClientServerRSC } from "@/lib/supabase/server";
+import {redirect} from "next/navigation";
+import {createClientServerRSC} from "@/lib/supabase/server";
 import AppShell from "@/components/layout/AppShell";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CalendarDays, DollarSign, MapPin, ArrowLeft, Clock, Share2, Globe } from "lucide-react";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
+import {
+    CalendarDays,
+    DollarSign,
+    ArrowLeft,
+} from "lucide-react";
 
 import TripViewerClient from "./TripViewerClient";
-import TripActionsClient, { TripConfig } from "@/app/trips/TripActionsClient";
+import TripActionsClient, {TripConfig} from "@/app/trips/TripActionsClient";
 import PublicToggle from "@/app/trips/PublicToggle";
 import DeleteTripClient from "@/app/trips/[id]/DeleteTripClient";
 import Image from "next/image";
+import {formatDateRange} from "@/lib/trip-dates";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -263,28 +268,39 @@ function buildDestinationMetaFromHistoryRow(
     const k = payload.kbyg ?? {};
 
     const weatherObj =
-        k.weather && isUnknownRecord(k.weather) ? (k.weather as UnknownRecord) : undefined;
+        k.weather && isUnknownRecord(k.weather)
+            ? (k.weather as UnknownRecord)
+            : undefined;
 
     const meta: DestinationMetaLike = {
         description: payload.about ?? undefined,
         history: payload.history ?? undefined,
         currency_code: isString(k.currency) ? k.currency : undefined,
         plugs: isString(k.plugs)
-            ? k.plugs.split(",").map((s) => s.trim()).filter(Boolean)
+            ? k
+                .plugs!.split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
             : undefined,
-        languages: Array.isArray(k.languages) && isStringArray(k.languages)
-            ? k.languages
-            : undefined,
+        languages:
+            Array.isArray(k.languages) && isStringArray(k.languages)
+                ? k.languages
+                : undefined,
         weather_desc:
-            weatherObj && isString(weatherObj["summary"]) ? (weatherObj["summary"] as string) : undefined,
+            weatherObj && isString(weatherObj["summary"])
+                ? (weatherObj["summary"] as string)
+                : undefined,
         transport: isString(k.getting_around)
-            ? k.getting_around.split(",").map((s) => s.trim()).filter(Boolean)
+            ? k
+                .getting_around!.split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
             : undefined,
         esim_provider: isString(k.esim) ? k.esim : undefined,
         city: isString(k.primary_city) ? k.primary_city : undefined,
     };
 
-    return { meta, heroUrl: hist.backdrop_image_url };
+    return {meta, heroUrl: hist.backdrop_image_url};
 }
 
 /* ---------- lodging helper ---------- */
@@ -305,28 +321,30 @@ function getValidLodging(
         typeof l.lat === "number" &&
         typeof l.lng === "number"
     ) {
-        return { name: l.name, lat: l.lat, lng: l.lng };
+        return {name: l.name, lat: l.lat, lng: l.lng};
     }
     return null;
 }
 
+/** 🔑 Next.js 15: params is a Promise and must be awaited */
 export default async function TripIdPage({
                                              params,
                                          }: {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }) {
+    const {id} = await params; // 👈 await params first
+    const tripId = id;
+
     const sb = await createClientServerRSC();
 
     // Auth (SSR)
     const {
-        data: { user },
+        data: {user},
     } = await sb.auth.getUser();
     if (!user) redirect("/login");
 
-    const tripId = params.id;
-
     // ---- Trip ----
-    const { data: trip, error: tripErr } = await sb
+    const {data: trip, error: tripErr} = await sb
         .schema("itinero")
         .from("trips")
         .select("*")
@@ -339,7 +357,7 @@ export default async function TripIdPage({
                 <div className="mx-auto mt-10 max-w-2xl px-4">
                     <Button asChild variant="ghost" className="mb-3 rounded-full">
                         <Link href="/trips">
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to trips
+                            <ArrowLeft className="mr-2 h-4 w-4"/> Back to trips
                         </Link>
                     </Button>
                     <Card className="rounded-3xl border-none shadow-md">
@@ -359,13 +377,13 @@ export default async function TripIdPage({
     }
 
     // ---- Items (ordered) ----
-    const { data: items, error: itemsErr } = await sb
+    const {data: items, error: itemsErr} = await sb
         .schema("itinero")
         .from("itinerary_items")
         .select("*")
         .eq("trip_id", tripId)
-        .order("date", { ascending: true, nullsFirst: true })
-        .order("order_index", { ascending: true });
+        .order("date", {ascending: true, nullsFirst: true})
+        .order("order_index", {ascending: true});
 
     if (itemsErr) {
         return (
@@ -373,7 +391,7 @@ export default async function TripIdPage({
                 <div className="mx-auto mt-10 max-w-2xl px-4">
                     <Button asChild variant="ghost" className="mb-3 rounded-full">
                         <Link href="/trips">
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to trips
+                            <ArrowLeft className="mr-2 h-4 w-4"/> Back to trips
                         </Link>
                     </Button>
                     <Card className="rounded-3xl border-none shadow-md">
@@ -397,10 +415,12 @@ export default async function TripIdPage({
     ) as string[];
     let places: PlaceRow[] = [];
     if (placeIds.length) {
-        const { data: pRows } = await sb
+        const {data: pRows} = await sb
             .schema("itinero")
             .from("places")
-            .select("id,name,lat,lng,category,popularity,cost_typical,cost_currency,tags")
+            .select(
+                "id,name,lat,lng,category,popularity,cost_typical,cost_currency,tags"
+            )
             .in("id", placeIds);
         places = (pRows ?? []) as PlaceRow[];
     }
@@ -408,7 +428,7 @@ export default async function TripIdPage({
     // ---- Optional per-day polylines ----
     const polyByDate = new Map<string, string>();
     try {
-        const { data: routes } = await sb
+        const {data: routes} = await sb
             .schema("itinero")
             .from("trip_day_routes")
             .select("date,polyline6,polyline")
@@ -446,7 +466,7 @@ export default async function TripIdPage({
     let history: DestinationHistoryRow | null = null;
 
     if (trip.destination_id) {
-        const { data: dRow } = await sb
+        const {data: dRow} = await sb
             .schema("itinero")
             .from("destinations")
             .select("id,name,lat,lng,current_history_id")
@@ -455,7 +475,7 @@ export default async function TripIdPage({
         destination = dRow ?? null;
 
         if (destination?.current_history_id) {
-            const { data: hRow } = await sb
+            const {data: hRow} = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select(
@@ -467,7 +487,8 @@ export default async function TripIdPage({
         }
     }
 
-    const { meta: destMeta, heroUrl } = buildDestinationMetaFromHistoryRow(history);
+    const {meta: destMeta, heroUrl} =
+        buildDestinationMetaFromHistoryRow(history);
 
     // ---- Inputs enrichment ----
     const rawInputs = (trip.inputs ?? null) as TripRow["inputs"] | null;
@@ -482,7 +503,9 @@ export default async function TripIdPage({
                 return null;
             }
         }
-        return isUnknownRecord(rawInputs) ? (rawInputs as Record<string, unknown>) : null;
+        return isUnknownRecord(rawInputs)
+            ? (rawInputs as Record<string, unknown>)
+            : null;
     })();
 
     // Ensure we have a destinations[0] entry for the UI (name/coords)
@@ -491,8 +514,10 @@ export default async function TripIdPage({
             ? [
                 {
                     name: destination.name ?? "Destination",
-                    lat: typeof destination.lat === "number" ? destination.lat : undefined,
-                    lng: typeof destination.lng === "number" ? destination.lng : undefined,
+                    lat:
+                        typeof destination.lat === "number" ? destination.lat : undefined,
+                    lng:
+                        typeof destination.lng === "number" ? destination.lng : undefined,
                 },
             ]
             : (parsedInputs?.destinations as
@@ -501,11 +526,13 @@ export default async function TripIdPage({
 
     const enrichedInputs = {
         ...(parsedInputs ?? {}),
-        ...(enrichedDestList ? { destinations: enrichedDestList } : {}),
+        ...(enrichedDestList ? {destinations: enrichedDestList} : {}),
         ...(destMeta
             ? {
                 destination_meta: {
-                    ...((parsedInputs?.destination_meta as DestinationMetaLike | undefined) ?? {}),
+                    ...((parsedInputs?.destination_meta as
+                        | DestinationMetaLike
+                        | undefined) ?? {}),
                     ...destMeta,
                 },
             }
@@ -535,7 +562,10 @@ export default async function TripIdPage({
         })),
     };
 
-    const dateRange = formatDateRange(trip.start_date ?? undefined, trip.end_date ?? undefined);
+    const dateRange = formatDateRange(
+        trip.start_date ?? undefined,
+        trip.end_date ?? undefined
+    );
 
     // For action bar props
     const clientPlaces = places.map((p) => ({
@@ -567,8 +597,8 @@ export default async function TripIdPage({
 
     return (
         <AppShell userEmail={user.email ?? null}>
-            <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
-
+            <div
+                className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
                 {/* Hero Header */}
                 <section className="relative h-[50vh] w-full overflow-hidden">
                     <div className="absolute inset-0 bg-slate-900">
@@ -579,33 +609,43 @@ export default async function TripIdPage({
                             className="object-cover opacity-80"
                             priority
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                        <div
+                            className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"/>
                     </div>
 
-                    <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-10 max-w-6xl mx-auto w-full">
-                        <Button asChild variant="ghost" size="sm" className="self-start rounded-full bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border border-white/10">
+                    <div
+                        className="absolute inset-0 mx-auto flex max-w-6xl w-full flex-col justify-between p-6 md:p-10">
+                        <Button
+                            asChild
+                            variant="ghost"
+                            size="sm"
+                            className="self-start rounded-full border border-white/10 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
+                        >
                             <Link href="/trips">
-                                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Trips
+                                <ArrowLeft className="mr-2 h-4 w-4"/> Back to Trips
                             </Link>
                         </Button>
 
                         <div className="space-y-4">
                             <div className="flex flex-wrap items-center gap-3">
-                                <Badge variant="outline" className="rounded-full border-white/30 bg-white/10 text-white backdrop-blur-md px-3 py-1">
-                                    <CalendarDays className="mr-2 h-3.5 w-3.5" /> {dateRange}
+                                <Badge
+                                    className="rounded-full border-white/30 bg-white/10 px-3 py-1 text-white backdrop-blur-md">
+                                    <CalendarDays className="mr-2 h-3.5 w-3.5"/> {dateRange}
                                 </Badge>
                                 {typeof trip.est_total_cost === "number" && (
-                                    <Badge variant="outline" className="rounded-full border-emerald-400/30 bg-emerald-500/20 text-emerald-100 backdrop-blur-md px-3 py-1">
-                                        <DollarSign className="mr-1 h-3.5 w-3.5" />
-                                        Est. {trip.currency ?? "USD"} {Math.round(trip.est_total_cost)}
+                                    <Badge
+                                        className="rounded-full border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-emerald-100 backdrop-blur-md">
+                                        <DollarSign className="mr-1 h-3.5 w-3.5"/>
+                                        Est. {trip.currency ?? "USD"}{" "}
+                                        {Math.round(trip.est_total_cost)}
                                     </Badge>
                                 )}
                                 <div className="hidden sm:flex">
-                                    <PublicToggle tripId={trip.id} publicId={trip.public_id} />
+                                    <PublicToggle tripId={trip.id} publicId={trip.public_id}/>
                                 </div>
                             </div>
 
-                            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white drop-shadow-lg max-w-3xl leading-[1.1]">
+                            <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight text-white drop-shadow-lg leading-[1.1] md:text-6xl">
                                 {trip.title ?? "Untitled Trip"}
                             </h1>
 
@@ -625,10 +665,9 @@ export default async function TripIdPage({
                 </section>
 
                 {/* Main Content */}
-                <div className="mx-auto w-full max-w-6xl px-4 -mt-8 relative z-10 pb-20">
-
+                <div className="relative z-10 -mt-8 mx-auto w-full max-w-6xl px-4 pb-20">
                     {/* Viewer */}
-                    <div className="rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 overflow-hidden">
+                    <div className="rounded-3xl overflow-hidden">
                         <TripViewerClient
                             tripId={trip.id}
                             data={previewLike}
@@ -638,14 +677,17 @@ export default async function TripIdPage({
 
                     {/* Danger Zone */}
                     <div className="mt-12 border-t border-slate-200 pt-8 text-center">
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Manage Trip</h3>
+                        <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-400">
+                            Manage Trip
+                        </h3>
                         <div className="flex justify-center">
-                            <DeleteTripClient tripId={trip.id} title={trip.title ?? "Trip"} />
+                            <DeleteTripClient
+                                tripId={trip.id}
+                                title={trip.title ?? "Trip"}
+                            />
                         </div>
                     </div>
-
                 </div>
-
             </div>
         </AppShell>
     );
@@ -653,44 +695,14 @@ export default async function TripIdPage({
 
 /* ---------------- helpers ---------------- */
 
-// 🔒 Stable, SSR-safe date formatting (fixed locale + UTC)
-const STABLE_DATE_LOCALE = "en-GB";
-const STABLE_DATE_TIMEZONE = "UTC";
-
-const STABLE_DTF = new Intl.DateTimeFormat(STABLE_DATE_LOCALE, {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: STABLE_DATE_TIMEZONE,
-});
-
-function parseYMDtoUTC(ymd: string): Date | null {
-    if (!ymd || typeof ymd !== "string") return null;
-    const [y, m, d] = ymd.split("-").map((n) => Number(n));
-    if (!y || !m || !d) return null;
-    return new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
-}
-
-function formatDateRange(start?: string, end?: string) {
-    if (!start && !end) return "—";
-    const s = start ? parseYMDtoUTC(start) : null;
-    const e = end ? parseYMDtoUTC(end) : null;
-    const fmt = (d: Date) => STABLE_DTF.format(d);
-    if (s && e) return `${fmt(s)} → ${fmt(e)}`;
-    if (s) return fmt(s);
-    if (e) return fmt(e);
-    return "—";
-}
-
 function groupItemsByDayIndex(items: ItemRow[]) {
     const map = new Map<number, { date: string | null; items: ItemRow[] }>();
     for (const it of items) {
         const key = it.day_index;
-        if (!map.has(key)) map.set(key, { date: it.date, items: [] });
+        if (!map.has(key)) map.set(key, {date: it.date, items: []});
         map.get(key)!.items.push(it);
     }
     return Array.from(map.entries())
         .sort((a, b) => a[0] - b[0])
-        .map(([dayIndex, v]) => ({ dayIndex, date: v.date, items: v.items }));
+        .map(([dayIndex, v]) => ({dayIndex, date: v.date, items: v.items}));
 }
