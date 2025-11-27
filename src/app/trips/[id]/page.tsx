@@ -16,9 +16,16 @@ import {
 import TripViewerClient from "./TripViewerClient";
 import TripActionsClient, {TripConfig} from "@/app/trips/TripActionsClient";
 import PublicToggle from "@/app/trips/PublicToggle";
-import DeleteTripClient from "@/app/trips/[id]/DeleteTripClient";
 import Image from "next/image";
 import {formatDateRange} from "@/lib/trip-dates";
+
+// --- NEW IMPORTS ---
+import {
+    ShareCard,
+    ExportCard,
+    DangerZoneCard,
+    CollaboratorsCard
+} from "./TripManagement";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -277,10 +284,7 @@ function buildDestinationMetaFromHistoryRow(
         history: payload.history ?? undefined,
         currency_code: isString(k.currency) ? k.currency : undefined,
         plugs: isString(k.plugs)
-            ? k
-                .plugs!.split(",")
-                .map((s) => s.trim())
-                .filter(Boolean)
+            ? k.plugs!.split(",").map((s) => s.trim()).filter(Boolean)
             : undefined,
         languages:
             Array.isArray(k.languages) && isStringArray(k.languages)
@@ -291,10 +295,7 @@ function buildDestinationMetaFromHistoryRow(
                 ? (weatherObj["summary"] as string)
                 : undefined,
         transport: isString(k.getting_around)
-            ? k
-                .getting_around!.split(",")
-                .map((s) => s.trim())
-                .filter(Boolean)
+            ? k.getting_around!.split(",").map((s) => s.trim()).filter(Boolean)
             : undefined,
         esim_provider: isString(k.esim) ? k.esim : undefined,
         city: isString(k.primary_city) ? k.primary_city : undefined,
@@ -332,7 +333,7 @@ export default async function TripIdPage({
                                          }: {
     params: Promise<{ id: string }>;
 }) {
-    const {id} = await params; // 👈 await params first
+    const {id} = await params;
     const tripId = id;
 
     const sb = await createClientServerRSC();
@@ -610,7 +611,7 @@ export default async function TripIdPage({
                             priority
                         />
                         <div
-                            className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"/>
+                            className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
                     </div>
 
                     <div
@@ -629,20 +630,20 @@ export default async function TripIdPage({
                         <div className="space-y-4">
                             <div className="flex flex-wrap items-center gap-3">
                                 <Badge
-                                    className="rounded-full border-white/30 bg-white/10 px-3 py-1 text-white backdrop-blur-md">
+                                    variant="outline"
+                                    className="rounded-full border-white/30 bg-white/10 px-3 py-1 text-white backdrop-blur-md"
+                                >
                                     <CalendarDays className="mr-2 h-3.5 w-3.5"/> {dateRange}
                                 </Badge>
                                 {typeof trip.est_total_cost === "number" && (
                                     <Badge
-                                        className="rounded-full border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-emerald-100 backdrop-blur-md">
+                                        variant="outline"
+                                        className="rounded-full border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-emerald-100 backdrop-blur-md"
+                                    >
                                         <DollarSign className="mr-1 h-3.5 w-3.5"/>
-                                        Est. {trip.currency ?? "USD"}{" "}
-                                        {Math.round(trip.est_total_cost)}
+                                        Est. {trip.currency ?? "USD"} {Math.round(trip.est_total_cost)}
                                     </Badge>
                                 )}
-                                <div className="hidden sm:flex">
-                                    <PublicToggle tripId={trip.id} publicId={trip.public_id}/>
-                                </div>
                             </div>
 
                             <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight text-white drop-shadow-lg leading-[1.1] md:text-6xl">
@@ -666,8 +667,9 @@ export default async function TripIdPage({
 
                 {/* Main Content */}
                 <div className="relative z-10 -mt-8 mx-auto w-full max-w-6xl px-4 pb-20">
+
                     {/* Viewer */}
-                    <div className="rounded-3xl overflow-hidden">
+                    <div className="mb-12 overflow-hidden">
                         <TripViewerClient
                             tripId={trip.id}
                             data={previewLike}
@@ -675,18 +677,38 @@ export default async function TripIdPage({
                         />
                     </div>
 
-                    {/* Danger Zone */}
-                    <div className="mt-12 border-t border-slate-200 pt-8 text-center">
-                        <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-slate-400">
-                            Manage Trip
-                        </h3>
-                        <div className="flex justify-center">
-                            <DeleteTripClient
+                    {/* NEW: Trip Settings & Management Grid */}
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2 px-2">
+                            <h3 className="text-xl font-bold text-slate-900">Trip Settings</h3>
+                            <div className="h-px flex-1 bg-slate-200"/>
+                        </div>
+
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {/* 1. Share */}
+                            <ShareCard
+                                tripId={trip.id}
+                                publicId={trip.public_id}
+                                isPublic={!!trip.public_id}
+                            />
+
+                            {/* 2. Export */}
+                            <ExportCard
                                 tripId={trip.id}
                                 title={trip.title ?? "Trip"}
+                                days={days} // <--- Pass the days data here
                             />
+
+                            {/* 3. Collaborators */}
+                            <CollaboratorsCard/>
+
+                            {/* 4. Danger Zone (Full width on large screens) */}
+                            <div className="md:col-span-2 lg:col-span-3">
+                                <DangerZoneCard tripId={trip.id} title={trip.title ?? "Trip"}/>
+                            </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </AppShell>

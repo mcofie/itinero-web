@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import {usePathname, useRouter} from "next/navigation";
-import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import {getSupabaseBrowser} from "@/lib/supabase/browser-singleton";
 import {cn} from "@/lib/utils";
 
 import {Button} from "@/components/ui/button";
@@ -542,21 +542,35 @@ export default function AppShell({children, userEmail}: Props) {
 
                             <div className="h-4 w-px bg-slate-200 hidden sm:block dark:bg-slate-800"></div>
 
+                            {/* --- FIXED TOP UP BUTTON --- */}
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        variant="ghost"
+                                        variant="outline"
                                         size="sm"
-                                        className="h-9 rounded-full gap-2 px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                                        className="h-9 rounded-full gap-0 px-3 border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-all dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
                                         onClick={() => setTopupOpen(true)}
                                     >
-                    <span className="text-sm font-semibold tabular-nums">
-                      {loadingPoints ? "..." : fmtInt(points)}
-                    </span>
-                                        <Star className="h-4 w-4 text-amber-400 fill-amber-400"/>
+                                        {/* Balance Section */}
+                                        <div className="flex items-center gap-1.5 mr-2">
+                <span className="text-sm font-bold tabular-nums">
+                    {loadingPoints ? "..." : fmtInt(points)}
+                </span>
+                                            <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400"/>
+                                        </div>
+
+                                        {/* Separator */}
+                                        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mr-2"/>
+
+                                        {/* Action Section */}
+                                        <div className="flex items-center gap-1">
+                                            <Plus className="h-3.5 w-3.5" strokeWidth={3}/>
+                                            <span
+                                                className="hidden lg:inline text-xs font-bold uppercase tracking-wide">Top Up</span>
+                                        </div>
                                     </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Your Balance</TooltipContent>
+                                <TooltipContent>Top up your balance</TooltipContent>
                             </Tooltip>
 
                             <DropdownMenu>

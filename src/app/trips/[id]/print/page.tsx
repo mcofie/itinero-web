@@ -1,8 +1,6 @@
-// app/trips/[id]/print/page.tsx
 import * as React from "react";
 import {redirect} from "next/navigation";
 import {createClientServerRSC} from "@/lib/supabase/server";
-import {extractDestName} from "../page";
 
 /* Force SSR, no cache */
 export const dynamic = "force-dynamic";
@@ -112,6 +110,15 @@ const STABLE_DTF = new Intl.DateTimeFormat(STABLE_DATE_LOCALE, {
     timeZone: STABLE_DATE_TIMEZONE,
 });
 
+function extractDestName(inputs: unknown): string {
+    try {
+        const obj = inputs as { destinations?: Array<{ name?: string }> };
+        return obj?.destinations?.[0]?.name ?? "Destination";
+    } catch {
+        return "Destination";
+    }
+}
+
 function parseYMDtoUTC(ymd?: string | null): Date | null {
     if (!ymd || typeof ymd !== "string") return null;
     const [y, m, d] = ymd.split("-").map((n) => Number(n));
@@ -169,25 +176,6 @@ function minutes(v?: number | null) {
     return `${v} min`;
 }
 
-function chip(label: string) {
-    return (
-        <span
-            style={{
-                display: "inline-block",
-                padding: "4px 10px",
-                borderRadius: 999,
-                background: "#f1f5f9",
-                border: "1px solid #e2e8f0",
-                fontSize: 11,
-                color: "#475569",
-                fontWeight: 500,
-            }}
-        >
-      {label}
-    </span>
-    );
-}
-
 function whenLabel(w: DayBlock["when"]) {
     const map = {morning: "🌅 Morning", afternoon: "🌞 Afternoon", evening: "🌙 Evening"};
     return map[w] || w;
@@ -234,34 +222,19 @@ function getLodging(inputs: unknown) {
     return l && typeof l.name === "string" ? l : null;
 }
 
+/* -- NEW: Note Extractors -- */
+function getTripNote(inputs: unknown): string | null {
+    const obj = parseInputs(inputs);
+    return typeof obj?.notes === "string" ? obj.notes : null;
+}
+
+function getDayNotes(inputs: unknown): Record<string, string> {
+    const obj = parseInputs(inputs);
+    return (obj?.day_notes as Record<string, string>) || {};
+}
+
 function sum<T>(arr: T[], pick: (t: T) => number | null | undefined) {
     return arr.reduce((s, x) => s + (Number(pick(x) ?? 0) || 0), 0);
-}
-
-function fmtHoursMin(mins: number) {
-    if (!mins) return "—";
-    const h = Math.floor(mins / 60),
-        m = mins % 60;
-    return h ? `${h}h${m ? " " + m + "m" : ""}` : `${m}m`;
-}
-
-function kbygEmoji(key: keyof ItineroKBYG): string {
-    switch (key) {
-        case "currency":
-            return "💱";
-        case "plugs":
-            return "🔌";
-        case "languages":
-            return "🗣️";
-        case "getting_around":
-            return "🚌";
-        case "esim":
-            return "📶";
-        case "primary_city":
-            return "🏙️";
-        default:
-            return "ℹ️";
-    }
 }
 
 function coerceHistoryPayload(p: unknown): DestinationHistoryPayload {
@@ -297,11 +270,14 @@ export default async function TripPrintPage({
                                                 params,
                                                 searchParams,
                                             }: {
-    params: { id: string };
-    searchParams: { [key: string]: string | string[] | undefined };
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+    const {id} = await params;
+    const sp = await searchParams;
+
     const sb = await createClientServerRSC();
-    const isHeadless = searchParams.print === "1";
+    const isHeadless = sp.print === "1";
 
     const {
         data: {user},
@@ -311,18 +287,19 @@ export default async function TripPrintPage({
         redirect("/login");
     }
 
-    const tripId = params.id;
+    const tripId = id;
 
-    // Trip
+    // 1. Fetch Trip
     const {data: trip} = await sb
         .schema("itinero")
         .from("trips")
         .select("*")
         .eq("id", tripId)
         .maybeSingle<TripRow>();
+
     if (!trip) redirect("/trips");
 
-    // Items
+    // 2. Fetch Items
     const {data: items} = await sb
         .schema("itinero")
         .from("itinerary_items")
@@ -334,7 +311,7 @@ export default async function TripPrintPage({
     const safeItems: ItemRow[] = Array.isArray(items) ? (items as ItemRow[]) : [];
     const days = groupItemsByDayIndex(safeItems);
 
-    // Places
+    // 3. Fetch Places
     const placeIds = Array.from(new Set(safeItems.map((r) => r.place_id).filter(Boolean))) as string[];
     let places: PlaceRow[] = [];
     if (placeIds.length) {
@@ -350,11 +327,10 @@ export default async function TripPrintPage({
     const dateRange = formatDateRange(trip.start_date, trip.end_date);
     const destinationName = extractDestName(trip.inputs);
 
-    // Destination history
+    // 4. Destination history
     let aboutText: string | undefined;
     let historyText: string | undefined;
     let kbyg: ItineroKBYG | undefined;
-    let sources: string[] | undefined;
 
     if (trip.destination_id) {
         const {data: dest} = await sb
@@ -376,24 +352,26 @@ export default async function TripPrintPage({
             aboutText = payload.about;
             historyText = payload.history;
             kbyg = payload.kbyg;
-
-            const s = histRow?.sources as unknown;
-            sources = Array.isArray(s) ? (s.filter((x) => typeof x === "string") as string[]) : undefined;
         }
     }
 
     const interests = getInterests(trip.inputs);
     const lodging = getLodging(trip.inputs);
 
+    // 5. Extract Notes
+    const tripGeneralNote = getTripNote(trip.inputs);
+    const dayNotesMap = getDayNotes(trip.inputs);
+
     const hero =
         trip.cover_url && trip.cover_url.startsWith("http")
             ? trip.cover_url
             : "https://images.unsplash.com/photo-1589556045897-c444ffa0a6ff?auto=format&fit=crop&q=80&w=2000";
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
-    const shareUrl = siteUrl ? `${siteUrl}/t/${trip.public_id}` : "";
-    const qr = shareUrl
-        ? `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(shareUrl)}`
+    // Generate QR for Mobile Access
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://itinero.app";
+    const shareUrl = trip.public_id ? `${siteUrl}/trips/share/${trip.public_id}` : "";
+    const qrUrl = shareUrl
+        ? `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(shareUrl)}`
         : "";
 
     const totalBlocks = safeItems.length;
@@ -470,7 +448,7 @@ export default async function TripPrintPage({
           .stat-label { font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin-bottom: 2px; }
           .stat-val { font-size: 14px; font-weight: 700; color: #0f172a; }
 
-          /* Info Grid (2 Columns) */
+          /* Info Grid */
           .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12mm; }
           
           /* KBYG Grid */
@@ -478,7 +456,7 @@ export default async function TripPrintPage({
           .kbyg-card { display: flex; gap: 8px; align-items: flex-start; padding: 10px; border-radius: 8px; border: 1px solid #f1f5f9; }
           .kbyg-icon { font-size: 16px; }
           
-          /* Timeline / Itinerary */
+          /* Timeline */
           .day-block { 
              margin-bottom: 12mm; 
              break-inside: avoid; 
@@ -486,7 +464,6 @@ export default async function TripPrintPage({
              border-radius: 12px;
              overflow: hidden;
           }
-          
           .day-header { 
             background: #f8fafc;
             padding: 10px 14px;
@@ -497,6 +474,15 @@ export default async function TripPrintPage({
           }
           .day-title { font-size: 16px; font-weight: 700; color: #0f172a; }
           .day-meta { font-size: 11px; color: #64748b; font-weight: 500; }
+
+          .day-note {
+            padding: 8px 14px;
+            background: #fffbeb;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 11px;
+            color: #475569;
+            font-style: italic;
+          }
 
           .timeline-table { width: 100%; border-collapse: collapse; }
           .timeline-table th { background: white; border-bottom: 1px solid #e2e8f0; padding: 8px 12px; text-align: left; font-size: 10px; text-transform: uppercase; color: #94a3b8; }
@@ -525,6 +511,43 @@ export default async function TripPrintPage({
             padding-top: 2mm;
           }
           .page-number:after { content: "Page " counter(page); }
+
+          /* QR Code */
+          .qr-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-top: 8mm;
+          }
+          .qr-text { font-size: 11px; color: #64748b; line-height: 1.4; }
+          .qr-title { font-weight: 700; color: #0f172a; font-size: 12px; margin-bottom: 2px; }
+
+          /* Notes Area */
+          .notes-area {
+            margin-top: 20mm;
+            border-top: 2px dashed #e2e8f0;
+            padding-top: 10mm;
+          }
+          .notes-content {
+            white-space: pre-wrap; 
+            margin-bottom: 10mm; 
+            font-size: 12px; 
+            font-family: monospace;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+          }
+          .notes-lines {
+            height: 30mm;
+            background-image: linear-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 100% 10mm;
+          }
         `}</style>
 
             <script
@@ -610,6 +633,17 @@ export default async function TripPrintPage({
                             </div>
                         </div>
                     )}
+
+                    {/* QR Code Section */}
+                    {qrUrl && (
+                        <div className="qr-section">
+                            <img src={qrUrl} alt="QR" style={{width: '60px', height: '60px', borderRadius: '4px'}}/>
+                            <div>
+                                <div className="qr-title">Live Map & Details</div>
+                                <div className="qr-text">Scan to view interactive map and updates.</div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Right Column: KBYG & Sources */}
@@ -675,8 +709,8 @@ export default async function TripPrintPage({
                                         borderRadius: "6px",
                                         border: "1px solid #e2e8f0"
                                     }}>
-                                    {emojiForInterest(i)} {i}
-                                </span>
+                        {emojiForInterest(i)} {i}
+                      </span>
                                 ))}
                             </div>
                         </div>
@@ -691,6 +725,7 @@ export default async function TripPrintPage({
 
             {days.map((day, idx) => {
                 const dayCost = sum(day.blocks, (b) => b.est_cost);
+                const specificDayNote = dayNotesMap[day.date]; // Check for day note
 
                 return (
                     <div key={idx} className="day-block">
@@ -699,6 +734,13 @@ export default async function TripPrintPage({
                             <span
                                 className="day-meta">{day.blocks.length} Stops · Est. {money(dayCost, trip.currency)}</span>
                         </div>
+
+                        {/* Render Day Note if Exists */}
+                        {specificDayNote && (
+                            <div className="day-note">
+                                📝 <strong>Note:</strong> {specificDayNote}
+                            </div>
+                        )}
 
                         <table className="timeline-table">
                             <thead>
@@ -743,6 +785,21 @@ export default async function TripPrintPage({
                     </div>
                 )
             })}
+
+            {/* --- Trip Notes Section (Corrected) --- */}
+            <div className="notes-area page-break">
+                <h3>Trip Notes</h3>
+
+                {/* If general trip note exists, render it */}
+                {tripGeneralNote ? (
+                    <div className="notes-content">
+                        {tripGeneralNote}
+                    </div>
+                ) : null}
+
+                {/* Fallback lines for manual notes */}
+                <div className="notes-lines"></div>
+            </div>
         </div>
         </body>
         </html>
