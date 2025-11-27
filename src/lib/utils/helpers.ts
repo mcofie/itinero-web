@@ -16,7 +16,7 @@ function parseYMDtoUTC(ymd: string): Date | null {
     if (!ymd || typeof ymd !== "string") return null;
     const [y, m, d] = ymd.split("-").map((n) => Number(n));
     if (!y || !m || !d) return null;
-    // Construct a UTC date so client/server don’t diverge by TZ
+    // Construct a UTC date so client/server don’share diverge by TZ
     return new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
 }
 

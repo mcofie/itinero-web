@@ -15,6 +15,7 @@ import {
     DollarSign,
     AlignLeft,
     Type,
+    Loader2,
 } from "lucide-react";
 
 import {Button} from "@/components/ui/button";
@@ -26,6 +27,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import {cn} from "@/lib/utils";
 
 /* ---------------- Types ---------------- */
 type UUID = string;
@@ -43,7 +45,6 @@ export type Day = { date: string; blocks: DayBlock[] };
 export type Place = { id: string; name: string; lat?: number; lng?: number };
 
 export type TripConfig = {
-    // ... (Keep existing types if needed for props, simplified here for brevity)
     [key: string]: any;
 };
 
@@ -164,7 +165,6 @@ export default function TripActionsClient({
 
     return (
         <div className="flex flex-wrap items-center gap-2">
-
             {/* --- 1. Title Edit Mode --- */}
             {editing ? (
                 <div
@@ -187,7 +187,11 @@ export default function TripActionsClient({
                             disabled={busy}
                             className="p-1.5 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
                         >
-                            <Check className="h-3 w-3"/>
+                            {busy ? (
+                                <Loader2 className="h-3 w-3 animate-spin"/>
+                            ) : (
+                                <Check className="h-3 w-3"/>
+                            )}
                         </button>
                         <button
                             onClick={() => {
@@ -206,10 +210,12 @@ export default function TripActionsClient({
                     variant="ghost"
                     size="sm"
                     onClick={() => setEditing(true)}
-                    className="h-9 gap-2 rounded-full text-slate-300 hover:bg-white/10 hover:text-white border border-transparent transition-all"
+                    className="h-9 gap-2 rounded-full text-white/80 hover:bg-white/10 hover:text-white border border-transparent transition-all"
                 >
                     <Pencil className="h-3.5 w-3.5"/>
-                    <span className="hidden sm:inline text-xs font-medium uppercase tracking-wide">Edit Title</span>
+                    <span className="hidden sm:inline text-xs font-medium uppercase tracking-wide">
+            Edit Title
+          </span>
                 </Button>
             )}
 
@@ -220,7 +226,7 @@ export default function TripActionsClient({
             {days.length > 0 && (
                 <Button
                     size="sm"
-                    className="h-9 gap-2 rounded-full bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/20 border border-blue-500 font-semibold transition-all"
+                    className="h-9 gap-2 rounded-full bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/20 border border-blue-500 font-semibold transition-all dark:bg-blue-600 dark:hover:bg-blue-500"
                     onClick={() => openAddItem(days[0].date)}
                 >
                     <Plus className="h-4 w-4"/>
@@ -234,35 +240,44 @@ export default function TripActionsClient({
                 onOpenChange={(o) => !o && setAddingForDate(null)}
             >
                 <DialogContent
-                    className="sm:max-w-md rounded-3xl border-slate-100 bg-white p-0 shadow-2xl overflow-hidden gap-0">
-                    <div className="bg-slate-50 px-6 py-5 border-b border-slate-100">
+                    className="sm:max-w-md rounded-3xl border-slate-100 bg-white p-0 shadow-2xl overflow-hidden gap-0 dark:bg-slate-900 dark:border-slate-800">
+                    <div
+                        className="bg-slate-50 px-6 py-5 border-b border-slate-100 dark:bg-slate-950/50 dark:border-slate-800">
                         <DialogHeader>
-                            <DialogTitle className="flex items-center gap-3 text-lg font-bold text-slate-900">
+                            <DialogTitle
+                                className="flex items-center gap-3 text-lg font-bold text-slate-900 dark:text-white">
                                 <div
-                                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm border border-slate-100">
+                                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-blue-400">
                                     <Plus className="h-5 w-5"/>
                                 </div>
                                 New Activity
                             </DialogTitle>
-                            <div className="mt-2 flex items-center gap-2 text-xs font-medium text-slate-500">
+                            <div
+                                className="mt-2 flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
                                 <Calendar className="h-3.5 w-3.5"/>
                                 <span>Adding to</span>
                                 <span
-                                    className="text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">{addingForDate}</span>
+                                    className="text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700">
+                  {addingForDate}
+                </span>
                             </div>
                         </DialogHeader>
                     </div>
 
                     <div className="px-6 py-6 grid gap-5">
                         <div className="grid gap-2">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Activity Details</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Activity Details
+              </span>
                             <div className="relative">
-                                <Type className="absolute left-3 top-3.5 h-4 w-4 text-slate-400"/>
+                                <Type className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 dark:text-slate-500"/>
                                 <Input
                                     placeholder="e.g. Dinner at Oseikrom"
                                     value={newBlock.title ?? ""}
-                                    onChange={(e) => setNewBlock((b) => ({...b, title: e.target.value}))}
-                                    className="pl-10 h-12 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-xl text-base"
+                                    onChange={(e) =>
+                                        setNewBlock((b) => ({...b, title: e.target.value}))
+                                    }
+                                    className="pl-10 h-12 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-xl text-base dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
                                     autoFocus
                                 />
                             </div>
@@ -270,94 +285,118 @@ export default function TripActionsClient({
 
                         <div className="grid grid-cols-3 gap-3">
                             <div className="grid gap-2">
-                                <span
-                                    className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Time</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Time
+                </span>
                                 <div className="relative">
                                     <select
-                                        className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-medium"
+                                        className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-medium dark:bg-slate-950 dark:border-slate-800 dark:text-white"
                                         value={newBlock.when ?? "morning"}
-                                        onChange={(e) => setNewBlock((b) => ({
-                                            ...b,
-                                            when: e.target.value as DayBlock["when"]
-                                        }))}
+                                        onChange={(e) =>
+                                            setNewBlock((b) => ({
+                                                ...b,
+                                                when: e.target.value as DayBlock["when"],
+                                            }))
+                                        }
                                     >
                                         <option value="morning">Morning</option>
                                         <option value="afternoon">Afternoon</option>
                                         <option value="evening">Evening</option>
                                     </select>
                                     <Clock
-                                        className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none"/>
+                                        className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none dark:text-slate-500"/>
                                 </div>
                             </div>
 
                             <div className="grid gap-2">
-                                <span
-                                    className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cost</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Cost
+                </span>
                                 <div className="relative">
-                                    <DollarSign className="absolute left-3 top-3.5 h-3.5 w-3.5 text-slate-400"/>
+                                    <DollarSign
+                                        className="absolute left-3 top-3.5 h-3.5 w-3.5 text-slate-400 dark:text-slate-500"/>
                                     <Input
                                         type="number"
                                         min={0}
                                         placeholder="0"
-                                        className="pl-8 h-11 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-xl"
+                                        className="pl-8 h-11 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-xl dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
                                         value={String(newBlock.est_cost ?? "")}
-                                        onChange={(e) => setNewBlock((b) => ({
-                                            ...b,
-                                            est_cost: Number(e.target.value || 0)
-                                        }))}
+                                        onChange={(e) =>
+                                            setNewBlock((b) => ({
+                                                ...b,
+                                                est_cost: Number(e.target.value || 0),
+                                            }))
+                                        }
                                     />
                                 </div>
                             </div>
 
                             <div className="grid gap-2">
-                                <span
-                                    className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Duration</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Duration
+                </span>
                                 <div className="relative">
-                                    <Clock className="absolute left-3 top-3.5 h-3.5 w-3.5 text-slate-400"/>
+                                    <Clock
+                                        className="absolute left-3 top-3.5 h-3.5 w-3.5 text-slate-400 dark:text-slate-500"/>
                                     <Input
                                         type="number"
                                         min={0}
                                         placeholder="90"
-                                        className="pl-8 h-11 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-xl"
+                                        className="pl-8 h-11 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-xl dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
                                         value={String(newBlock.duration_min ?? "")}
-                                        onChange={(e) => setNewBlock((b) => ({
-                                            ...b,
-                                            duration_min: Number(e.target.value || 0)
-                                        }))}
+                                        onChange={(e) =>
+                                            setNewBlock((b) => ({
+                                                ...b,
+                                                duration_min: Number(e.target.value || 0),
+                                            }))
+                                        }
                                     />
                                 </div>
                             </div>
                         </div>
 
                         <div className="grid gap-2">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Notes</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Notes
+              </span>
                             <div className="relative">
-                                <AlignLeft className="absolute left-3 top-3 h-4 w-4 text-slate-400"/>
+                                <AlignLeft
+                                    className="absolute left-3 top-3 h-4 w-4 text-slate-400 dark:text-slate-500"/>
                                 <Textarea
                                     value={newBlock.notes ?? ""}
-                                    onChange={(e) => setNewBlock((b) => ({...b, notes: e.target.value}))}
+                                    onChange={(e) =>
+                                        setNewBlock((b) => ({...b, notes: e.target.value}))
+                                    }
                                     placeholder="Reservation numbers, directions, tips..."
-                                    className="pl-10 min-h-[100px] bg-slate-50 border-slate-200 focus-visible:ring-blue-600 resize-none rounded-xl"
+                                    className="pl-10 min-h-[100px] bg-slate-50 border-slate-200 focus-visible:ring-blue-600 resize-none rounded-xl dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
                                 />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-slate-50 p-4 border-t border-slate-100 flex justify-between gap-3">
+                    <div
+                        className="bg-slate-50 p-4 border-t border-slate-100 flex justify-between gap-3 dark:bg-slate-950/50 dark:border-slate-800">
                         <Button
                             variant="outline"
                             onClick={() => setAddingForDate(null)}
                             disabled={busy}
-                            className="h-11 flex-1 rounded-xl border-slate-200 text-slate-600 hover:bg-white hover:text-slate-900 font-medium"
+                            className="h-11 flex-1 rounded-xl border-slate-200 text-slate-600 hover:bg-white hover:text-slate-900 font-medium dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={confirmAddItem}
                             disabled={busy || !newBlock.title}
-                            className="h-11 flex-1 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-md font-bold"
+                            className="h-11 flex-1 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-md font-bold dark:bg-blue-600 dark:hover:bg-blue-500"
                         >
-                            {busy ? "Saving..." : "Save Activity"}
+                            {busy ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                    Saving...
+                                </>
+                            ) : (
+                                "Save Activity"
+                            )}
                         </Button>
                     </div>
                 </DialogContent>

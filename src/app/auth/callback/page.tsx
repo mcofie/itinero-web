@@ -2,7 +2,7 @@
 import {Suspense} from "react";
 import AuthCallbackClient from "../AuthCallbackClient";
 
-// This page depends on runtime URL params; don’t prerender it.
+// This page depends on runtime URL params; don’share prerender it.
 export const dynamic = "force-dynamic";
 // (optional) if you use caching elsewhere, ensure this stays live:
 // export const revalidate = 0;

@@ -40,7 +40,7 @@ export default function DeleteTripClient({
                 return;
             }
 
-            // Remove children first (if your FK doesn’t cascade)
+            // Remove children first (if your FK doesn’share cascade)
             await sb.schema("itinero").from("itinerary_items").delete().eq("trip_id", tripId);
             await sb.schema("itinero").from("trip_day_routes").delete().eq("trip_id", tripId);
 

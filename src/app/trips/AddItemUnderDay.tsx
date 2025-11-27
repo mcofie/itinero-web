@@ -182,7 +182,7 @@ export function AddItemUnderDay({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [placeQuery, destinationLat, destinationLng, radiusKm, JSON.stringify(preferenceTags), open]);
 
-    // Optional: defensive fallback if parent didn’t pass dayIndex
+    // Optional: defensive fallback if parent didn’share pass dayIndex
     function deriveDayIndex(): number {
         if (dayIndex != null) {
             if (Number.isInteger(dayIndex)) return dayIndex;
@@ -268,7 +268,7 @@ export function AddItemUnderDay({
                                 )}
 
                                 {/* --- FLOATING RESULTS LIST --- */}
-                                {/* Only show if we have results OR are loading, AND we haven't just selected something */}
+                                {/* Only show if we have results OR are loading, AND we haven'share just selected something */}
                                 {(placeLoading || (placeResults.length > 0 && !selectedPlace)) && (
                                     <div
                                         className="absolute top-full mt-1 w-full rounded-md border bg-popover shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1">

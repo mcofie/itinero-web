@@ -1,4 +1,4 @@
-// app/t/[publicId]/public-trip-client.tsx
+// app/share/[publicId]/public-trip-client.tsx
 "use client";
 
 import * as React from "react";
@@ -278,7 +278,7 @@ function openSelf() {
 async function copyShareUrl(publicId: string) {
     const url =
         typeof window !== "undefined"
-            ? window.location.origin + "/t/" + publicId
+            ? window.location.origin + "/share/" + publicId
             : `/t/${publicId}`;
     try {
         if (navigator.share) {

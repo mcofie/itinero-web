@@ -1,4 +1,4 @@
-// app/t/[publicId]/MapSection.tsx
+// app/share/[publicId]/MapSection.tsx
 "use client";
 
 import * as React from "react";

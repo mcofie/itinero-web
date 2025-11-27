@@ -1,8 +1,8 @@
 import * as React from "react";
-import type { Metadata } from "next";
+import type {Metadata} from "next";
 import Image from "next/image";
-import { notFound } from "next/navigation";
-import { createClientServerRSC } from "@/lib/supabase/server";
+import {notFound} from "next/navigation";
+import {createClientServerRSC} from "@/lib/supabase/server";
 import PublicItineraryClient from "./public-itinerary-client";
 import {
     MapPin,
@@ -11,19 +11,16 @@ import {
     Globe,
     Phone,
     CloudSun,
-    ChevronDown,
     User2,
     CalendarDays,
-    Sparkles,
     CreditCard,
     Wallet,
-    Info,
     Plane
 } from "lucide-react";
-import MapSection from "@/app/t/[publicId]/MapSection";
+import MapSection from "@/app/trips/share/[publicId]/MapSection";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
+import {Badge} from "@/components/ui/badge";
 
 /* ---------------- Types (Preserved) ---------------- */
 
@@ -484,15 +481,16 @@ function safeNum(n: unknown): number | null {
 export async function generateMetadata({
                                            params,
                                        }: {
-    params: { publicId: string };
+    params: Promise<{ publicId: string }>;
 }): Promise<Metadata> {
+    const {publicId} = await params;
     const sb = await createClientServerRSC();
 
-    const { data: trip } = await sb
+    const {data: trip} = await sb
         .schema("itinero")
         .from("trips")
         .select("title, cover_url, start_date, end_date, destination_id")
-        .eq("public_id", params.publicId)
+        .eq("public_id", publicId)
         .maybeSingle();
 
     let ogImage =
@@ -500,7 +498,7 @@ export async function generateMetadata({
         "https://images.unsplash.com/photo-1526772662000-3b5ec3a7fe05ff?q=80&w=1600&auto=format&fit=crop";
 
     if (trip?.destination_id) {
-        const { data: dest } = await sb
+        const {data: dest} = await sb
             .schema("itinero")
             .from("destinations")
             .select("id,current_history_id")
@@ -508,7 +506,7 @@ export async function generateMetadata({
             .maybeSingle<DestinationRow>();
 
         if (dest?.current_history_id) {
-            const { data: hist } = await sb
+            const {data: hist} = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select("id,backdrop_image_url")
@@ -518,7 +516,9 @@ export async function generateMetadata({
         }
     }
 
-    const title = trip?.title ? `${trip.title} • Itinero` : "Shared Trip • Itinero";
+    const title = trip?.title
+        ? `${trip.title} • Itinero`
+        : "Shared Trip • Itinero";
     const description =
         trip?.start_date || trip?.end_date
             ? `Travel dates: ${formatDateRange(
@@ -533,9 +533,14 @@ export async function generateMetadata({
         openGraph: {
             title,
             description,
-            images: [{ url: ogImage, width: 1600, height: 840 }],
+            images: [{url: ogImage, width: 1600, height: 840}],
         },
-        twitter: { card: "summary_large_image", title, description, images: [ogImage] },
+        twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+            images: [ogImage],
+        },
     };
 }
 
@@ -544,22 +549,26 @@ export async function generateMetadata({
 export default async function PublicTripPage({
                                                  params,
                                              }: {
-    params: { publicId: string };
+    params: Promise<{ publicId: string }>;
 }) {
+    const {publicId} = await params;
     const sb = await createClientServerRSC();
 
-    const { data, error } = await sb
+    const {data, error} = await sb
         .schema("itinero")
         .from("trips")
         .select("*")
-        .eq("public_id", params.publicId)
+        .eq("public_id", publicId)
         .maybeSingle<TripRowLoose>();
 
     if (error || !data) notFound();
 
+    // Determine Trip Currency
+    const tripCurrency = data.currency ?? "USD";
+
     let owner: ProfileRow = null;
     if (data.user_id) {
-        const { data: o } = await sb
+        const {data: o} = await sb
             .schema("itinero")
             .from("profiles")
             .select("id,full_name,avatar_url,username")
@@ -572,7 +581,7 @@ export default async function PublicTripPage({
     let hist: DestinationHistoryRow = null;
 
     if (data.destination_id) {
-        const { data: dRow } = await sb
+        const {data: dRow} = await sb
             .schema("itinero")
             .from("destinations")
             .select("id,name,current_history_id")
@@ -581,7 +590,7 @@ export default async function PublicTripPage({
         dest = dRow ?? null;
 
         if (dest?.current_history_id) {
-            const { data: hRow } = await sb
+            const {data: hRow} = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select(
@@ -593,7 +602,7 @@ export default async function PublicTripPage({
         }
     }
 
-    const { meta: destMeta, heroUrl } = buildMetaFromHistory(hist);
+    const {meta: destMeta, heroUrl} = buildMetaFromHistory(hist);
 
     const title = (data.title ?? "Shared Trip").trim();
     const dateRange = formatDateRange(
@@ -608,14 +617,14 @@ export default async function PublicTripPage({
 
     const tripSummary: TripSummary = (data.trip_summary as TripSummary) ?? null;
 
-    const { data: itemsRows } = await sb
+    const {data: itemsRows} = await sb
         .schema("itinero")
         .from("itinerary_items")
         .select(
             "id,trip_id,place_id,title,notes,est_cost,duration_min,travel_min_from_prev,when, date"
         )
         .eq("trip_id", data.id)
-        .order("date", { ascending: true, nullsFirst: true })
+        .order("date", {ascending: true, nullsFirst: true})
         .returns<ItineraryItemRow[]>();
 
     const items = Array.isArray(itemsRows)
@@ -628,7 +637,7 @@ export default async function PublicTripPage({
 
     let placeDetails: PlaceDetail[] = [];
     if (placeIds.length > 0) {
-        const { data: placeRows } = await sb
+        const {data: placeRows} = await sb
             .schema("itinero")
             .from("places")
             .select("id,name,category,lat,lng,description")
@@ -644,7 +653,7 @@ export default async function PublicTripPage({
 
     const places: PlaceLite[] =
         (placeDetails?.length
-            ? placeDetails.map(({ id, name, category }) => ({
+            ? placeDetails.map(({id, name, category}) => ({
                 id,
                 name,
                 category: category ?? null,
@@ -660,9 +669,11 @@ export default async function PublicTripPage({
     const interests = extractInterests(data.inputs, tripSummary);
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+        <div
+            className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-sans selection:bg-blue-100 selection:text-blue-900 transition-colors duration-300">
             {/* 1. HERO SECTION (Immersive) */}
-            <header className="relative h-[45vh] md:h-[55vh] w-full overflow-hidden">
+            <header
+                className="relative h-[45vh] md:h-[55vh] w-full overflow-hidden border-b border-slate-200 dark:border-slate-800">
                 <Image
                     src={cover}
                     alt={title}
@@ -671,17 +682,25 @@ export default async function PublicTripPage({
                     className="object-cover"
                     sizes="100vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90" />
+                <div
+                    className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90"/>
 
                 {/* Top Nav */}
                 <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-30">
-                    <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-white hover:text-blue-100 transition-colors">
+                    <Link
+                        href="/public"
+                        className="flex items-center gap-2 font-bold text-xl tracking-tight text-white hover:text-blue-100 transition-colors"
+                    >
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-blue-600">
-                            <Plane className="h-4 w-4" />
+                            <Plane className="h-4 w-4"/>
                         </div>
                         Itinero
                     </Link>
-                    <Button asChild variant="secondary" className="rounded-full bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border border-white/10 font-semibold">
+                    <Button
+                        asChild
+                        variant="secondary"
+                        className="rounded-full bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border border-white/10 font-semibold transition-colors"
+                    >
                         <Link href="/trip-maker">Create Your Own</Link>
                     </Button>
                 </div>
@@ -690,13 +709,19 @@ export default async function PublicTripPage({
                 <div className="absolute inset-x-0 bottom-0 z-20 pb-10 md:pb-16">
                     <div className="mx-auto max-w-6xl px-6 flex flex-col items-start gap-5">
                         <div className="flex flex-wrap gap-3 items-center">
-                            <Badge variant="secondary" className="rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 hover:bg-white/20">
-                                <CalendarDays className="w-3.5 h-3.5 mr-1.5" />
+                            <Badge
+                                variant="secondary"
+                                className="rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 hover:bg-white/20 transition-colors font-medium"
+                            >
+                                <CalendarDays className="w-3.5 h-3.5 mr-1.5"/>
                                 {dateRange}
                             </Badge>
                             {dest?.name && (
-                                <Badge variant="secondary" className="rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 hover:bg-white/20">
-                                    <Globe className="w-3.5 h-3.5 mr-1.5" />
+                                <Badge
+                                    variant="secondary"
+                                    className="rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 hover:bg-white/20 transition-colors font-medium"
+                                >
+                                    <Globe className="w-3.5 h-3.5 mr-1.5"/>
                                     {dest.name}
                                 </Badge>
                             )}
@@ -709,15 +734,23 @@ export default async function PublicTripPage({
                         <div className="flex items-center gap-4 pt-2">
                             {ownerName && (
                                 <div className="flex items-center gap-3 pr-6 border-r border-white/20">
-                                    <div className="relative h-10 w-10 rounded-full overflow-hidden bg-white/10 ring-2 ring-white/20">
+                                    <div
+                                        className="relative h-10 w-10 rounded-full overflow-hidden bg-white/10 ring-2 ring-white/20">
                                         {ownerAvatar ? (
-                                            <Image src={ownerAvatar} alt={ownerName} fill className="object-cover" />
+                                            <Image
+                                                src={ownerAvatar}
+                                                alt={ownerName}
+                                                fill
+                                                className="object-cover"
+                                            />
                                         ) : (
-                                            <User2 className="h-5 w-5 text-white absolute inset-0 m-auto" />
+                                            <User2 className="h-5 w-5 text-white absolute inset-0 m-auto"/>
                                         )}
                                     </div>
                                     <div>
-                                        <p className="text-white font-semibold text-sm">{ownerName}</p>
+                                        <p className="text-white font-semibold text-sm">
+                                            {ownerName}
+                                        </p>
                                         <p className="text-white/60 text-xs">Curator</p>
                                     </div>
                                 </div>
@@ -732,24 +765,29 @@ export default async function PublicTripPage({
 
             {/* 2. MAIN CONTENT WRAPPER (Floating Up) */}
             <div className="relative z-10 -mt-8 mx-auto max-w-6xl px-4 sm:px-6 pb-20 space-y-8">
-
                 {/* A. INTRO & STATS GRID (Bento Style) */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
                     {/* Left: Overview / Description */}
                     <div className="lg:col-span-2 space-y-6">
                         {(destMeta?.description || interests.length > 0) && (
-                            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
+                            <div
+                                className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
                                 {interests.length > 0 && (
                                     <div className="mb-8">
-                                        <h3 className="text-xs font-bold uppercase text-slate-400 mb-3 tracking-wider">Trip Vibe</h3>
-                                        <InterestChips interests={interests} pillTone="default" />
+                                        <h3 className="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-3 tracking-wider">
+                                            Trip Vibe
+                                        </h3>
+                                        <InterestChips interests={interests} pillTone="default"/>
                                     </div>
                                 )}
                                 {destMeta?.description && (
-                                    <div className="prose prose-slate max-w-none">
-                                        <h3 className="text-lg font-bold text-slate-900 mb-2">About this trip</h3>
-                                        <p className="text-slate-600 leading-relaxed text-base">{destMeta.description}</p>
+                                    <div className="prose prose-slate dark:prose-invert max-w-none">
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                                            About this trip
+                                        </h3>
+                                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-base">
+                                            {destMeta.description}
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -758,31 +796,62 @@ export default async function PublicTripPage({
 
                     {/* Right: Know Before You Go (Stats) */}
                     <div className="lg:col-span-1 flex flex-col gap-4">
-
                         {/* Budget Card */}
                         {data.est_total_cost && (
-                            <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col gap-1">
+                            <div
+                                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-1">
                                 <div className="flex items-center gap-3 mb-2">
-                                    <div className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                                        <Wallet className="w-5 h-5" />
+                                    <div
+                                        className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                                        <Wallet className="w-5 h-5"/>
                                     </div>
-                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Est. Budget</span>
+                                    <span
+                                        className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    Est. Budget
+                  </span>
                                 </div>
-                                <p className="text-3xl font-extrabold text-slate-900">{data.currency || '$'}{data.est_total_cost.toLocaleString()}</p>
-                                <p className="text-xs text-slate-500">Estimated total based on activities</p>
+                                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                                    {tripCurrency} {data.est_total_cost.toLocaleString()}
+                                </p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    Estimated total based on activities
+                                </p>
                             </div>
                         )}
 
                         {/* Quick Facts Grid */}
-                        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 space-y-4">
-                            <h3 className="font-bold text-slate-900 text-sm border-b border-slate-100 pb-3">Local Guide</h3>
+                        <div
+                            className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 space-y-4">
+                            <h3 className="font-bold text-slate-900 dark:text-white text-sm border-b border-slate-100 dark:border-slate-800 pb-3">
+                                Local Guide
+                            </h3>
                             <div className="space-y-3">
-                                <InfoItem icon={MapPin} label="City" value={destMeta?.city} />
-                                <InfoItem icon={DollarSign} label="Currency" value={destMeta?.currency_code} />
-                                <InfoItem icon={CloudSun} label="Weather" value={destMeta?.weather_desc} />
-                                <InfoItem icon={Plug} label="Plugs" value={joinArr(destMeta?.plugs)} />
-                                <InfoItem icon={Phone} label="eSIM" value={destMeta?.esim_provider} />
-                                <InfoItem icon={Globe} label="Language" value={joinArr(destMeta?.languages)} />
+                                <InfoItem icon={MapPin} label="City" value={destMeta?.city}/>
+                                <InfoItem
+                                    icon={DollarSign}
+                                    label="Currency"
+                                    value={destMeta?.currency_code}
+                                />
+                                <InfoItem
+                                    icon={CloudSun}
+                                    label="Weather"
+                                    value={destMeta?.weather_desc}
+                                />
+                                <InfoItem
+                                    icon={Plug}
+                                    label="Plugs"
+                                    value={joinArr(destMeta?.plugs)}
+                                />
+                                <InfoItem
+                                    icon={Phone}
+                                    label="eSIM"
+                                    value={destMeta?.esim_provider}
+                                />
+                                <InfoItem
+                                    icon={Globe}
+                                    label="Language"
+                                    value={joinArr(destMeta?.languages)}
+                                />
                             </div>
                         </div>
                     </div>
@@ -791,17 +860,19 @@ export default async function PublicTripPage({
                 {/* B. ITINERARY TIMELINE */}
                 <div className="space-y-6">
                     <div className="flex items-center justify-between px-2">
-                        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                                <CalendarDays className="w-5 h-5" />
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+                            <div
+                                className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                                <CalendarDays className="w-5 h-5"/>
                             </div>
                             Itinerary
                         </h2>
                     </div>
 
-                    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div
+                        className="overflow-hidden">
                         <PublicItineraryClient
-                            currency={data.currency ?? "USD"}
+                            currency={tripCurrency}
                             estTotalCost={coerceNumber(data.est_total_cost)}
                             tripSummary={tripSummary}
                             days={days}
@@ -815,40 +886,50 @@ export default async function PublicTripPage({
                 {placeDetails.length > 0 && (
                     <div className="space-y-6 pt-8">
                         <div className="flex items-center gap-3 px-2">
-                            <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                <MapPin className="w-5 h-5" />
+                            <div
+                                className="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                <MapPin className="w-5 h-5"/>
                             </div>
-                            <h2 className="text-2xl font-bold text-slate-900">Explore the Area</h2>
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                                Explore the Area
+                            </h2>
                         </div>
 
-                        <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-sm h-[450px] bg-slate-100 relative">
-                            <MapSection places={placeDetails} />
-                            <div className="absolute bottom-6 left-6 bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold shadow-md border border-slate-100 pointer-events-none z-[1000] text-slate-700 flex items-center gap-2">
+                        <div
+                            className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm h-[450px] bg-slate-100 dark:bg-slate-800 relative">
+                            <MapSection places={placeDetails}/>
+                            <div
+                                className="absolute bottom-6 left-6 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold shadow-md border border-slate-100 dark:border-slate-800 pointer-events-none z-[1000] text-slate-700 dark:text-slate-200 flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
                                 {placeDetails.length} Locations
                             </div>
                         </div>
                     </div>
                 )}
-
             </div>
 
             {/* Footer */}
-            <footer className="border-t border-slate-200 bg-white py-12 text-center">
+            <footer
+                className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-12 text-center transition-colors duration-300">
                 <div className="mx-auto max-w-md px-6 space-y-4">
-                    <div className="flex items-center justify-center gap-2 font-bold text-xl tracking-tight text-blue-600">
-               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-                  <Plane className="h-4 w-4" />
-               </span>
+                    <div
+                        className="flex items-center justify-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
+            <span
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
+              <Plane className="h-4 w-4"/>
+            </span>
                         Itinero
                     </div>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
                         Plan your next adventure in minutes.
                     </p>
-                    <Button asChild className="rounded-full bg-slate-900 text-white hover:bg-slate-800 px-6 mt-4">
+                    <Button
+                        asChild
+                        className="rounded-full bg-slate-900 text-white hover:bg-slate-800 px-6 mt-4 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+                    >
                         <Link href="/trip-maker">Start Planning Free</Link>
                     </Button>
-                    <p className="text-xs text-slate-400 pt-8">
+                    <p className="text-xs text-slate-400 dark:text-slate-500 pt-8">
                         © {new Date().getFullYear()} Itinero Inc.
                     </p>
                 </div>
@@ -859,19 +940,33 @@ export default async function PublicTripPage({
 
 /* ---------------- UI Components ---------------- */
 
-function InfoItem({ icon: Icon, label, value }: { icon: any, label: string, value?: string | null }) {
+function InfoItem({
+                      icon: Icon,
+                      label,
+                      value,
+                  }: {
+    icon: any;
+    label: string;
+    value?: string | null;
+}) {
     if (!value) return null;
     return (
-        <div className="flex items-start gap-3 p-2 hover:bg-slate-50 rounded-lg transition-colors">
-            <div className="mt-0.5 text-slate-400">
-                <Icon className="w-4 h-4" />
+        <div
+            className="flex items-start gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
+            <div className="mt-0.5 text-slate-400 dark:text-slate-500">
+                <Icon className="w-4 h-4"/>
             </div>
             <div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{label}</div>
-                <div className="text-sm font-medium text-slate-700 leading-snug">{value}</div>
+                <div
+                    className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+                    {label}
+                </div>
+                <div className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-snug">
+                    {value}
+                </div>
             </div>
         </div>
-    )
+    );
 }
 
 function InterestChips({
@@ -884,7 +979,7 @@ function InterestChips({
     const isLight = pillTone === "light";
     const containerClass = isLight
         ? "bg-white/10 border-white/20 text-white hover:bg-white/20"
-        : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200";
+        : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700";
 
     return (
         <ul className="flex flex-wrap gap-2">

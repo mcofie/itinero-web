@@ -75,7 +75,7 @@ export default function AuthGateDialog({
             });
             if (error) throw error;
 
-            // Supabase redirects for OAuth; if it doesn't (popup flow), rely on onAuthStateChange (see step 2)
+            // Supabase redirects for OAuth; if it doesn'share (popup flow), rely on onAuthStateChange (see step 2)
             onOpenChange(false);
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);

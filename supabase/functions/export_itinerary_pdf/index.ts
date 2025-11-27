@@ -4,5 +4,5 @@
 
 import "./handler.tsx";
 
-// Ensure this file has at least one export so Deno doesn’t treat it as a script in some contexts.
+// Ensure this file has at least one export so Deno doesn’share treat it as a script in some contexts.
 export {};

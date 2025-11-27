@@ -23,15 +23,11 @@ import {
     Sparkles,
     Map as MapIcon,
     Download,
-    Share2,
     PencilLine,
-    ChevronDown,
     Globe,
     Plug,
     Phone,
     CloudSun,
-    ChevronLeft,
-    ChevronRight,
     Wallet,
 } from "lucide-react";
 
@@ -45,8 +41,9 @@ import {
 import {cn} from "@/lib/utils";
 
 /* =========================
-   Types
+   Types (Preserved)
 ========================= */
+// ... (Keep existing types as is)
 export type PreviewResponse = {
     trip_summary: {
         total_days: number;
@@ -136,6 +133,7 @@ type DestinationHistoryRow = {
     weather_desc?: string | null;
 };
 
+
 /* =========================
    Constants / utils
 ========================= */
@@ -160,12 +158,7 @@ function emojiFor(tag: string) {
     if (t.includes("music")) return "🎶";
     if (t.includes("night")) return "🌙";
     if (t.includes("shop")) return "🛍️";
-    if (
-        t.includes("hiking") ||
-        t.includes("trail") ||
-        t.includes("nature") ||
-        t.includes("park")
-    )
+    if (t.includes("hiking") || t.includes("trail") || t.includes("nature") || t.includes("park"))
         return "🥾";
     if (t.includes("wildlife") || t.includes("safari")) return "🦁";
     if (t.includes("art")) return "🎨";
@@ -237,25 +230,25 @@ function whenBadgeClasses(w: "morning" | "afternoon" | "evening") {
     if (w === "morning") {
         return {
             dot: "bg-amber-400",
-            badge: "bg-amber-50 text-amber-700 border-amber-100",
+            badge: "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-900",
         };
     }
     if (w === "afternoon") {
         return {
             dot: "bg-orange-400",
-            badge: "bg-orange-50 text-orange-700 border-orange-100",
+            badge: "bg-orange-50 text-orange-700 border-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-900",
         };
     }
     return {
         dot: "bg-indigo-400",
-        badge: "bg-indigo-50 text-indigo-700 border-indigo-100",
+        badge: "bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-900",
     };
 }
 
 /* =========================
    Client-only dynamic
 ========================= */
-const MapSection = dynamic(() => import("../t/[publicId]/MapSection"), {
+const MapSection = dynamic(() => import("@/app/trips/share/[publicId]/MapSection"), {
     ssr: false,
 });
 
@@ -278,9 +271,7 @@ export default function PreviewClient({
     const [preview, setPreview] = React.useState<PreviewResponse | null>(null);
     const [loading, setLoading] = React.useState(true);
 
-    const [points, setPoints] = React.useState<number | null>(
-        initialPoints ?? null
-    );
+    const [points, setPoints] = React.useState<number | null>(initialPoints ?? null);
     const [pointsBusy, setPointsBusy] = React.useState(false);
 
     const [activeDayIdx, setActiveDayIdx] = React.useState(0);
@@ -310,11 +301,7 @@ export default function PreviewClient({
                 const parsed = JSON.parse(raw) as PreviewResponse;
                 setPreview(parsed);
             } catch (e) {
-                console.error(
-                    "[PreviewClient] Failed to parse itinero:latest_preview:",
-                    e
-                );
-                // Remove corrupted value to avoid perma-broken state
+                console.error("[PreviewClient] Failed to parse itinero:latest_preview:", e);
                 window.localStorage.removeItem("itinero:latest_preview");
                 setPreview(null);
             }
@@ -345,7 +332,7 @@ export default function PreviewClient({
         })();
     }, [points, sb]);
 
-    // Countdown to paywall (10s, visualized as 10 "ticks")
+    // Countdown to paywall
     React.useEffect(() => {
         if (showPaywall) return;
         let left = 10;
@@ -404,26 +391,16 @@ export default function PreviewClient({
                     .maybeSingle<DestinationHistoryRow>();
 
                 if (error || !data) {
-                    if (error) {
-                        console.error(
-                            "[PreviewClient] destination_history query error:",
-                            error
-                        );
-                    }
+                    if (error) console.error("[PreviewClient] destination_history query error:", error);
                     setDestMetaFromDb(null);
                     return;
                 }
 
-                const toArr = (
-                    v: string[] | string | null | undefined
-                ): string[] | undefined =>
+                const toArr = (v: string[] | string | null | undefined): string[] | undefined =>
                     Array.isArray(v)
                         ? v
                         : typeof v === "string"
-                            ? v
-                                .split(",")
-                                .map((s) => s.trim())
-                                .filter(Boolean)
+                            ? v.split(",").map((s) => s.trim()).filter(Boolean)
                             : undefined;
 
                 const normalized: DestinationMetaLike = {
@@ -438,23 +415,9 @@ export default function PreviewClient({
                     weather_desc: data.weather_desc ?? undefined,
                 };
 
-                const hasAny =
-                    normalized.description ||
-                    normalized.history ||
-                    normalized.city ||
-                    normalized.currency_code ||
-                    (normalized.plugs && normalized.plugs.length) ||
-                    (normalized.languages && normalized.languages.length) ||
-                    (normalized.transport && normalized.transport.length) ||
-                    normalized.esim_provider ||
-                    normalized.weather_desc;
-
-                setDestMetaFromDb(hasAny ? normalized : null);
+                setDestMetaFromDb(normalized);
             } catch (e) {
-                console.error(
-                    "[PreviewClient] destination_history query threw:",
-                    e
-                );
+                console.error("[PreviewClient] destination_history query threw:", e);
                 setDestMetaFromDb(null);
             }
         })();
@@ -481,9 +444,8 @@ export default function PreviewClient({
     if (loading) {
         return (
             <div className="mx-auto grid min-h-[40vh] max-w-4xl place-items-center">
-                <div className="flex items-center gap-2 text-slate-500">
-                    <Loader2 className="h-5 w-5 animate-spin text-blue-600"/> Loading
-                    preview…
+                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-600"/> Loading preview…
                 </div>
             </div>
         );
@@ -493,17 +455,17 @@ export default function PreviewClient({
         return (
             <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-4 text-center">
                 <div
-                    className="relative w-full overflow-hidden rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+                    className="relative w-full overflow-hidden rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center dark:bg-slate-900 dark:border-slate-800">
                     <div
-                        className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm ring-8 ring-white/50">
-                        <Sparkles className="h-8 w-8 text-blue-600"/>
+                        className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm ring-8 ring-white/50 dark:bg-slate-800 dark:ring-slate-800/50">
+                        <Sparkles className="h-8 w-8 text-blue-600 dark:text-blue-400"/>
                     </div>
 
-                    <h2 className="text-xl font-bold text-slate-900">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                         No preview available
                     </h2>
 
-                    <p className="mt-2 text-sm text-slate-500">
+                    <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                         Start a new trip plan to see your itinerary preview here.
                     </p>
 
@@ -520,7 +482,7 @@ export default function PreviewClient({
                         <Button
                             variant="outline"
                             size="lg"
-                            className="w-full rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 sm:w-auto"
+                            className="w-full rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 sm:w-auto dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
                             onClick={() => router.push("/trips")}
                         >
                             View Saved Trips
@@ -531,7 +493,6 @@ export default function PreviewClient({
         );
     }
 
-    // Prefer DB meta, fallback to preview meta
     const destinationMeta: DestinationMetaLike | undefined =
         destMetaFromDb ?? preview.destination_meta ?? undefined;
 
@@ -540,15 +501,10 @@ export default function PreviewClient({
             (p) => Number.isFinite(p.lat) && Number.isFinite(p.lng)
         ) ?? [];
 
-    const lastActivity =
-        preview.days && preview.days.length
-            ? formatISODate(preview.days[preview.days.length - 1]?.date)
-            : "—";
-
     return (
         <>
             {/* HERO */}
-            <section className="relative bg-slate-50 pb-12 pt-8">
+            <section className="relative bg-slate-50 pb-12 pt-8 dark:bg-slate-950">
                 <div className="mx-auto w-full max-w-5xl px-4 md:max-w-6xl">
                     <div className="flex flex-col gap-8 md:flex-row md:items-center">
                         {/* Cover Image */}
@@ -564,28 +520,30 @@ export default function PreviewClient({
                             />
                             {/* Overlay Badge */}
                             <div
-                                className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-900 backdrop-blur-md shadow-sm">
-                                <Sparkles className="h-3.5 w-3.5 text-blue-600"/>
+                                className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-900 backdrop-blur-md shadow-sm dark:bg-slate-900/90 dark:text-white">
+                                <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"/>
                                 Preview Mode
                             </div>
                         </div>
 
                         {/* Trip Details */}
                         <div className="flex-1 space-y-4">
-                            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
+                            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl lg:text-5xl dark:text-white">
                                 {tripTitle}
                             </h1>
 
-                            <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-600">
-                <span className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200">
+                            <div
+                                className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-600 dark:text-slate-300">
+                <span
+                    className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                   <CalendarDays className="h-4 w-4 text-slate-400"/>
                     {formatDateRange(preview.trip_summary)}
                 </span>
 
                                 {typeof estTotal === "number" && (
                                     <span
-                                        className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200">
-                    <DollarSign className="h-4 w-4 text-emerald-600"/>
+                                        className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+                    <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400"/>
                     Est. {preview.trip_summary.currency ?? "$"}
                                         {estTotal}
                   </span>
@@ -593,7 +551,7 @@ export default function PreviewClient({
 
                                 {modeIcon && (
                                     <span
-                                        className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 capitalize">
+                                        className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 capitalize dark:bg-slate-900 dark:border-slate-800">
                     {modeIcon}
                                         {inputs?.mode}
                   </span>
@@ -616,15 +574,17 @@ export default function PreviewClient({
                 <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
                     {/* LEFT: Itinerary */}
                     <div className="space-y-8">
-                        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                        <section
+                            className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
                             {/* Day Picker Header */}
-                            <div className="bg-slate-50 border-b border-slate-100 px-6 py-4">
+                            <div
+                                className="bg-slate-50 border-b border-slate-100 px-6 py-4 dark:bg-slate-950/50 dark:border-slate-800">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h2 className="font-bold text-slate-900 text-lg">
+                                    <h2 className="font-bold text-slate-900 text-lg dark:text-white">
                                         Day by Day
                                     </h2>
                                     <div
-                                        className="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">
+                                        className="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded border border-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400">
                                         {preview.trip_summary.total_days} Days Total
                                     </div>
                                 </div>
@@ -638,8 +598,8 @@ export default function PreviewClient({
                                             className={cn(
                                                 "px-4 py-2 rounded-lg text-sm font-semibold transition-all",
                                                 activeDayIdx === i
-                                                    ? "bg-slate-900 text-white shadow-md"
-                                                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                                                    ? "bg-slate-900 text-white shadow-md dark:bg-white dark:text-slate-900"
+                                                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800"
                                             )}
                                         >
                                             Day {i + 1}
@@ -671,13 +631,15 @@ export default function PreviewClient({
                     <div className="space-y-6">
                         {/* Map Card */}
                         {placesWithCoords.length > 0 && (
-                            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                                <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                                    <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                                        <MapIcon className="h-4 w-4 text-blue-600"/> Map View
+                            <div
+                                className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+                                <div
+                                    className="p-4 border-b border-slate-100 flex items-center justify-between dark:border-slate-800">
+                                    <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2 dark:text-white">
+                                        <MapIcon className="h-4 w-4 text-blue-600 dark:text-blue-400"/> Map View
                                     </h3>
                                 </div>
-                                <div className="h-64 w-full bg-slate-100">
+                                <div className="h-64 w-full bg-slate-100 dark:bg-slate-800">
                                     <MapSection
                                         places={placesWithCoords.map((p) => ({
                                             id: p.id,
@@ -692,11 +654,12 @@ export default function PreviewClient({
 
                         {/* Destination Info */}
                         {hasDestMeta(destinationMeta) && (
-                            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
-                                <h3 className="font-bold text-slate-900 text-sm">Local Guide</h3>
+                            <div
+                                className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4 dark:bg-slate-900 dark:border-slate-800">
+                                <h3 className="font-bold text-slate-900 text-sm dark:text-white">Local Guide</h3>
 
                                 {destinationMeta?.description && (
-                                    <div className="text-xs text-slate-600 leading-relaxed">
+                                    <div className="text-xs text-slate-600 leading-relaxed dark:text-slate-400">
                                         {destinationMeta.description.slice(0, 150)}...
                                     </div>
                                 )}
@@ -727,11 +690,12 @@ export default function PreviewClient({
             {/* Floating Paywall Countdown */}
             {!showPaywall && paywallLeft > 0 && (
                 <div className="fixed bottom-6 right-6 z-50">
-                    <div className="flex items-center gap-3 rounded-full bg-slate-900 text-white px-5 py-2.5 shadow-xl">
+                    <div
+                        className="flex items-center gap-3 rounded-full bg-slate-900 text-white px-5 py-2.5 shadow-xl dark:bg-white dark:text-slate-900">
                         <div className="relative h-4 w-4">
                             <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
                                 <path
-                                    className="text-slate-700"
+                                    className="text-slate-700 dark:text-slate-200"
                                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                                     fill="none"
                                     stroke="currentColor"
@@ -768,23 +732,26 @@ export default function PreviewClient({
 
             {/* Not enough points dialog */}
             <Dialog open={insufficientOpen} onOpenChange={setInsufficientOpen}>
-                <DialogContent className="sm:max-w-sm rounded-3xl border-slate-200 p-6">
+                <DialogContent
+                    className="sm:max-w-sm rounded-3xl border-slate-200 p-6 dark:bg-slate-900 dark:border-slate-800">
                     <DialogHeader>
-                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50">
-                            <Wallet className="h-6 w-6 text-amber-600"/>
+                        <div
+                            className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-900/20">
+                            <Wallet className="h-6 w-6 text-amber-600 dark:text-amber-400"/>
                         </div>
-                        <DialogTitle className="text-lg font-bold text-slate-900">
+                        <DialogTitle className="text-lg font-bold text-slate-900 dark:text-white">
                             Not enough points
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="space-y-3 text-center text-sm text-slate-600">
+                    <div className="space-y-3 text-center text-sm text-slate-600 dark:text-slate-400">
                         <p>
                             You need{" "}
-                            <strong className="text-slate-900">{requiredPoints} points</strong>{" "}
+                            <strong className="text-slate-900 dark:text-white">{requiredPoints} points</strong>{" "}
                             to save this full itinerary.
                         </p>
-                        <div className="rounded-xl bg-slate-50 p-3 font-medium border border-slate-100">
+                        <div
+                            className="rounded-xl bg-slate-50 p-3 font-medium border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
                             Current Balance: {points ?? "..."} points
                         </div>
                     </div>
@@ -793,12 +760,12 @@ export default function PreviewClient({
                         <Button
                             variant="outline"
                             onClick={() => setInsufficientOpen(false)}
-                            className="rounded-xl border-slate-200"
+                            className="rounded-xl border-slate-200 dark:border-slate-700 dark:bg-transparent dark:text-slate-300"
                         >
                             Cancel
                         </Button>
                         <Button
-                            className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                            className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold dark:bg-blue-600 dark:hover:bg-blue-500"
                             onClick={() => router.push("/rewards")}
                         >
                             Get Points
@@ -828,13 +795,13 @@ function ItineraryDay({
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-                <div className="text-3xl font-bold text-slate-900">{weekday}</div>
-                <div className="h-1 w-1 rounded-full bg-slate-300"></div>
-                <div className="text-slate-500 font-medium">{rest}</div>
+            <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                <div className="text-3xl font-bold text-slate-900 dark:text-white">{weekday}</div>
+                <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+                <div className="text-slate-500 font-medium dark:text-slate-400">{rest}</div>
             </div>
 
-            <div className="relative pl-8 border-l-2 border-slate-100 space-y-8">
+            <div className="relative pl-8 border-l-2 border-slate-100 dark:border-slate-800 space-y-8">
                 {day.blocks.map((b, i) => {
                     const place = b.place_id ? placesById.get(b.place_id) : null;
                     const badgeClasses = whenBadgeClasses(b.when);
@@ -844,13 +811,13 @@ function ItineraryDay({
                             {/* Timeline Dot */}
                             <div
                                 className={cn(
-                                    "absolute -left-[39px] top-0 h-5 w-5 rounded-full border-4 border-white shadow-sm z-10",
+                                    "absolute -left-[39px] top-0 h-5 w-5 rounded-full border-4 border-white shadow-sm z-10 dark:border-slate-900",
                                     badgeClasses.dot
                                 )}
                             />
 
                             <div
-                                className="rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow">
+                                className="rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow dark:bg-slate-900 dark:border-slate-800">
                                 <div className="flex items-start justify-between gap-4 mb-3">
                                     <div>
                     <span
@@ -861,14 +828,14 @@ function ItineraryDay({
                     >
                       {b.when}
                     </span>
-                                        <h4 className="text-base font-bold text-slate-900">
+                                        <h4 className="text-base font-bold text-slate-900 dark:text-white">
                                             {b.title}
                                         </h4>
                                     </div>
-                                    <div className="text-right text-xs font-medium text-slate-500">
+                                    <div className="text-right text-xs font-medium text-slate-500 dark:text-slate-400">
                                         <div>{b.duration_min} min</div>
                                         {b.est_cost > 0 && (
-                                            <div className="text-emerald-600 font-bold mt-0.5">
+                                            <div className="text-emerald-600 font-bold mt-0.5 dark:text-emerald-400">
                                                 ${b.est_cost}
                                             </div>
                                         )}
@@ -876,16 +843,16 @@ function ItineraryDay({
                                 </div>
 
                                 {b.notes && (
-                                    <p className="text-sm text-slate-600 leading-relaxed mb-3">
+                                    <p className="text-sm text-slate-600 leading-relaxed mb-3 dark:text-slate-400">
                                         {b.notes}
                                     </p>
                                 )}
 
                                 {place && (
                                     <div
-                                        className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                        className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
                                         <MapPin className="h-3.5 w-3.5 text-slate-400"/>
-                                        <span className="font-medium text-slate-700">
+                                        <span className="font-medium text-slate-700 dark:text-slate-300">
                       {place.name}
                     </span>
                                     </div>
@@ -896,7 +863,7 @@ function ItineraryDay({
                 })}
 
                 {day.blocks.length === 0 && (
-                    <div className="text-sm text-slate-400 italic pl-2">
+                    <div className="text-sm text-slate-400 italic pl-2 dark:text-slate-600">
                         No scheduled activities.
                     </div>
                 )}
@@ -918,14 +885,14 @@ function IconFact({
     return (
         <div className="flex items-center gap-3">
             <div
-                className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100">
+                className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
                 <Icon className="h-4 w-4"/>
             </div>
             <div>
-                <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
+                <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500">
                     {label}
                 </div>
-                <div className="text-xs font-medium text-slate-700">{value}</div>
+                <div className="text-xs font-medium text-slate-700 dark:text-slate-300">{value}</div>
             </div>
         </div>
     );
@@ -937,7 +904,7 @@ function InterestChips({interests}: { interests: string[] }) {
             {interests.map((raw) => (
                 <span
                     key={raw}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm capitalize"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm capitalize dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300"
                 >
           <span>{emojiFor(raw)}</span>
                     {raw}
@@ -968,10 +935,11 @@ function FullScreenPaywallOverlay({
     return (
         <div
             data-theme={forceTheme}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 dark:bg-black/80"
         >
-            <div className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden">
-                <div className="relative h-40 bg-blue-600 overflow-hidden">
+            <div
+                className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-800">
+                <div className="relative h-40 bg-blue-600 overflow-hidden dark:bg-blue-700">
                     <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20"></div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
                         <Sparkles className="h-10 w-10 mb-2"/>
@@ -1005,9 +973,9 @@ function FullScreenPaywallOverlay({
 
                     <div className="flex flex-col items-center gap-4">
                         <div
-                            className="flex items-center gap-2 text-sm font-medium text-slate-600 bg-slate-100 px-4 py-2 rounded-full">
+                            className="flex items-center gap-2 text-sm font-medium text-slate-600 bg-slate-100 px-4 py-2 rounded-full dark:bg-slate-800 dark:text-slate-300">
                             <span>Cost: {required} pts</span>
-                            <span className="text-slate-300">|</span>
+                            <span className="text-slate-300 dark:text-slate-600">|</span>
                             <span>
                 You have:{" "}
                                 <span
@@ -1015,8 +983,8 @@ function FullScreenPaywallOverlay({
                                         points === null
                                             ? "font-bold"
                                             : hasEnough
-                                                ? "text-emerald-600 font-bold"
-                                                : "text-red-600 font-bold"
+                                                ? "text-emerald-600 font-bold dark:text-emerald-400"
+                                                : "text-red-600 font-bold dark:text-red-400"
                                     }
                                 >
                   {points ?? "..."}
@@ -1030,7 +998,7 @@ function FullScreenPaywallOverlay({
                                 size="lg"
                                 onClick={onBuy}
                                 disabled={saving}
-                                className="flex-1 sm:flex-initial rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+                                className="flex-1 sm:flex-initial rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                             >
                                 {saving
                                     ? "Processing..."
@@ -1043,7 +1011,7 @@ function FullScreenPaywallOverlay({
                                 variant="outline"
                                 onClick={onSave}
                                 disabled={saving}
-                                className="flex-1 sm:flex-initial rounded-xl border-slate-200"
+                                className="flex-1 sm:flex-initial rounded-xl border-slate-200 dark:border-slate-700 dark:bg-transparent dark:text-slate-300"
                             >
                                 Save Draft
                             </Button>
@@ -1066,12 +1034,13 @@ function PerkItem({
 }) {
     return (
         <div className="flex gap-3">
-            <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+            <div
+                className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 dark:bg-blue-900/30 dark:text-blue-400">
                 <Icon className="h-5 w-5"/>
             </div>
             <div>
-                <h4 className="font-bold text-slate-900 text-sm">{title}</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
+                <h4 className="font-bold text-slate-900 text-sm dark:text-white">{title}</h4>
+                <p className="text-xs text-slate-500 leading-relaxed dark:text-slate-400">{desc}</p>
             </div>
         </div>
     );

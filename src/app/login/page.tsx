@@ -177,7 +177,7 @@ export default function LoginPage() {
                                     onClick={() => setMode((m) => (m === "login" ? "signup" : "login"))}
                                 >
                                     {mode === "login"
-                                        ? "Don't have an account? Sign up"
+                                        ? "Don'share have an account? Sign up"
                                         : "Already have an account? Sign in"}
                                 </button>
                             </div>

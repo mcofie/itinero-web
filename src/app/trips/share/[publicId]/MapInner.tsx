@@ -1,4 +1,4 @@
-// app/t/[publicId]/MapInner.tsx
+// app/share/[publicId]/MapInner.tsx
 "use client";
 import "leaflet/dist/leaflet.css";
 import * as React from "react";

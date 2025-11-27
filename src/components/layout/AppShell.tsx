@@ -20,13 +20,10 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
-    DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import {
     Sheet,
     SheetContent,
-    SheetHeader,
-    SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
@@ -34,18 +31,14 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
 import {
     LogOut,
     User,
-    Map,
     Calendar,
     Star,
     Plus,
     Menu,
-    Crown,
     Sparkles,
-    Globe,
-    Heart,
     Plane,
-    Settings,
     CreditCard,
+    Heart,
 } from "lucide-react";
 import {ThemeToggle} from "@/components/ThemeToggle";
 import {TopupDialogFxAware} from "@/components/layout/TopupDialogFxAware";
@@ -92,11 +85,10 @@ export default function AppShell({children, userEmail}: Props) {
     const resetAuthAndStorage = React.useCallback(async () => {
         if (typeof window !== "undefined") {
             try {
-                // Remove Supabase + app-specific keys that are most likely involved.
                 for (const key of Object.keys(window.localStorage)) {
                     if (
-                        key.startsWith("sb-") || // supabase-js v2
-                        key.startsWith("supabase.") || // older patterns
+                        key.startsWith("sb-") ||
+                        key.startsWith("supabase.") ||
                         key.startsWith("itinero:")
                     ) {
                         window.localStorage.removeItem(key);
@@ -114,7 +106,6 @@ export default function AppShell({children, userEmail}: Props) {
         }
 
         setUid(null);
-        // Send user to landing/login so they can re-auth cleanly
         router.replace("/");
     }, [router, sb]);
 
@@ -173,7 +164,6 @@ export default function AppShell({children, userEmail}: Props) {
                     const code = data.preferred_currency.toUpperCase();
                     setUserCurrency(code);
                 } else {
-                    // fallback default
                     setUserCurrency("USD");
                 }
             } catch (e) {
@@ -183,13 +173,13 @@ export default function AppShell({children, userEmail}: Props) {
         [sb]
     );
 
-    // -------- FX snapshot + derived GHS -> userCurrency --------
+    // -------- FX snapshot --------
     useEffect(() => {
         const cancelled = {current: false};
 
         (async () => {
             try {
-                const snap = await getLatestFxSnapshot("USD"); // or your base
+                const snap = await getLatestFxSnapshot("USD");
                 if (!cancelled.current) {
                     setFxSnapshot(snap);
                 }
@@ -205,12 +195,10 @@ export default function AppShell({children, userEmail}: Props) {
 
     const ghsToUserRate = React.useMemo(() => {
         if (!fxSnapshot) return null;
-        // 1 GHS -> userCurrency
-        const val = convertUsingSnapshot(fxSnapshot, 1, "GHS", userCurrency);
-        return val;
+        return convertUsingSnapshot(fxSnapshot, 1, "GHS", userCurrency);
     }, [fxSnapshot, userCurrency]);
 
-    // -------- Session init + auth listener (single effect, hardened) --------
+    // -------- Session init + auth listener --------
     React.useEffect(() => {
         let mounted = true;
 
@@ -221,13 +209,11 @@ export default function AppShell({children, userEmail}: Props) {
 
                 if (error) {
                     console.error("[auth.getSession] error:", error);
-                    // If the session can't even be read, reset everything
                     await resetAuthAndStorage();
                     return;
                 }
 
                 const userId = data?.session?.user?.id ?? null;
-                console.log("[auth.getSession] uid:", userId);
                 setUid(userId);
 
                 await Promise.all([
@@ -242,42 +228,34 @@ export default function AppShell({children, userEmail}: Props) {
             }
         })();
 
-        const {data: sub} = sb.auth.onAuthStateChange(
-            async (event, session) => {
-                if (!mounted) return;
-                console.log("[auth.onAuthStateChange]", event, session?.user?.id);
+        const {data: sub} = sb.auth.onAuthStateChange(async (event, session) => {
+            if (!mounted) return;
 
-                // If Supabase reports an invalid session, just reset.
-                if (!session || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
-                    // session will be null on SIGNED_OUT, non-null on TOKEN_REFRESHED
-                    // For SIGNED_OUT, treat user as logged out.
-                    const userId = session?.user?.id ?? null;
-                    setUid(userId);
+            if (!session || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
+                const userId = session?.user?.id ?? null;
+                setUid(userId);
 
-                    if (event === "SIGNED_OUT") {
-                        // ensure storage is clean
-                        await resetAuthAndStorage();
-                        return;
-                    }
+                if (event === "SIGNED_OUT") {
+                    await resetAuthAndStorage();
+                    return;
+                }
 
-                    if (event === "TOKEN_REFRESHED") {
-                        // Just refresh data for the (possibly new) user
-                        await Promise.all([
-                            refreshPoints(userId),
-                            refreshPreferredCurrency(userId),
-                        ]);
-                        return;
-                    }
-                } else {
-                    const userId = session.user?.id ?? null;
-                    setUid(userId);
+                if (event === "TOKEN_REFRESHED") {
                     await Promise.all([
                         refreshPoints(userId),
                         refreshPreferredCurrency(userId),
                     ]);
+                    return;
                 }
+            } else {
+                const userId = session.user?.id ?? null;
+                setUid(userId);
+                await Promise.all([
+                    refreshPoints(userId),
+                    refreshPreferredCurrency(userId),
+                ]);
             }
-        );
+        });
 
         return () => {
             mounted = false;
@@ -285,7 +263,7 @@ export default function AppShell({children, userEmail}: Props) {
         };
     }, [sb, refreshPoints, refreshPreferredCurrency, resetAuthAndStorage]);
 
-    // -------- Preview indicator (localStorage) --------
+    // -------- Preview indicator --------
     React.useEffect(() => {
         try {
             if (typeof window !== "undefined") {
@@ -298,7 +276,7 @@ export default function AppShell({children, userEmail}: Props) {
         }
     }, [pathname]);
 
-    // -------- Live updates: points + preferred_currency --------
+    // -------- Live updates --------
     React.useEffect(() => {
         if (!uid) return;
 
@@ -339,25 +317,22 @@ export default function AppShell({children, userEmail}: Props) {
         };
     }, [uid, sb, refreshPoints, refreshPreferredCurrency]);
 
-    // -------- Auth: logout --------
+    // -------- Logout --------
     const logout = React.useCallback(async () => {
         try {
             await sb.auth.signOut();
         } catch (e) {
             console.error("[logout] signOut error:", e);
         } finally {
-            // Also clean local storage, just to be safe
             await resetAuthAndStorage();
         }
     }, [resetAuthAndStorage, sb]);
 
-    // -------- Top-up → quote → Paystack init --------
+    // -------- Top-up --------
     const startTopup = React.useCallback(async () => {
         const pts = Number(pointsInput);
 
-        // If uid is missing, don't silently fail: force user to re-auth
         if (!uid) {
-            console.warn("[startTopup] No uid – resetting auth & redirecting");
             await resetAuthAndStorage();
             return;
         }
@@ -424,10 +399,12 @@ export default function AppShell({children, userEmail}: Props) {
         <TooltipProvider delayDuration={150}>
             <div
                 className="flex min-h-screen flex-col bg-slate-50 text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900 dark:bg-slate-950 dark:text-white dark:selection:bg-blue-900 dark:selection:text-white transition-colors duration-300">
+
                 {/* Header */}
                 <header
                     className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/80 backdrop-blur-md dark:bg-slate-950/80 dark:border-slate-800">
                     <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+
                         {/* Left: Brand & Mobile Menu */}
                         <div className="flex items-center gap-3">
                             <Sheet>
@@ -527,22 +504,23 @@ export default function AppShell({children, userEmail}: Props) {
                         </nav>
 
                         {/* Right: Actions */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
+
+                            {/* 1. NEW TRIP BUTTON */}
                             <div className="hidden sm:flex">
                                 <Button
-                                    variant="ghost"
                                     size="sm"
-                                    className="h-9 w-9 rounded-full p-0 text-slate-600 hover:bg-slate-100 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400"
                                     onClick={() => router.push("/trip-maker")}
-                                    title="New Trip"
+                                    className="h-9 items-center gap-2 rounded-full bg-blue-600 px-4 text-xs font-bold uppercase tracking-wide text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md dark:bg-blue-500 dark:hover:bg-blue-400"
                                 >
-                                    <Plus className="h-5 w-5"/>
+                                    <Plus className="h-3.5 w-3.5" strokeWidth={3}/>
+                                    New Trip
                                 </Button>
                             </div>
 
-                            <div className="h-4 w-px bg-slate-200 hidden sm:block dark:bg-slate-800"></div>
+                            <div className="hidden h-5 w-px bg-slate-200 sm:block dark:bg-slate-800"/>
 
-                            {/* --- FIXED TOP UP BUTTON --- */}
+                            {/* 2. TOP UP / BALANCE BUTTON */}
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
@@ -551,18 +529,18 @@ export default function AppShell({children, userEmail}: Props) {
                                         className="h-9 rounded-full gap-0 px-3 border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-all dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
                                         onClick={() => setTopupOpen(true)}
                                     >
-                                        {/* Balance Section */}
+                                        {/* Balance */}
                                         <div className="flex items-center gap-1.5 mr-2">
-                <span className="text-sm font-bold tabular-nums">
-                    {loadingPoints ? "..." : fmtInt(points)}
-                </span>
+                      <span className="text-sm font-bold tabular-nums">
+                        {loadingPoints ? "..." : fmtInt(points)}
+                      </span>
                                             <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400"/>
                                         </div>
 
-                                        {/* Separator */}
+                                        {/* Divider */}
                                         <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mr-2"/>
 
-                                        {/* Action Section */}
+                                        {/* Action */}
                                         <div className="flex items-center gap-1">
                                             <Plus className="h-3.5 w-3.5" strokeWidth={3}/>
                                             <span
@@ -573,6 +551,7 @@ export default function AppShell({children, userEmail}: Props) {
                                 <TooltipContent>Top up your balance</TooltipContent>
                             </Tooltip>
 
+                            {/* 3. AVATAR MENU */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button

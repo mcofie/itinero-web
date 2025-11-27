@@ -9,9 +9,8 @@ import {
     X,
     ArrowUpRight,
     CalendarDays,
-    Check
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {cn} from "@/lib/utils";
 
 /* ---------- Types ---------- */
 
@@ -97,35 +96,41 @@ export default function PublicItineraryClient({
 
     return (
         <section className="space-y-8">
-
             {/* Trip stats - Clean White Card */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div
+                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:bg-slate-900 dark:border-slate-800">
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     {/* Days */}
-                    <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all hover:border-slate-200 hover:bg-white hover:shadow-sm">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-                            <CalendarDays className="h-6 w-6" />
+                    <div
+                        className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all hover:border-slate-200 hover:bg-white hover:shadow-sm dark:bg-slate-800/50 dark:border-slate-800 dark:hover:bg-slate-800 dark:hover:border-slate-700">
+                        <div
+                            className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">
+                            <CalendarDays className="h-6 w-6"/>
                         </div>
                         <div className="min-w-0">
-                            <div className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">
+                            <div
+                                className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-0.5 dark:text-slate-400">
                                 Trip Length
                             </div>
-                            <div className="text-xl font-bold text-slate-900 leading-none">
+                            <div className="text-xl font-bold text-slate-900 leading-none dark:text-white">
                                 {totalDays} {totalDays === 1 ? "day" : "days"}
                             </div>
                         </div>
                     </div>
 
                     {/* Cost */}
-                    <div className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all hover:border-slate-200 hover:bg-white hover:shadow-sm">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                            <DollarSign className="h-6 w-6" />
+                    <div
+                        className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all hover:border-slate-200 hover:bg-white hover:shadow-sm dark:bg-slate-800/50 dark:border-slate-800 dark:hover:bg-slate-800 dark:hover:border-slate-700">
+                        <div
+                            className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+                            <DollarSign className="h-6 w-6"/>
                         </div>
                         <div className="min-w-0">
-                            <div className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">
+                            <div
+                                className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-0.5 dark:text-slate-400">
                                 Estimated Cost
                             </div>
-                            <div className="text-xl font-bold text-slate-900 leading-none">
+                            <div className="text-xl font-bold text-slate-900 leading-none dark:text-white">
                                 {displayCost !== null ? formatMoney(displayCost, currency) : "—"}
                             </div>
                         </div>
@@ -138,7 +143,7 @@ export default function PublicItineraryClient({
                 <div
                     role="tablist"
                     aria-label="Itinerary days"
-                    className="flex w-max gap-2 rounded-full bg-slate-100/80 p-1"
+                    className="flex w-max gap-2 rounded-full bg-slate-100/80 p-1 dark:bg-slate-800"
                 >
                     {days.map((day, i) => {
                         const selected = i === active;
@@ -153,8 +158,8 @@ export default function PublicItineraryClient({
                                 className={cn(
                                     "rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200",
                                     selected
-                                        ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200"
-                                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/50"
+                                        ? "bg-white text-blue-600 shadow-sm ring-1 ring-slate-200 dark:bg-slate-950 dark:text-blue-400 dark:ring-slate-700"
+                                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700/50"
                                 )}
                             >
                                 {dayLabel(i, day)}
@@ -180,12 +185,18 @@ export default function PublicItineraryClient({
                     />
                 </div>
             ) : (
-                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center">
-                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
-                        <CalendarDays className="h-6 w-6" />
+                <div
+                    className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center dark:border-slate-800 dark:bg-slate-900/50">
+                    <div
+                        className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+                        <CalendarDays className="h-6 w-6"/>
                     </div>
-                    <p className="text-slate-900 font-semibold">No items planned</p>
-                    <p className="text-slate-500 text-sm">This day is currently empty.</p>
+                    <p className="text-slate-900 font-semibold dark:text-white">
+                        No items planned
+                    </p>
+                    <p className="text-slate-500 text-sm dark:text-slate-400">
+                        This day is currently empty.
+                    </p>
                 </div>
             )}
         </section>
@@ -208,17 +219,22 @@ function DayCard({
     const label = day.date ? friendlyDate(day.date) : "Unscheduled";
 
     return (
-        <article className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <header className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4 bg-slate-50/50">
-                <h3 className="text-base font-bold text-slate-900">{label}</h3>
-                <span className="text-xs font-medium text-slate-500 bg-white px-2.5 py-1 rounded-md border border-slate-200">
-           {day.blocks.length} Activities
+        <article
+            className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+            <header
+                className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-950/50">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                    {label}
+                </h3>
+                <span
+                    className="text-xs font-medium text-slate-500 bg-white px-2.5 py-1 rounded-md border border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700">
+          {day.blocks.length} Activities
         </span>
             </header>
 
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {day.blocks.length === 0 && (
-                    <div className="px-6 py-8 text-center text-sm text-slate-500 italic">
+                    <div className="px-6 py-8 text-center text-sm text-slate-500 italic dark:text-slate-400">
                         No items for this day.
                     </div>
                 )}
@@ -227,9 +243,13 @@ function DayCard({
                     <ItineraryItemRow
                         key={`${block.title}-${idx}`}
                         block={block}
-                        place={block.place_id ? nameIndex.get(block.place_id) ?? null : null}
+                        place={
+                            block.place_id ? nameIndex.get(block.place_id) ?? null : null
+                        }
                         placeDetail={
-                            block.place_id ? detailIndex.get(block.place_id) ?? null : null
+                            block.place_id
+                                ? detailIndex.get(block.place_id) ?? null
+                                : null
                         }
                         currency={currency}
                     />
@@ -274,50 +294,72 @@ function ItineraryItemRow({
         };
     }, [open]);
 
-    const chips: Array<{ icon: React.ReactNode; label: string; color: string }> = [];
+    const chips: Array<{ icon: React.ReactNode; label: string; color: string }> =
+        [];
 
     if (isFiniteNum(block.est_cost) && block.est_cost! > 0)
         chips.push({
-            icon: <DollarSign className="h-3 w-3" />,
+            icon: <DollarSign className="h-3 w-3"/>,
             label: formatMoney(block.est_cost!, currency),
-            color: "text-emerald-700 bg-emerald-50 border-emerald-100",
+            color:
+                "text-emerald-700 bg-emerald-50 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50",
         });
 
     if (isFiniteNum(block.duration_min) && block.duration_min! > 0)
         chips.push({
-            icon: <Clock className="h-3 w-3" />,
+            icon: <Clock className="h-3 w-3"/>,
             label: formatMinutes(block.duration_min!),
-            color: "text-slate-600 bg-slate-50 border-slate-200",
+            color:
+                "text-slate-600 bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300",
         });
 
-    if (isFiniteNum(block.travel_min_from_prev) && block.travel_min_from_prev! > 0)
+    if (
+        isFiniteNum(block.travel_min_from_prev) &&
+        block.travel_min_from_prev! > 0
+    )
         chips.push({
-            icon: <CarFront className="h-3 w-3" />,
+            icon: <CarFront className="h-3 w-3"/>,
             label: `${block.travel_min_from_prev}m travel`,
-            color: "text-slate-500 bg-white border-slate-200",
+            color:
+                "text-slate-500 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400",
         });
 
     const whenUi = getWhenUi(block.when as any);
 
     return (
-        <div className="px-6 py-5 hover:bg-slate-50/50 transition-colors group">
+        <div className="px-6 py-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-
                 {/* Left: Time + Title + Place */}
                 <div className="flex gap-4 min-w-0">
                     {/* Time Indicator */}
-                    <div className={cn("flex-shrink-0 w-12 flex flex-col items-center gap-1 pt-1")}>
-              <span className={cn("h-8 w-8 rounded-full flex items-center justify-center text-sm bg-white border border-slate-200 shadow-sm", whenUi.text)}>
-                 {whenUi.emoji}
-              </span>
-                        <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">{block.when}</span>
+                    <div
+                        className={cn(
+                            "flex-shrink-0 w-12 flex flex-col items-center gap-1 pt-1"
+                        )}
+                    >
+            <span
+                className={cn(
+                    "h-8 w-8 rounded-full flex items-center justify-center text-sm bg-white border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700",
+                    whenUi.text
+                )}
+            >
+              {whenUi.emoji}
+            </span>
+                        <span
+                            className="text-[10px] font-bold uppercase text-slate-400 tracking-wider dark:text-slate-500">
+              {block.when}
+            </span>
                     </div>
 
                     <div className="space-y-1.5 flex-1">
-                        <h4 className="text-base font-bold text-slate-900 leading-tight">{block.title || "Untitled Activity"}</h4>
+                        <h4 className="text-base font-bold text-slate-900 leading-tight dark:text-white">
+                            {block.title || "Untitled Activity"}
+                        </h4>
 
                         {block.notes && (
-                            <p className="text-sm text-slate-600 leading-relaxed max-w-xl">{block.notes}</p>
+                            <p className="text-sm text-slate-600 leading-relaxed max-w-xl dark:text-slate-400">
+                                {block.notes}
+                            </p>
                         )}
 
                         {/* Place Button */}
@@ -326,12 +368,15 @@ function ItineraryItemRow({
                                 <button
                                     ref={anchorRef}
                                     id={buttonId(place.id)}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors border border-blue-100"
-                                    onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-900/50"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpen((v) => !v);
+                                    }}
                                     aria-expanded={open}
                                     aria-controls={open ? popId(anchorRef.current!) : undefined}
                                 >
-                                    <MapPin className="h-3.5 w-3.5" />
+                                    <MapPin className="h-3.5 w-3.5"/>
                                     <span>{place.name}</span>
                                 </button>
                             </div>
@@ -345,7 +390,10 @@ function ItineraryItemRow({
                         {chips.map((c, i) => (
                             <span
                                 key={i}
-                                className={cn("inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium", c.color)}
+                                className={cn(
+                                    "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium",
+                                    c.color
+                                )}
                             >
                 {c.icon}
                                 <span>{c.label}</span>
@@ -401,34 +449,38 @@ function Popover({
     return (
         <div
             id={popIdByAnchor(anchorId)}
-            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-100"
+            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-100 dark:bg-slate-900 dark:border-slate-700 dark:ring-white/10"
             style={style}
             role="dialog"
             aria-label={`${place.name} details`}
         >
             {/* Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3 bg-slate-50/50">
+            <div
+                className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3 bg-slate-50/50 dark:bg-slate-950/50 dark:border-slate-800">
                 <div className="min-w-0">
-                    <div className="truncate text-sm font-bold text-slate-900">{place.name}</div>
+                    <div className="truncate text-sm font-bold text-slate-900 dark:text-white">
+                        {place.name}
+                    </div>
                     {detail?.category && (
-                        <div className="truncate text-xs font-medium text-slate-500 mt-0.5">
+                        <div className="truncate text-xs font-medium text-slate-500 mt-0.5 dark:text-slate-400">
                             {detail.category}
                         </div>
                     )}
                 </div>
                 <button
-                    className="rounded-full p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors"
+                    className="rounded-full p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition-colors dark:hover:bg-slate-800 dark:hover:text-slate-200"
                     onClick={onClose}
                     aria-label="Close"
                 >
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4"/>
                 </button>
             </div>
 
             {/* Body */}
             <div className="p-4 space-y-3">
                 {detail?.photo_url && (
-                    <div className="relative h-40 w-full overflow-hidden rounded-xl border border-slate-100">
+                    <div
+                        className="relative h-40 w-full overflow-hidden rounded-xl border border-slate-100 dark:border-slate-800">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={detail.photo_url}
@@ -438,26 +490,29 @@ function Popover({
                     </div>
                 )}
                 {detail?.description && (
-                    <div className="text-xs text-slate-600 leading-relaxed">{detail.description}</div>
+                    <div className="text-xs text-slate-600 leading-relaxed dark:text-slate-300">
+                        {detail.description}
+                    </div>
                 )}
                 {detail?.address && (
-                    <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                        <MapPin className="h-3 w-3 shrink-0 mt-0.5 text-slate-400" />
+                    <div
+                        className="flex items-start gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
+                        <MapPin className="h-3 w-3 shrink-0 mt-0.5 text-slate-400 dark:text-slate-500"/>
                         <span>{detail.address}</span>
                     </div>
                 )}
             </div>
 
             {/* Footer */}
-            <div className="border-t border-slate-100 bg-slate-50/30 p-3">
+            <div className="border-t border-slate-100 bg-slate-50/30 p-3 dark:border-slate-800 dark:bg-slate-950/30">
                 <a
                     href={gmapsHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 transition-all shadow-sm active:scale-95"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 transition-all shadow-sm active:scale-95 dark:bg-blue-600 dark:hover:bg-blue-500"
                 >
                     View on Google Maps
-                    <ArrowUpRight className="h-4 w-4" />
+                    <ArrowUpRight className="h-4 w-4"/>
                 </a>
             </div>
         </div>
@@ -467,7 +522,6 @@ function Popover({
 /* ---------- Utils ---------- */
 
 function dayLabel(index: number, day: Day) {
-    // Day N • Mon, 11 Nov (or “Unscheduled”)
     const left = `Day ${index + 1}`;
     if (!day.date) return `${left}`;
     const d = new Date(`${day.date}T00:00:00`);
@@ -522,7 +576,10 @@ function friendlyDate(ymd: string) {
     });
 }
 
-function buildGoogleMapsLink(detail: PlaceDetail | undefined, fallback: PlaceLite) {
+function buildGoogleMapsLink(
+    detail: PlaceDetail | undefined,
+    fallback: PlaceLite
+) {
     const q =
         detail?.lat && detail?.lng
             ? `${detail.lat},${detail.lng}`
@@ -543,7 +600,7 @@ function daysInclusive(a: Date, b: Date) {
 
 function computeTripDays(days: Day[]) {
     const dated = days.map((d) => d.date).filter(Boolean) as string[];
-    if (dated.length === 0) return Math.max(0, days.length); // fallback to count of day entries
+    if (dated.length === 0) return Math.max(0, days.length);
     const sorted = dated.sort();
     const start = toDate(sorted[0])!;
     const end = toDate(sorted[sorted.length - 1])!;
@@ -566,10 +623,10 @@ function getWhenUi(
     when: "morning" | "afternoon" | "evening"
 ): { emoji: string; text: string } {
     if (when === "morning") {
-        return { emoji: "🌅", text: "text-amber-600" };
+        return {emoji: "🌅", text: "text-amber-600 dark:text-amber-400"};
     }
     if (when === "afternoon") {
-        return { emoji: "☀️", text: "text-orange-600" };
+        return {emoji: "☀️", text: "text-orange-600 dark:text-orange-400"};
     }
-    return { emoji: "🌙", text: "text-indigo-600" };
+    return {emoji: "🌙", text: "text-indigo-600 dark:text-indigo-400"};
 }

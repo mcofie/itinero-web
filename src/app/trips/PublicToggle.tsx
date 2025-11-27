@@ -2,14 +2,14 @@
 "use client";
 
 import * as React from "react";
-import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { setTripPublic } from "@/app/actions/trips";
-import { Link as LinkIcon, Globe, Lock, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {useState, useMemo} from "react";
+import {Button} from "@/components/ui/button";
+import {Badge} from "@/components/ui/badge";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import {setTripPublic} from "@/app/actions/trips";
+import {Link as LinkIcon, Globe, Lock, Loader2} from "lucide-react";
+import {cn} from "@/lib/utils";
 import {
     Tooltip,
     TooltipContent,
@@ -83,22 +83,17 @@ export default function PublicToggle({
     }
 
     return (
-        <div
-            className={cn(
-                "rounded-2xl border border-border/70 bg-card/70 p-4 backdrop-blur-sm",
-                className
-            )}
-        >
-            <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <div className="flex flex-col items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                     {isPublic ? (
                         <Badge className="gap-1" variant="secondary">
-                            <Globe className="h-3.5 w-3.5" />
+                            <Globe className="h-3.5 w-3.5"/>
                             Public
                         </Badge>
                     ) : (
                         <Badge className="gap-1" variant="outline">
-                            <Lock className="h-3.5 w-3.5" />
+                            <Lock className="h-3.5 w-3.5"/>
                             Private
                         </Badge>
                     )}
@@ -113,7 +108,7 @@ export default function PublicToggle({
                 <Button onClick={handleToggle} disabled={busy} className="gap-1">
                     {busy ? (
                         <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <Loader2 className="h-4 w-4 animate-spin"/>
                             Saving…
                         </>
                     ) : isPublic ? (
@@ -123,43 +118,6 @@ export default function PublicToggle({
                     )}
                 </Button>
             </div>
-
-            {isPublic && (
-                <div className="mt-4 space-y-2">
-                    <Label
-                        htmlFor="public-link"
-                        className="text-xs font-medium text-muted-foreground"
-                    >
-                        Share link
-                    </Label>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            id="public-link"
-                            readOnly
-                            value={shareUrl}
-                            className="border-dashed border-border/70 text-xs text-muted-foreground"
-                        />
-                        <TooltipProvider>
-                            <Tooltip open={copied}>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        type="button"
-                                        variant="secondary"
-                                        onClick={copy}
-                                        className="gap-1"
-                                    >
-                                        <LinkIcon className="h-4 w-4" />
-                                        Copy
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="text-xs">
-                                    Copied!
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

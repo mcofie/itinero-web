@@ -1,4 +1,3 @@
-// ./src/app/rewards/verify/VerifyTopupPage.tsx
 "use client";
 
 import * as React from "react";
@@ -9,11 +8,13 @@ import {
     RefreshCw,
     XCircle,
     ArrowLeft,
+    Loader2,
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
 import {Button} from "@/components/ui/button";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {cn} from "@/lib/utils";
 
 type VerifyState = "checking" | "success" | "timeout" | "error";
 
@@ -27,11 +28,11 @@ type VerifyResponse = {
 export default function VerifyTopupPage() {
     const sp = useSearchParams();
     const router = useRouter();
-    const reference = sp.get("reference") || sp.get("ref") || ""; // Paystack returns `reference`
+    const reference = sp.get("reference") || sp.get("ref") || "";
 
     const [state, setState] = React.useState<VerifyState>("checking");
     const [message, setMessage] = React.useState<string>(
-        "Hang tight, we’re verifying your payment…",
+        "Hang tight, we’re verifying your payment…"
     );
     const [balance, setBalance] = React.useState<number | null>(null);
     const [tries, setTries] = React.useState(0);
@@ -52,7 +53,7 @@ export default function VerifyTopupPage() {
                     method: "GET",
                     headers: {"Content-Type": "application/json"},
                     cache: "no-store",
-                },
+                }
             );
 
             const data = (await r.json()) as VerifyResponse;
@@ -84,21 +85,18 @@ export default function VerifyTopupPage() {
     React.useEffect(() => {
         if (!reference) return;
 
-        // If we've hit a terminal state, don't schedule further polls
         if (state === "success" || state === "error" || state === "timeout") {
             return;
         }
 
-        // If we've exhausted retries, move to timeout
         if (tries >= 30) {
             setState("timeout");
             setMessage(
-                "We couldn’t confirm yet. Your bank may be slow. You can refresh your balance below.",
+                "We couldn’t confirm yet. Your bank may be slow. You can refresh your balance below."
             );
             return;
         }
 
-        // Schedule a single poll in 2s
         const timeoutId = setTimeout(() => {
             void poll();
         }, 2000);
@@ -132,16 +130,16 @@ export default function VerifyTopupPage() {
                 ? XCircle
                 : state === "timeout"
                     ? Clock
-                    : RefreshCw;
+                    : Loader2;
 
     const title =
         state === "checking"
-            ? "Verifying your payment"
+            ? "Verifying Payment"
             : state === "success"
-                ? "Payment verified"
+                ? "Payment Verified"
                 : state === "timeout"
-                    ? "Still verifying"
-                    : "Verification error";
+                    ? "Still Verifying"
+                    : "Verification Error";
 
     const subtitle =
         state === "checking"
@@ -152,91 +150,103 @@ export default function VerifyTopupPage() {
                     ? "Your bank or network might be taking a bit longer than usual."
                     : "Something went wrong while confirming your payment.";
 
-    const iconRingClass =
-        state === "success"
-            ? "bg-emerald-500/10 text-emerald-500 ring-emerald-500/30"
-            : state === "error"
-                ? "bg-red-500/10 text-red-500 ring-red-500/30"
-                : state === "timeout"
-                    ? "bg-amber-500/10 text-amber-500 ring-amber-500/30"
-                    : "bg-primary/10 text-primary ring-primary/30";
+    // Theme-aware styles for status icons
+    const iconStyles = {
+        success:
+            "bg-emerald-50 text-emerald-600 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20",
+        error:
+            "bg-rose-50 text-rose-600 ring-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:ring-rose-500/20",
+        timeout:
+            "bg-amber-50 text-amber-600 ring-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20",
+        checking:
+            "bg-blue-50 text-blue-600 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20",
+    };
 
-    const iconClass = state === "checking" ? "h-8 w-8 animate-spin" : "h-8 w-8";
+    const currentStyle = iconStyles[state] || iconStyles.checking;
 
     return (
         <AppShell userEmail={null}>
-            <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-10">
-                {/* Soft background glow */}
-                <div
-                    className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.09),_transparent_55%)] dark:bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_55%)]"/>
+            <div
+                className="min-h-screen bg-slate-50/50 dark:bg-slate-950 flex items-center justify-center px-4 py-12 transition-colors duration-300">
 
-                <div className="relative z-10 w-full max-w-lg">
-                    <Card className="overflow-hidden border-border/60 bg-card/90 shadow-xl backdrop-blur">
+                {/* Decorative Background Glow */}
+                <div
+                    className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent dark:from-blue-950/20 dark:to-transparent -z-10 pointer-events-none"/>
+
+                <div className="relative z-10 w-full max-w-md">
+                    <Card
+                        className="overflow-hidden border-slate-200 bg-white shadow-xl shadow-slate-200/40 rounded-3xl dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
                         <CardHeader
-                            className="space-y-3 border-b border-border/60 bg-gradient-to-br from-primary/5 via-background to-background">
+                            className="border-b border-slate-100 bg-white/50 px-6 py-6 dark:bg-slate-900/50 dark:border-slate-800">
                             <button
                                 type="button"
                                 onClick={() => router.push("/trips")}
-                                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                                className="mb-4 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
                             >
-                                <ArrowLeft className="h-3 w-3"/>
+                                <ArrowLeft className="h-3.5 w-3.5"/>
                                 Back to trips
                             </button>
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-start gap-4">
                                 <div
-                                    className={`flex h-12 w-12 items-center justify-center rounded-full ring-2 ${iconRingClass}`}
+                                    className={cn(
+                                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-full ring-4",
+                                        currentStyle
+                                    )}
                                 >
-                                    <Icon className={iconClass}/>
+                                    <Icon className={cn("h-6 w-6", state === "checking" && "animate-spin")}/>
                                 </div>
                                 <div>
-                                    <CardTitle className="text-lg font-semibold md:text-xl">
+                                    <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">
                                         {title}
                                     </CardTitle>
-                                    <p className="mt-1 text-xs text-muted-foreground md:text-sm">
+                                    <p className="mt-1.5 text-sm text-slate-500 leading-relaxed dark:text-slate-400">
                                         {subtitle}
                                     </p>
                                 </div>
                             </div>
                         </CardHeader>
 
-                        <CardContent className="space-y-5 pt-5">
+                        <CardContent className="space-y-6 px-6 py-6">
                             {/* Status message */}
-                            <p className="text-sm text-muted-foreground">{message}</p>
+                            <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                {message}
+                            </div>
 
                             {/* Reference + balance block */}
                             <div
-                                className="grid gap-3 rounded-xl border border-border/70 bg-muted/40 p-3 text-sm sm:grid-cols-2">
-                                <div className="space-y-1">
-                                    <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                                        Payment reference
+                                className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2 dark:bg-slate-950/50 dark:border-slate-800">
+                                <div className="space-y-1.5">
+                                    <div
+                                        className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                        Payment Ref
                                     </div>
                                     <div
-                                        className="inline-flex max-w-full items-center rounded-full bg-background px-3 py-1 text-xs font-mono">
+                                        className="inline-flex max-w-full items-center rounded-md bg-white px-2 py-1 text-xs font-mono text-slate-600 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300">
                     <span className="truncate">
                       {reference || "Not available"}
                     </span>
                                     </div>
                                 </div>
 
-                                <div className="space-y-1">
-                                    <div className="text-xs uppercase tracking-wide text-muted-foreground">
-                                        Points balance
-                                    </div>
+                                <div className="space-y-1.5">
                                     <div
-                                        className="inline-flex items-baseline gap-1 rounded-xl bg-background px-3 py-2">
-                    <span className="text-xs text-muted-foreground">
-                      Current:
-                    </span>
-                                        <span className="text-base font-semibold">
+                                        className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                        New Balance
+                                    </div>
+                                    <div className="inline-flex items-baseline gap-1">
+                    <span className="text-lg font-bold text-slate-900 dark:text-white">
                       {balance ?? "—"}
                     </span>
+                                        <span
+                                            className="text-xs font-medium text-slate-500 dark:text-slate-400">pts</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Helper text */}
-                            <div className="rounded-lg bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                            <div
+                                className="rounded-xl bg-blue-50 px-4 py-3 text-xs text-blue-700 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-900/30">
                                 {state === "success" ? (
                                     <>You can now use your new points to unlock full itineraries.</>
                                 ) : state === "timeout" ? (
@@ -256,28 +266,32 @@ export default function VerifyTopupPage() {
                             </div>
 
                             {/* Actions */}
-                            <div className="flex flex-wrap gap-2 pt-1">
+                            <div className="flex flex-col gap-3 pt-2 sm:flex-row">
                                 <Button
-                                    variant="secondary"
+                                    variant="default"
                                     onClick={() => router.push("/trips")}
+                                    className="flex-1 rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
                                 >
-                                    <ArrowLeft className="mr-2 h-4 w-4"/>
-                                    Go to trips
+                                    Go to Trips
                                 </Button>
 
-                                <Button onClick={refreshBalance} variant="outline">
+                                <Button
+                                    onClick={refreshBalance}
+                                    variant="outline"
+                                    className="flex-1 rounded-xl border-slate-200 dark:border-slate-700 dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800"
+                                >
                                     <RefreshCw className="mr-2 h-4 w-4"/>
-                                    Refresh balance
+                                    Refresh
                                 </Button>
 
-                                {state !== "success" && (
+                                {state !== "success" && state !== "checking" && (
                                     <Button
-                                        type="button"
                                         variant="ghost"
                                         onClick={() => {
                                             setTries(0);
                                             void poll();
                                         }}
+                                        className="flex-1 rounded-xl hover:bg-slate-100 text-slate-600 dark:text-slate-400 dark:hover:bg-slate-800"
                                     >
                                         Try again
                                     </Button>

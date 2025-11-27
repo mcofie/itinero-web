@@ -141,7 +141,7 @@ function textWidthApprox(txt: string, size: number) {
     return txt.length * size * 0.55;
 }
 
-/** Replace characters unsupported by WinAnsi when we can't embed Unicode TTF. */
+/** Replace characters unsupported by WinAnsi when we can'share embed Unicode TTF. */
 function winAnsiSafe(s: string) {
     return s
         .replace(/\u2192/g, "->")   // →

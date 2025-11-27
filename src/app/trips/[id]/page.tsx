@@ -15,7 +15,6 @@ import {
 
 import TripViewerClient from "./TripViewerClient";
 import TripActionsClient, {TripConfig} from "@/app/trips/TripActionsClient";
-import PublicToggle from "@/app/trips/PublicToggle";
 import Image from "next/image";
 import {formatDateRange} from "@/lib/trip-dates";
 
@@ -284,7 +283,10 @@ function buildDestinationMetaFromHistoryRow(
         history: payload.history ?? undefined,
         currency_code: isString(k.currency) ? k.currency : undefined,
         plugs: isString(k.plugs)
-            ? k.plugs!.split(",").map((s) => s.trim()).filter(Boolean)
+            ? k
+                .plugs!.split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
             : undefined,
         languages:
             Array.isArray(k.languages) && isStringArray(k.languages)
@@ -295,7 +297,10 @@ function buildDestinationMetaFromHistoryRow(
                 ? (weatherObj["summary"] as string)
                 : undefined,
         transport: isString(k.getting_around)
-            ? k.getting_around!.split(",").map((s) => s.trim()).filter(Boolean)
+            ? k
+                .getting_around!.split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
             : undefined,
         esim_provider: isString(k.esim) ? k.esim : undefined,
         city: isString(k.primary_city) ? k.primary_city : undefined,
@@ -376,6 +381,9 @@ export default async function TripIdPage({
             </AppShell>
         );
     }
+
+    // Determine Currency
+    const tripCurrency = trip.currency ?? "USD";
 
     // ---- Items (ordered) ----
     const {data: items, error: itemsErr} = await sb
@@ -544,7 +552,7 @@ export default async function TripIdPage({
         trip_summary: {
             total_days: days.length,
             est_total_cost: Number(trip.est_total_cost ?? 0),
-            currency: trip.currency ?? undefined,
+            currency: tripCurrency,
             inputs: enrichedInputs as TripRow["inputs"],
             start_date: trip.start_date ?? undefined,
             end_date: trip.end_date ?? undefined,
@@ -599,9 +607,11 @@ export default async function TripIdPage({
     return (
         <AppShell userEmail={user.email ?? null}>
             <div
-                className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+                className="min-h-screen bg-slate-50/50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900 transition-colors duration-300">
+
                 {/* Hero Header */}
-                <section className="relative h-[50vh] w-full overflow-hidden">
+                <section
+                    className="relative h-[50vh] w-full overflow-hidden border-b border-slate-200 dark:border-slate-800">
                     <div className="absolute inset-0 bg-slate-900">
                         <Image
                             src={heroBackground}
@@ -620,7 +630,7 @@ export default async function TripIdPage({
                             asChild
                             variant="ghost"
                             size="sm"
-                            className="self-start rounded-full border border-white/10 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20"
+                            className="self-start rounded-full border border-white/10 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 transition-all"
                         >
                             <Link href="/trips">
                                 <ArrowLeft className="mr-2 h-4 w-4"/> Back to Trips
@@ -631,17 +641,17 @@ export default async function TripIdPage({
                             <div className="flex flex-wrap items-center gap-3">
                                 <Badge
                                     variant="outline"
-                                    className="rounded-full border-white/30 bg-white/10 px-3 py-1 text-white backdrop-blur-md"
+                                    className="rounded-full border-white/30 bg-white/10 px-3 py-1 text-white backdrop-blur-md font-medium"
                                 >
                                     <CalendarDays className="mr-2 h-3.5 w-3.5"/> {dateRange}
                                 </Badge>
                                 {typeof trip.est_total_cost === "number" && (
                                     <Badge
                                         variant="outline"
-                                        className="rounded-full border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-emerald-100 backdrop-blur-md"
+                                        className="rounded-full border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-emerald-100 backdrop-blur-md font-medium"
                                     >
                                         <DollarSign className="mr-1 h-3.5 w-3.5"/>
-                                        Est. {trip.currency ?? "USD"} {Math.round(trip.est_total_cost)}
+                                        Est. {tripCurrency} {Math.round(trip.est_total_cost)}
                                     </Badge>
                                 )}
                             </div>
@@ -669,7 +679,8 @@ export default async function TripIdPage({
                 <div className="relative z-10 -mt-8 mx-auto w-full max-w-6xl px-4 pb-20">
 
                     {/* Viewer */}
-                    <div className="mb-12 overflow-hidden">
+                    <div
+                        className="mb-12 overflow-hidden  dark:border-slate-800  transition-all">
                         <TripViewerClient
                             tripId={trip.id}
                             data={previewLike}
@@ -677,11 +688,11 @@ export default async function TripIdPage({
                         />
                     </div>
 
-                    {/* NEW: Trip Settings & Management Grid */}
+                    {/* Trip Settings & Management Grid */}
                     <div className="space-y-6">
                         <div className="flex items-center gap-2 px-2">
-                            <h3 className="text-xl font-bold text-slate-900">Trip Settings</h3>
-                            <div className="h-px flex-1 bg-slate-200"/>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Trip Settings</h3>
+                            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800"/>
                         </div>
 
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -696,7 +707,7 @@ export default async function TripIdPage({
                             <ExportCard
                                 tripId={trip.id}
                                 title={trip.title ?? "Trip"}
-                                days={days} // <--- Pass the days data here
+                                days={days}
                             />
 
                             {/* 3. Collaborators */}
