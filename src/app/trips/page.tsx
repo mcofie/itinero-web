@@ -1,9 +1,9 @@
 import * as React from "react";
 import Link from "next/link";
-import {redirect} from "next/navigation";
-import {createClientServerRSC} from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { createClientServerRSC } from "@/lib/supabase/server";
 import AppShell from "@/components/layout/AppShell";
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     CalendarDays,
     Plus,
@@ -12,7 +12,7 @@ import {
     AlertCircle,
     ArrowRight,
 } from "lucide-react";
-import {cn} from "@/lib/utils";
+
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -36,19 +36,19 @@ export default async function TripsPage() {
 
     // Auth (server-side)
     const {
-        data: {user},
+        data: { user },
     } = await sb.auth.getUser();
     if (!user) redirect("/login");
 
     // Fetch trips
-    const {data: trips, error} = await sb
+    const { data: trips, error } = await sb
         .schema("itinero")
         .from("trips")
         .select(
             "id,user_id,title,start_date,end_date,est_total_cost,currency,cover_url,created_at"
         )
         .eq("user_id", user.id)
-        .order("created_at", {ascending: false});
+        .order("created_at", { ascending: false });
 
     const tripsSafe: TripRow[] = (trips ?? []) as TripRow[];
     const hasTrips = tripsSafe.length > 0;
@@ -62,7 +62,7 @@ export default async function TripsPage() {
                             className="rounded-2xl border border-red-100 bg-white p-8 text-center shadow-sm dark:bg-red-950/10 dark:border-red-900/50">
                             <div
                                 className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400">
-                                <AlertCircle className="h-6 w-6"/>
+                                <AlertCircle className="h-6 w-6" />
                             </div>
                             <h3 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">
                                 Unable to load trips
@@ -101,7 +101,7 @@ export default async function TripsPage() {
                                     href="/trip-maker"
                                     className="inline-flex h-10 items-center justify-center rounded-full bg-blue-600 px-6 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 dark:bg-blue-600 dark:hover:bg-blue-500"
                                 >
-                                    <Plus className="mr-2 h-4 w-4"/>
+                                    <Plus className="mr-2 h-4 w-4" />
                                     New Trip
                                 </Link>
                             )}
@@ -118,19 +118,19 @@ export default async function TripsPage() {
                             >
                                 <div
                                     className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-transform group-hover:scale-110 dark:bg-blue-900/20 dark:text-blue-400">
-                                    <Plus className="h-8 w-8"/>
+                                    <Plus className="h-8 w-8" />
                                 </div>
                                 <span className="text-sm font-bold text-slate-900 dark:text-white">
-                  Create new trip
-                </span>
+                                    Create new trip
+                                </span>
                             </Link>
 
                             {tripsSafe.map((t) => (
-                                <TripCard key={t.id} trip={t}/>
+                                <TripCard key={t.id} trip={t} />
                             ))}
                         </div>
                     ) : (
-                        <EmptyState/>
+                        <EmptyState />
                     )}
                 </section>
             </div>
@@ -139,7 +139,7 @@ export default async function TripsPage() {
 }
 
 /** ---------- TripCard Component ---------- */
-function TripCard({trip}: { trip: TripRow }) {
+function TripCard({ trip }: { trip: TripRow }) {
     const title = trip.title?.trim() || "Untitled Trip";
     const dateRange = formatDateRange(trip.start_date, trip.end_date);
     const created = trip.created_at
@@ -170,10 +170,10 @@ function TripCard({trip}: { trip: TripRow }) {
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
                 <div
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                    style={{backgroundImage: `url(${imageUrl})`}}
+                    style={{ backgroundImage: `url(${imageUrl})` }}
                 />
                 <div
-                    className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"/>
+                    className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                 {/* Cost Badge */}
                 {amount && (
@@ -193,20 +193,20 @@ function TripCard({trip}: { trip: TripRow }) {
                 </div>
 
                 <div className="mt-1.5 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                    <CalendarDays className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500"/>
+                    <CalendarDays className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                     <span>{dateRange}</span>
                 </div>
 
                 <div
                     className="mt-auto flex items-center justify-between pt-4 text-xs text-slate-400 dark:text-slate-500">
-          <span className="flex items-center gap-1">
-            <Clock className="h-3 w-3"/>
-              {created}
-          </span>
+                    <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {created}
+                    </span>
                     <span
                         className="font-bold text-blue-600 opacity-0 transition-all transform translate-x-[-5px] group-hover:opacity-100 group-hover:translate-x-0 flex items-center gap-0.5 dark:text-blue-400">
-            Open <ArrowRight className="h-3 w-3"/>
-          </span>
+                        Open <ArrowRight className="h-3 w-3" />
+                    </span>
                 </div>
             </div>
         </Link>
@@ -220,7 +220,7 @@ function EmptyState() {
             className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white py-24 text-center shadow-sm dark:bg-slate-900 dark:border-slate-800">
             <div
                 className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-blue-50 ring-8 ring-blue-50/50 dark:bg-slate-800 dark:ring-slate-800/50">
-                <Plane className="h-10 w-10 text-blue-600 dark:text-blue-400"/>
+                <Plane className="h-10 w-10 text-blue-600 dark:text-blue-400" />
             </div>
 
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">

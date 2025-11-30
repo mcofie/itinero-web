@@ -13,7 +13,6 @@ import {
     CloudSun,
     User2,
     CalendarDays,
-    CreditCard,
     Wallet,
     Plane
 } from "lucide-react";

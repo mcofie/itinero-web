@@ -150,7 +150,7 @@ function groupItemsByDayIndex(items: ItemRow[]): Day[] {
     }
     return Array.from(map.entries())
         .sort((a, b) => a[0] - b[0])
-        .map(([_, v]) => ({
+        .map(([, v]) => ({
             date: v.date ?? "",
             blocks: v.items.map((it) => ({
                 id: it.id,

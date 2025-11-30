@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1175,9 +1177,11 @@ export default function ItineroDashboardClient({
                                                 >
                                                     <td className="px-4 py-3">
                                                         {d.cover_url ? (
-                                                            <img
+                                                            <Image
                                                                 src={d.cover_url}
                                                                 alt={d.name ?? "Destination"}
+                                                                width={64}
+                                                                height={40}
                                                                 className="h-10 w-16 object-cover rounded-md border border-slate-200 dark:border-slate-700"
                                                             />
                                                         ) : (

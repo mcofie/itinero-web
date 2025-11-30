@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TripWizard from "@/components/landing/TripWizard";
 import {
     Users2, FileText, Wallet, CalendarPlus, Plane, Sparkles,
     Compass, MapPin, Ticket, Mail, ArrowRight, CheckCircle2,
-    Twitter, Instagram, Linkedin, Github, Globe2, Camera
+    Star, Twitter, Instagram, Linkedin, Github, Facebook, Menu, X
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -253,7 +254,7 @@ export default function LandingPage() {
                                     transition={{ delay: i * 0.05 }}
                                     className="group relative aspect-[3/4] overflow-hidden rounded-3xl cursor-pointer"
                                 >
-                                    <img src={c.image} alt={c.name}
+                                    <Image src={c.image} alt={c.name} fill
                                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                     <div
                                         className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
@@ -459,9 +460,10 @@ function StickyFeatures() {
                                     transition={{ duration: 0.5, ease: "circOut" }}
                                     className="absolute inset-0 h-full w-full"
                                 >
-                                    <img
+                                    <Image
                                         src={WHY[activeFeature].image}
                                         alt={WHY[activeFeature].title}
+                                        fill
                                         className="w-full h-full object-cover"
                                     />
                                     {/* Subtle Overlay */}

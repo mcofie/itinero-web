@@ -1,5 +1,20 @@
 {
   "node": {
+    "40b90ca448ebc92cbe6723b53e3c950a0732913303": {
+      "workers": {
+        "app/profile/page": {
+          "moduleId": "35053",
+          "async": false,
+          "exportedName": "saveProfileAction",
+          "filename": "src/app/profile/server-actions.ts"
+        }
+      },
+      "layer": {
+        "app/profile/page": "action-browser"
+      },
+      "filename": "src/app/profile/server-actions.ts",
+      "exportedName": "saveProfileAction"
+    },
     "60927e2bbd7f83d2c6d9eaeadbade8d20bf26e5817": {
       "workers": {
         "app/trips/[id]/page": {
@@ -59,21 +74,6 @@
       },
       "filename": "src/app/actions/trips.ts",
       "exportedName": "setTripPublic"
-    },
-    "40b90ca448ebc92cbe6723b53e3c950a0732913303": {
-      "workers": {
-        "app/profile/page": {
-          "moduleId": "35053",
-          "async": false,
-          "exportedName": "saveProfileAction",
-          "filename": "src/app/profile/server-actions.ts"
-        }
-      },
-      "layer": {
-        "app/profile/page": "action-browser"
-      },
-      "filename": "src/app/profile/server-actions.ts",
-      "exportedName": "saveProfileAction"
     }
   },
   "edge": {},

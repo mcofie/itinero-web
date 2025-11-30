@@ -3,7 +3,7 @@ export default function convert(
     from: string,
     to: string,
     rates: Record<string, number>,
-    base: string = "USD"
+
 ): number {
     if (from === to) return amount;
 

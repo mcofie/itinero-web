@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Users2, FileText, Wallet, Share2, CalendarPlus } from "lucide-react";
+import { Users2, FileText, Wallet, Share2 } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const features = [
@@ -52,9 +53,10 @@ export function BentoGrid() {
                 >
                     {/* Background Image with Overlay */}
                     <div className="absolute inset-0 z-0">
-                        <img
+                        <Image
                             src={feature.image}
                             alt={feature.title}
+                            fill
                             className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-40 group-hover:opacity-30"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />

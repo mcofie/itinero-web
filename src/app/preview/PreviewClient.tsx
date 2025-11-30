@@ -8,7 +8,6 @@ import { useTheme } from "next-themes";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
     Loader2,
     CalendarDays,

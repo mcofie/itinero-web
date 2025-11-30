@@ -395,7 +395,7 @@ export default function TripViewerClient({
                                             try {
                                                 await updateTripNote(tripId, val);
                                                 toast.success("Trip note saved");
-                                            } catch (e) {
+                                            } catch {
                                                 toast.error("Failed to save note");
                                             }
                                         }}
@@ -596,7 +596,7 @@ export default function TripViewerClient({
 
 /* ---------- Reusable Inline Note Editor ---------- */
 function InlineNoteEditor({
-    id,
+    // id,
     initialValue,
     label,
     onSave,
@@ -901,7 +901,7 @@ function EditableDay({
                         try {
                             await updateDayNote(tripId, day.date, val);
                             toast.success("Day note saved");
-                        } catch (e) {
+                        } catch {
                             toast.error("Failed to save note");
                         }
                     }}
@@ -962,7 +962,7 @@ function EditableDay({
                                     try {
                                         await updateItemNote(id, val);
                                         toast.success("Note updated");
-                                    } catch (e) {
+                                    } catch {
                                         toast.error("Failed to save note");
                                     }
                                 }}

@@ -2,12 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {usePathname, useRouter} from "next/navigation";
-import {getSupabaseBrowser} from "@/lib/supabase/browser-singleton";
-import {cn} from "@/lib/utils";
+import { usePathname, useRouter } from "next/navigation";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { cn } from "@/lib/utils";
 
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
     Tooltip,
     TooltipContent,
@@ -26,7 +25,7 @@ import {
     SheetContent,
     SheetTrigger,
 } from "@/components/ui/sheet";
-import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
     LogOut,
@@ -40,11 +39,11 @@ import {
     CreditCard,
     Heart,
 } from "lucide-react";
-import {ThemeToggle} from "@/components/ThemeToggle";
-import {TopupDialogFxAware} from "@/components/layout/TopupDialogFxAware";
-import {FxSnapshot} from "@/lib/fx/types";
-import {convertUsingSnapshot, getLatestFxSnapshot} from "@/lib/fx/fx";
-import {useEffect} from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { TopupDialogFxAware } from "@/components/layout/TopupDialogFxAware";
+import { FxSnapshot } from "@/lib/fx/types";
+import { convertUsingSnapshot, getLatestFxSnapshot } from "@/lib/fx/fx";
+import { useEffect } from "react";
 
 type Props = {
     children: React.ReactNode;
@@ -53,7 +52,7 @@ type Props = {
 
 const POINT_UNIT_PRICE_GHS = 0.4; // 40 pesewas per point
 
-export default function AppShell({children, userEmail}: Props) {
+export default function AppShell({ children, userEmail }: Props) {
     const pathname = usePathname();
     const router = useRouter();
     const sb = React.useMemo(() => getSupabaseBrowser(), []);
@@ -121,7 +120,7 @@ export default function AppShell({children, userEmail}: Props) {
 
             setLoadingPoints(true);
             try {
-                const {data: sumValue, error} = await sb.rpc("sum_points_for_user", {
+                const { data: sumValue, error } = await sb.rpc("sum_points_for_user", {
                     uid: userId,
                 });
 
@@ -149,7 +148,7 @@ export default function AppShell({children, userEmail}: Props) {
             if (!userId) return;
 
             try {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("profiles")
                     .select("preferred_currency")
@@ -176,7 +175,7 @@ export default function AppShell({children, userEmail}: Props) {
 
     // -------- FX snapshot --------
     useEffect(() => {
-        const cancelled = {current: false};
+        const cancelled = { current: false };
 
         (async () => {
             try {
@@ -205,7 +204,7 @@ export default function AppShell({children, userEmail}: Props) {
 
         (async () => {
             try {
-                const {data, error} = await sb.auth.getSession();
+                const { data, error } = await sb.auth.getSession();
                 if (!mounted) return;
 
                 if (error) {
@@ -229,7 +228,7 @@ export default function AppShell({children, userEmail}: Props) {
             }
         })();
 
-        const {data: sub} = sb.auth.onAuthStateChange(async (event, session) => {
+        const { data: sub } = sb.auth.onAuthStateChange(async (event, session) => {
             if (!mounted) return;
 
             if (!session || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
@@ -344,8 +343,8 @@ export default function AppShell({children, userEmail}: Props) {
         try {
             const qRes = await fetch("/api/points/quote", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({points: pts}),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ points: pts }),
             });
 
             if (!qRes.ok) {
@@ -357,7 +356,7 @@ export default function AppShell({children, userEmail}: Props) {
 
             const initRes = await fetch("/api/paystack/init", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     quoteId: q.quoteId,
                     email: userEmail ?? "user@example.com",
@@ -415,7 +414,7 @@ export default function AppShell({children, userEmail}: Props) {
                                         size="icon"
                                         className="md:hidden h-8 w-8 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                                     >
-                                        <Menu className="h-4 w-4"/>
+                                        <Menu className="h-4 w-4" />
                                     </Button>
                                 </SheetTrigger>
                                 <SheetContent
@@ -427,10 +426,10 @@ export default function AppShell({children, userEmail}: Props) {
                                             href="/"
                                             className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400"
                                         >
-                      <span
-                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
-                        <Plane className="h-4 w-4"/>
-                      </span>
+                                            <span
+                                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
+                                                <Plane className="h-4 w-4" />
+                                            </span>
                                             Itinero
                                         </Link>
                                     </div>
@@ -439,30 +438,30 @@ export default function AppShell({children, userEmail}: Props) {
                                             href="/trips"
                                             active={pathname?.startsWith("/trips")}
                                         >
-                                            <Calendar className="mr-3 h-4 w-4"/> Trips
+                                            <Calendar className="mr-3 h-4 w-4" /> Trips
                                         </MobileNavItem>
                                         <MobileNavItem
                                             href="/preview"
                                             active={pathname === "/preview"}
                                         >
-                                            <Sparkles className="mr-3 h-4 w-4"/>
+                                            <Sparkles className="mr-3 h-4 w-4" />
                                             Preview
                                             {hasPreview && (
                                                 <span
-                                                    className="ml-auto h-2 w-2 rounded-full bg-blue-500 animate-pulse"/>
+                                                    className="ml-auto h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
                                             )}
                                         </MobileNavItem>
                                         <MobileNavItem
                                             href="/rewards"
                                             active={pathname === "/rewards"}
                                         >
-                                            <Star className="mr-3 h-4 w-4"/> Rewards
+                                            <Star className="mr-3 h-4 w-4" /> Rewards
                                         </MobileNavItem>
                                         <MobileNavItem
                                             href="/profile"
                                             active={pathname === "/profile"}
                                         >
-                                            <User className="mr-3 h-4 w-4"/> Profile
+                                            <User className="mr-3 h-4 w-4" /> Profile
                                         </MobileNavItem>
                                     </div>
                                     <div className="mt-auto p-4 border-t border-slate-100 dark:border-slate-800">
@@ -470,7 +469,7 @@ export default function AppShell({children, userEmail}: Props) {
                                             className="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600"
                                             onClick={() => router.push("/trip-maker")}
                                         >
-                                            <Plus className="mr-2 h-4 w-4"/> New Trip
+                                            <Plus className="mr-2 h-4 w-4" /> New Trip
                                         </Button>
                                     </div>
                                 </SheetContent>
@@ -480,10 +479,10 @@ export default function AppShell({children, userEmail}: Props) {
                                 href="/trips"
                                 className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400"
                             >
-                <span
-                    className="hidden md:flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
-                  <Plane className="h-4 w-4"/>
-                </span>
+                                <span
+                                    className="hidden md:flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
+                                    <Plane className="h-4 w-4" />
+                                </span>
                                 <span className="hidden sm:inline-block">Itinero</span>
                             </Link>
                         </div>
@@ -493,7 +492,7 @@ export default function AppShell({children, userEmail}: Props) {
                             <NavItem href="/preview" active={pathname === "/preview"}>
                                 Preview
                                 {hasPreview && (
-                                    <span className="ml-1.5 h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse"/>
+                                    <span className="ml-1.5 h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
                                 )}
                             </NavItem>
                             <NavItem href="/trips" active={pathname?.startsWith("/trips")}>
@@ -514,12 +513,12 @@ export default function AppShell({children, userEmail}: Props) {
                                     onClick={() => router.push("/trip-maker")}
                                     className="h-9 items-center gap-2 rounded-full bg-blue-600 px-4 text-xs font-bold uppercase tracking-wide text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md dark:bg-blue-500 dark:hover:bg-blue-400"
                                 >
-                                    <Plus className="h-3.5 w-3.5" strokeWidth={3}/>
+                                    <Plus className="h-3.5 w-3.5" strokeWidth={3} />
                                     New Trip
                                 </Button>
                             </div>
 
-                            <div className="hidden h-5 w-px bg-slate-200 sm:block dark:bg-slate-800"/>
+                            <div className="hidden h-5 w-px bg-slate-200 sm:block dark:bg-slate-800" />
 
                             {/* 2. TOP UP / BALANCE BUTTON */}
                             <Tooltip>
@@ -532,18 +531,18 @@ export default function AppShell({children, userEmail}: Props) {
                                     >
                                         {/* Balance */}
                                         <div className="flex items-center gap-1.5 mr-2">
-                      <span className="text-sm font-bold tabular-nums">
-                        {loadingPoints ? "..." : fmtInt(points)}
-                      </span>
-                                            <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400"/>
+                                            <span className="text-sm font-bold tabular-nums">
+                                                {loadingPoints ? "..." : fmtInt(points)}
+                                            </span>
+                                            <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
                                         </div>
 
                                         {/* Divider */}
-                                        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mr-2"/>
+                                        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mr-2" />
 
                                         {/* Action */}
                                         <div className="flex items-center gap-1">
-                                            <Plus className="h-3.5 w-3.5" strokeWidth={3}/>
+                                            <Plus className="h-3.5 w-3.5" strokeWidth={3} />
                                             <span
                                                 className="hidden lg:inline text-xs font-bold uppercase tracking-wide">Top Up</span>
                                         </div>
@@ -561,7 +560,7 @@ export default function AppShell({children, userEmail}: Props) {
                                         className="h-9 w-9 rounded-full p-0 ml-1 ring-2 ring-transparent hover:ring-slate-100 dark:hover:ring-slate-800"
                                     >
                                         <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700">
-                                            <AvatarImage src=""/>
+                                            <AvatarImage src="" />
                                             <AvatarFallback
                                                 className="bg-slate-100 text-slate-600 font-bold text-xs dark:bg-slate-800 dark:text-slate-300">
                                                 {initials(userEmail)}
@@ -581,30 +580,30 @@ export default function AppShell({children, userEmail}: Props) {
                                             Free Plan
                                         </p>
                                     </div>
-                                    <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800"/>
+                                    <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
                                     <DropdownMenuItem
                                         onClick={() => router.push("/profile")}
                                         className="rounded-lg cursor-pointer text-slate-600 focus:text-blue-600 focus:bg-blue-50 dark:text-slate-300 dark:focus:bg-slate-800 dark:focus:text-blue-400"
                                     >
-                                        <User className="mr-2 h-4 w-4"/> Profile
+                                        <User className="mr-2 h-4 w-4" /> Profile
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={() => router.push("/pricing")}
                                         className="rounded-lg cursor-pointer text-slate-600 focus:text-blue-600 focus:bg-blue-50 dark:text-slate-300 dark:focus:bg-slate-800 dark:focus:text-blue-400"
                                     >
-                                        <CreditCard className="mr-2 h-4 w-4"/> Billing
+                                        <CreditCard className="mr-2 h-4 w-4" /> Billing
                                     </DropdownMenuItem>
                                     <div
                                         className="flex items-center justify-between px-2 py-1.5 text-slate-600 dark:text-slate-300">
                                         <span className="text-sm">Theme</span>
-                                        <ThemeToggle/>
+                                        <ThemeToggle />
                                     </div>
-                                    <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800"/>
+                                    <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
                                     <DropdownMenuItem
                                         onClick={logout}
                                         className="rounded-lg cursor-pointer text-rose-600 focus:text-rose-700 focus:bg-rose-50 dark:text-rose-400 dark:focus:bg-rose-900/20"
                                     >
-                                        <LogOut className="mr-2 h-4 w-4"/> Log out
+                                        <LogOut className="mr-2 h-4 w-4" /> Log out
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -622,7 +621,7 @@ export default function AppShell({children, userEmail}: Props) {
                         <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
                             <div
                                 className="flex h-6 w-6 items-center justify-center rounded bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-                                <Plane className="h-3 w-3"/>
+                                <Plane className="h-3 w-3" />
                             </div>
                             Itinero
                         </div>
@@ -644,7 +643,7 @@ export default function AppShell({children, userEmail}: Props) {
                             </Link>
                             <div className="flex items-center gap-1 text-slate-400 cursor-default">
                                 Made with{" "}
-                                <Heart className="h-3 w-3 text-rose-500 fill-rose-500"/>
+                                <Heart className="h-3 w-3 text-rose-500 fill-rose-500" />
                             </div>
                         </div>
                     </div>
@@ -670,10 +669,10 @@ export default function AppShell({children, userEmail}: Props) {
 
 /* ---------- Nav Items ---------- */
 function NavItem({
-                     href,
-                     active,
-                     children,
-                 }: {
+    href,
+    active,
+    children,
+}: {
     href: string;
     active?: boolean;
     children: React.ReactNode;
@@ -694,10 +693,10 @@ function NavItem({
 }
 
 function MobileNavItem({
-                           href,
-                           active,
-                           children,
-                       }: {
+    href,
+    active,
+    children,
+}: {
     href: string;
     active?: boolean;
     children: React.ReactNode;

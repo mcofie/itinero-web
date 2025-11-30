@@ -7,27 +7,15 @@ import {
     Calendar,
     Check,
     Download,
-    Info,
     Map,
     Share2,
     Sparkles,
-    Coins,
-    CreditCard,
-    Globe,
-    Moon,
-    Sun
+    Coins
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-} from "@/components/ui/card";
+
 import { Accordion, AccordionItem, AccordionContent, AccordionTrigger } from "@/components/ui/accordion";
-import { Separator } from "@/components/ui/separator";
+
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 
@@ -94,7 +82,7 @@ export default function PricingPage() {
         []
     );
 
-    const baseDisplayAmount = convertFromGhs(baseBundle.ghs, displayCur);
+
 
     return (
         <div

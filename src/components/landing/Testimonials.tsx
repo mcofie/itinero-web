@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Star } from "lucide-react";
 
 const testimonials = [
@@ -58,9 +59,11 @@ export function Testimonials() {
                             className="flex-shrink-0 w-[350px] rounded-2xl border border-border bg-card p-6 shadow-sm"
                         >
                             <div className="flex items-center gap-3 mb-4">
-                                <img
+                                <Image
                                     src={t.avatar}
                                     alt={t.name}
+                                    width={40}
+                                    height={40}
                                     className="h-10 w-10 rounded-full object-cover border border-border"
                                 />
                                 <div>

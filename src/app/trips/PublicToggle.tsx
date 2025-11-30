@@ -1,21 +1,11 @@
-// app/trips/PublicToggle.tsx
 "use client";
 
 import * as React from "react";
-import {useState, useMemo} from "react";
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {setTripPublic} from "@/app/actions/trips";
-import {Link as LinkIcon, Globe, Lock, Loader2} from "lucide-react";
-import {cn} from "@/lib/utils";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { setTripPublic } from "@/app/actions/trips";
+import { Link as LinkIcon, Globe, Lock, Loader2 } from "lucide-react";
 
 type SetTripPublicResult = {
     public_id: string | null;
@@ -23,10 +13,10 @@ type SetTripPublicResult = {
 } | void;
 
 export default function PublicToggle({
-                                         tripId,
-                                         publicId,
-                                         className,
-                                     }: {
+    tripId,
+    publicId,
+    className,
+}: {
     tripId: string;
     publicId?: string | null;
     className?: string;
@@ -36,7 +26,6 @@ export default function PublicToggle({
         publicId ?? null
     );
     const [busy, setBusy] = useState(false);
-    const [copied, setCopied] = useState(false);
 
     const isPublic = !!currentPublicId;
 
@@ -70,30 +59,18 @@ export default function PublicToggle({
         }
     }
 
-    async function copy() {
-        if (!shareUrl) return;
-        try {
-            await navigator.clipboard.writeText(shareUrl);
-            setCopied(true);
-            // Hide after 1.5s
-            setTimeout(() => setCopied(false), 1500);
-        } catch {
-            // optional: toast fallback
-        }
-    }
-
     return (
         <div>
             <div className="flex flex-col items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                     {isPublic ? (
                         <Badge className="gap-1" variant="secondary">
-                            <Globe className="h-3.5 w-3.5"/>
+                            <Globe className="h-3.5 w-3.5" />
                             Public
                         </Badge>
                     ) : (
                         <Badge className="gap-1" variant="outline">
-                            <Lock className="h-3.5 w-3.5"/>
+                            <Lock className="h-3.5 w-3.5" />
                             Private
                         </Badge>
                     )}
@@ -108,7 +85,7 @@ export default function PublicToggle({
                 <Button onClick={handleToggle} disabled={busy} className="gap-1">
                     {busy ? (
                         <>
-                            <Loader2 className="h-4 w-4 animate-spin"/>
+                            <Loader2 className="h-4 w-4 animate-spin" />
                             Saving…
                         </>
                     ) : isPublic ? (
