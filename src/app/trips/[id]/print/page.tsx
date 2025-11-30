@@ -667,7 +667,7 @@ export default async function TripPrintPage({
                                                 <div>
                                                     <div className="tiny muted">Weather</div>
                                                     <div
-                                                        style={{ fontWeight: 600 }}>{typeof kbyg.weather === 'object' && (kbyg.weather as any).summary ? (kbyg.weather as any).summary : '—'}</div>
+                                                        style={{ fontWeight: 600 }}>{typeof kbyg.weather === 'object' && (kbyg.weather as { summary?: string }).summary ? (kbyg.weather as { summary?: string }).summary : '—'}</div>
                                                 </div>
                                             </div>
                                         )}

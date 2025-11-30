@@ -10,7 +10,7 @@ import {
     ArrowUpRight,
     CalendarDays,
 } from "lucide-react";
-import {cn} from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 /* ---------- Types ---------- */
 
@@ -48,13 +48,13 @@ type PlaceDetail = {
 };
 
 export default function PublicItineraryClient({
-                                                  currency,
-                                                  estTotalCost,
-                                                  tripSummary, // unused here, but kept to preserve prop shape
-                                                  days,
-                                                  places,
-                                                  placeDetails = [],
-                                              }: {
+    currency,
+    estTotalCost,
+    tripSummary, // unused here, but kept to preserve prop shape
+    days,
+    places,
+    placeDetails = [],
+}: {
     currency: string;
     estTotalCost: number | null;
     tripSummary: Record<string, unknown> | null;
@@ -105,7 +105,7 @@ export default function PublicItineraryClient({
                         className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all hover:border-slate-200 hover:bg-white hover:shadow-sm dark:bg-slate-800/50 dark:border-slate-800 dark:hover:bg-slate-800 dark:hover:border-slate-700">
                         <div
                             className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">
-                            <CalendarDays className="h-6 w-6"/>
+                            <CalendarDays className="h-6 w-6" />
                         </div>
                         <div className="min-w-0">
                             <div
@@ -123,7 +123,7 @@ export default function PublicItineraryClient({
                         className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all hover:border-slate-200 hover:bg-white hover:shadow-sm dark:bg-slate-800/50 dark:border-slate-800 dark:hover:bg-slate-800 dark:hover:border-slate-700">
                         <div
                             className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
-                            <DollarSign className="h-6 w-6"/>
+                            <DollarSign className="h-6 w-6" />
                         </div>
                         <div className="min-w-0">
                             <div
@@ -189,7 +189,7 @@ export default function PublicItineraryClient({
                     className="rounded-3xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center dark:border-slate-800 dark:bg-slate-900/50">
                     <div
                         className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
-                        <CalendarDays className="h-6 w-6"/>
+                        <CalendarDays className="h-6 w-6" />
                     </div>
                     <p className="text-slate-900 font-semibold dark:text-white">
                         No items planned
@@ -206,11 +206,11 @@ export default function PublicItineraryClient({
 /* ---------- Day + Item ---------- */
 
 function DayCard({
-                     day,
-                     nameIndex,
-                     detailIndex,
-                     currency,
-                 }: {
+    day,
+    nameIndex,
+    detailIndex,
+    currency,
+}: {
     day: Day;
     nameIndex: Map<string, PlaceLite>;
     detailIndex: Map<string, PlaceDetail>;
@@ -228,8 +228,8 @@ function DayCard({
                 </h3>
                 <span
                     className="text-xs font-medium text-slate-500 bg-white px-2.5 py-1 rounded-md border border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700">
-          {day.blocks.length} Activities
-        </span>
+                    {day.blocks.length} Activities
+                </span>
             </header>
 
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -260,11 +260,11 @@ function DayCard({
 }
 
 function ItineraryItemRow({
-                              block,
-                              place,
-                              placeDetail,
-                              currency,
-                          }: {
+    block,
+    place,
+    placeDetail,
+    currency,
+}: {
     block: DayBlock;
     place: PlaceLite | null;
     placeDetail: PlaceDetail | null;
@@ -299,7 +299,7 @@ function ItineraryItemRow({
 
     if (isFiniteNum(block.est_cost) && block.est_cost! > 0)
         chips.push({
-            icon: <DollarSign className="h-3 w-3"/>,
+            icon: <DollarSign className="h-3 w-3" />,
             label: formatMoney(block.est_cost!, currency),
             color:
                 "text-emerald-700 bg-emerald-50 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50",
@@ -307,7 +307,7 @@ function ItineraryItemRow({
 
     if (isFiniteNum(block.duration_min) && block.duration_min! > 0)
         chips.push({
-            icon: <Clock className="h-3 w-3"/>,
+            icon: <Clock className="h-3 w-3" />,
             label: formatMinutes(block.duration_min!),
             color:
                 "text-slate-600 bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300",
@@ -318,13 +318,13 @@ function ItineraryItemRow({
         block.travel_min_from_prev! > 0
     )
         chips.push({
-            icon: <CarFront className="h-3 w-3"/>,
+            icon: <CarFront className="h-3 w-3" />,
             label: `${block.travel_min_from_prev}m travel`,
             color:
                 "text-slate-500 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400",
         });
 
-    const whenUi = getWhenUi(block.when as any);
+    const whenUi = getWhenUi(block.when as "morning" | "afternoon" | "evening");
 
     return (
         <div className="px-6 py-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
@@ -337,18 +337,18 @@ function ItineraryItemRow({
                             "flex-shrink-0 w-12 flex flex-col items-center gap-1 pt-1"
                         )}
                     >
-            <span
-                className={cn(
-                    "h-8 w-8 rounded-full flex items-center justify-center text-sm bg-white border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700",
-                    whenUi.text
-                )}
-            >
-              {whenUi.emoji}
-            </span>
+                        <span
+                            className={cn(
+                                "h-8 w-8 rounded-full flex items-center justify-center text-sm bg-white border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700",
+                                whenUi.text
+                            )}
+                        >
+                            {whenUi.emoji}
+                        </span>
                         <span
                             className="text-[10px] font-bold uppercase text-slate-400 tracking-wider dark:text-slate-500">
-              {block.when}
-            </span>
+                            {block.when}
+                        </span>
                     </div>
 
                     <div className="space-y-1.5 flex-1">
@@ -376,7 +376,7 @@ function ItineraryItemRow({
                                     aria-expanded={open}
                                     aria-controls={open ? popId(anchorRef.current!) : undefined}
                                 >
-                                    <MapPin className="h-3.5 w-3.5"/>
+                                    <MapPin className="h-3.5 w-3.5" />
                                     <span>{place.name}</span>
                                 </button>
                             </div>
@@ -395,9 +395,9 @@ function ItineraryItemRow({
                                     c.color
                                 )}
                             >
-                {c.icon}
+                                {c.icon}
                                 <span>{c.label}</span>
-              </span>
+                            </span>
                         ))}
                     </div>
                 )}
@@ -419,11 +419,11 @@ function ItineraryItemRow({
 /* ---------- Popover ---------- */
 
 function Popover({
-                     anchorId,
-                     onClose,
-                     place,
-                     detail,
-                 }: {
+    anchorId,
+    onClose,
+    place,
+    detail,
+}: {
     anchorId: string;
     onClose: () => void;
     place: PlaceLite;
@@ -472,7 +472,7 @@ function Popover({
                     onClick={onClose}
                     aria-label="Close"
                 >
-                    <X className="h-4 w-4"/>
+                    <X className="h-4 w-4" />
                 </button>
             </div>
 
@@ -497,7 +497,7 @@ function Popover({
                 {detail?.address && (
                     <div
                         className="flex items-start gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
-                        <MapPin className="h-3 w-3 shrink-0 mt-0.5 text-slate-400 dark:text-slate-500"/>
+                        <MapPin className="h-3 w-3 shrink-0 mt-0.5 text-slate-400 dark:text-slate-500" />
                         <span>{detail.address}</span>
                     </div>
                 )}
@@ -512,7 +512,7 @@ function Popover({
                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 transition-all shadow-sm active:scale-95 dark:bg-blue-600 dark:hover:bg-blue-500"
                 >
                     View on Google Maps
-                    <ArrowUpRight className="h-4 w-4"/>
+                    <ArrowUpRight className="h-4 w-4" />
                 </a>
             </div>
         </div>
@@ -623,10 +623,10 @@ function getWhenUi(
     when: "morning" | "afternoon" | "evening"
 ): { emoji: string; text: string } {
     if (when === "morning") {
-        return {emoji: "🌅", text: "text-amber-600 dark:text-amber-400"};
+        return { emoji: "🌅", text: "text-amber-600 dark:text-amber-400" };
     }
     if (when === "afternoon") {
-        return {emoji: "☀️", text: "text-orange-600 dark:text-orange-400"};
+        return { emoji: "☀️", text: "text-orange-600 dark:text-orange-400" };
     }
-    return {emoji: "🌙", text: "text-indigo-600 dark:text-indigo-400"};
+    return { emoji: "🌙", text: "text-indigo-600 dark:text-indigo-400" };
 }

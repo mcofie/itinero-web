@@ -1,21 +1,21 @@
 "use client";
 
 import * as React from "react";
-import {useEffect, useMemo, useState} from "react";
-import {useRouter} from "next/navigation";
-import {motion, AnimatePresence} from "framer-motion";
-import {CurrencySelect} from "@/components/CurrencySelect";
-import {getCurrencyMeta} from "@/lib/currency-data";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { CurrencySelect } from "@/components/CurrencySelect";
+import { getCurrencyMeta } from "@/lib/currency-data";
 
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Calendar} from "@/components/ui/calendar";
-import {cn} from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
-import {getSupabaseBrowser} from "@/lib/supabase/browser-singleton";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 
-import {DateRange} from "react-day-picker";
+import { DateRange } from "react-day-picker";
 import {
     CalendarDays,
     ChevronLeft,
@@ -87,14 +87,14 @@ const DEFAULT_INTERESTS = [
 ] as const;
 
 const STEPS = [
-    {key: "dest", label: "Where", icon: MapPin},
-    {key: "dates", label: "When", icon: CalendarDays},
-    {key: "budget", label: "Budget", icon: Footprints},
-    {key: "interests", label: "Vibe", icon: Sparkles},
-    {key: "pace", label: "Pace", icon: Clock},
-    {key: "mode", label: "Travel", icon: Car},
-    {key: "lodging", label: "Stay", icon: Users},
-    {key: "review", label: "Ready", icon: Check},
+    { key: "dest", label: "Where", icon: MapPin },
+    { key: "dates", label: "When", icon: CalendarDays },
+    { key: "budget", label: "Budget", icon: Footprints },
+    { key: "interests", label: "Vibe", icon: Sparkles },
+    { key: "pace", label: "Pace", icon: Clock },
+    { key: "mode", label: "Travel", icon: Car },
+    { key: "lodging", label: "Stay", icon: Users },
+    { key: "review", label: "Ready", icon: Check },
 ] as const;
 
 /* ================== Main Wizard ================== */
@@ -107,14 +107,14 @@ export default function TripWizard() {
     const [authOpen, setAuthOpen] = useState(false);
 
     const [state, setState] = useState<RequestBody>({
-        destinations: [{id: "", name: ""}],
+        destinations: [{ id: "", name: "" }],
         start_date: "",
         end_date: "",
         budget_daily: "",
         interests: ["culture", "food"],
         pace: "balanced",
         mode: "car",
-        lodging: {name: ""},
+        lodging: { name: "" },
         currency: "USD",
     });
 
@@ -147,7 +147,7 @@ export default function TripWizard() {
     }, [router, sb]);
 
     const isTokenError = (err: unknown) => {
-        const anyErr = err as any;
+        const anyErr = err as { message?: string; status?: number; code?: number; name?: string };
         const msg: string = anyErr?.message ?? "";
         const status: number | undefined = anyErr?.status ?? anyErr?.code;
 
@@ -164,7 +164,7 @@ export default function TripWizard() {
         try {
             const stored = window.localStorage.getItem("itinero:currency");
             const code = (stored || "USD").toUpperCase();
-            setState((s) => ({...s, currency: s.currency ?? code}));
+            setState((s) => ({ ...s, currency: s.currency ?? code }));
         } catch (e) {
             console.error("[TripWizard] reading itinero:currency failed:", e);
         }
@@ -172,7 +172,7 @@ export default function TripWizard() {
 
     // Auth listener (wizard-specific)
     useEffect(() => {
-        const {data: sub} = sb.auth.onAuthStateChange(async (evt) => {
+        const { data: sub } = sb.auth.onAuthStateChange(async (evt) => {
             if (evt === "SIGNED_IN") {
                 router.replace("/preview");
                 router.refresh();
@@ -211,7 +211,7 @@ export default function TripWizard() {
             const payload = toPayload(state);
             console.log("[TripWizard] invoking build_preview_itinerary with payload:", payload);
 
-            const {data, error} = await sb.functions.invoke("build_preview_itinerary", {
+            const { data, error } = await sb.functions.invoke("build_preview_itinerary", {
                 body: payload,
             });
 
@@ -245,11 +245,11 @@ export default function TripWizard() {
             // --- try to get user; "no session" is NOT fatal ---
             let user = null;
             try {
-                const {data: userData, error: userError} = await sb.auth.getUser();
+                const { data: userData, error: userError } = await sb.auth.getUser();
 
                 if (userError) {
                     // This one just means "anonymous user" – we *expect* this for logged-out trips
-                    if ((userError as any).name === "AuthSessionMissingError") {
+                    if ((userError as { name?: string }).name === "AuthSessionMissingError") {
                         console.info(
                             "[TripWizard auth.getUser] no active session; treating as anonymous user"
                         );
@@ -293,18 +293,18 @@ export default function TripWizard() {
 
     const handleRangeChange = (range: DateRangeValue) => {
         if (!range) {
-            setState((s) => ({...s, start_date: "", end_date: ""}));
+            setState((s) => ({ ...s, start_date: "", end_date: "" }));
             return;
         }
         const from = range.from ? toDateOnlyString(range.from) : "";
         const to = range.to ? toDateOnlyString(range.to) : "";
-        setState((s) => ({...s, start_date: from, end_date: to}));
+        setState((s) => ({ ...s, start_date: from, end_date: to }));
     };
 
     const selectedRange: DateRangeValue = useMemo(() => {
         const from = parseDateOnlyString(state.start_date);
         const to = parseDateOnlyString(state.end_date);
-        return from || to ? {from, to} : undefined;
+        return from || to ? { from, to } : undefined;
     }, [state.start_date, state.end_date]);
 
     const dateDisplay =
@@ -324,8 +324,8 @@ export default function TripWizard() {
                         </div>
                         <span
                             className="text-sm font-semibold text-slate-600 uppercase tracking-wide dark:text-slate-400">
-              {STEPS[step].label}
-            </span>
+                            {STEPS[step].label}
+                        </span>
                     </div>
 
                     {/* Segmented Progress Bar */}
@@ -358,7 +358,7 @@ export default function TripWizard() {
                                         <DestinationField
                                             value={state.destinations[0]}
                                             onChange={(d) =>
-                                                setState((s) => ({...s, destinations: [d]}))
+                                                setState((s) => ({ ...s, destinations: [d] }))
                                             }
                                         />
                                     </FieldBlock>
@@ -386,7 +386,7 @@ export default function TripWizard() {
                                                         : undefined
                                                 }
                                                 onSelect={handleRangeChange}
-                                                disabled={[{before: new Date()}]}
+                                                disabled={[{ before: new Date() }]}
                                                 className="bg-transparent"
                                                 classNames={{
                                                     months: "gap-4",
@@ -414,9 +414,9 @@ export default function TripWizard() {
                                             <div className="relative flex-1">
                                                 <div
                                                     className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                          <span className="text-slate-500 dark:text-slate-400">
-                            {getCurrencyMeta(state.currency).symbol}
-                          </span>
+                                                    <span className="text-slate-500 dark:text-slate-400">
+                                                        {getCurrencyMeta(state.currency).symbol}
+                                                    </span>
                                                 </div>
                                                 <Input
                                                     type="number"
@@ -438,7 +438,7 @@ export default function TripWizard() {
                                             <CurrencySelect
                                                 value={state.currency}
                                                 onChange={(c) =>
-                                                    setState((s) => ({...s, currency: c}))
+                                                    setState((s) => ({ ...s, currency: c }))
                                                 }
                                             />
                                         </div>
@@ -449,7 +449,7 @@ export default function TripWizard() {
                                                     key={amt}
                                                     type="button"
                                                     onClick={() =>
-                                                        setState((s) => ({...s, budget_daily: amt}))
+                                                        setState((s) => ({ ...s, budget_daily: amt }))
                                                     }
                                                     className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-blue-600 hover:text-blue-600 dark:border-slate-700 dark:text-slate-400 dark:hover:border-blue-500 dark:hover:text-blue-500"
                                                 >
@@ -513,7 +513,7 @@ export default function TripWizard() {
                                                     label={opt}
                                                     selected={state.pace === opt}
                                                     onClick={() =>
-                                                        setState((s) => ({...s, pace: opt}))
+                                                        setState((s) => ({ ...s, pace: opt }))
                                                     }
                                                     emoji={
                                                         opt === "chill"
@@ -541,7 +541,7 @@ export default function TripWizard() {
                                                         label={opt}
                                                         selected={state.mode === opt}
                                                         onClick={() =>
-                                                            setState((s) => ({...s, mode: opt}))
+                                                            setState((s) => ({ ...s, mode: opt }))
                                                         }
                                                         emoji={
                                                             opt === "car"
@@ -576,7 +576,7 @@ export default function TripWizard() {
                                                     setState((s) => ({
                                                         ...s,
                                                         lodging: v
-                                                            ? {name: v.name ?? ""}
+                                                            ? { name: v.name ?? "" }
                                                             : undefined,
                                                     }))
                                                 }
@@ -597,7 +597,7 @@ export default function TripWizard() {
                             {/* STEP 7: REVIEW */}
                             {step === 7 && (
                                 <Slide key="review">
-                                    <ReviewCard data={toPayload(state)} onEdit={jumpTo}/>
+                                    <ReviewCard data={toPayload(state)} onEdit={jumpTo} />
                                 </Slide>
                             )}
                         </AnimatePresence>
@@ -612,7 +612,7 @@ export default function TripWizard() {
                             disabled={step === 0 || busy}
                             className="text-slate-500 hover:bg-slate-200/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                         >
-                            <ChevronLeft className="mr-2 h-4 w-4"/> Back
+                            <ChevronLeft className="mr-2 h-4 w-4" /> Back
                         </Button>
 
                         <Button
@@ -628,15 +628,15 @@ export default function TripWizard() {
                         >
                             {busy ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/> Generating...
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating...
                                 </>
                             ) : step === STEPS.length - 1 ? (
                                 <>
-                                    Create Itinerary <Sparkles className="ml-2 h-4 w-4"/>
+                                    Create Itinerary <Sparkles className="ml-2 h-4 w-4" />
                                 </>
                             ) : (
                                 <>
-                                    Next <ChevronRight className="ml-2 h-4 w-4"/>
+                                    Next <ChevronRight className="ml-2 h-4 w-4" />
                                 </>
                             )}
                         </Button>
@@ -657,13 +657,13 @@ export default function TripWizard() {
 
 /* ================== Sub-components ================== */
 
-function Slide({children}: { children: React.ReactNode }) {
+function Slide({ children }: { children: React.ReactNode }) {
     return (
         <motion.div
-            initial={{opacity: 0, x: 20}}
-            animate={{opacity: 1, x: 0}}
-            exit={{opacity: 0, x: -20}}
-            transition={{duration: 0.3, ease: "easeOut"}}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className="h-full flex flex-col justify-center"
         >
             {children}
@@ -672,13 +672,13 @@ function Slide({children}: { children: React.ReactNode }) {
 }
 
 function FieldBlock({
-                        label,
-                        icon: Icon,
-                        hint,
-                        children,
-                    }: {
+    label,
+    icon: Icon,
+    hint,
+    children,
+}: {
     label: string;
-    icon: any;
+    icon: React.ElementType;
     hint?: string;
     children: React.ReactNode;
 }) {
@@ -687,7 +687,7 @@ function FieldBlock({
             <div className="flex items-center gap-3">
                 <div
                     className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
-                    <Icon className="h-6 w-6"/>
+                    <Icon className="h-6 w-6" />
                 </div>
                 <div>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -706,11 +706,11 @@ function FieldBlock({
 }
 
 function SelectionCard({
-                           label,
-                           selected,
-                           onClick,
-                           emoji,
-                       }: {
+    label,
+    selected,
+    onClick,
+    emoji,
+}: {
     label: string;
     selected: boolean;
     onClick: () => void;
@@ -735,9 +735,9 @@ function SelectionCard({
 
 // --- DESTINATION FIELD ---
 function DestinationField({
-                              value,
-                              onChange,
-                          }: {
+    value,
+    onChange,
+}: {
     value: Destination;
     onChange: (d: Destination) => void;
 }) {
@@ -755,7 +755,7 @@ function DestinationField({
 
         const t = setTimeout(async () => {
             try {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("destinations")
                     .select("id,name,lat,lng")
@@ -768,7 +768,7 @@ function DestinationField({
                 }
 
                 if (data) {
-                    setRows(data.map((r) => ({...r, id: String(r.id)})));
+                    setRows(data.map((r) => ({ ...r, id: String(r.id) })));
                 }
             } catch (e) {
                 console.error("[DestinationField] destinations query threw:", e);
@@ -785,7 +785,7 @@ function DestinationField({
                 onChange={(e) => {
                     setQ(e.target.value);
                     setOpen(true);
-                    onChange({...value, name: e.target.value, id: undefined});
+                    onChange({ ...value, name: e.target.value, id: undefined });
                 }}
                 onFocus={() => setOpen(true)}
                 className="h-14 w-full rounded-2xl border-slate-200 bg-slate-50 pl-4 text-lg shadow-sm focus-visible:ring-blue-600 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
@@ -805,12 +805,12 @@ function DestinationField({
                                 setOpen(false);
                             }}
                         >
-              <span className="font-medium text-slate-700 dark:text-slate-200">
-                {r.name}
-              </span>
+                            <span className="font-medium text-slate-700 dark:text-slate-200">
+                                {r.name}
+                            </span>
                             <span className="text-xs text-slate-400 dark:text-slate-500">
-                Select
-              </span>
+                                Select
+                            </span>
                         </button>
                     ))}
                 </div>
@@ -821,9 +821,9 @@ function DestinationField({
 
 // --- REVIEW CARD ---
 function ReviewCard({
-                        data,
-                        onEdit,
-                    }: {
+    data,
+    onEdit,
+}: {
     data: ReturnType<typeof toPayload>;
     onEdit: (i: number) => void;
 }) {
@@ -892,10 +892,10 @@ function ReviewCard({
 }
 
 function ReviewRow({
-                       label,
-                       value,
-                       onEdit,
-                   }: {
+    label,
+    value,
+    onEdit,
+}: {
     label: string;
     value: string;
     onEdit: () => void;
@@ -940,7 +940,7 @@ function toPayload(s: RequestBody) {
         interests: s.interests,
         pace: s.pace,
         mode: s.mode,
-        lodging: s.lodging?.name ? {name: s.lodging.name} : undefined,
+        lodging: s.lodging?.name ? { name: s.lodging.name } : undefined,
         currency: s.currency,
     };
 }

@@ -74,7 +74,7 @@ export function Testimonials() {
                                 </div>
                             </div>
                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                "{t.text}"
+                                &quot;{t.text}&quot;
                             </p>
                         </div>
                     ))}

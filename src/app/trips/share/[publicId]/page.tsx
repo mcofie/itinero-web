@@ -1,8 +1,8 @@
 import * as React from "react";
-import type {Metadata} from "next";
+import type { Metadata } from "next";
 import Image from "next/image";
-import {notFound} from "next/navigation";
-import {createClientServerRSC} from "@/lib/supabase/server";
+import { notFound } from "next/navigation";
+import { createClientServerRSC } from "@/lib/supabase/server";
 import PublicItineraryClient from "./public-itinerary-client";
 import {
     MapPin,
@@ -19,8 +19,8 @@ import {
 } from "lucide-react";
 import MapSection from "@/app/trips/share/[publicId]/MapSection";
 import Link from "next/link";
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 /* ---------------- Types (Preserved) ---------------- */
 
@@ -49,42 +49,42 @@ export type PlaceLite = {
 
 type TripRowLoose =
     | {
-    id: string;
-    public_id?: string | null;
-    user_id?: string | null;
-    title?: string | null;
-    start_date?: string | null;
-    end_date?: string | null;
-    est_total_cost?: number | null;
-    currency?: string | null;
-    created_at?: string | null;
-    inputs?: unknown;
-    trip_summary?: unknown;
-    days?: unknown; // legacy
-    places?: unknown;
-    cover_url?: string | null;
-    destination_id?: string | null;
-}
+        id: string;
+        public_id?: string | null;
+        user_id?: string | null;
+        title?: string | null;
+        start_date?: string | null;
+        end_date?: string | null;
+        est_total_cost?: number | null;
+        currency?: string | null;
+        created_at?: string | null;
+        inputs?: unknown;
+        trip_summary?: unknown;
+        days?: unknown; // legacy
+        places?: unknown;
+        cover_url?: string | null;
+        destination_id?: string | null;
+    }
     | null;
 
 type DestinationRow =
     | {
-    id: string;
-    name: string | null;
-    current_history_id: string | null;
-}
+        id: string;
+        name: string | null;
+        current_history_id: string | null;
+    }
     | null;
 
 type DestinationHistoryRow =
     | {
-    id?: string;
-    section?: string | null;
-    payload?: unknown;
-    sources?: unknown;
-    created_at?: string | Date | null;
-    backdrop_image_url?: string | null;
-    backdrop_image_attribution?: string | null;
-}
+        id?: string;
+        section?: string | null;
+        payload?: unknown;
+        sources?: unknown;
+        created_at?: string | Date | null;
+        backdrop_image_url?: string | null;
+        backdrop_image_attribution?: string | null;
+    }
     | null;
 
 type ItineroKBYG = {
@@ -126,26 +126,26 @@ type DestinationMetaLike = {
 
 type ProfileRow =
     | {
-    id: string;
-    full_name?: string | null;
-    avatar_url?: string | null;
-    username?: string | null;
-}
+        id: string;
+        full_name?: string | null;
+        avatar_url?: string | null;
+        username?: string | null;
+    }
     | null;
 
 type ItineraryItemRow =
     | {
-    id: string;
-    trip_id: string;
-    place_id?: string | null;
-    title?: string | null;
-    notes?: string | null;
-    est_cost?: number | null;
-    duration_min?: number | null;
-    travel_min_from_prev?: number | null;
-    date?: string | null;
-    when?: string | null;
-}
+        id: string;
+        trip_id: string;
+        place_id?: string | null;
+        title?: string | null;
+        notes?: string | null;
+        est_cost?: number | null;
+        duration_min?: number | null;
+        travel_min_from_prev?: number | null;
+        date?: string | null;
+        when?: string | null;
+    }
     | null;
 
 /* ---------------- Helpers ---------------- */
@@ -479,14 +479,14 @@ function safeNum(n: unknown): number | null {
 /* ---------------- Metadata ---------------- */
 
 export async function generateMetadata({
-                                           params,
-                                       }: {
+    params,
+}: {
     params: Promise<{ publicId: string }>;
 }): Promise<Metadata> {
-    const {publicId} = await params;
+    const { publicId } = await params;
     const sb = await createClientServerRSC();
 
-    const {data: trip} = await sb
+    const { data: trip } = await sb
         .schema("itinero")
         .from("trips")
         .select("title, cover_url, start_date, end_date, destination_id")
@@ -498,7 +498,7 @@ export async function generateMetadata({
         "https://images.unsplash.com/photo-1526772662000-3b5ec3a7fe05ff?q=80&w=1600&auto=format&fit=crop";
 
     if (trip?.destination_id) {
-        const {data: dest} = await sb
+        const { data: dest } = await sb
             .schema("itinero")
             .from("destinations")
             .select("id,current_history_id")
@@ -506,7 +506,7 @@ export async function generateMetadata({
             .maybeSingle<DestinationRow>();
 
         if (dest?.current_history_id) {
-            const {data: hist} = await sb
+            const { data: hist } = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select("id,backdrop_image_url")
@@ -533,7 +533,7 @@ export async function generateMetadata({
         openGraph: {
             title,
             description,
-            images: [{url: ogImage, width: 1600, height: 840}],
+            images: [{ url: ogImage, width: 1600, height: 840 }],
         },
         twitter: {
             card: "summary_large_image",
@@ -547,14 +547,14 @@ export async function generateMetadata({
 /* ---------------- Main Page Component ---------------- */
 
 export default async function PublicTripPage({
-                                                 params,
-                                             }: {
+    params,
+}: {
     params: Promise<{ publicId: string }>;
 }) {
-    const {publicId} = await params;
+    const { publicId } = await params;
     const sb = await createClientServerRSC();
 
-    const {data, error} = await sb
+    const { data, error } = await sb
         .schema("itinero")
         .from("trips")
         .select("*")
@@ -568,7 +568,7 @@ export default async function PublicTripPage({
 
     let owner: ProfileRow = null;
     if (data.user_id) {
-        const {data: o} = await sb
+        const { data: o } = await sb
             .schema("itinero")
             .from("profiles")
             .select("id,full_name,avatar_url,username")
@@ -581,7 +581,7 @@ export default async function PublicTripPage({
     let hist: DestinationHistoryRow = null;
 
     if (data.destination_id) {
-        const {data: dRow} = await sb
+        const { data: dRow } = await sb
             .schema("itinero")
             .from("destinations")
             .select("id,name,current_history_id")
@@ -590,7 +590,7 @@ export default async function PublicTripPage({
         dest = dRow ?? null;
 
         if (dest?.current_history_id) {
-            const {data: hRow} = await sb
+            const { data: hRow } = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select(
@@ -602,7 +602,7 @@ export default async function PublicTripPage({
         }
     }
 
-    const {meta: destMeta, heroUrl} = buildMetaFromHistory(hist);
+    const { meta: destMeta, heroUrl } = buildMetaFromHistory(hist);
 
     const title = (data.title ?? "Shared Trip").trim();
     const dateRange = formatDateRange(
@@ -617,14 +617,14 @@ export default async function PublicTripPage({
 
     const tripSummary: TripSummary = (data.trip_summary as TripSummary) ?? null;
 
-    const {data: itemsRows} = await sb
+    const { data: itemsRows } = await sb
         .schema("itinero")
         .from("itinerary_items")
         .select(
             "id,trip_id,place_id,title,notes,est_cost,duration_min,travel_min_from_prev,when, date"
         )
         .eq("trip_id", data.id)
-        .order("date", {ascending: true, nullsFirst: true})
+        .order("date", { ascending: true, nullsFirst: true })
         .returns<ItineraryItemRow[]>();
 
     const items = Array.isArray(itemsRows)
@@ -637,7 +637,7 @@ export default async function PublicTripPage({
 
     let placeDetails: PlaceDetail[] = [];
     if (placeIds.length > 0) {
-        const {data: placeRows} = await sb
+        const { data: placeRows } = await sb
             .schema("itinero")
             .from("places")
             .select("id,name,category,lat,lng,description")
@@ -653,7 +653,7 @@ export default async function PublicTripPage({
 
     const places: PlaceLite[] =
         (placeDetails?.length
-            ? placeDetails.map(({id, name, category}) => ({
+            ? placeDetails.map(({ id, name, category }) => ({
                 id,
                 name,
                 category: category ?? null,
@@ -683,7 +683,7 @@ export default async function PublicTripPage({
                     sizes="100vw"
                 />
                 <div
-                    className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90"/>
+                    className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90" />
 
                 {/* Top Nav */}
                 <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-30">
@@ -692,7 +692,7 @@ export default async function PublicTripPage({
                         className="flex items-center gap-2 font-bold text-xl tracking-tight text-white hover:text-blue-100 transition-colors"
                     >
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-blue-600">
-                            <Plane className="h-4 w-4"/>
+                            <Plane className="h-4 w-4" />
                         </div>
                         Itinero
                     </Link>
@@ -713,7 +713,7 @@ export default async function PublicTripPage({
                                 variant="secondary"
                                 className="rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 hover:bg-white/20 transition-colors font-medium"
                             >
-                                <CalendarDays className="w-3.5 h-3.5 mr-1.5"/>
+                                <CalendarDays className="w-3.5 h-3.5 mr-1.5" />
                                 {dateRange}
                             </Badge>
                             {dest?.name && (
@@ -721,7 +721,7 @@ export default async function PublicTripPage({
                                     variant="secondary"
                                     className="rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 hover:bg-white/20 transition-colors font-medium"
                                 >
-                                    <Globe className="w-3.5 h-3.5 mr-1.5"/>
+                                    <Globe className="w-3.5 h-3.5 mr-1.5" />
                                     {dest.name}
                                 </Badge>
                             )}
@@ -744,7 +744,7 @@ export default async function PublicTripPage({
                                                 className="object-cover"
                                             />
                                         ) : (
-                                            <User2 className="h-5 w-5 text-white absolute inset-0 m-auto"/>
+                                            <User2 className="h-5 w-5 text-white absolute inset-0 m-auto" />
                                         )}
                                     </div>
                                     <div>
@@ -777,7 +777,7 @@ export default async function PublicTripPage({
                                         <h3 className="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-3 tracking-wider">
                                             Trip Vibe
                                         </h3>
-                                        <InterestChips interests={interests} pillTone="default"/>
+                                        <InterestChips interests={interests} pillTone="default" />
                                     </div>
                                 )}
                                 {destMeta?.description && (
@@ -803,12 +803,12 @@ export default async function PublicTripPage({
                                 <div className="flex items-center gap-3 mb-2">
                                     <div
                                         className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                                        <Wallet className="w-5 h-5"/>
+                                        <Wallet className="w-5 h-5" />
                                     </div>
                                     <span
                                         className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                    Est. Budget
-                  </span>
+                                        Est. Budget
+                                    </span>
                                 </div>
                                 <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
                                     {tripCurrency} {data.est_total_cost.toLocaleString()}
@@ -826,7 +826,7 @@ export default async function PublicTripPage({
                                 Local Guide
                             </h3>
                             <div className="space-y-3">
-                                <InfoItem icon={MapPin} label="City" value={destMeta?.city}/>
+                                <InfoItem icon={MapPin} label="City" value={destMeta?.city} />
                                 <InfoItem
                                     icon={DollarSign}
                                     label="Currency"
@@ -863,7 +863,7 @@ export default async function PublicTripPage({
                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                             <div
                                 className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                                <CalendarDays className="w-5 h-5"/>
+                                <CalendarDays className="w-5 h-5" />
                             </div>
                             Itinerary
                         </h2>
@@ -888,7 +888,7 @@ export default async function PublicTripPage({
                         <div className="flex items-center gap-3 px-2">
                             <div
                                 className="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                                <MapPin className="w-5 h-5"/>
+                                <MapPin className="w-5 h-5" />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                                 Explore the Area
@@ -897,7 +897,7 @@ export default async function PublicTripPage({
 
                         <div
                             className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm h-[450px] bg-slate-100 dark:bg-slate-800 relative">
-                            <MapSection places={placeDetails}/>
+                            <MapSection places={placeDetails} />
                             <div
                                 className="absolute bottom-6 left-6 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold shadow-md border border-slate-100 dark:border-slate-800 pointer-events-none z-[1000] text-slate-700 dark:text-slate-200 flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
@@ -914,10 +914,10 @@ export default async function PublicTripPage({
                 <div className="mx-auto max-w-md px-6 space-y-4">
                     <div
                         className="flex items-center justify-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
-            <span
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
-              <Plane className="h-4 w-4"/>
-            </span>
+                        <span
+                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
+                            <Plane className="h-4 w-4" />
+                        </span>
                         Itinero
                     </div>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -941,11 +941,11 @@ export default async function PublicTripPage({
 /* ---------------- UI Components ---------------- */
 
 function InfoItem({
-                      icon: Icon,
-                      label,
-                      value,
-                  }: {
-    icon: any;
+    icon: Icon,
+    label,
+    value,
+}: {
+    icon: React.ElementType;
     label: string;
     value?: string | null;
 }) {
@@ -954,7 +954,7 @@ function InfoItem({
         <div
             className="flex items-start gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
             <div className="mt-0.5 text-slate-400 dark:text-slate-500">
-                <Icon className="w-4 h-4"/>
+                <Icon className="w-4 h-4" />
             </div>
             <div>
                 <div
@@ -970,9 +970,9 @@ function InfoItem({
 }
 
 function InterestChips({
-                           interests,
-                           pillTone = "light",
-                       }: {
+    interests,
+    pillTone = "light",
+}: {
     interests: string[];
     pillTone?: "light" | "default";
 }) {

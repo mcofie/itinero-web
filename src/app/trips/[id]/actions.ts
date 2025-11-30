@@ -1,7 +1,7 @@
 "use server";
 
-import {createClientServerRSC} from "@/lib/supabase/server"; // Update this path to your supabase server client
-import {revalidatePath} from "next/cache";
+import { createClientServerRSC } from "@/lib/supabase/server"; // Update this path to your supabase server client
+import { revalidatePath } from "next/cache";
 
 /**
  * 1. Update Itinerary Item Note
@@ -10,10 +10,10 @@ import {revalidatePath} from "next/cache";
 export async function updateItemNote(itemId: string, note: string) {
     const supabase = await createClientServerRSC();
 
-    const {error} = await supabase
+    const { error } = await supabase
         .schema("itinero")
         .from("itinerary_items")
-        .update({notes: note})
+        .update({ notes: note })
         .eq("id", itemId);
 
     if (error) throw new Error(error.message);
@@ -28,20 +28,21 @@ export async function updateTripNote(tripId: string, note: string) {
     const supabase = await createClientServerRSC();
 
     // Fetch current inputs first to preserve other data
-    const {data: trip} = await supabase
+    const { data: trip } = await supabase
         .schema("itinero")
         .from("trips")
         .select("inputs")
         .eq("id", tripId)
         .single();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const currentInputs = (trip?.inputs as Record<string, any>) || {};
 
-    const {error} = await supabase
+    const { error } = await supabase
         .schema("itinero")
         .from("trips")
         .update({
-            inputs: {...currentInputs, notes: note}
+            inputs: { ...currentInputs, notes: note }
         })
         .eq("id", tripId);
 
@@ -56,17 +57,18 @@ export async function updateTripNote(tripId: string, note: string) {
 export async function updateDayNote(tripId: string, dateKey: string, note: string) {
     const supabase = await createClientServerRSC();
 
-    const {data: trip} = await supabase
+    const { data: trip } = await supabase
         .schema("itinero")
         .from("trips")
         .select("inputs")
         .eq("id", tripId)
         .single();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const currentInputs = (trip?.inputs as Record<string, any>) || {};
     const currentDayNotes = currentInputs.day_notes || {};
 
-    const {error} = await supabase
+    const { error } = await supabase
         .schema("itinero")
         .from("trips")
         .update({

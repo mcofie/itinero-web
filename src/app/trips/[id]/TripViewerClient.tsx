@@ -555,7 +555,7 @@ export default function TripViewerClient({
                                     Explore with a Local
                                 </h2>
                                 <p className="mb-10 leading-relaxed text-slate-600 dark:text-slate-400">
-                                    We're vetting the best local guides to bring you exclusive,
+                                    We&apos;re vetting the best local guides to bring you exclusive,
                                     verified experiences that plug directly into your itinerary.
                                 </p>
 
@@ -577,7 +577,7 @@ export default function TripViewerClient({
                                             Curated Tours
                                         </h4>
                                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                            Unique experiences you can't find elsewhere.
+                                            Unique experiences you can&apos;t find elsewhere.
                                         </p>
                                     </div>
                                 </div>
@@ -696,7 +696,7 @@ function MetricTile({
     label: string;
     value: React.ReactNode;
     highlight?: boolean;
-    icon?: any;
+    icon?: React.ElementType;
 }) {
     return (
         <div
@@ -746,7 +746,7 @@ function SidebarFact({
     label: string;
     value?: React.ReactNode;
     sub?: React.ReactNode;
-    icon: any;
+    icon: React.ElementType;
     href?: string;
 }) {
     if (!value && !sub) return null;
@@ -860,9 +860,9 @@ function EditableDay({
                     dayIndex={dayIdx}
                     date={null}
                     tripStartDate={startDate}
-                    destinationLat={tripConfig?.destinations?.[0]?.lat}
-                    destinationLng={tripConfig?.destinations?.[0]?.lng}
-                    preferenceTags={tripConfig?.interests}
+                    destinationLat={tripConfig?.destinations?.[0]?.lat as number | undefined}
+                    destinationLng={tripConfig?.destinations?.[0]?.lng as number | undefined}
+                    preferenceTags={tripConfig?.interests as string[] | undefined}
                     nextOrderIndex={nextOrderIndex}
                 />
             </div>
@@ -1101,7 +1101,7 @@ function StatChip({
 }) {
     const styles: Record<
         StatKind,
-        { bg: string; text: string; border: string; icon: any }
+        { bg: string; text: string; border: string; icon: React.ElementType }
     > = {
         cost: {
             bg: "bg-emerald-50 dark:bg-emerald-900/20",
