@@ -1,13 +1,13 @@
 // app/auth/callback/page.tsx
 "use client";
 
-import {useEffect} from "react";
-import {useRouter} from "next/navigation";
-import {createClientBrowser} from "@/lib/supabase/browser";
-import {Loader2} from "lucide-react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { Loader2 } from "lucide-react";
 
 export default function AuthCallback() {
-    const sb = createClientBrowser();
+    const sb = getSupabaseBrowser();
     const router = useRouter();
 
     useEffect(() => {
@@ -24,7 +24,7 @@ export default function AuthCallback() {
     return (
         <div className="grid min-h-[60vh] place-items-center text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin"/> Finishing sign-in…
+                <Loader2 className="h-4 w-4 animate-spin" /> Finishing sign-in…
             </div>
         </div>
     );

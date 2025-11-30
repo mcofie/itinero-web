@@ -4,7 +4,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClientBrowser } from "@/lib/supabase/browser";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Loader2, Plane, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
-    const sb = createClientBrowser();
+    const sb = getSupabaseBrowser();
     const router = useRouter();
 
     const [mode, setMode] = useState<"login" | "signup">("login");
@@ -85,9 +85,9 @@ export default function LoginPage() {
 
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
                 <Link href="/" className="inline-flex items-center gap-2 font-bold text-2xl tracking-tight text-blue-600 mb-6">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
-              <Plane className="h-5 w-5" />
-            </span>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/20">
+                        <Plane className="h-5 w-5" />
+                    </span>
                     Itinero
                 </Link>
                 <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">

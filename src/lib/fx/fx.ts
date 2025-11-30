@@ -1,4 +1,4 @@
-import { createClientBrowser } from "@/lib/supabase/browser";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 import type { FxSnapshot } from "./types";
 
 const DEFAULT_BASE = "USD";
@@ -6,7 +6,7 @@ const DEFAULT_BASE = "USD";
 export async function getLatestFxSnapshot(
     base: string = DEFAULT_BASE
 ): Promise<FxSnapshot | null> {
-    const sb = createClientBrowser();
+    const sb = getSupabaseBrowser();
 
     const { data, error } = await sb
         .schema("itinero")

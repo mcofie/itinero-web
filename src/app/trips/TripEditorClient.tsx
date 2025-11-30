@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import {Button} from "@/components/ui/button";
-import {Trash2, Pencil, Save, X} from "lucide-react";
-import {Input} from "@/components/ui/input";
-import {createClientBrowser} from "@/lib/supabase/browser";
-import {useRouter} from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Trash2, Pencil, Save, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { useRouter } from "next/navigation";
 
 
 type UUID = string;
@@ -23,11 +23,11 @@ type Item = {
 };
 
 export default function TripEditorClient({
-                                             itemsByDate,
-                                         }: {
+    itemsByDate,
+}: {
     itemsByDate: Record<string, Item[]>;
 }) {
-    const sb = createClientBrowser();
+    const sb = getSupabaseBrowser();
     const [editingId, setEditingId] = React.useState<string | null>(null);
     const [draft, setDraft] = React.useState<Partial<Item>>({});
     const [busy, setBusy] = React.useState(false);
@@ -91,7 +91,7 @@ export default function TripEditorClient({
         if (!confirm("Delete this item?")) return;
         setBusy(true);
         try {
-            const {error} = await sb.schema("itinero").from("itinerary_items").delete().eq("id", id);
+            const { error } = await sb.schema("itinero").from("itinerary_items").delete().eq("id", id);
             if (error) throw error;
         } finally {
             setBusy(false);
@@ -135,7 +135,7 @@ export default function TripEditorClient({
                                                 </select>
                                                 <Input
                                                     value={draft.title ?? it.title}
-                                                    onChange={(e) => setDraft((d) => ({...d, title: e.target.value}))}
+                                                    onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
                                                     placeholder="Title"
                                                 />
                                                 <Input
@@ -161,7 +161,7 @@ export default function TripEditorClient({
                                                 <Input
                                                     className="sm:col-span-4"
                                                     value={draft.notes ?? it.notes ?? ""}
-                                                    onChange={(e) => setDraft((d) => ({...d, notes: e.target.value}))}
+                                                    onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
                                                     placeholder="Notes"
                                                 />
                                             </div>
@@ -173,21 +173,21 @@ export default function TripEditorClient({
                                         {!active ? (
                                             <>
                                                 <Button size="sm" variant="outline" onClick={() => beginEdit(it)}>
-                                                    <Pencil className="mr-2 h-4 w-4"/> Edit
+                                                    <Pencil className="mr-2 h-4 w-4" /> Edit
                                                 </Button>
                                                 <Button size="sm" variant="destructive"
-                                                        onClick={() => deleteItem(it.id)}>
-                                                    <Trash2 className="mr-2 h-4 w-4"/> Delete
+                                                    onClick={() => deleteItem(it.id)}>
+                                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
                                                 </Button>
                                             </>
                                         ) : (
                                             <>
                                                 <Button size="sm" onClick={saveEdit} disabled={busy}>
-                                                    <Save className="mr-2 h-4 w-4"/> Save
+                                                    <Save className="mr-2 h-4 w-4" /> Save
                                                 </Button>
                                                 <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}
-                                                        disabled={busy}>
-                                                    <X className="mr-2 h-4 w-4"/> Cancel
+                                                    disabled={busy}>
+                                                    <X className="mr-2 h-4 w-4" /> Cancel
                                                 </Button>
                                             </>
                                         )}

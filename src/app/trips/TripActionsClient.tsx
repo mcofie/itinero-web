@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import {useState, useEffect} from "react";
-import {useRouter} from "next/navigation";
-import {createClientBrowser} from "@/lib/supabase/browser";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 
 import {
     Pencil,
@@ -18,16 +18,16 @@ import {
     Loader2,
 } from "lucide-react";
 
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Textarea} from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import {cn} from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 /* ---------------- Types ---------------- */
 type UUID = string;
@@ -48,6 +48,21 @@ export type TripConfig = {
     [key: string]: any;
 };
 
+export type DestinationMeta = {
+    description?: string;
+    history?: string;
+    currency_code?: string;
+    plugs?: string[];
+    languages?: string[];
+    weather_desc?: string;
+    transport?: string[];
+    esim_provider?: string;
+    city?: string;
+    fx_rate?: number;
+    fx_base?: string;
+    weather_temp_c?: number;
+};
+
 type Props = {
     tripId: UUID;
     tripTitle: string;
@@ -61,11 +76,11 @@ type Props = {
 /* ---------------- Component ---------------- */
 
 export default function TripActionsClient({
-                                              tripId,
-                                              tripTitle,
-                                              days,
-                                          }: Props) {
-    const sb = createClientBrowser();
+    tripId,
+    tripTitle,
+    days,
+}: Props) {
+    const sb = getSupabaseBrowser();
     const router = useRouter();
 
     // Local state for title editing
@@ -90,10 +105,10 @@ export default function TripActionsClient({
         if (!newTitle.trim()) return;
         setBusy(true);
         try {
-            const {error} = await sb
+            const { error } = await sb
                 .schema("itinero")
                 .from("trips")
-                .update({title: newTitle.trim()})
+                .update({ title: newTitle.trim() })
                 .eq("id", tripId);
 
             if (error) throw error;
@@ -125,20 +140,20 @@ export default function TripActionsClient({
         }
         setBusy(true);
         try {
-            const {data: last} = await sb
+            const { data: last } = await sb
                 .schema("itinero")
                 .from("itinerary_items")
                 .select("order_index")
                 .eq("trip_id", tripId)
                 .eq("date", addingForDate)
-                .order("order_index", {ascending: false})
+                .order("order_index", { ascending: false })
                 .limit(1)
                 .maybeSingle<{ order_index: number }>();
 
             const order_index = (last?.order_index ?? -1) + 1;
             const when = (newBlock.when ?? "morning") as DayBlock["when"];
 
-            const {error} = await sb
+            const { error } = await sb
                 .schema("itinero")
                 .from("itinerary_items")
                 .insert({
@@ -188,9 +203,9 @@ export default function TripActionsClient({
                             className="p-1.5 rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
                         >
                             {busy ? (
-                                <Loader2 className="h-3 w-3 animate-spin"/>
+                                <Loader2 className="h-3 w-3 animate-spin" />
                             ) : (
-                                <Check className="h-3 w-3"/>
+                                <Check className="h-3 w-3" />
                             )}
                         </button>
                         <button
@@ -201,7 +216,7 @@ export default function TripActionsClient({
                             disabled={busy}
                             className="p-1.5 rounded-full hover:bg-white/10 text-white/70 transition-colors"
                         >
-                            <X className="h-3 w-3"/>
+                            <X className="h-3 w-3" />
                         </button>
                     </div>
                 </div>
@@ -212,15 +227,15 @@ export default function TripActionsClient({
                     onClick={() => setEditing(true)}
                     className="h-9 gap-2 rounded-full text-white/80 hover:bg-white/10 hover:text-white border border-transparent transition-all"
                 >
-                    <Pencil className="h-3.5 w-3.5"/>
+                    <Pencil className="h-3.5 w-3.5" />
                     <span className="hidden sm:inline text-xs font-medium uppercase tracking-wide">
-            Edit Title
-          </span>
+                        Edit Title
+                    </span>
                 </Button>
             )}
 
             {/* Separator */}
-            <div className="h-4 w-px bg-white/20 mx-1"/>
+            <div className="h-4 w-px bg-white/20 mx-1" />
 
             {/* --- 2. Add Activity Action --- */}
             {days.length > 0 && (
@@ -229,7 +244,7 @@ export default function TripActionsClient({
                     className="h-9 gap-2 rounded-full bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/20 border border-blue-500 font-semibold transition-all dark:bg-blue-600 dark:hover:bg-blue-500"
                     onClick={() => openAddItem(days[0].date)}
                 >
-                    <Plus className="h-4 w-4"/>
+                    <Plus className="h-4 w-4" />
                     <span>Add Activity</span>
                 </Button>
             )}
@@ -248,34 +263,34 @@ export default function TripActionsClient({
                                 className="flex items-center gap-3 text-lg font-bold text-slate-900 dark:text-white">
                                 <div
                                     className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-blue-400">
-                                    <Plus className="h-5 w-5"/>
+                                    <Plus className="h-5 w-5" />
                                 </div>
                                 New Activity
                             </DialogTitle>
                             <div
                                 className="mt-2 flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                <Calendar className="h-3.5 w-3.5"/>
+                                <Calendar className="h-3.5 w-3.5" />
                                 <span>Adding to</span>
                                 <span
                                     className="text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700">
-                  {addingForDate}
-                </span>
+                                    {addingForDate}
+                                </span>
                             </div>
                         </DialogHeader>
                     </div>
 
                     <div className="px-6 py-6 grid gap-5">
                         <div className="grid gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Activity Details
-              </span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                Activity Details
+                            </span>
                             <div className="relative">
-                                <Type className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 dark:text-slate-500"/>
+                                <Type className="absolute left-3 top-3.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
                                 <Input
                                     placeholder="e.g. Dinner at Oseikrom"
                                     value={newBlock.title ?? ""}
                                     onChange={(e) =>
-                                        setNewBlock((b) => ({...b, title: e.target.value}))
+                                        setNewBlock((b) => ({ ...b, title: e.target.value }))
                                     }
                                     className="pl-10 h-12 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-xl text-base dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
                                     autoFocus
@@ -285,9 +300,9 @@ export default function TripActionsClient({
 
                         <div className="grid grid-cols-3 gap-3">
                             <div className="grid gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  Time
-                </span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                    Time
+                                </span>
                                 <div className="relative">
                                     <select
                                         className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-medium dark:bg-slate-950 dark:border-slate-800 dark:text-white"
@@ -304,17 +319,17 @@ export default function TripActionsClient({
                                         <option value="evening">Evening</option>
                                     </select>
                                     <Clock
-                                        className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none dark:text-slate-500"/>
+                                        className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none dark:text-slate-500" />
                                 </div>
                             </div>
 
                             <div className="grid gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  Cost
-                </span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                    Cost
+                                </span>
                                 <div className="relative">
                                     <DollarSign
-                                        className="absolute left-3 top-3.5 h-3.5 w-3.5 text-slate-400 dark:text-slate-500"/>
+                                        className="absolute left-3 top-3.5 h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                                     <Input
                                         type="number"
                                         min={0}
@@ -332,12 +347,12 @@ export default function TripActionsClient({
                             </div>
 
                             <div className="grid gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  Duration
-                </span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                    Duration
+                                </span>
                                 <div className="relative">
                                     <Clock
-                                        className="absolute left-3 top-3.5 h-3.5 w-3.5 text-slate-400 dark:text-slate-500"/>
+                                        className="absolute left-3 top-3.5 h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                                     <Input
                                         type="number"
                                         min={0}
@@ -356,16 +371,16 @@ export default function TripActionsClient({
                         </div>
 
                         <div className="grid gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Notes
-              </span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                Notes
+                            </span>
                             <div className="relative">
                                 <AlignLeft
-                                    className="absolute left-3 top-3 h-4 w-4 text-slate-400 dark:text-slate-500"/>
+                                    className="absolute left-3 top-3 h-4 w-4 text-slate-400 dark:text-slate-500" />
                                 <Textarea
                                     value={newBlock.notes ?? ""}
                                     onChange={(e) =>
-                                        setNewBlock((b) => ({...b, notes: e.target.value}))
+                                        setNewBlock((b) => ({ ...b, notes: e.target.value }))
                                     }
                                     placeholder="Reservation numbers, directions, tips..."
                                     className="pl-10 min-h-[100px] bg-slate-50 border-slate-200 focus-visible:ring-blue-600 resize-none rounded-xl dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
@@ -391,7 +406,7 @@ export default function TripActionsClient({
                         >
                             {busy ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     Saving...
                                 </>
                             ) : (

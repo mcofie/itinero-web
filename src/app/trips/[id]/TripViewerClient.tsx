@@ -2,24 +2,24 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
-import {useMemo, useState, useTransition} from "react";
-import {useTheme} from "next-themes";
-import {Card, CardContent} from "@/components/ui/card";
-import {Badge} from "@/components/ui/badge";
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs";
-import {ScrollArea, ScrollBar} from "@/components/ui/scroll-area";
-import {Button} from "@/components/ui/button";
-import {Textarea} from "@/components/ui/textarea";
-import {toast} from "sonner";
-import type {PreviewLike, Day, Place} from "./page";
+import { useMemo, useState, useTransition } from "react";
+import { useTheme } from "next-themes";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import type { PreviewLike, Day, Place } from "./page";
 
 import "leaflet/dist/leaflet.css";
 
 // --- Server Actions Import ---
-import {updateTripNote, updateDayNote, updateItemNote} from "@/app/trips/[id]/actions";
+import { updateTripNote, updateDayNote, updateItemNote } from "@/app/trips/[id]/actions";
 
-import {BlockActions, ItemRowLite} from "@/app/trips/BlockEditControls";
-import {cn} from "@/lib/utils";
+import { BlockActions, ItemRowLite } from "@/app/trips/BlockEditControls";
+import { cn } from "@/lib/utils";
 import {
     Cloud,
     DollarSign,
@@ -42,9 +42,9 @@ import {
     Loader2,
     ExternalLink,
 } from "lucide-react";
-import {AddItemUnderDay} from "@/app/trips/AddItemUnderDay";
-import {DestinationMeta, TripConfig} from "@/app/trips/TripActionsClient";
-import {formatDateRange} from "@/lib/trip-dates";
+import { AddItemUnderDay } from "@/app/trips/AddItemUnderDay";
+import { DestinationMeta, TripConfig } from "@/app/trips/TripActionsClient";
+import { formatDateRange } from "@/lib/trip-dates";
 
 /* ---------- Map (allow nullable day) ---------- */
 type LeafletMapProps = {
@@ -55,8 +55,10 @@ type LeafletMapProps = {
 
 const LeafletMap = dynamic<LeafletMapProps>(
     () => import("@/app/preview/_leaflet/LeafletMap"),
-    {ssr: false}
+    { ssr: false }
 );
+
+type StatKind = "cost" | "duration" | "travel";
 
 /** ---------- helpers for safe inputs typing ---------- */
 type TripInputs = {
@@ -75,15 +77,15 @@ function hasInterests(v: unknown): v is { interests: string[] } {
 }
 
 export default function TripViewerClient({
-                                             tripId,
-                                             startDate,
-                                             data,
-                                         }: {
+    tripId,
+    startDate,
+    data,
+}: {
     tripId: string;
     data: PreviewLike;
     startDate?: string;
 }) {
-    const {resolvedTheme} = useTheme();
+    const { resolvedTheme } = useTheme();
     const theme: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light";
 
     const [activeDayIdx, setActiveDayIdx] = useState(0);
@@ -194,22 +196,22 @@ export default function TripViewerClient({
                     className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-8 shadow-sm relative overflow-hidden group">
                     {/* Subtle decorative gradient blob */}
                     <div
-                        className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-50/50 dark:bg-blue-900/20 blur-3xl transition-all group-hover:bg-blue-100/50 dark:group-hover:bg-blue-800/20"/>
+                        className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-blue-50/50 dark:bg-blue-900/20 blur-3xl transition-all group-hover:bg-blue-100/50 dark:group-hover:bg-blue-800/20" />
 
                     <div className="relative z-10 mb-6 flex flex-col justify-between gap-6 md:flex-row md:items-end">
                         <div className="space-y-2">
                             <div
                                 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                <Clock3 className="h-3.5 w-3.5"/>
+                                <Clock3 className="h-3.5 w-3.5" />
                                 Trip Progress
                             </div>
                             <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                  Day {Math.min(activeDayIdx + 1, Math.max(1, totalDays))}
-                </span>
+                                <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                                    Day {Math.min(activeDayIdx + 1, Math.max(1, totalDays))}
+                                </span>
                                 <span className="text-lg font-medium text-slate-400 dark:text-slate-500">
-                  / {totalDays || "—"}
-                </span>
+                                    / {totalDays || "—"}
+                                </span>
                             </div>
                         </div>
 
@@ -232,7 +234,7 @@ export default function TripViewerClient({
                         className="relative z-10 h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                         <div
                             className="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-400 shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all duration-700 ease-out"
-                            style={{width: `${progressPct}%`}}
+                            style={{ width: `${progressPct}%` }}
                         />
                     </div>
                 </div>
@@ -281,11 +283,11 @@ export default function TripViewerClient({
                                     className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white via-slate-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-900/50 dark:to-slate-950 p-8 shadow-sm">
                                     <div className="mb-8">
                                         <div className="mb-3 flex items-center gap-2">
-                                            <div className="h-px w-8 bg-blue-600 dark:bg-blue-500"/>
+                                            <div className="h-px w-8 bg-blue-600 dark:bg-blue-500" />
                                             <span
                                                 className="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                        Destination
-                      </span>
+                                                Destination
+                                            </span>
                                         </div>
                                         <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                                             {primaryDestination?.name ??
@@ -297,7 +299,7 @@ export default function TripViewerClient({
                                             primaryDestination.lng != null && (
                                                 <div
                                                     className="mt-3 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-                                                    <MapPin className="h-4 w-4 text-blue-500 dark:text-blue-400"/>
+                                                    <MapPin className="h-4 w-4 text-blue-500 dark:text-blue-400" />
                                                     {primaryDestination.lat.toFixed(4)},{" "}
                                                     {primaryDestination.lng.toFixed(4)}
                                                 </div>
@@ -344,7 +346,7 @@ export default function TripViewerClient({
                                     <div
                                         className="h-full rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm transition-shadow hover:shadow-md">
                                         <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-blue-500"/>
+                                            <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
                                             About
                                         </h3>
                                         {destinationMeta?.description ? (
@@ -360,7 +362,7 @@ export default function TripViewerClient({
                                     <div
                                         className="h-full rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm transition-shadow hover:shadow-md">
                                         <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-purple-500"/>
+                                            <div className="h-1.5 w-1.5 rounded-full bg-purple-500" />
                                             History
                                         </h3>
                                         {destinationMeta?.history ? (
@@ -382,7 +384,7 @@ export default function TripViewerClient({
                                 <div
                                     className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-950/10 p-6 shadow-sm">
                                     <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">
-                                        <NotebookPen className="h-4 w-4 text-amber-600 dark:text-amber-500"/> Trip Notes
+                                        <NotebookPen className="h-4 w-4 text-amber-600 dark:text-amber-500" /> Trip Notes
                                     </h3>
                                     <InlineNoteEditor
                                         id="trip-notes"
@@ -403,7 +405,7 @@ export default function TripViewerClient({
                                 <div
                                     className="sticky top-24 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
                                     <h3 className="mb-6 flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-4">
-                                        <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400"/> Local Guide
+                                        <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Local Guide
                                     </h3>
                                     <ul className="space-y-4">
                                         <SidebarFact
@@ -486,7 +488,7 @@ export default function TripViewerClient({
                                                 </button>
                                             ))}
                                         </div>
-                                        <ScrollBar orientation="horizontal"/>
+                                        <ScrollBar orientation="horizontal" />
                                     </ScrollArea>
                                 </div>
 
@@ -530,10 +532,10 @@ export default function TripViewerClient({
                                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">All Places</h2>
                                 <span
                                     className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
-                  {data.places?.length ?? 0} Locations
-                </span>
+                                    {data.places?.length ?? 0} Locations
+                                </span>
                             </div>
-                            <PlacesList places={data.places}/>
+                            <PlacesList places={data.places} />
                         </div>
                     </TabsContent>
 
@@ -560,7 +562,7 @@ export default function TripViewerClient({
                                 <div className="grid gap-4 text-left sm:grid-cols-2">
                                     <div
                                         className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                                        <Users2 className="mb-3 h-6 w-6 text-blue-600 dark:text-blue-400"/>
+                                        <Users2 className="mb-3 h-6 w-6 text-blue-600 dark:text-blue-400" />
                                         <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                                             Verified Guides
                                         </h4>
@@ -570,7 +572,7 @@ export default function TripViewerClient({
                                     </div>
                                     <div
                                         className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
-                                        <Compass className="mb-3 h-6 w-6 text-purple-600 dark:text-purple-400"/>
+                                        <Compass className="mb-3 h-6 w-6 text-purple-600 dark:text-purple-400" />
                                         <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                                             Curated Tours
                                         </h4>
@@ -594,12 +596,12 @@ export default function TripViewerClient({
 
 /* ---------- Reusable Inline Note Editor ---------- */
 function InlineNoteEditor({
-                              id,
-                              initialValue,
-                              label,
-                              onSave,
-                              variant = "default",
-                          }: {
+    id,
+    initialValue,
+    label,
+    onSave,
+    variant = "default",
+}: {
     id: string;
     initialValue?: string | null;
     label?: string;
@@ -638,11 +640,11 @@ function InlineNoteEditor({
                 />
                 <div className="flex justify-end gap-2">
                     <Button size="sm" variant="ghost" onClick={handleCancel} disabled={isSaving}>
-                        <X className="h-3.5 w-3.5 mr-1"/> Cancel
+                        <X className="h-3.5 w-3.5 mr-1" /> Cancel
                     </Button>
                     <Button size="sm" onClick={handleSave} disabled={isSaving}>
-                        {isSaving ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin"/> :
-                            <Check className="h-3.5 w-3.5 mr-1"/>}
+                        {isSaving ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> :
+                            <Check className="h-3.5 w-3.5 mr-1" />}
                         {isSaving ? "Saving..." : "Save"}
                     </Button>
                 </div>
@@ -657,7 +659,7 @@ function InlineNoteEditor({
                 onClick={() => setIsEditing(true)}
                 className="text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors group"
             >
-                <Pencil className="h-3 w-3 opacity-50 group-hover:opacity-100"/>
+                <Pencil className="h-3 w-3 opacity-50 group-hover:opacity-100" />
                 Add {label || "notes"}
             </button>
         );
@@ -678,7 +680,7 @@ function InlineNoteEditor({
                 onClick={() => setIsEditing(true)}
                 className="absolute -right-2 -top-2 p-1.5 bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-800"
             >
-                <Pencil className="h-3 w-3"/>
+                <Pencil className="h-3 w-3" />
             </button>
         </div>
     );
@@ -686,11 +688,11 @@ function InlineNoteEditor({
 
 /* ---------- Updated Metric Tile ---------- */
 function MetricTile({
-                        label,
-                        value,
-                        highlight,
-                        icon: Icon,
-                    }: {
+    label,
+    value,
+    highlight,
+    icon: Icon,
+}: {
     label: string;
     value: React.ReactNode;
     highlight?: boolean;
@@ -706,20 +708,20 @@ function MetricTile({
             )}
         >
             <div className="flex flex-col gap-1 relative z-10">
-        <span
-            className={cn(
-                "text-[10px] font-bold uppercase tracking-wider",
-                highlight ? "text-blue-200" : "text-slate-400 dark:text-slate-500"
-            )}
-        >
-          {label}
-        </span>
+                <span
+                    className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider",
+                        highlight ? "text-blue-200" : "text-slate-400 dark:text-slate-500"
+                    )}
+                >
+                    {label}
+                </span>
                 <span
                     suppressHydrationWarning
                     className="text-lg font-bold truncate leading-tight"
                 >
-          {value}
-        </span>
+                    {value}
+                </span>
             </div>
             {Icon && (
                 <Icon
@@ -735,12 +737,12 @@ function MetricTile({
 
 /* ---------- Updated Sidebar Fact ---------- */
 function SidebarFact({
-                         label,
-                         value,
-                         sub,
-                         icon: Icon,
-                         href,
-                     }: {
+    label,
+    value,
+    sub,
+    icon: Icon,
+    href,
+}: {
     label: string;
     value?: React.ReactNode;
     sub?: React.ReactNode;
@@ -759,16 +761,16 @@ function SidebarFact({
                         : "bg-slate-50 border-slate-100 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
                 )}
             >
-                <Icon className="h-5 w-5"/>
+                <Icon className="h-5 w-5" />
             </div>
             <div className="min-w-0 py-0.5 flex-1">
                 <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">
-            {label}
-          </span>
+                    <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">
+                        {label}
+                    </span>
                     {href && (
                         <ExternalLink
-                            className="h-3 w-3 text-blue-400 dark:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"/>
+                            className="h-3 w-3 text-blue-400 dark:text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     )}
                 </div>
                 {value && (
@@ -804,17 +806,17 @@ function SidebarFact({
 /* ---------- Editable day renderer ---------- */
 
 function EditableDay({
-                         dayIdx,
-                         day,
-                         items,
-                         nextOrderIndex,
-                         tripId,
-                         placesById,
-                         startDate,
-                         tripConfig,
-                         tripInputs,
-                         tripCurrency,
-                     }: {
+    dayIdx,
+    day,
+    items,
+    nextOrderIndex,
+    tripId,
+    placesById,
+    startDate,
+    tripConfig,
+    tripInputs,
+    tripCurrency,
+}: {
     dayIdx: number;
     day: Day | null;
     items: ItemRowLite[];
@@ -845,7 +847,7 @@ function EditableDay({
         return (
             <div className="flex flex-col items-center justify-center space-y-4 py-12 text-center">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                    <CalendarDays className="h-6 w-6 text-slate-300 dark:text-slate-600"/>
+                    <CalendarDays className="h-6 w-6 text-slate-300 dark:text-slate-600" />
                 </div>
                 <div className="space-y-1">
                     <p className="font-bold text-slate-900 dark:text-white">Empty Day</p>
@@ -955,7 +957,7 @@ function EditableDay({
                                         value: `${b.travel_min_from_prev ?? 0}m`,
                                     },
                                 ]}
-                                actions={<BlockActions item={forControls}/>}
+                                actions={<BlockActions item={forControls} />}
                                 onUpdateNote={async (id, val) => {
                                     try {
                                         await updateItemNote(id, val);
@@ -989,16 +991,16 @@ function EditableDay({
 /* ---------- Block Card Component ---------- */
 
 function BlockCard({
-                       id,
-                       title,
-                       when,
-                       place,
-                       notes,
-                       coords,
-                       stats,
-                       actions,
-                       onUpdateNote
-                   }: {
+    id,
+    title,
+    when,
+    place,
+    notes,
+    coords,
+    stats,
+    actions,
+    onUpdateNote
+}: {
     id: string;
     title: string;
     when: "morning" | "afternoon" | "evening";
@@ -1019,14 +1021,14 @@ function BlockCard({
             {/* Header */}
             <div className="mb-3 relative z-10 flex items-start justify-between gap-4">
                 <div className="space-y-1">
-          <span
-              className={cn(
-                  "mb-1 inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                  whenUi.badge
-              )}
-          >
-            {when}
-          </span>
+                    <span
+                        className={cn(
+                            "mb-1 inline-flex items-center rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                            whenUi.badge
+                        )}
+                    >
+                        {when}
+                    </span>
                     <h3 className="text-base font-bold leading-tight text-slate-900 dark:text-white">
                         {title}
                     </h3>
@@ -1055,17 +1057,17 @@ function BlockCard({
                     {place ? (
                         <div
                             className="flex w-fit items-center gap-2 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-                            <MapPin className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400"/>
+                            <MapPin className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                             <span>{place.name}</span>
                             {place.category && (
                                 <span className="font-normal text-slate-400 dark:text-slate-500">
-                  • {place.category}
-                </span>
+                                    • {place.category}
+                                </span>
                             )}
                         </div>
                     ) : coords ? (
                         <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
-                            <MapPin className="h-3.5 w-3.5"/>
+                            <MapPin className="h-3.5 w-3.5" />
                             <span>{coords}</span>
                         </div>
                     ) : null}
@@ -1089,10 +1091,10 @@ function BlockCard({
 }
 
 function StatChip({
-                      variant,
-                      label,
-                      value,
-                  }: {
+    variant,
+    label,
+    value,
+}: {
     variant: StatKind;
     label: string;
     value: string | number;
@@ -1132,7 +1134,7 @@ function StatChip({
                 s.border
             )}
         >
-            <Icon className="h-3 w-3 opacity-70"/>
+            <Icon className="h-3 w-3 opacity-70" />
             <span className="opacity-70">{label}:</span>
             <span>{value}</span>
         </div>
@@ -1141,13 +1143,13 @@ function StatChip({
 
 /* ---------- Places List ---------- */
 
-function PlacesList({places}: { places: Place[] }) {
+function PlacesList({ places }: { places: Place[] }) {
     if (!places?.length) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div
                     className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800">
-                    <MapPin className="h-6 w-6 text-slate-300 dark:text-slate-600"/>
+                    <MapPin className="h-6 w-6 text-slate-300 dark:text-slate-600" />
                 </div>
                 <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                     No places added yet.
@@ -1166,7 +1168,7 @@ function PlacesList({places}: { places: Place[] }) {
                     <div className="flex items-start gap-3">
                         <div
                             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
-                            <MapPin className="h-5 w-5"/>
+                            <MapPin className="h-5 w-5" />
                         </div>
                         <div>
                             <h3 className="mb-1 text-sm font-bold text-slate-900 dark:text-white">
@@ -1176,15 +1178,15 @@ function PlacesList({places}: { places: Place[] }) {
                                 {p.category && (
                                     <span
                                         className="rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-400">
-                    {p.category}
-                  </span>
+                                        {p.category}
+                                    </span>
                                 )}
                                 {p.popularity && (
                                     <span
                                         className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
-                    <Star className="h-3 w-3"/>
+                                        <Star className="h-3 w-3" />
                                         {p.popularity}
-                  </span>
+                                    </span>
                                 )}
                             </div>
                         </div>

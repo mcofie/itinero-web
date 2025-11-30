@@ -1,32 +1,32 @@
 "use client";
 
 import * as React from "react";
-import {useState} from "react";
+import { useState } from "react";
 import {
     Dialog,
     DialogContent,
     DialogTitle,
 } from "@/components/ui/dialog";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {toast} from "sonner";
-import {createClientBrowser} from "@/lib/supabase/browser";
-import {useRouter} from "next/navigation";
-import {Loader2, Lock, Mail, Chrome} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { useRouter } from "next/navigation";
+import { Loader2, Lock, Mail, Chrome } from "lucide-react";
 
 export default function AuthGateDialog({
-                                           open,
-                                           onOpenChange,
-                                           title = "Sign in to save & share",
-                                           postLogin,
-                                       }: {
+    open,
+    onOpenChange,
+    title = "Sign in to save & share",
+    postLogin,
+}: {
     open: boolean;
     onOpenChange: (v: boolean) => void;
     title?: string;
     postLogin?: () => Promise<void> | void;
 }) {
-    const sb = createClientBrowser();
+    const sb = getSupabaseBrowser();
     const router = useRouter();
     const [mode, setMode] = useState<"login" | "signup">("login");
     const [email, setEmail] = useState("");
@@ -37,10 +37,10 @@ export default function AuthGateDialog({
         try {
             setBusy(true);
 
-            const {error} =
+            const { error } =
                 mode === "login"
-                    ? await sb.auth.signInWithPassword({email, password: pwd})
-                    : await sb.auth.signUp({email, password: pwd});
+                    ? await sb.auth.signInWithPassword({ email, password: pwd })
+                    : await sb.auth.signUp({ email, password: pwd });
             if (error) throw error;
 
             // ensure the session is available to the client before we navigate
@@ -62,7 +62,7 @@ export default function AuthGateDialog({
             }
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Authentication failed", {description: msg});
+            toast.error("Authentication failed", { description: msg });
         } finally {
             setBusy(false);
         }
@@ -71,7 +71,7 @@ export default function AuthGateDialog({
     async function handleGoogle() {
         try {
             setBusy(true);
-            const {error} = await sb.auth.signInWithOAuth({
+            const { error } = await sb.auth.signInWithOAuth({
                 provider: "google",
                 options: {
                     redirectTo:
@@ -86,7 +86,7 @@ export default function AuthGateDialog({
             onOpenChange(false);
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Google sign-in failed", {description: msg});
+            toast.error("Google sign-in failed", { description: msg });
         } finally {
             setBusy(false);
         }
@@ -102,7 +102,7 @@ export default function AuthGateDialog({
                     className="bg-slate-50 border-b border-slate-100 px-6 py-8 flex flex-col items-center text-center dark:bg-slate-950/50 dark:border-slate-800">
                     <div
                         className="h-12 w-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mb-4 shadow-sm dark:bg-blue-900/30 dark:text-blue-400">
-                        <Lock className="h-6 w-6"/>
+                        <Lock className="h-6 w-6" />
                     </div>
                     <DialogTitle className="text-xl font-bold text-slate-900 dark:text-white">
                         {title}
@@ -119,11 +119,11 @@ export default function AuthGateDialog({
                     <div className="space-y-4">
                         <div className="space-y-1.5">
                             <Label htmlFor="email"
-                                   className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                                 Email Address
                             </Label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 pointer-events-none"/>
+                                <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
                                 <Input
                                     id="email"
                                     type="email"
@@ -139,12 +139,12 @@ export default function AuthGateDialog({
                         <div className="space-y-1.5">
                             <div className="flex items-center justify-between">
                                 <Label htmlFor="pwd"
-                                       className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                    className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                                     Password
                                 </Label>
                             </div>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 pointer-events-none"/>
+                                <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 pointer-events-none" />
                                 <Input
                                     id="pwd"
                                     type="password"
@@ -166,18 +166,18 @@ export default function AuthGateDialog({
                             disabled={busy}
                             className="w-full h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md dark:bg-blue-600 dark:hover:bg-blue-500"
                         >
-                            {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                            {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {mode === "login" ? "Sign In" : "Create Account"}
                         </Button>
 
                         <div className="relative py-1">
                             <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t border-slate-100 dark:border-slate-800"/>
+                                <span className="w-full border-t border-slate-100 dark:border-slate-800" />
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-slate-400 dark:bg-slate-900 dark:text-slate-600">
-                  Or continue with
-                </span>
+                                <span className="bg-white px-2 text-slate-400 dark:bg-slate-900 dark:text-slate-600">
+                                    Or continue with
+                                </span>
                             </div>
                         </div>
 
@@ -187,7 +187,7 @@ export default function AuthGateDialog({
                             disabled={busy}
                             className="w-full h-11 rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50 font-medium dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                         >
-                            <Chrome className="mr-2 h-4 w-4"/>
+                            <Chrome className="mr-2 h-4 w-4" />
                             Google
                         </Button>
                     </div>

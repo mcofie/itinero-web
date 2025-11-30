@@ -1,5 +1,20 @@
 {
   "node": {
+    "40751d074d96d4be7d3c56956f2145c2796af27fbb": {
+      "workers": {
+        "app/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/profile/server-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveProfileAction",
+          "filename": "src/app/profile/server-actions.ts"
+        }
+      },
+      "layer": {
+        "app/profile/page": "action-browser"
+      },
+      "filename": "src/app/profile/server-actions.ts",
+      "exportedName": "saveProfileAction"
+    },
     "60fbc1c1987c49bade7433fdd32e617488b89dc200": {
       "workers": {
         "app/trips/[id]/page": {
@@ -59,21 +74,6 @@
       },
       "filename": "src/app/actions/trips.ts",
       "exportedName": "setTripPublic"
-    },
-    "40751d074d96d4be7d3c56956f2145c2796af27fbb": {
-      "workers": {
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/profile/server-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
-          "async": false,
-          "exportedName": "saveProfileAction",
-          "filename": "src/app/profile/server-actions.ts"
-        }
-      },
-      "layer": {
-        "app/profile/page": "action-browser"
-      },
-      "filename": "src/app/profile/server-actions.ts",
-      "exportedName": "saveProfileAction"
     }
   },
   "edge": {},

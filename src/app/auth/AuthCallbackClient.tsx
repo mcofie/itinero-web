@@ -3,7 +3,7 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClientBrowser } from "@/lib/supabase/browser";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 
 export default function AuthCallbackClient() {
     const params = useSearchParams();
@@ -15,7 +15,7 @@ export default function AuthCallbackClient() {
         const next = params.get("next") || "/trips";
 
         const run = async () => {
-            const sb = createClientBrowser();
+            const sb = getSupabaseBrowser();
 
             // If OAuth provider returned an error in the URL, bail nicely
             if (error) {

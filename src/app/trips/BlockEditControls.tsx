@@ -1,18 +1,18 @@
 "use client";
 
 import * as React from "react";
-import {useState, useMemo} from "react";
-import {useRouter} from "next/navigation";
-import {createClientBrowser} from "@/lib/supabase/browser";
-import {Button} from "@/components/ui/button";
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/components/ui/dialog";
-import {Input} from "@/components/ui/input";
-import {Textarea} from "@/components/ui/textarea";
-import {Label} from "@/components/ui/label";
-import {Select, SelectTrigger, SelectValue, SelectContent, SelectItem} from "@/components/ui/select";
-import {Separator} from "@/components/ui/separator";
-import {Pencil, Trash2, Plus} from "lucide-react";
-import {ConfirmDialog} from "@/app/trips/ConfirmDialog";
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Pencil, Trash2, Plus } from "lucide-react";
+import { ConfirmDialog } from "@/app/trips/ConfirmDialog";
 
 type UUID = string;
 
@@ -33,16 +33,16 @@ export type ItemRowLite = {
 type When = ItemRowLite["when"];
 
 function WhenSelect({
-                        value,
-                        onValueChange,
-                    }: {
+    value,
+    onValueChange,
+}: {
     value: When;
     onValueChange: (v: When) => void;
 }) {
     return (
         <Select value={value} onValueChange={(v) => onValueChange(v as When)}>
             <SelectTrigger className="w-full">
-                <SelectValue placeholder="When"/>
+                <SelectValue placeholder="When" />
             </SelectTrigger>
             <SelectContent>
                 <SelectItem value="morning">Morning</SelectItem>
@@ -57,12 +57,12 @@ function WhenSelect({
    Edit / Delete per block
    ========================= */
 export function BlockActions({
-                                 item,
-                             }: {
+    item,
+}: {
     item: ItemRowLite;
 }) {
     const router = useRouter();
-    const sb = createClientBrowser();
+    const sb = getSupabaseBrowser();
 
     const [open, setOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
@@ -77,7 +77,7 @@ export function BlockActions({
     async function onSave() {
         setBusy(true);
         try {
-            const {error} = await sb
+            const { error } = await sb
                 .schema("itinero")
                 .from("itinerary_items")
                 .update({
@@ -100,7 +100,7 @@ export function BlockActions({
     async function onDelete() {
         setBusy(true);
         try {
-            const {error} = await sb
+            const { error } = await sb
                 .schema("itinero")
                 .from("itinerary_items")
                 .delete()
@@ -117,10 +117,10 @@ export function BlockActions({
     return (
         <div className="mt-2 flex items-center gap-2">
             <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
-                <Pencil className="mr-2 h-4 w-4"/>
+                <Pencil className="mr-2 h-4 w-4" />
             </Button>
             <Button size="sm" variant="secondary" onClick={() => setDeleteOpen(true)}>
-                <Trash2 className="mr-2 h-4 w-4"/></Button>
+                <Trash2 className="mr-2 h-4 w-4" /></Button>
 
             <ConfirmDialog
                 open={deleteOpen}
@@ -144,13 +144,13 @@ export function BlockActions({
                     <div className="grid gap-3">
                         <div className="grid gap-1.5">
                             <Label>Title</Label>
-                            <Input value={title} onChange={(e) => setTitle(e.target.value)}/>
+                            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
                         </div>
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="grid gap-1.5">
                                 <Label>When</Label>
-                                <WhenSelect value={when} onValueChange={setWhen}/>
+                                <WhenSelect value={when} onValueChange={setWhen} />
                             </div>
                             <div className="grid gap-1.5">
                                 <Label>Estimated cost</Label>

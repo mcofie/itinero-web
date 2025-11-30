@@ -2,16 +2,16 @@
 "use client";
 
 import * as React from "react";
-import {useState, useEffect, useRef} from "react";
-import {useRouter} from "next/navigation";
-import {Plus, MapPin, Loader2} from "lucide-react";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Textarea} from "@/components/ui/textarea";
-import {Separator} from "@/components/ui/separator";
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter} from "@/components/ui/dialog";
-import {createClientBrowser} from "@/lib/supabase/browser";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Plus, MapPin, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 
 type UUID = string;
 type When = "morning" | "afternoon" | "evening";
@@ -43,17 +43,17 @@ type NewItineraryItem = {
 };
 
 export function AddItemUnderDay({
-                                    tripId,
-                                    date, // yyyy-mm-dd (or null -> fallback ordering)
-                                    nextOrderIndex, // pass the next index to append at end
-                                    defaultWhen = "afternoon",
-                                    destinationLat,
-                                    destinationLng,
-                                    radiusKm = 50,
-                                    tripStartDate,
-                                    preferenceTags, // e.g. ["food","culture"]
-                                    dayIndex, // include if your table requires NOT NULL day_index
-                                }: {
+    tripId,
+    date, // yyyy-mm-dd (or null -> fallback ordering)
+    nextOrderIndex, // pass the next index to append at end
+    defaultWhen = "afternoon",
+    destinationLat,
+    destinationLng,
+    radiusKm = 50,
+    tripStartDate,
+    preferenceTags, // e.g. ["food","culture"]
+    dayIndex, // include if your table requires NOT NULL day_index
+}: {
     tripId: UUID;
     date: string | null;
     nextOrderIndex: number;
@@ -66,7 +66,7 @@ export function AddItemUnderDay({
     dayIndex: number;
 }) {
     const router = useRouter();
-    const sb = createClientBrowser();
+    const sb = getSupabaseBrowser();
 
     const [open, setOpen] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -128,7 +128,7 @@ export function AddItemUnderDay({
 
                 // Try RPC first when we have a location
                 if (typeof destinationLat === "number" && typeof destinationLng === "number") {
-                    const {data, error} = await sb
+                    const { data, error } = await sb
                         .schema("itinero")
                         .rpc("find_places_near", {
                             lat: destinationLat,
@@ -158,7 +158,7 @@ export function AddItemUnderDay({
                         query = query.overlaps("tags", preferenceTags);
                     }
 
-                    const {data, error} = await query;
+                    const { data, error } = await query;
                     if (!error && Array.isArray(data)) {
                         results = data as PlaceLite[];
                     }
@@ -218,7 +218,7 @@ export function AddItemUnderDay({
                 payload.day_index = dayIndex;
             }
 
-            const {error} = await sb.schema("itinero").from("itinerary_items").insert(payload);
+            const { error } = await sb.schema("itinero").from("itinerary_items").insert(payload);
             if (error) throw error;
 
             setOpen(false);
@@ -230,9 +230,9 @@ export function AddItemUnderDay({
 
     return (
         <>
-            <Separator className="my-3"/>
+            <Separator className="my-3" />
             <Button size="sm" variant="secondary" onClick={() => setOpen(true)}>
-                <Plus className="mr-2 h-4 w-4"/>
+                <Plus className="mr-2 h-4 w-4" />
                 Add item
             </Button>
 
@@ -263,7 +263,7 @@ export function AddItemUnderDay({
                                 {/* Visual indicator that a Place is locked in */}
                                 {selectedPlace && (
                                     <div className="absolute left-3 top-2.5 text-primary animate-in fade-in zoom-in">
-                                        <MapPin className="h-4 w-4"/>
+                                        <MapPin className="h-4 w-4" />
                                     </div>
                                 )}
 
@@ -274,7 +274,7 @@ export function AddItemUnderDay({
                                         className="absolute top-full mt-1 w-full rounded-md border bg-popover shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1">
                                         {placeLoading ? (
                                             <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
-                                                <Loader2 className="h-4 w-4 animate-spin"/>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
                                                 Finding places...
                                             </div>
                                         ) : (
@@ -292,17 +292,17 @@ export function AddItemUnderDay({
                                                         >
                                                             <div
                                                                 className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                                                <MapPin className="h-3.5 w-3.5"/>
+                                                                <MapPin className="h-3.5 w-3.5" />
                                                             </div>
                                                             <div className="flex-1">
-                          <span className="block text-sm font-medium leading-none mb-1">
-                            {p.name}
-                          </span>
+                                                                <span className="block text-sm font-medium leading-none mb-1">
+                                                                    {p.name}
+                                                                </span>
                                                                 <span
                                                                     className="block text-xs text-muted-foreground line-clamp-1">
-                            {[p.city, p.country].filter(Boolean).join(", ")}
+                                                                    {[p.city, p.country].filter(Boolean).join(", ")}
                                                                     {typeof p.distance_km === "number" && ` • ${p.distance_km.toFixed(1)} km`}
-                          </span>
+                                                                </span>
                                                             </div>
                                                         </button>
                                                     </li>
@@ -318,7 +318,7 @@ export function AddItemUnderDay({
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
                                 <Label>When</Label>
-                                <WhenSelect value={when} onValueChange={setWhen}/>
+                                <WhenSelect value={when} onValueChange={setWhen} />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Duration (min)</Label>
@@ -332,8 +332,8 @@ export function AddItemUnderDay({
                                     />
                                     <span
                                         className="absolute right-3 top-2.5 text-xs text-muted-foreground pointer-events-none">
-              min
-            </span>
+                                        min
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -342,9 +342,9 @@ export function AddItemUnderDay({
                         <div className="grid gap-2">
                             <Label>Estimated cost</Label>
                             <div className="relative">
-             <span className="absolute left-3 top-2.5 text-muted-foreground text-sm font-medium">
-              GHS
-            </span>
+                                <span className="absolute left-3 top-2.5 text-muted-foreground text-sm font-medium">
+                                    GHS
+                                </span>
                                 <Input
                                     className="pl-12" // Make room for currency
                                     type="number"
@@ -376,7 +376,7 @@ export function AddItemUnderDay({
                         <Button onClick={onCreate} disabled={busy || !title}>
                             {busy ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     Adding...
                                 </>
                             ) : "Add Item"}
@@ -391,9 +391,9 @@ export function AddItemUnderDay({
 /* ----- small helper ----- */
 
 function WhenSelect({
-                        value,
-                        onValueChange,
-                    }: {
+    value,
+    onValueChange,
+}: {
     value: When;
     onValueChange: (w: When) => void;
 }) {

@@ -3,11 +3,11 @@
 
 import * as React from "react";
 import AppShell from "@/components/layout/AppShell";
-import { createClientBrowser } from "@/lib/supabase/browser";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 
 export default function TripMakerLayout({ children }: { children: React.ReactNode }) {
     // If you also want to show the email in AppShell:
-    const sb = createClientBrowser();
+    const sb = getSupabaseBrowser();
     const [email, setEmail] = React.useState<string | null>(null);
     const [preferredCurrency, setPreferredCurrency] = React.useState<string | null>(null);
 

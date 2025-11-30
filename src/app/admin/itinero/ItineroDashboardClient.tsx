@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import {createClientBrowser} from "@/lib/supabase/browser";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Textarea} from "@/components/ui/textarea";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
     Tabs,
     TabsList,
@@ -26,7 +26,7 @@ import {
     SelectItem,
     SelectValue,
 } from "@/components/ui/select";
-import {Badge} from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import {
     Loader2,
     MapPin,
@@ -39,7 +39,7 @@ import {
     Flag,
     History,
 } from "lucide-react";
-import {cn} from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 /* =====================================================
    Types
@@ -65,6 +65,9 @@ export type PlaceOption = {
     tags?: string[] | null;
     description?: string | null;
     destination_id?: string | null;
+    popularity?: number | null;
+    cost_typical?: number | null;
+    cost_currency?: string | null;
 };
 
 type ItineroDashboardClientProps = {
@@ -111,10 +114,10 @@ type GuidedTour = {
 ===================================================== */
 
 export default function ItineroDashboardClient({
-                                                   initialDestinations,
-                                                   initialPlaces,
-                                               }: ItineroDashboardClientProps) {
-    const sb = React.useMemo(() => createClientBrowser(), []);
+    initialDestinations,
+    initialPlaces,
+}: ItineroDashboardClientProps) {
+    const sb = React.useMemo(() => getSupabaseBrowser(), []);
 
     const [destinations, setDestinations] = React.useState<DestinationOption[]>(
         initialDestinations
@@ -180,6 +183,9 @@ export default function ItineroDashboardClient({
     const [placeLng, setPlaceLng] = React.useState<string>("");
     const [placeTags, setPlaceTags] = React.useState("");
     const [placeDescription, setPlaceDescription] = React.useState("");
+    const [placePopularity, setPlacePopularity] = React.useState<string>("");
+    const [placeCostTypical, setPlaceCostTypical] = React.useState<string>("");
+    const [placeCostCurrency, setPlaceCostCurrency] = React.useState<string>("");
     const [placeSaving, setPlaceSaving] = React.useState(false);
     const [placeMessage, setPlaceMessage] = React.useState<string | null>(null);
     const [editingPlaceId, setEditingPlaceId] = React.useState<string | null>(
@@ -235,6 +241,9 @@ export default function ItineroDashboardClient({
         setPlaceLng("");
         setPlaceTags("");
         setPlaceDescription("");
+        setPlacePopularity("");
+        setPlaceCostTypical("");
+        setPlaceCostCurrency("");
         setEditingPlaceId(null);
         setPlaceMessage(null);
     }
@@ -283,14 +292,14 @@ export default function ItineroDashboardClient({
             setHistLoadingList(true);
             setHistMessage(null);
             try {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("destination_history")
                     .select(
                         "id,destination_id,section,payload,created_at,backdrop_image_url,backdrop_image_attribution"
                     )
                     .eq("destination_id", histDestinationId)
-                    .order("created_at", {ascending: false});
+                    .order("created_at", { ascending: false });
 
                 if (error) {
                     setHistMessage(error.message ?? "Failed to load history.");
@@ -317,12 +326,12 @@ export default function ItineroDashboardClient({
         (async () => {
             setTourMessage(null);
             try {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("guided_tours")
                     .select("id,title,destination_id,summary,days,difficulty")
                     .eq("destination_id", tourDestinationId)
-                    .order("created_at", {ascending: false});
+                    .order("created_at", { ascending: false });
 
                 if (error) {
                     setTourMessage(error.message ?? "Failed to load tours.");
@@ -350,14 +359,14 @@ export default function ItineroDashboardClient({
             setCurrentHistoryLoading(true);
             setCurrentHistoryMessage(null);
             try {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("destination_history")
                     .select(
                         "id,destination_id,section,payload,created_at,backdrop_image_url,backdrop_image_attribution"
                     )
                     .eq("destination_id", currentHistoryDestId)
-                    .order("created_at", {ascending: false});
+                    .order("created_at", { ascending: false });
 
                 if (error) {
                     setCurrentHistoryMessage(
@@ -403,7 +412,7 @@ export default function ItineroDashboardClient({
                 destLng.trim() !== "" ? Number(destLng.trim()) : null;
 
             if (editingDestId) {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("destinations")
                     .update({
@@ -434,7 +443,7 @@ export default function ItineroDashboardClient({
                 );
                 setDestMessage("Destination updated.");
             } else {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("destinations")
                     .insert({
@@ -486,7 +495,7 @@ export default function ItineroDashboardClient({
         if (!confirm("Delete this destination?")) return;
         setDestMessage(null);
         try {
-            const {error} = await sb
+            const { error } = await sb
                 .schema("itinero")
                 .from("destinations")
                 .delete()
@@ -531,7 +540,7 @@ export default function ItineroDashboardClient({
 
         setCurrentHistorySaving(true);
         try {
-            const {data, error} = await sb
+            const { data, error } = await sb
                 .schema("itinero")
                 .from("destinations")
                 .update({
@@ -596,7 +605,7 @@ export default function ItineroDashboardClient({
             };
 
             if (editingHistId) {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("destination_history")
                     .update({
@@ -627,7 +636,7 @@ export default function ItineroDashboardClient({
                 );
                 setHistMessage("History entry updated.");
             } else {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("destination_history")
                     .insert({
@@ -693,7 +702,7 @@ export default function ItineroDashboardClient({
         if (!confirm("Delete this history entry?")) return;
         setHistMessage(null);
         try {
-            const {error} = await sb
+            const { error } = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .delete()
@@ -734,8 +743,15 @@ export default function ItineroDashboardClient({
                 .map((t) => t.trim())
                 .filter(Boolean);
 
+            const popularityNum =
+                placePopularity.trim() !== "" ? Number(placePopularity.trim()) : null;
+            const costTypicalNum =
+                placeCostTypical.trim() !== "" ? Number(placeCostTypical.trim()) : null;
+            const costCurrencyVal =
+                placeCostCurrency.trim() !== "" ? placeCostCurrency.trim() : null;
+
             if (editingPlaceId) {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("places")
                     .update({
@@ -746,10 +762,13 @@ export default function ItineroDashboardClient({
                         lng: lngNum,
                         tags: tagsArr.length ? tagsArr : null,
                         description: placeDescription.trim() || null,
+                        popularity: popularityNum,
+                        cost_typical: costTypicalNum,
+                        cost_currency: costCurrencyVal,
                     })
                     .eq("id", editingPlaceId)
                     .select(
-                        "id,name,category,lat,lng,tags,description,destination_id"
+                        "id,name,category,lat,lng,tags,description,destination_id,popularity,cost_typical,cost_currency"
                     )
                     .maybeSingle();
 
@@ -767,7 +786,7 @@ export default function ItineroDashboardClient({
                 );
                 setPlaceMessage("Place updated.");
             } else {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("places")
                     .insert({
@@ -778,9 +797,12 @@ export default function ItineroDashboardClient({
                         lng: lngNum,
                         tags: tagsArr.length ? tagsArr : null,
                         description: placeDescription.trim() || null,
+                        popularity: popularityNum,
+                        cost_typical: costTypicalNum,
+                        cost_currency: costCurrencyVal,
                     })
                     .select(
-                        "id,name,category,lat,lng,tags,description,destination_id"
+                        "id,name,category,lat,lng,tags,description,destination_id,popularity,cost_typical,cost_currency"
                     )
                     .single();
 
@@ -812,6 +834,13 @@ export default function ItineroDashboardClient({
         setPlaceLng(p.lng?.toString() ?? "");
         setPlaceTags(tagsToString(p.tags));
         setPlaceDescription(p.description ?? "");
+        setPlacePopularity(
+            typeof p.popularity === "number" ? p.popularity.toString() : ""
+        );
+        setPlaceCostTypical(
+            typeof p.cost_typical === "number" ? p.cost_typical.toString() : ""
+        );
+        setPlaceCostCurrency(p.cost_currency ?? "");
         setPlaceMessage(null);
     }
 
@@ -819,7 +848,7 @@ export default function ItineroDashboardClient({
         if (!confirm("Delete this place?")) return;
         setPlaceMessage(null);
         try {
-            const {error} = await sb
+            const { error } = await sb
                 .schema("itinero")
                 .from("places")
                 .delete()
@@ -850,7 +879,7 @@ export default function ItineroDashboardClient({
         setTourSaving(true);
         try {
             if (editingTourId) {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("guided_tours")
                     .update({
@@ -880,7 +909,7 @@ export default function ItineroDashboardClient({
                 );
                 setTourMessage("Tour updated.");
             } else {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("guided_tours")
                     .insert({
@@ -930,7 +959,7 @@ export default function ItineroDashboardClient({
         if (!confirm("Delete this tour?")) return;
         setTourMessage(null);
         try {
-            const {error} = await sb
+            const { error } = await sb
                 .schema("itinero")
                 .from("guided_tours")
                 .delete()
@@ -1000,12 +1029,12 @@ export default function ItineroDashboardClient({
                     <div className="flex gap-2">
                         <Badge
                             className="rounded-full bg-white border-slate-200 text-slate-600 px-3 py-1 shadow-sm dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400">
-                            <MapPin className="mr-1.5 h-3.5 w-3.5 text-blue-600"/>{" "}
+                            <MapPin className="mr-1.5 h-3.5 w-3.5 text-blue-600" />{" "}
                             {destinations.length} Destinations
                         </Badge>
                         <Badge
                             className="rounded-full bg-white border-slate-200 text-slate-600 px-3 py-1 shadow-sm dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400">
-                            <Database className="mr-1.5 h-3.5 w-3.5 text-emerald-600"/>{" "}
+                            <Database className="mr-1.5 h-3.5 w-3.5 text-emerald-600" />{" "}
                             {places.length} Places
                         </Badge>
                     </div>
@@ -1015,10 +1044,10 @@ export default function ItineroDashboardClient({
                     <div className="overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
                         <TabsList
                             className="inline-flex h-11 items-center justify-start rounded-full bg-slate-200/60 p-1 text-slate-500 w-full md:w-auto dark:bg-slate-800">
-                            <TabPill value="destinations" icon={Globe} label="Destinations"/>
-                            <TabPill value="history" icon={History} label="History / KBYG"/>
-                            <TabPill value="places" icon={MapPin} label="Places"/>
-                            <TabPill value="guided" icon={Flag} label="Guided Tours"/>
+                            <TabPill value="destinations" icon={Globe} label="Destinations" />
+                            <TabPill value="history" icon={History} label="History / KBYG" />
+                            <TabPill value="places" icon={MapPin} label="Places" />
+                            <TabPill value="guided" icon={Flag} label="Guided Tours" />
                         </TabsList>
                     </div>
 
@@ -1102,9 +1131,9 @@ export default function ItineroDashboardClient({
                                                 disabled={destSaving}
                                             >
                                                 {destSaving ? (
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                                 ) : (
-                                                    <Plus className="mr-2 h-4 w-4"/>
+                                                    <Plus className="mr-2 h-4 w-4" />
                                                 )}
                                                 {editingDestId ? "Save Changes" : "Add Destination"}
                                             </Button>
@@ -1118,7 +1147,7 @@ export default function ItineroDashboardClient({
                                 <div
                                     className="p-4 border-b border-slate-100 bg-slate-50/50 rounded-t-xl flex gap-3 dark:border-slate-800 dark:bg-slate-900">
                                     <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400"/>
+                                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                                         <Input
                                             placeholder="Search..."
                                             value={destSearch}
@@ -1131,64 +1160,64 @@ export default function ItineroDashboardClient({
                                     <table className="w-full text-sm text-left">
                                         <thead
                                             className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0 dark:bg-slate-950 dark:text-slate-400">
-                                        <tr>
-                                            <th className="px-4 py-3">Image</th>
-                                            <th className="px-4 py-3">Name</th>
-                                            <th className="px-4 py-3">Country</th>
-                                            <th className="px-4 py-3 text-right">Actions</th>
-                                        </tr>
+                                            <tr>
+                                                <th className="px-4 py-3">Image</th>
+                                                <th className="px-4 py-3">Name</th>
+                                                <th className="px-4 py-3">Country</th>
+                                                <th className="px-4 py-3 text-right">Actions</th>
+                                            </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                        {filteredDestinations.map((d) => (
-                                            <tr
-                                                key={d.id}
-                                                className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50"
-                                            >
-                                                <td className="px-4 py-3">
-                                                    {d.cover_url ? (
-                                                        <img
-                                                            src={d.cover_url}
-                                                            alt={d.name ?? "Destination"}
-                                                            className="h-10 w-16 object-cover rounded-md border border-slate-200 dark:border-slate-700"
-                                                        />
-                                                    ) : (
-                                                        <div
-                                                            className="h-10 w-16 rounded-md bg-slate-100 text-[10px] text-slate-400 flex items-center justify-center dark:bg-slate-800">
-                                                            No image
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
-                                                    <div className="flex flex-col gap-0.5">
-                                                        <span>{d.name}</span>
-                                                        {d.current_history_id && (
-                                                            <span
-                                                                className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                                  • Current history set
-                                </span>
+                                            {filteredDestinations.map((d) => (
+                                                <tr
+                                                    key={d.id}
+                                                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50"
+                                                >
+                                                    <td className="px-4 py-3">
+                                                        {d.cover_url ? (
+                                                            <img
+                                                                src={d.cover_url}
+                                                                alt={d.name ?? "Destination"}
+                                                                className="h-10 w-16 object-cover rounded-md border border-slate-200 dark:border-slate-700"
+                                                            />
+                                                        ) : (
+                                                            <div
+                                                                className="h-10 w-16 rounded-md bg-slate-100 text-[10px] text-slate-400 flex items-center justify-center dark:bg-slate-800">
+                                                                No image
+                                                            </div>
                                                         )}
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
-                                                    {d.country}
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
-                                                    <div className="flex justify-end gap-1">
-                                                        <ActionBtn
-                                                            icon={Pencil}
-                                                            onClick={() => startEditDestination(d)}
-                                                        />
-                                                        <ActionBtn
-                                                            icon={Trash2}
-                                                            onClick={() =>
-                                                                handleDeleteDestination(d.id)
-                                                            }
-                                                            destructive
-                                                        />
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                                    </td>
+                                                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <span>{d.name}</span>
+                                                            {d.current_history_id && (
+                                                                <span
+                                                                    className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                                                                    • Current history set
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
+                                                        {d.country}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <div className="flex justify-end gap-1">
+                                                            <ActionBtn
+                                                                icon={Pencil}
+                                                                onClick={() => startEditDestination(d)}
+                                                            />
+                                                            <ActionBtn
+                                                                icon={Trash2}
+                                                                onClick={() =>
+                                                                    handleDeleteDestination(d.id)
+                                                                }
+                                                                destructive
+                                                            />
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                     </table>
                                     {!filteredDestinations.length && (
@@ -1232,7 +1261,7 @@ export default function ItineroDashboardClient({
                                         >
                                             <SelectTrigger
                                                 className="bg-slate-50 border-slate-200 h-10 rounded-lg dark:bg-slate-950 dark:border-slate-800">
-                                                <SelectValue placeholder="Pick destination..."/>
+                                                <SelectValue placeholder="Pick destination..." />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {destinations.map((d) => (
@@ -1250,7 +1279,7 @@ export default function ItineroDashboardClient({
                                         </Label>
                                         {currentHistoryLoading ? (
                                             <div className="flex items-center text-xs text-slate-400 h-10">
-                                                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin"/>
+                                                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
                                                 Loading history entries…
                                             </div>
                                         ) : currentHistoryList.length === 0 ? (
@@ -1266,7 +1295,7 @@ export default function ItineroDashboardClient({
                                             >
                                                 <SelectTrigger
                                                     className="bg-slate-50 border-slate-200 h-10 rounded-lg dark:bg-slate-950 dark:border-slate-800">
-                                                    <SelectValue placeholder="Choose history entry…"/>
+                                                    <SelectValue placeholder="Choose history entry…" />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {currentHistoryList.map((h) => (
@@ -1291,7 +1320,7 @@ export default function ItineroDashboardClient({
                                             }
                                         >
                                             {currentHistorySaving && (
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                             )}
                                             Set Current
                                         </Button>
@@ -1330,7 +1359,7 @@ export default function ItineroDashboardClient({
                                     >
                                         <SelectTrigger
                                             className="bg-slate-50 border-slate-200 h-11 rounded-xl dark:bg-slate-950 dark:border-slate-800">
-                                            <SelectValue placeholder="Choose a city..."/>
+                                            <SelectValue placeholder="Choose a city..." />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {destinations.map((d) => (
@@ -1422,7 +1451,7 @@ export default function ItineroDashboardClient({
                                                 disabled={histSaving}
                                             >
                                                 {histSaving && (
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                                 )}
                                                 {editingHistId ? "Save Changes" : "Save History"}
                                             </Button>
@@ -1436,7 +1465,7 @@ export default function ItineroDashboardClient({
                                             {histLoadingList ? (
                                                 <div
                                                     className="flex items-center justify-center py-10 text-xs text-slate-500">
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                                     Loading history…
                                                 </div>
                                             ) : historyList.length === 0 ? (
@@ -1581,7 +1610,7 @@ export default function ItineroDashboardClient({
                                                 disabled={!placeDestinationId || placeSaving}
                                             >
                                                 {placeSaving && (
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                                 )}
                                                 {editingPlaceId ? "Save Place" : "Add Place"}
                                             </Button>
@@ -1610,39 +1639,39 @@ export default function ItineroDashboardClient({
                                         <table className="w-full text-sm text-left">
                                             <thead
                                                 className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0 dark:bg-slate-950">
-                                            <tr>
-                                                <th className="px-4 py-2">Name</th>
-                                                <th className="px-4 py-2">Category</th>
-                                                <th className="px-4 py-2 text-right">Edit</th>
-                                            </tr>
+                                                <tr>
+                                                    <th className="px-4 py-2">Name</th>
+                                                    <th className="px-4 py-2">Category</th>
+                                                    <th className="px-4 py-2 text-right">Edit</th>
+                                                </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                            {visiblePlaces.map((p) => (
-                                                <tr
-                                                    key={p.id}
-                                                    className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                                                >
-                                                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
-                                                        {p.name}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
-                                                        {p.category}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right">
-                                                        <div className="flex justify-end gap-1">
-                                                            <ActionBtn
-                                                                icon={Pencil}
-                                                                onClick={() => startEditPlace(p)}
-                                                            />
-                                                            <ActionBtn
-                                                                icon={Trash2}
-                                                                onClick={() => handleDeletePlace(p.id)}
-                                                                destructive
-                                                            />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                {visiblePlaces.map((p) => (
+                                                    <tr
+                                                        key={p.id}
+                                                        className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                                    >
+                                                        <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
+                                                            {p.name}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
+                                                            {p.category}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <div className="flex justify-end gap-1">
+                                                                <ActionBtn
+                                                                    icon={Pencil}
+                                                                    onClick={() => startEditPlace(p)}
+                                                                />
+                                                                <ActionBtn
+                                                                    icon={Trash2}
+                                                                    onClick={() => handleDeletePlace(p.id)}
+                                                                    destructive
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
                                             </tbody>
                                         </table>
                                     )}
@@ -1650,7 +1679,6 @@ export default function ItineroDashboardClient({
                             </Card>
                         </div>
                     </TabsContent>
-
                     {/* GUIDED TOURS */}
                     <TabsContent value="guided" className="mt-6">
                         <Card className="border-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -1677,7 +1705,7 @@ export default function ItineroDashboardClient({
                                     >
                                         <SelectTrigger
                                             className="bg-slate-50 border-slate-200 h-10 rounded-lg dark:bg-slate-950 dark:border-slate-800">
-                                            <SelectValue placeholder="Pick destination..."/>
+                                            <SelectValue placeholder="Pick destination..." />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {destinations.map((d) => (
@@ -1730,7 +1758,7 @@ export default function ItineroDashboardClient({
                                                     >
                                                         <SelectTrigger
                                                             className="bg-slate-50 border-slate-200 h-10 rounded-lg dark:bg-slate-950 dark:border-slate-800">
-                                                            <SelectValue/>
+                                                            <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="easy">
@@ -1767,7 +1795,7 @@ export default function ItineroDashboardClient({
                                                     disabled={tourSaving}
                                                 >
                                                     {tourSaving && (
-                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                                     )}
                                                     {editingTourId ? "Save Tour" : "Add Tour"}
                                                 </Button>
@@ -1796,9 +1824,9 @@ export default function ItineroDashboardClient({
                                                         >
                                                             <div className="space-y-1">
                                                                 <div className="flex items-center gap-2">
-                                  <span className="font-semibold text-slate-900 dark:text-white text-sm">
-                                    {t.title}
-                                  </span>
+                                                                    <span className="font-semibold text-slate-900 dark:text-white text-sm">
+                                                                        {t.title}
+                                                                    </span>
                                                                     <Badge
                                                                         variant="outline"
                                                                         className="text-[10px] rounded-full px-2 py-0.5"
@@ -1843,10 +1871,10 @@ export default function ItineroDashboardClient({
 /* ---------- Sub-components for clean code ---------- */
 
 function TabPill({
-                     value,
-                     icon: Icon,
-                     label,
-                 }: {
+    value,
+    icon: Icon,
+    label,
+}: {
     value: string;
     icon: any;
     label: string;
@@ -1856,19 +1884,19 @@ function TabPill({
             value={value}
             className="rounded-full px-4 py-2 text-sm font-medium gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-blue-400"
         >
-            <Icon className="h-4 w-4"/>
+            <Icon className="h-4 w-4" />
             {label}
         </TabsTrigger>
     );
 }
 
 function FormInput({
-                       label,
-                       value,
-                       onChange,
-                       placeholder,
-                       type = "text",
-                   }: any) {
+    label,
+    value,
+    onChange,
+    placeholder,
+    type = "text",
+}: any) {
     return (
         <div className="space-y-1.5">
             <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
@@ -1886,12 +1914,12 @@ function FormInput({
 }
 
 function FormTextarea({
-                          label,
-                          value,
-                          onChange,
-                          placeholder,
-                          rows,
-                      }: any) {
+    label,
+    value,
+    onChange,
+    placeholder,
+    rows,
+}: any) {
     return (
         <div className="space-y-1.5">
             <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
@@ -1909,10 +1937,10 @@ function FormTextarea({
 }
 
 function ActionBtn({
-                       icon: Icon,
-                       onClick,
-                       destructive,
-                   }: {
+    icon: Icon,
+    onClick,
+    destructive,
+}: {
     icon: any;
     onClick: () => void;
     destructive?: boolean;
@@ -1928,7 +1956,7 @@ function ActionBtn({
                     : "text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
             )}
         >
-            <Icon className="h-4 w-4"/>
+            <Icon className="h-4 w-4" />
         </button>
     );
 }
