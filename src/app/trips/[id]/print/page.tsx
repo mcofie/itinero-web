@@ -1,6 +1,6 @@
 import * as React from "react";
-import {redirect} from "next/navigation";
-import {createClientServerRSC} from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { createClientServerRSC } from "@/lib/supabase/server";
 
 /* Force SSR, no cache */
 export const dynamic = "force-dynamic";
@@ -145,7 +145,7 @@ function formatDateRange(start?: string | null, end?: string | null) {
 function groupItemsByDayIndex(items: ItemRow[]): Day[] {
     const map = new Map<number, { date: string | null; items: ItemRow[] }>();
     for (const it of items) {
-        if (!map.has(it.day_index)) map.set(it.day_index, {date: it.date, items: []});
+        if (!map.has(it.day_index)) map.set(it.day_index, { date: it.date, items: [] });
         map.get(it.day_index)!.items.push(it);
     }
     return Array.from(map.entries())
@@ -177,7 +177,7 @@ function minutes(v?: number | null) {
 }
 
 function whenLabel(w: DayBlock["when"]) {
-    const map = {morning: "🌅 Morning", afternoon: "🌞 Afternoon", evening: "🌙 Evening"};
+    const map = { morning: "🌅 Morning", afternoon: "🌞 Afternoon", evening: "🌙 Evening" };
     return map[w] || w;
 }
 
@@ -267,20 +267,20 @@ function coerceHistoryPayload(p: unknown): DestinationHistoryPayload {
 /* ---------------- page ---------------- */
 
 export default async function TripPrintPage({
-                                                params,
-                                                searchParams,
-                                            }: {
+    params,
+    searchParams,
+}: {
     params: Promise<{ id: string }>;
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const {id} = await params;
+    const { id } = await params;
     const sp = await searchParams;
 
     const sb = await createClientServerRSC();
     const isHeadless = sp.print === "1";
 
     const {
-        data: {user},
+        data: { user },
     } = await sb.auth.getUser();
 
     if (!user && !isHeadless) {
@@ -290,7 +290,7 @@ export default async function TripPrintPage({
     const tripId = id;
 
     // 1. Fetch Trip
-    const {data: trip} = await sb
+    const { data: trip } = await sb
         .schema("itinero")
         .from("trips")
         .select("*")
@@ -300,13 +300,13 @@ export default async function TripPrintPage({
     if (!trip) redirect("/trips");
 
     // 2. Fetch Items
-    const {data: items} = await sb
+    const { data: items } = await sb
         .schema("itinero")
         .from("itinerary_items")
         .select("*")
         .eq("trip_id", tripId)
-        .order("date", {ascending: true, nullsFirst: true})
-        .order("order_index", {ascending: true});
+        .order("date", { ascending: true, nullsFirst: true })
+        .order("order_index", { ascending: true });
 
     const safeItems: ItemRow[] = Array.isArray(items) ? (items as ItemRow[]) : [];
     const days = groupItemsByDayIndex(safeItems);
@@ -315,7 +315,7 @@ export default async function TripPrintPage({
     const placeIds = Array.from(new Set(safeItems.map((r) => r.place_id).filter(Boolean))) as string[];
     let places: PlaceRow[] = [];
     if (placeIds.length) {
-        const {data: pRows} = await sb
+        const { data: pRows } = await sb
             .schema("itinero")
             .from("places")
             .select("id,name,lat,lng,category,tags")
@@ -333,7 +333,7 @@ export default async function TripPrintPage({
     let kbyg: ItineroKBYG | undefined;
 
     if (trip.destination_id) {
-        const {data: dest} = await sb
+        const { data: dest } = await sb
             .schema("itinero")
             .from("destinations")
             .select("id,name,lat,lng,current_history_id")
@@ -341,7 +341,7 @@ export default async function TripPrintPage({
             .maybeSingle<DestinationRow>();
 
         if (dest?.current_history_id) {
-            const {data: histRow} = await sb
+            const { data: histRow } = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select("id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution")
@@ -379,12 +379,12 @@ export default async function TripPrintPage({
 
     return (
         <html lang="en">
-        <head>
-            <meta charSet="utf-8"/>
-            <title>{trip.title ?? "Trip"} – Printable</title>
-            <link rel="preconnect" href="https://images.unsplash.com" crossOrigin=""/>
+            <head>
+                <meta charSet="utf-8" />
+                <title>{trip.title ?? "Trip"} – Printable</title>
+                <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="" />
 
-            <style>{`
+                <style>{`
           @page { size: A4; margin: 15mm; }
           * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           html, body { margin: 0; padding: 0; height: 100%; }
@@ -550,258 +550,258 @@ export default async function TripPrintPage({
           }
         `}</style>
 
-            <script
-                dangerouslySetInnerHTML={{
-                    __html: `
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `
               if (new URLSearchParams(window.location.search).get("print") === "1") {
                 window.addEventListener("load", () => setTimeout(window.print, 500));
               }
             `,
-                }}
-            />
-        </head>
-        <body>
-        <div className="global-footer">
-            <span>{trip.title}</span>
-            <span className="page-number"></span>
-        </div>
+                    }}
+                />
+            </head>
+            <body>
+                <div className="global-footer">
+                    <span>{trip.title}</span>
+                    <span className="page-number"></span>
+                </div>
 
-        {/* --- Page 1: Cover & Context --- */}
-        <div className="container page-break">
-            <div className="cover-hero">
-                <img src={hero} className="cover-img" alt="Cover"/>
-                <div className="cover-overlay">
-                    <div className="cover-meta">
-                        <span className="cover-badge">Itinerary</span>
-                        <span className="cover-badge">{destinationName}</span>
+                {/* --- Page 1: Cover & Context --- */}
+                <div className="container page-break">
+                    <div className="cover-hero">
+                        <img src={hero} className="cover-img" alt="Cover" />
+                        <div className="cover-overlay">
+                            <div className="cover-meta">
+                                <span className="cover-badge">Itinerary</span>
+                                <span className="cover-badge">{destinationName}</span>
+                            </div>
+                            <h1>{trip.title || "Untitled Trip"}</h1>
+                            <p style={{ color: "rgba(255,255,255,0.9)", marginTop: "4px", fontSize: "14px" }}>
+                                {dateRange}
+                            </p>
+                        </div>
                     </div>
-                    <h1>{trip.title || "Untitled Trip"}</h1>
-                    <p style={{color: "rgba(255,255,255,0.9)", marginTop: "4px", fontSize: "14px"}}>
-                        {dateRange}
-                    </p>
-                </div>
-            </div>
 
-            {/* Key Stats */}
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <div className="stat-label">Duration</div>
-                    <div className="stat-val">{days.length} days</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-label">Est. Cost</div>
-                    <div className="stat-val">{money(totalCost, trip.currency)}</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-label">Activities</div>
-                    <div className="stat-val">{totalBlocks}</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-label">City</div>
-                    <div className="stat-val" style={{fontSize: 12, lineHeight: 1.2}}>{destinationName}</div>
-                </div>
-            </div>
+                    {/* Key Stats */}
+                    <div className="stats-grid">
+                        <div className="stat-card">
+                            <div className="stat-label">Duration</div>
+                            <div className="stat-val">{days.length} days</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-label">Est. Cost</div>
+                            <div className="stat-val">{money(totalCost, trip.currency)}</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-label">Activities</div>
+                            <div className="stat-val">{totalBlocks}</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-label">City</div>
+                            <div className="stat-val" style={{ fontSize: 12, lineHeight: 1.2 }}>{destinationName}</div>
+                        </div>
+                    </div>
 
-            {/* Context Grid: About & KBYG */}
-            <div className="info-grid">
-                {/* Left Column: Narrative */}
-                <div>
-                    {(aboutText || historyText) && (
-                        <div style={{marginBottom: "8mm"}}>
-                            <h3>About {destinationName}</h3>
-                            {aboutText && <p style={{marginBottom: "8px"}}>{aboutText}</p>}
-                            {historyText && (
-                                <>
-                                    <h3>History</h3>
-                                    <p>{historyText}</p>
-                                </>
+                    {/* Context Grid: About & KBYG */}
+                    <div className="info-grid">
+                        {/* Left Column: Narrative */}
+                        <div>
+                            {(aboutText || historyText) && (
+                                <div style={{ marginBottom: "8mm" }}>
+                                    <h3>About {destinationName}</h3>
+                                    {aboutText && <p style={{ marginBottom: "8px" }}>{aboutText}</p>}
+                                    {historyText && (
+                                        <>
+                                            <h3>History</h3>
+                                            <p>{historyText}</p>
+                                        </>
+                                    )}
+                                </div>
                             )}
-                        </div>
-                    )}
 
-                    {lodging && (
-                        <div>
-                            <h3>🏨 Accommodation</h3>
-                            <div style={{
-                                background: "#f8fafc",
-                                padding: "10px",
-                                borderRadius: "8px",
-                                border: "1px solid #e2e8f0"
-                            }}>
-                                <div style={{fontWeight: 600}}>{lodging.name}</div>
-                                <div className="tiny muted">Check app for details</div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* QR Code Section */}
-                    {qrUrl && (
-                        <div className="qr-section">
-                            <img src={qrUrl} alt="QR" style={{width: '60px', height: '60px', borderRadius: '4px'}}/>
-                            <div>
-                                <div className="qr-title">Live Map & Details</div>
-                                <div className="qr-text">Scan to view interactive map and updates.</div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Right Column: KBYG & Sources */}
-                <div>
-                    {kbyg && (
-                        <div style={{marginBottom: "8mm"}}>
-                            <h3>Know Before You Go</h3>
-                            <div className="kbyg-grid">
-                                {kbyg.currency && (
-                                    <div className="kbyg-card">
-                                        <span className="kbyg-icon">💱</span>
-                                        <div>
-                                            <div className="tiny muted">Currency</div>
-                                            <div style={{fontWeight: 600}}>{kbyg.currency}</div>
-                                        </div>
-                                    </div>
-                                )}
-                                {kbyg.weather && (
-                                    <div className="kbyg-card">
-                                        <span className="kbyg-icon">🌤️</span>
-                                        <div>
-                                            <div className="tiny muted">Weather</div>
-                                            <div
-                                                style={{fontWeight: 600}}>{typeof kbyg.weather === 'object' && (kbyg.weather as any).summary ? (kbyg.weather as any).summary : '—'}</div>
-                                        </div>
-                                    </div>
-                                )}
-                                {kbyg.plugs && (
-                                    <div className="kbyg-card">
-                                        <span className="kbyg-icon">🔌</span>
-                                        <div>
-                                            <div className="tiny muted">Plugs</div>
-                                            <div style={{fontWeight: 600}}>{kbyg.plugs}</div>
-                                        </div>
-                                    </div>
-                                )}
-                                {kbyg.getting_around && (
-                                    <div className="kbyg-card">
-                                        <span className="kbyg-icon">🚌</span>
-                                        <div>
-                                            <div className="tiny muted">Transport</div>
-                                            <div style={{
-                                                fontWeight: 600,
-                                                fontSize: 10
-                                            }}>{kbyg.getting_around.split(',')[0]}</div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Interests Chips */}
-                    {interests.length > 0 && (
-                        <div>
-                            <h3>Interests</h3>
-                            <div style={{display: "flex", flexWrap: "wrap", gap: "6px"}}>
-                                {interests.map((i) => (
-                                    <span key={i} style={{
-                                        fontSize: "11px",
-                                        background: "#f1f5f9",
-                                        padding: "4px 8px",
-                                        borderRadius: "6px",
+                            {lodging && (
+                                <div>
+                                    <h3>🏨 Accommodation</h3>
+                                    <div style={{
+                                        background: "#f8fafc",
+                                        padding: "10px",
+                                        borderRadius: "8px",
                                         border: "1px solid #e2e8f0"
                                     }}>
-                        {emojiForInterest(i)} {i}
-                      </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
+                                        <div style={{ fontWeight: 600 }}>{lodging.name}</div>
+                                        <div className="tiny muted">Check app for details</div>
+                                    </div>
+                                </div>
+                            )}
 
-        {/* --- Itinerary Section --- */}
-        <div className="container" style={{marginTop: "0"}}>
-            <h2 style={{marginBottom: '16px', borderBottom: 'none'}}>Detailed Itinerary</h2>
-
-            {days.map((day, idx) => {
-                const dayCost = sum(day.blocks, (b) => b.est_cost);
-                const specificDayNote = dayNotesMap[day.date]; // Check for day note
-
-                return (
-                    <div key={idx} className="day-block">
-                        <div className="day-header">
-                            <span className="day-title">Day {idx + 1} · {formatDate(day.date)}</span>
-                            <span
-                                className="day-meta">{day.blocks.length} Stops · Est. {money(dayCost, trip.currency)}</span>
+                            {/* QR Code Section */}
+                            {qrUrl && (
+                                <div className="qr-section">
+                                    <img src={qrUrl} alt="QR" style={{ width: '60px', height: '60px', borderRadius: '4px' }} />
+                                    <div>
+                                        <div className="qr-title">Live Map & Details</div>
+                                        <div className="qr-text">Scan to view interactive map and updates.</div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Render Day Note if Exists */}
-                        {specificDayNote && (
-                            <div className="day-note">
-                                📝 <strong>Note:</strong> {specificDayNote}
-                            </div>
-                        )}
-
-                        <table className="timeline-table">
-                            <thead>
-                            <tr>
-                                <th style={{width: '15%'}}>Time</th>
-                                <th style={{width: '40%'}}>Activity</th>
-                                <th style={{width: '45%'}}>Details</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {day.blocks.map(b => (
-                                <tr key={b.id || b.title}>
-                                    <td>
-                                        <div className="event-time">{whenLabel(b.when)}</div>
-                                        <div style={{
-                                            fontSize: '10px',
-                                            color: '#94a3b8',
-                                            marginTop: 2
-                                        }}>{minutes(b.duration_min)}</div>
-                                    </td>
-                                    <td>
-                                        <div className="event-title">{b.title}</div>
-                                        {b.place_id && (
-                                            <div className="event-details"
-                                                 style={{display: 'flex', alignItems: 'center', gap: 4}}>
-                                                <span>📍</span> {placeName(b.place_id)}
+                        {/* Right Column: KBYG & Sources */}
+                        <div>
+                            {kbyg && (
+                                <div style={{ marginBottom: "8mm" }}>
+                                    <h3>Know Before You Go</h3>
+                                    <div className="kbyg-grid">
+                                        {kbyg.currency && (
+                                            <div className="kbyg-card">
+                                                <span className="kbyg-icon">💱</span>
+                                                <div>
+                                                    <div className="tiny muted">Currency</div>
+                                                    <div style={{ fontWeight: 600 }}>{kbyg.currency}</div>
+                                                </div>
                                             </div>
                                         )}
-                                    </td>
-                                    <td>
-                                        <div className="event-details">
-                                            {b.est_cost > 0 && <span>Cost: {money(b.est_cost, trip.currency)}</span>}
-                                            {b.travel_min_from_prev > 0 && <span
-                                                style={{marginLeft: 8}}>🚗 {minutes(b.travel_min_from_prev)} travel</span>}
-                                        </div>
-                                        {b.notes && <div className="event-notes">{b.notes}</div>}
-                                    </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
+                                        {!!kbyg.weather && (
+                                            <div className="kbyg-card">
+                                                <span className="kbyg-icon">🌤️</span>
+                                                <div>
+                                                    <div className="tiny muted">Weather</div>
+                                                    <div
+                                                        style={{ fontWeight: 600 }}>{typeof kbyg.weather === 'object' && (kbyg.weather as any).summary ? (kbyg.weather as any).summary : '—'}</div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {kbyg.plugs && (
+                                            <div className="kbyg-card">
+                                                <span className="kbyg-icon">🔌</span>
+                                                <div>
+                                                    <div className="tiny muted">Plugs</div>
+                                                    <div style={{ fontWeight: 600 }}>{kbyg.plugs}</div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {kbyg.getting_around && (
+                                            <div className="kbyg-card">
+                                                <span className="kbyg-icon">🚌</span>
+                                                <div>
+                                                    <div className="tiny muted">Transport</div>
+                                                    <div style={{
+                                                        fontWeight: 600,
+                                                        fontSize: 10
+                                                    }}>{kbyg.getting_around.split(',')[0]}</div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Interests Chips */}
+                            {interests.length > 0 && (
+                                <div>
+                                    <h3>Interests</h3>
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                                        {interests.map((i) => (
+                                            <span key={i} style={{
+                                                fontSize: "11px",
+                                                background: "#f1f5f9",
+                                                padding: "4px 8px",
+                                                borderRadius: "6px",
+                                                border: "1px solid #e2e8f0"
+                                            }}>
+                                                {emojiForInterest(i)} {i}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                )
-            })}
+                </div>
 
-            {/* --- Trip Notes Section (Corrected) --- */}
-            <div className="notes-area page-break">
-                <h3>Trip Notes</h3>
+                {/* --- Itinerary Section --- */}
+                <div className="container" style={{ marginTop: "0" }}>
+                    <h2 style={{ marginBottom: '16px', borderBottom: 'none' }}>Detailed Itinerary</h2>
 
-                {/* If general trip note exists, render it */}
-                {tripGeneralNote ? (
-                    <div className="notes-content">
-                        {tripGeneralNote}
+                    {days.map((day, idx) => {
+                        const dayCost = sum(day.blocks, (b) => b.est_cost);
+                        const specificDayNote = dayNotesMap[day.date]; // Check for day note
+
+                        return (
+                            <div key={idx} className="day-block">
+                                <div className="day-header">
+                                    <span className="day-title">Day {idx + 1} · {formatDate(day.date)}</span>
+                                    <span
+                                        className="day-meta">{day.blocks.length} Stops · Est. {money(dayCost, trip.currency)}</span>
+                                </div>
+
+                                {/* Render Day Note if Exists */}
+                                {specificDayNote && (
+                                    <div className="day-note">
+                                        📝 <strong>Note:</strong> {specificDayNote}
+                                    </div>
+                                )}
+
+                                <table className="timeline-table">
+                                    <thead>
+                                        <tr>
+                                            <th style={{ width: '15%' }}>Time</th>
+                                            <th style={{ width: '40%' }}>Activity</th>
+                                            <th style={{ width: '45%' }}>Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {day.blocks.map(b => (
+                                            <tr key={b.id || b.title}>
+                                                <td>
+                                                    <div className="event-time">{whenLabel(b.when)}</div>
+                                                    <div style={{
+                                                        fontSize: '10px',
+                                                        color: '#94a3b8',
+                                                        marginTop: 2
+                                                    }}>{minutes(b.duration_min)}</div>
+                                                </td>
+                                                <td>
+                                                    <div className="event-title">{b.title}</div>
+                                                    {b.place_id && (
+                                                        <div className="event-details"
+                                                            style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                            <span>📍</span> {placeName(b.place_id)}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <div className="event-details">
+                                                        {b.est_cost > 0 && <span>Cost: {money(b.est_cost, trip.currency)}</span>}
+                                                        {b.travel_min_from_prev > 0 && <span
+                                                            style={{ marginLeft: 8 }}>🚗 {minutes(b.travel_min_from_prev)} travel</span>}
+                                                    </div>
+                                                    {b.notes && <div className="event-notes">{b.notes}</div>}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )
+                    })}
+
+                    {/* --- Trip Notes Section (Corrected) --- */}
+                    <div className="notes-area page-break">
+                        <h3>Trip Notes</h3>
+
+                        {/* If general trip note exists, render it */}
+                        {tripGeneralNote ? (
+                            <div className="notes-content">
+                                {tripGeneralNote}
+                            </div>
+                        ) : null}
+
+                        {/* Fallback lines for manual notes */}
+                        <div className="notes-lines"></div>
                     </div>
-                ) : null}
-
-                {/* Fallback lines for manual notes */}
-                <div className="notes-lines"></div>
-            </div>
-        </div>
-        </body>
+                </div>
+            </body>
         </html>
     );
 }
