@@ -118,6 +118,7 @@ const fadeUp = {
     initial: { opacity: 0, y: 20 },
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true, margin: "-100px" },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     transition: { duration: 0.5, ease: "easeOut" } as any
 };
 

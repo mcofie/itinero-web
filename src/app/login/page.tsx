@@ -177,7 +177,7 @@ export default function LoginPage() {
                                     onClick={() => setMode((m) => (m === "login" ? "signup" : "login"))}
                                 >
                                     {mode === "login"
-                                        ? "Don'share have an account? Sign up"
+                                        ? "Don&apos;t have an account? Sign up"
                                         : "Already have an account? Sign in"}
                                 </button>
                             </div>
@@ -186,7 +186,7 @@ export default function LoginPage() {
                 </div>
 
                 <p className="mt-8 text-center text-xs text-slate-400">
-                    By continuing, you agree to Itinero's <Link href="/terms" className="underline hover:text-slate-600">Terms of Service</Link> and <Link href="/privacy" className="underline hover:text-slate-600">Privacy Policy</Link>.
+                    By continuing, you agree to Itinero&apos;s <Link href="/terms" className="underline hover:text-slate-600">Terms of Service</Link> and <Link href="/privacy" className="underline hover:text-slate-600">Privacy Policy</Link>.
                 </p>
             </div>
         </div>

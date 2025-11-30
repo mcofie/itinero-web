@@ -1,9 +1,9 @@
 {
   "node": {
-    "60fbc1c1987c49bade7433fdd32e617488b89dc200": {
+    "60927e2bbd7f83d2c6d9eaeadbade8d20bf26e5817": {
       "workers": {
         "app/trips/[id]/page": {
-          "moduleId": "[project]/.next-internal/server/app/trips/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/trips/[id]/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/actions/trips.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "moduleId": "41112",
           "async": false,
           "exportedName": "updateTripNote",
           "filename": "src/app/trips/[id]/actions.ts"
@@ -15,10 +15,10 @@
       "filename": "src/app/trips/[id]/actions.ts",
       "exportedName": "updateTripNote"
     },
-    "70235fb19d3736c4dbad5f529ea7c72ba56c030136": {
+    "7084124edf63c59f2e0014ecbeb51b6686211c34da": {
       "workers": {
         "app/trips/[id]/page": {
-          "moduleId": "[project]/.next-internal/server/app/trips/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/trips/[id]/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/actions/trips.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "moduleId": "41112",
           "async": false,
           "exportedName": "updateDayNote",
           "filename": "src/app/trips/[id]/actions.ts"
@@ -30,10 +30,10 @@
       "filename": "src/app/trips/[id]/actions.ts",
       "exportedName": "updateDayNote"
     },
-    "607d9085a95d24224bdb7baeae43590c9e177a291c": {
+    "6061f123cecb3435acb93ab089b542ff1fc75ea375": {
       "workers": {
         "app/trips/[id]/page": {
-          "moduleId": "[project]/.next-internal/server/app/trips/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/trips/[id]/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/actions/trips.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "moduleId": "41112",
           "async": false,
           "exportedName": "updateItemNote",
           "filename": "src/app/trips/[id]/actions.ts"
@@ -45,10 +45,10 @@
       "filename": "src/app/trips/[id]/actions.ts",
       "exportedName": "updateItemNote"
     },
-    "604b6e97e1d660473472e5179ca207838946da9480": {
+    "6048613a86a8e852c78511930a38055ebc15437adb": {
       "workers": {
         "app/trips/[id]/page": {
-          "moduleId": "[project]/.next-internal/server/app/trips/[id]/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/trips/[id]/actions.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/app/actions/trips.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "moduleId": "41112",
           "async": false,
           "exportedName": "setTripPublic",
           "filename": "src/app/actions/trips.ts"
@@ -59,8 +59,23 @@
       },
       "filename": "src/app/actions/trips.ts",
       "exportedName": "setTripPublic"
+    },
+    "40b90ca448ebc92cbe6723b53e3c950a0732913303": {
+      "workers": {
+        "app/profile/page": {
+          "moduleId": "35053",
+          "async": false,
+          "exportedName": "saveProfileAction",
+          "filename": "src/app/profile/server-actions.ts"
+        }
+      },
+      "layer": {
+        "app/profile/page": "action-browser"
+      },
+      "filename": "src/app/profile/server-actions.ts",
+      "exportedName": "saveProfileAction"
     }
   },
   "edge": {},
-  "encryptionKey": "jysVyTbjUObxu5wsjowKmSEoguJYDe4ayKeISDQcPo4="
+  "encryptionKey": "2q2DebqYI+QOsnxxtfw+/1MRIlT2VBCQNMg/P26CRJo="
 }

@@ -3,12 +3,12 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import {useRouter} from "next/navigation";
-import {useTheme} from "next-themes";
-import {getSupabaseBrowser} from "@/lib/supabase/browser-singleton";
+import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
     Loader2,
     CalendarDays,
@@ -40,7 +40,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
-import {cn} from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 /* =========================
    Types
@@ -142,10 +142,10 @@ const HERO_FALLBACK =
 function modeToIcon(mode?: string) {
     if (!mode) return null;
     const cl = "mr-1 h-3.5 w-3.5";
-    if (mode === "walk") return <Footprints className={cl}/>;
-    if (mode === "bike") return <Bike className={cl}/>;
-    if (mode === "car") return <Car className={cl}/>;
-    if (mode === "transit") return <Train className={cl}/>;
+    if (mode === "walk") return <Footprints className={cl} />;
+    if (mode === "bike") return <Bike className={cl} />;
+    if (mode === "car") return <Car className={cl} />;
+    if (mode === "transit") return <Train className={cl} />;
     return null;
 }
 
@@ -244,15 +244,15 @@ const MapSection = dynamic(() => import("@/app/trips/share/[publicId]/MapSection
    Main Component
 ========================= */
 export default function PreviewClient({
-                                          requiredPoints,
-                                          initialPoints,
-                                      }: {
+    requiredPoints,
+    initialPoints,
+}: {
     requiredPoints: number;
     initialPoints: number | null;
 }) {
     const sb = getSupabaseBrowser();
     const router = useRouter();
-    const {resolvedTheme} = useTheme();
+    const { resolvedTheme } = useTheme();
     const isDark = (resolvedTheme ?? "dark") === "dark";
 
     // Client state
@@ -307,7 +307,7 @@ export default function PreviewClient({
         (async () => {
             setPointsBusy(true);
             try {
-                const {data: rpcBalance, error} = await sb.rpc("get_points_balance");
+                const { data: rpcBalance, error } = await sb.rpc("get_points_balance");
                 if (error) console.error("[PreviewClient] get_points_balance error:", error);
                 if (typeof rpcBalance === "number") setPoints(rpcBalance);
             } catch (e) {
@@ -368,7 +368,7 @@ export default function PreviewClient({
             }
 
             try {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("destination_history")
                     .select(
@@ -432,7 +432,7 @@ export default function PreviewClient({
         return (
             <div className="mx-auto grid min-h-[40vh] max-w-4xl place-items-center">
                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                    <Loader2 className="h-5 w-5 animate-spin text-blue-600"/> Loading preview…
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-600" /> Loading preview…
                 </div>
             </div>
         );
@@ -445,7 +445,7 @@ export default function PreviewClient({
                     className="relative w-full overflow-hidden rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center dark:bg-slate-900 dark:border-slate-800">
                     <div
                         className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm ring-8 ring-white/50 dark:bg-slate-800 dark:ring-slate-800/50">
-                        <Sparkles className="h-8 w-8 text-blue-600 dark:text-blue-400"/>
+                        <Sparkles className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                     </div>
 
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -462,7 +462,7 @@ export default function PreviewClient({
                             className="w-full rounded-xl bg-blue-600 text-white hover:bg-blue-700 sm:w-auto"
                             onClick={() => router.push("/trip-maker")}
                         >
-                            <CalendarDays className="mr-2 h-4 w-4"/>
+                            <CalendarDays className="mr-2 h-4 w-4" />
                             Start Planning
                         </Button>
 
@@ -507,7 +507,7 @@ export default function PreviewClient({
                             />
                             <div
                                 className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-900 backdrop-blur-md shadow-sm dark:bg-slate-900/90 dark:text-white">
-                                <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400"/>
+                                <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                                 Preview Mode
                             </div>
                         </div>
@@ -520,32 +520,32 @@ export default function PreviewClient({
 
                             <div
                                 className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-600 dark:text-slate-300">
-                <span
-                    className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-                  <CalendarDays className="h-4 w-4 text-slate-400"/>
-                    {formatDateRange(preview.trip_summary)}
-                </span>
+                                <span
+                                    className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+                                    <CalendarDays className="h-4 w-4 text-slate-400" />
+                                    {formatDateRange(preview.trip_summary)}
+                                </span>
 
                                 {typeof estTotal === "number" && (
                                     <span
                                         className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-                    <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400"/>
-                    Est. {currency} {estTotal}
-                  </span>
+                                        <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                        Est. {currency} {estTotal}
+                                    </span>
                                 )}
 
                                 {modeIcon && (
                                     <span
                                         className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 capitalize dark:bg-slate-900 dark:border-slate-800">
-                    {modeIcon}
+                                        {modeIcon}
                                         {inputs?.mode}
-                  </span>
+                                    </span>
                                 )}
                             </div>
 
                             {!!inputs?.interests?.length && (
                                 <div className="pt-2">
-                                    <InterestChips interests={inputs!.interests!}/>
+                                    <InterestChips interests={inputs!.interests!} />
                                 </div>
                             )}
                         </div>
@@ -618,7 +618,7 @@ export default function PreviewClient({
                                 <div
                                     className="p-4 border-b border-slate-100 flex items-center justify-between dark:border-slate-800">
                                     <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2 dark:text-white">
-                                        <MapIcon className="h-4 w-4 text-blue-600 dark:text-blue-400"/> Map View
+                                        <MapIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Map View
                                     </h3>
                                 </div>
                                 <div className="h-64 w-full bg-slate-100 dark:bg-slate-800">
@@ -644,9 +644,9 @@ export default function PreviewClient({
                                     </div>
                                 )}
                                 <div className="space-y-2">
-                                    <IconFact label="City" value={destinationMeta?.city} icon={MapPin}/>
+                                    <IconFact label="City" value={destinationMeta?.city} icon={MapPin} />
                                     <IconFact label="Currency" value={destinationMeta?.currency_code}
-                                              icon={DollarSign}/>
+                                        icon={DollarSign} />
 
                                     {/* Interactive Weather */}
                                     <IconFact
@@ -656,9 +656,9 @@ export default function PreviewClient({
                                         href={`https://www.google.com/search?q=weather+${encodeURIComponent(locationName)}`}
                                     />
 
-                                    <IconFact label="Plugs" value={joinArr(destinationMeta?.plugs)} icon={Plug}/>
+                                    <IconFact label="Plugs" value={joinArr(destinationMeta?.plugs)} icon={Plug} />
                                     <IconFact label="Transport" value={joinArr(destinationMeta?.transport)}
-                                              icon={Train}/>
+                                        icon={Train} />
 
                                     {/* Interactive eSIM */}
                                     <IconFact
@@ -723,7 +723,7 @@ export default function PreviewClient({
                     <DialogHeader>
                         <div
                             className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-900/20">
-                            <Wallet className="h-6 w-6 text-amber-600 dark:text-amber-400"/>
+                            <Wallet className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                         </div>
                         <DialogTitle className="text-lg font-bold text-slate-900 dark:text-white">
                             Not enough points
@@ -733,7 +733,7 @@ export default function PreviewClient({
                     <div className="space-y-3 text-center text-sm text-slate-600 dark:text-slate-400">
                         <p>
                             You need <strong
-                            className="text-slate-900 dark:text-white">{requiredPoints} points</strong> to save this
+                                className="text-slate-900 dark:text-white">{requiredPoints} points</strong> to save this
                             full itinerary.
                         </p>
                         <div
@@ -768,11 +768,11 @@ export default function PreviewClient({
 ========================= */
 
 function ItineraryDay({
-                          dayIdx,
-                          day,
-                          placesById,
-                          currency,
-                      }: {
+    dayIdx,
+    day,
+    placesById,
+    currency,
+}: {
     dayIdx: number;
     day: Day;
     placesById: Map<string, Place>;
@@ -808,14 +808,14 @@ function ItineraryDay({
                                 className="rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow dark:bg-slate-900 dark:border-slate-800">
                                 <div className="flex items-start justify-between gap-4 mb-3">
                                     <div>
-                    <span
-                        className={cn(
-                            "inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-2",
-                            badgeClasses.badge
-                        )}
-                    >
-                      {b.when}
-                    </span>
+                                        <span
+                                            className={cn(
+                                                "inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mb-2",
+                                                badgeClasses.badge
+                                            )}
+                                        >
+                                            {b.when}
+                                        </span>
                                         <h4 className="text-base font-bold text-slate-900 dark:text-white">
                                             {b.title}
                                         </h4>
@@ -839,10 +839,10 @@ function ItineraryDay({
                                 {place && (
                                     <div
                                         className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
-                                        <MapPin className="h-3.5 w-3.5 text-slate-400"/>
+                                        <MapPin className="h-3.5 w-3.5 text-slate-400" />
                                         <span className="font-medium text-slate-700 dark:text-slate-300">
-                      {place.name}
-                    </span>
+                                            {place.name}
+                                        </span>
                                     </div>
                                 )}
                             </div>
@@ -855,14 +855,14 @@ function ItineraryDay({
 }
 
 function IconFact({
-                      label,
-                      value,
-                      icon: Icon,
-                      href,
-                  }: {
+    label,
+    value,
+    icon: Icon,
+    href,
+}: {
     label: string;
     value?: string | null;
-    icon: any;
+    icon: React.ElementType;
     href?: string;
 }) {
     if (!value) return null;
@@ -873,7 +873,7 @@ function IconFact({
                 href ? "bg-blue-50 border-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400"
                     : "bg-slate-50 border-slate-100 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
             )}>
-                <Icon className="w-4 h-4"/>
+                <Icon className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
@@ -881,7 +881,7 @@ function IconFact({
                         {label}
                     </div>
                     {href && <ExternalLink
-                        className="h-3 w-3 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"/>}
+                        className="h-3 w-3 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />}
                 </div>
                 <div className="text-xs font-medium text-slate-700 dark:text-slate-300">{value}</div>
             </div>
@@ -891,7 +891,7 @@ function IconFact({
     if (href) {
         return (
             <a href={href} target="_blank" rel="noopener noreferrer"
-               className="block hover:bg-slate-50/50 dark:hover:bg-slate-800/30 -mx-2 px-2 py-1 rounded-xl transition-colors">
+                className="block hover:bg-slate-50/50 dark:hover:bg-slate-800/30 -mx-2 px-2 py-1 rounded-xl transition-colors">
                 {Content}
             </a>
         )
@@ -899,7 +899,7 @@ function IconFact({
     return Content;
 }
 
-function InterestChips({interests}: { interests: string[] }) {
+function InterestChips({ interests }: { interests: string[] }) {
     return (
         <div className="flex flex-wrap gap-2">
             {interests.map((raw) => (
@@ -907,9 +907,9 @@ function InterestChips({interests}: { interests: string[] }) {
                     key={raw}
                     className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm capitalize dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300"
                 >
-          <span>{emojiFor(raw)}</span>
+                    <span>{emojiFor(raw)}</span>
                     {raw}
-        </span>
+                </span>
             ))}
         </div>
     );
@@ -917,14 +917,14 @@ function InterestChips({interests}: { interests: string[] }) {
 
 /* Full Screen Paywall Component */
 function FullScreenPaywallOverlay({
-                                      onBuy,
-                                      onSave,
-                                      onClose,
-                                      points,
-                                      required,
-                                      saving,
-                                      forceTheme,
-                                  }: {
+    onBuy,
+    onSave,
+    onClose,
+    points,
+    required,
+    saving,
+    forceTheme,
+}: {
     onBuy: () => void;
     onSave: () => void;
     onClose: () => void;
@@ -952,13 +952,13 @@ function FullScreenPaywallOverlay({
             <div
                 className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-800 relative">
                 <button onClick={onClose}
-                        className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors">
-                    <X className="h-5 w-5"/>
+                    className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors">
+                    <X className="h-5 w-5" />
                 </button>
                 <div className="relative h-40 bg-blue-600 overflow-hidden dark:bg-blue-700">
                     <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20"></div>
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                        <Sparkles className="h-10 w-10 mb-2"/>
+                        <Sparkles className="h-10 w-10 mb-2" />
                         <h2 className="text-2xl font-bold">Unlock Full Itinerary</h2>
                     </div>
                 </div>
@@ -966,10 +966,10 @@ function FullScreenPaywallOverlay({
                 <div className="p-8">
                     <div className="grid gap-6 sm:grid-cols-2 mb-8">
                         <PerkItem icon={MapIcon} title="Interactive Maps"
-                                  desc="Navigate easily with pinned locations."/>
-                        <PerkItem icon={Download} title="PDF Export" desc="Save offline for when signal drops."/>
-                        <PerkItem icon={CalendarDays} title="Calendar Sync" desc="Add to Google/Apple Calendar."/>
-                        <PerkItem icon={PencilLine} title="Edit & Customize" desc="Full control to tweak your plan."/>
+                            desc="Navigate easily with pinned locations." />
+                        <PerkItem icon={Download} title="PDF Export" desc="Save offline for when signal drops." />
+                        <PerkItem icon={CalendarDays} title="Calendar Sync" desc="Add to Google/Apple Calendar." />
+                        <PerkItem icon={PencilLine} title="Edit & Customize" desc="Full control to tweak your plan." />
                     </div>
 
                     <div className="flex flex-col items-center gap-4">
@@ -978,7 +978,7 @@ function FullScreenPaywallOverlay({
                             <span>Cost: {required} pts</span>
                             <span className="text-slate-300 dark:text-slate-600">|</span>
                             <span>
-                You have:{" "}
+                                You have:{" "}
                                 <span
                                     className={
                                         points === null
@@ -988,10 +988,10 @@ function FullScreenPaywallOverlay({
                                                 : "text-red-600 font-bold dark:text-red-400"
                                     }
                                 >
-                  {points ?? "..."}
-                </span>{" "}
+                                    {points ?? "..."}
+                                </span>{" "}
                                 pts
-              </span>
+                            </span>
                         </div>
 
                         <div className="flex gap-3 w-full sm:w-auto">
@@ -1003,7 +1003,7 @@ function FullScreenPaywallOverlay({
                             >
                                 {saving ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         Processing...
                                     </>
                                 ) : hasEnough ? (
@@ -1030,11 +1030,11 @@ function FullScreenPaywallOverlay({
 }
 
 function PerkItem({
-                      icon: Icon,
-                      title,
-                      desc,
-                  }: {
-    icon: any;
+    icon: Icon,
+    title,
+    desc,
+}: {
+    icon: React.ElementType;
     title: string;
     desc: string;
 }) {
@@ -1042,7 +1042,7 @@ function PerkItem({
         <div className="flex gap-3">
             <div
                 className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 dark:bg-blue-900/30 dark:text-blue-400">
-                <Icon className="h-5 w-5"/>
+                <Icon className="h-5 w-5" />
             </div>
             <div>
                 <h4 className="font-bold text-slate-900 text-sm dark:text-white">{title}</h4>
@@ -1081,7 +1081,7 @@ async function saveDraftAsTrip(
     let pointsSpent = false;
 
     try {
-        const {data: auth, error: userErr} = await sbClient.auth.getUser();
+        const { data: auth, error: userErr } = await sbClient.auth.getUser();
         if (userErr) {
             console.error("[saveDraftAsTrip] auth.getUser error:", userErr);
         }
@@ -1090,7 +1090,7 @@ async function saveDraftAsTrip(
 
         // 1) Spend points via RPC, fallback to manual ledger insert
         try {
-            const {data: ok, error: rpcErr} = await sbClient.rpc("spend_points", {
+            const { data: ok, error: rpcErr } = await sbClient.rpc("spend_points", {
                 p_cost: COST,
             });
             if (rpcErr) throw rpcErr;
@@ -1102,14 +1102,14 @@ async function saveDraftAsTrip(
             pointsSpent = true;
         } catch (e) {
             console.error("[saveDraftAsTrip] spend_points RPC failed, fallback:", e);
-            const {error: debitErr} = await sbClient
+            const { error: debitErr } = await sbClient
                 .schema("itinero")
                 .from("points_ledger")
                 .insert({
                     user_id: currentUserId,
                     delta: -COST,
                     reason: "save_trip",
-                    meta: {source: "web", at: new Date().toISOString()},
+                    meta: { source: "web", at: new Date().toISOString() },
                 });
             if (debitErr) {
                 console.error("[saveDraftAsTrip] manual debit failed:", debitErr);
@@ -1132,7 +1132,7 @@ async function saveDraftAsTrip(
         let coverUrlFromDest: string | null = null;
         if (destinationId) {
             try {
-                const {data: destRow, error: destErr} = await sbClient
+                const { data: destRow, error: destErr } = await sbClient
                     .schema("itinero")
                     .from("destinations")
                     .select("cover_url")
@@ -1172,7 +1172,7 @@ async function saveDraftAsTrip(
             cover_url: coverUrlFromDest ?? ins?.destinations?.[0]?.cover_url ?? null,
         };
 
-        const {data: tripInsert, error: tripErr} = await sbClient
+        const { data: tripInsert, error: tripErr } = await sbClient
             .schema("itinero")
             .from("trips")
             .insert(tripRow)
@@ -1221,7 +1221,7 @@ async function saveDraftAsTrip(
         });
 
         if (items.length) {
-            const {error: itemsErr} = await sbClient
+            const { error: itemsErr } = await sbClient
                 .schema("itinero")
                 .from("itinerary_items")
                 .insert(items);
@@ -1230,7 +1230,7 @@ async function saveDraftAsTrip(
 
         // 4) Refresh points balance
         try {
-            const {data: newBal} = await sbClient.rpc("get_points_balance");
+            const { data: newBal } = await sbClient.rpc("get_points_balance");
             if (typeof newBal === "number") setPoints(newBal);
         } catch (e) {
             console.error("[saveDraftAsTrip] refresh balance failed:", e);
@@ -1251,13 +1251,13 @@ async function saveDraftAsTrip(
         // Refund points if we successfully spent them but failed later
         if (pointsSpent) {
             try {
-                const {data: auth2} = await sbClient.auth.getUser();
+                const { data: auth2 } = await sbClient.auth.getUser();
                 const uid = auth2?.user?.id ?? null;
                 await sbClient.schema("itinero").from("points_ledger").insert({
                     user_id: uid,
                     delta: COST,
                     reason: "refund_save_trip_failed",
-                    meta: {source: "web", at: new Date().toISOString()},
+                    meta: { source: "web", at: new Date().toISOString() },
                 });
             } catch {
                 // swallow

@@ -1876,7 +1876,7 @@ function TabPill({
     label,
 }: {
     value: string;
-    icon: any;
+    icon: React.ElementType;
     label: string;
 }) {
     return (
@@ -1896,7 +1896,13 @@ function FormInput({
     onChange,
     placeholder,
     type = "text",
-}: any) {
+}: {
+    label: string;
+    value: string;
+    onChange: (val: string) => void;
+    placeholder?: string;
+    type?: string;
+}) {
     return (
         <div className="space-y-1.5">
             <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
@@ -1919,7 +1925,13 @@ function FormTextarea({
     onChange,
     placeholder,
     rows,
-}: any) {
+}: {
+    label: string;
+    value: string;
+    onChange: (val: string) => void;
+    placeholder?: string;
+    rows?: number;
+}) {
     return (
         <div className="space-y-1.5">
             <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
@@ -1941,7 +1953,7 @@ function ActionBtn({
     onClick,
     destructive,
 }: {
-    icon: any;
+    icon: React.ElementType;
     onClick: () => void;
     destructive?: boolean;
 }) {

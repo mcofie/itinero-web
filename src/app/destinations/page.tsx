@@ -2,10 +2,10 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import AppShell from "@/components/layout/AppShell";
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
-import {ArrowLeft, MapPin, Sparkles, Clock, Plane, ArrowRight} from "lucide-react";
-import {createClientServerRSC} from "@/lib/supabase/server";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, MapPin, Sparkles, Clock, Plane, ArrowRight } from "lucide-react";
+import { createClientServerRSC } from "@/lib/supabase/server";
 
 /* --- Data Configuration --- */
 
@@ -131,7 +131,7 @@ const DESTINATIONS: Destination[] = [
 
 export default async function DestinationsPage() {
     const sb = await createClientServerRSC();
-    const {data: {user}} = await sb.auth.getUser();
+    const { data: { user } } = await sb.auth.getUser();
 
     const activeDestinations = DESTINATIONS.filter((d) => d.status === "active");
     const comingSoonDestinations = DESTINATIONS.filter((d) => d.status === "coming_soon");
@@ -150,14 +150,14 @@ export default async function DestinationsPage() {
                             className="mb-6 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white -ml-4"
                         >
                             <Link href="/">
-                                <ArrowLeft className="mr-2 h-4 w-4"/> Back to Home
+                                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
                             </Link>
                         </Button>
 
                         <div className="max-w-3xl">
                             <div
                                 className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-4 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
-                                <MapPin className="h-3 w-3"/>
+                                <MapPin className="h-3 w-3" />
                                 Explore the World
                             </div>
                             <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6">
@@ -176,7 +176,7 @@ export default async function DestinationsPage() {
                     <div className="mx-auto max-w-7xl">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                             {activeDestinations.map((dest) => (
-                                <DestinationCard key={dest.id} destination={dest}/>
+                                <DestinationCard key={dest.id} destination={dest} />
                             ))}
                         </div>
                     </div>
@@ -189,7 +189,7 @@ export default async function DestinationsPage() {
                         <div className="flex items-center gap-3 mb-10">
                             <div
                                 className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
-                                <Clock className="h-5 w-5"/>
+                                <Clock className="h-5 w-5" />
                             </div>
                             <div>
                                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Coming Soon</h2>
@@ -200,7 +200,7 @@ export default async function DestinationsPage() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                             {comingSoonDestinations.map((dest) => (
-                                <DestinationCard key={dest.id} destination={dest}/>
+                                <DestinationCard key={dest.id} destination={dest} />
                             ))}
                         </div>
                     </div>
@@ -211,16 +211,16 @@ export default async function DestinationsPage() {
                     <div className="mx-auto max-w-2xl space-y-6">
                         <div
                             className="mx-auto h-16 w-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-4 dark:bg-blue-900/20 dark:text-blue-400">
-                            <Plane className="h-8 w-8"/>
+                            <Plane className="h-8 w-8" />
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Don't see your
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Don&apos;t see your
                             destination?</h2>
                         <p className="text-slate-600 dark:text-slate-400 text-lg">
                             We are constantly adding new cities and countries. Let us know where you want to travel
                             next.
                         </p>
                         <Button variant="outline" size="lg"
-                                className="rounded-full border-slate-300 dark:border-slate-700">
+                            className="rounded-full border-slate-300 dark:border-slate-700">
                             Request a Destination
                         </Button>
                     </div>
@@ -233,11 +233,11 @@ export default async function DestinationsPage() {
 
 /* ---------------- Sub-components ---------------- */
 
-function DestinationCard({destination}: { destination: Destination }) {
+function DestinationCard({ destination }: { destination: Destination }) {
     const isActive = destination.status === "active";
 
     // Base card wrapper
-    const CardWrapper = ({children}: { children: React.ReactNode }) => {
+    const CardWrapper = ({ children }: { children: React.ReactNode }) => {
         if (isActive) {
             return (
                 <Link href={`/trip-maker?dest=${destination.name}`} className="group block h-full">
@@ -265,7 +265,7 @@ function DestinationCard({destination}: { destination: Destination }) {
 
                 {/* Gradient Overlay */}
                 <div
-                    className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-70 transition-opacity"/>
+                    className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-70 transition-opacity" />
 
                 {/* Content */}
                 <div className="absolute inset-0 p-6 flex flex-col justify-end">
@@ -276,7 +276,7 @@ function DestinationCard({destination}: { destination: Destination }) {
                             {isActive ? (
                                 <Badge
                                     className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-md">
-                                    <Sparkles className="mr-1.5 h-3 w-3 text-yellow-300"/> Popular
+                                    <Sparkles className="mr-1.5 h-3 w-3 text-yellow-300" /> Popular
                                 </Badge>
                             ) : (
                                 <Badge className="bg-slate-800/80 text-slate-300 border-slate-700 backdrop-blur-md">
@@ -299,8 +299,8 @@ function DestinationCard({destination}: { destination: Destination }) {
                         <div
                             className="mt-4 opacity-0 transform translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
                             <Button size="sm"
-                                    className="w-full rounded-full bg-white text-slate-900 hover:bg-blue-50 font-bold">
-                                Plan Trip <ArrowRight className="ml-2 h-4 w-4"/>
+                                className="w-full rounded-full bg-white text-slate-900 hover:bg-blue-50 font-bold">
+                                Plan Trip <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                         </div>
                     )}
