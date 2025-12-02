@@ -6,7 +6,7 @@ type AppRouteHandlerRoutes = "/api/paystack/init" | "/api/paystack/webhook" | "/
 type PageRoutes = never
 type LayoutRoutes = "/" | "/login"
 type RedirectRoutes = never
-type RewriteRoutes = never
+type RewriteRoutes = "/ingest/[[...path]]" | "/ingest/static/[[...path]]"
 type Routes = AppRoutes | PageRoutes | LayoutRoutes | RedirectRoutes | RewriteRoutes | AppRouteHandlerRoutes
 
 
@@ -21,6 +21,8 @@ interface ParamMap {
   "/auth/callback": {}
   "/checkout": {}
   "/destinations": {}
+  "/ingest/[[...path]]": { "path"?: string[]; }
+  "/ingest/static/[[...path]]": { "path"?: string[]; }
   "/login": {}
   "/preview": {}
   "/pricing": {}
