@@ -1,8 +1,12 @@
 import * as React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "My Trips",
+};
 import { createClientServerRSC } from "@/lib/supabase/server";
-import AppShell from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import {
     CalendarDays,
@@ -55,86 +59,82 @@ export default async function TripsPage() {
 
     if (error) {
         return (
-            <AppShell userEmail={user.email ?? null}>
-                <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 px-4 py-10">
-                    <div className="mx-auto max-w-5xl">
+            <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 px-4 py-10">
+                <div className="mx-auto max-w-5xl">
+                    <div
+                        className="rounded-2xl border border-red-100 bg-white p-8 text-center shadow-sm dark:bg-red-950/10 dark:border-red-900/50">
                         <div
-                            className="rounded-2xl border border-red-100 bg-white p-8 text-center shadow-sm dark:bg-red-950/10 dark:border-red-900/50">
-                            <div
-                                className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400">
-                                <AlertCircle className="h-6 w-6" />
-                            </div>
-                            <h3 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">
-                                Unable to load trips
-                            </h3>
-                            <p className="text-slate-500 dark:text-slate-400">
-                                {error.message}
-                            </p>
+                            className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                            <AlertCircle className="h-6 w-6" />
                         </div>
+                        <h3 className="mb-1 text-lg font-semibold text-slate-900 dark:text-white">
+                            Unable to load trips
+                        </h3>
+                        <p className="text-slate-500 dark:text-slate-400">
+                            {error.message}
+                        </p>
                     </div>
                 </div>
-            </AppShell>
+            </div>
         );
     }
 
     return (
-        <AppShell userEmail={user.email ?? null}>
-            <div
-                className="min-h-screen bg-slate-50/50 text-slate-900 dark:bg-slate-950 dark:text-white transition-colors duration-300">
-                <section className="mx-auto w-full max-w-7xl px-4 py-12 md:px-6 lg:py-16">
-                    {/* Header - Clean & Minimal */}
-                    <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-                        <div className="space-y-1">
-                            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-                                Trips
-                            </h1>
-                            <p className="text-lg text-slate-500 dark:text-slate-400">
-                                {hasTrips
-                                    ? "Your collection of planned adventures."
-                                    : "Start planning your next getaway."}
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            {hasTrips && (
-                                <Link
-                                    href="/trip-maker"
-                                    className="inline-flex h-10 items-center justify-center rounded-full bg-blue-600 px-6 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 dark:bg-blue-600 dark:hover:bg-blue-500"
-                                >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    New Trip
-                                </Link>
-                            )}
-                        </div>
+        <div
+            className="min-h-screen bg-slate-50/50 text-slate-900 dark:bg-slate-950 dark:text-white transition-colors duration-300">
+            <section className="mx-auto w-full max-w-7xl px-4 py-12 md:px-6 lg:py-16">
+                {/* Header - Clean & Minimal */}
+                <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl dark:text-white">
+                            Trips
+                        </h1>
+                        <p className="text-lg text-slate-500 dark:text-slate-400">
+                            {hasTrips
+                                ? "Your collection of planned adventures."
+                                : "Start planning your next getaway."}
+                        </p>
                     </div>
 
-                    {/* Content */}
-                    {hasTrips ? (
-                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {/* Add Card - Minimalist Outline (First item for visibility) */}
+                    <div className="flex items-center gap-3">
+                        {hasTrips && (
                             <Link
                                 href="/trip-maker"
-                                className="group relative flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-slate-200 bg-white/50 p-6 text-center transition-all hover:border-blue-500 hover:bg-blue-50/50 hover:shadow-md dark:bg-slate-900/50 dark:border-slate-800 dark:hover:border-blue-500/50 dark:hover:bg-slate-800/80"
+                                className="inline-flex h-10 items-center justify-center rounded-full bg-blue-600 px-6 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 dark:bg-blue-600 dark:hover:bg-blue-500"
                             >
-                                <div
-                                    className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-transform group-hover:scale-110 dark:bg-blue-900/20 dark:text-blue-400">
-                                    <Plus className="h-8 w-8" />
-                                </div>
-                                <span className="text-sm font-bold text-slate-900 dark:text-white">
-                                    Create new trip
-                                </span>
+                                <Plus className="mr-2 h-4 w-4" />
+                                New Trip
                             </Link>
+                        )}
+                    </div>
+                </div>
 
-                            {tripsSafe.map((t) => (
-                                <TripCard key={t.id} trip={t} />
-                            ))}
-                        </div>
-                    ) : (
-                        <EmptyState />
-                    )}
-                </section>
-            </div>
-        </AppShell>
+                {/* Content */}
+                {hasTrips ? (
+                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {/* Add Card - Minimalist Outline (First item for visibility) */}
+                        <Link
+                            href="/trip-maker"
+                            className="group relative flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-slate-200 bg-white/50 p-6 text-center transition-all hover:border-blue-500 hover:bg-blue-50/50 hover:shadow-md dark:bg-slate-900/50 dark:border-slate-800 dark:hover:border-blue-500/50 dark:hover:bg-slate-800/80"
+                        >
+                            <div
+                                className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-transform group-hover:scale-110 dark:bg-blue-900/20 dark:text-blue-400">
+                                <Plus className="h-8 w-8" />
+                            </div>
+                            <span className="text-sm font-bold text-slate-900 dark:text-white">
+                                Create new trip
+                            </span>
+                        </Link>
+
+                        {tripsSafe.map((t) => (
+                            <TripCard key={t.id} trip={t} />
+                        ))}
+                    </div>
+                ) : (
+                    <EmptyState />
+                )}
+            </section>
+        </div>
     );
 }
 

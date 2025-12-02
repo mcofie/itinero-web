@@ -137,97 +137,95 @@ export default async function DestinationsPage() {
     const comingSoonDestinations = DESTINATIONS.filter((d) => d.status === "coming_soon");
 
     return (
-        <AppShell userEmail={user?.email ?? null}>
-            <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300">
 
-                {/* Header Section */}
-                <section
-                    className="relative bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pt-12 pb-16 px-6">
-                    <div className="mx-auto max-w-7xl">
-                        <Button
-                            asChild
-                            variant="ghost"
-                            className="mb-6 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white -ml-4"
-                        >
-                            <Link href="/">
-                                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
-                            </Link>
-                        </Button>
+            {/* Header Section */}
+            <section
+                className="relative bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pt-12 pb-16 px-6">
+                <div className="mx-auto max-w-7xl">
+                    <Button
+                        asChild
+                        variant="ghost"
+                        className="mb-6 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white -ml-4"
+                    >
+                        <Link href="/">
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
+                        </Link>
+                    </Button>
 
-                        <div className="max-w-3xl">
-                            <div
-                                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-4 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
-                                <MapPin className="h-3 w-3" />
-                                Explore the World
-                            </div>
-                            <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6">
-                                Where will you go next?
-                            </h1>
-                            <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
-                                We currently support curated itineraries for these amazing destinations.
-                                Select a location to start building your dream trip instantly.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Active Destinations */}
-                <section className="px-6 py-16">
-                    <div className="mx-auto max-w-7xl">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                            {activeDestinations.map((dest) => (
-                                <DestinationCard key={dest.id} destination={dest} />
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Coming Soon Section */}
-                <section
-                    className="px-6 py-16 bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-                    <div className="mx-auto max-w-7xl">
-                        <div className="flex items-center gap-3 mb-10">
-                            <div
-                                className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
-                                <Clock className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Coming Soon</h2>
-                                <p className="text-slate-500 dark:text-slate-400 text-sm">We are working hard to add
-                                    these locations.</p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {comingSoonDestinations.map((dest) => (
-                                <DestinationCard key={dest.id} destination={dest} />
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* Request Footer */}
-                <section className="py-24 px-6 text-center">
-                    <div className="mx-auto max-w-2xl space-y-6">
+                    <div className="max-w-3xl">
                         <div
-                            className="mx-auto h-16 w-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-4 dark:bg-blue-900/20 dark:text-blue-400">
-                            <Plane className="h-8 w-8" />
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-4 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300">
+                            <MapPin className="h-3 w-3" />
+                            Explore the World
                         </div>
-                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Don&apos;t see your
-                            destination?</h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-lg">
-                            We are constantly adding new cities and countries. Let us know where you want to travel
-                            next.
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6">
+                            Where will you go next?
+                        </h1>
+                        <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
+                            We currently support curated itineraries for these amazing destinations.
+                            Select a location to start building your dream trip instantly.
                         </p>
-                        <Button variant="outline" size="lg"
-                            className="rounded-full border-slate-300 dark:border-slate-700">
-                            Request a Destination
-                        </Button>
                     </div>
-                </section>
+                </div>
+            </section>
 
-            </div>
-        </AppShell>
+            {/* Active Destinations */}
+            <section className="px-6 py-16">
+                <div className="mx-auto max-w-7xl">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                        {activeDestinations.map((dest) => (
+                            <DestinationCard key={dest.id} destination={dest} />
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Coming Soon Section */}
+            <section
+                className="px-6 py-16 bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                <div className="mx-auto max-w-7xl">
+                    <div className="flex items-center gap-3 mb-10">
+                        <div
+                            className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
+                            <Clock className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Coming Soon</h2>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm">We are working hard to add
+                                these locations.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {comingSoonDestinations.map((dest) => (
+                            <DestinationCard key={dest.id} destination={dest} />
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Request Footer */}
+            <section className="py-24 px-6 text-center">
+                <div className="mx-auto max-w-2xl space-y-6">
+                    <div
+                        className="mx-auto h-16 w-16 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-4 dark:bg-blue-900/20 dark:text-blue-400">
+                        <Plane className="h-8 w-8" />
+                    </div>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Don&apos;t see your
+                        destination?</h2>
+                    <p className="text-slate-600 dark:text-slate-400 text-lg">
+                        We are constantly adding new cities and countries. Let us know where you want to travel
+                        next.
+                    </p>
+                    <Button variant="outline" size="lg"
+                        className="rounded-full border-slate-300 dark:border-slate-700">
+                        Request a Destination
+                    </Button>
+                </div>
+            </section>
+
+        </div>
     );
 }
 
@@ -261,6 +259,7 @@ function DestinationCard({ destination }: { destination: Destination }) {
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    unoptimized
                 />
 
                 {/* Gradient Overlay */}

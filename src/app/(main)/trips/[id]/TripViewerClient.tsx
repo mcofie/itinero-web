@@ -16,9 +16,9 @@ import type { PreviewLike, Day, Place } from "./page";
 import "leaflet/dist/leaflet.css";
 
 // --- Server Actions Import ---
-import { updateTripNote, updateDayNote, updateItemNote } from "@/app/trips/[id]/actions";
+import { updateTripNote, updateDayNote, updateItemNote } from "@/app/(main)/trips/[id]/actions";
 
-import { BlockActions, ItemRowLite } from "@/app/trips/BlockEditControls";
+import { BlockActions, ItemRowLite } from "@/app/(main)/trips/BlockEditControls";
 import { cn } from "@/lib/utils";
 import {
     Cloud,
@@ -42,9 +42,10 @@ import {
     Loader2,
     ExternalLink,
 } from "lucide-react";
-import { AddItemUnderDay } from "@/app/trips/AddItemUnderDay";
-import { DestinationMeta, TripConfig } from "@/app/trips/TripActionsClient";
+import { AddItemUnderDay } from "@/app/(main)/trips/AddItemUnderDay";
+import { DestinationMeta, TripConfig } from "@/app/(main)/trips/TripActionsClient";
 import { formatDateRange } from "@/lib/trip-dates";
+import { WeatherWidget } from "@/components/trips/WeatherWidget";
 
 /* ---------- Map (allow nullable day) ---------- */
 type LeafletMapProps = {
@@ -54,7 +55,7 @@ type LeafletMapProps = {
 };
 
 const LeafletMap = dynamic<LeafletMapProps>(
-    () => import("@/app/preview/_leaflet/LeafletMap"),
+    () => import("@/app/(main)/preview/_leaflet/LeafletMap"),
     { ssr: false }
 );
 
@@ -338,6 +339,9 @@ export default function TripViewerClient({
                                             value={`${Math.round(totals.travelMin / 60)}h`}
                                             icon={MoveRight}
                                         />
+                                        <div className="col-span-2 sm:col-span-1">
+                                            <WeatherWidget meta={destinationMeta} className="h-full" />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -419,18 +423,7 @@ export default function TripViewerClient({
                                             icon={DollarSign}
                                         />
 
-                                        {/* WEATHER: Links to Google */}
-                                        <SidebarFact
-                                            label="Weather"
-                                            value={destinationMeta?.weather_desc}
-                                            sub={
-                                                destinationMeta?.weather_temp_c != null
-                                                    ? `${destinationMeta.weather_temp_c.toFixed(1)}°C`
-                                                    : undefined
-                                            }
-                                            icon={Cloud}
-                                            href={`https://www.google.com/search?q=weather+${encodeURIComponent(locationName)}`}
-                                        />
+
 
                                         <SidebarFact
                                             label="Plugs"

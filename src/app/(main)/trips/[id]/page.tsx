@@ -1,22 +1,29 @@
 import * as React from "react";
 import Link from "next/link";
-import {redirect} from "next/navigation";
-import {createClientServerRSC} from "@/lib/supabase/server";
-import AppShell from "@/components/layout/AppShell";
+import { redirect } from "next/navigation";
+import { createClientServerRSC } from "@/lib/supabase/server";
 
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
     CalendarDays,
-    DollarSign,
+    Plus,
+    Plane,
+    Clock,
+    AlertCircle,
+    ArrowRight,
     ArrowLeft,
+    DollarSign,
+    MapPin,
 } from "lucide-react";
 
 import TripViewerClient from "./TripViewerClient";
-import TripActionsClient, {TripConfig} from "@/app/trips/TripActionsClient";
+import TripActionsClient, { TripConfig } from "@/app/(main)/trips/TripActionsClient";
 import Image from "next/image";
-import {formatDateRange} from "@/lib/trip-dates";
+import { formatDateRange } from "@/lib/trip-dates";
+import { ParallaxHero } from "@/components/trips/ParallaxHero";
+import { Metadata } from "next";
 
 // --- NEW IMPORTS ---
 import {
@@ -26,9 +33,34 @@ import {
     CollaboratorsCard
 } from "./TripManagement";
 
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "default-no-store";
+
+type Props = {
+    params: { id: string };
+    searchParams: { [key: string]: string | string[] | undefined };
+};
+
+export async function generateMetadata(
+    { params }: Props,
+): Promise<Metadata> {
+    const { id } = params;
+    const sb = await createClientServerRSC();
+
+    // Fetch just the title for metadata
+    const { data: trip } = await sb
+        .schema("itinero")
+        .from("trips")
+        .select("title")
+        .eq("id", id)
+        .single();
+
+    return {
+        title: trip?.title || "Trip Details",
+    };
+}
 
 type UUID = string;
 
@@ -45,7 +77,7 @@ type TripRow = {
     destination_id?: UUID | null;
     public_id: string | null;
     inputs?:
-        | {
+    | {
         destinations?: { name: string; lat?: number; lng?: number }[];
         start_date?: string;
         end_date?: string;
@@ -55,7 +87,7 @@ type TripRow = {
         lodging?: { name: string; lat?: number; lng?: number } | null;
         destination_meta?: DestinationMetaLike;
     }
-        | unknown;
+    | unknown;
     created_at?: string | null;
 };
 
@@ -306,7 +338,7 @@ function buildDestinationMetaFromHistoryRow(
         city: isString(k.primary_city) ? k.primary_city : undefined,
     };
 
-    return {meta, heroUrl: hist.backdrop_image_url};
+    return { meta, heroUrl: hist.backdrop_image_url };
 }
 
 /* ---------- lodging helper ---------- */
@@ -327,30 +359,30 @@ function getValidLodging(
         typeof l.lat === "number" &&
         typeof l.lng === "number"
     ) {
-        return {name: l.name, lat: l.lat, lng: l.lng};
+        return { name: l.name, lat: l.lat, lng: l.lng };
     }
     return null;
 }
 
 /** 🔑 Next.js 15: params is a Promise and must be awaited */
 export default async function TripIdPage({
-                                             params,
-                                         }: {
+    params,
+}: {
     params: Promise<{ id: string }>;
 }) {
-    const {id} = await params;
+    const { id } = await params;
     const tripId = id;
 
     const sb = await createClientServerRSC();
 
     // Auth (SSR)
     const {
-        data: {user},
+        data: { user },
     } = await sb.auth.getUser();
     if (!user) redirect("/login");
 
     // ---- Trip ----
-    const {data: trip, error: tripErr} = await sb
+    const { data: trip, error: tripErr } = await sb
         .schema("itinero")
         .from("trips")
         .select("*")
@@ -359,26 +391,24 @@ export default async function TripIdPage({
 
     if (tripErr || !trip) {
         return (
-            <AppShell userEmail={user.email ?? null}>
-                <div className="mx-auto mt-10 max-w-2xl px-4">
-                    <Button asChild variant="ghost" className="mb-3 rounded-full">
-                        <Link href="/trips">
-                            <ArrowLeft className="mr-2 h-4 w-4"/> Back to trips
-                        </Link>
-                    </Button>
-                    <Card className="rounded-3xl border-none shadow-md">
-                        <CardHeader>
-                            <CardTitle>
-                                {tripErr ? "Couldn’t load trip" : "Trip not found"}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-sm text-muted-foreground">
-                            {tripErr?.message ??
-                                "The requested trip doesn’t exist or you don’t have access to it."}
-                        </CardContent>
-                    </Card>
-                </div>
-            </AppShell>
+            <div className="mx-auto mt-10 max-w-2xl px-4">
+                <Button asChild variant="ghost" className="mb-3 rounded-full">
+                    <Link href="/trips">
+                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to trips
+                    </Link>
+                </Button>
+                <Card className="rounded-3xl border-none shadow-md">
+                    <CardHeader>
+                        <CardTitle>
+                            {tripErr ? "Couldn’t load trip" : "Trip not found"}
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-muted-foreground">
+                        {tripErr?.message ??
+                            "The requested trip doesn’t exist or you don’t have access to it."}
+                    </CardContent>
+                </Card>
+            </div>
         );
     }
 
@@ -386,33 +416,31 @@ export default async function TripIdPage({
     const tripCurrency = trip.currency ?? "USD";
 
     // ---- Items (ordered) ----
-    const {data: items, error: itemsErr} = await sb
+    const { data: items, error: itemsErr } = await sb
         .schema("itinero")
         .from("itinerary_items")
         .select("*")
         .eq("trip_id", tripId)
-        .order("date", {ascending: true, nullsFirst: true})
-        .order("order_index", {ascending: true});
+        .order("date", { ascending: true, nullsFirst: true })
+        .order("order_index", { ascending: true });
 
     if (itemsErr) {
         return (
-            <AppShell userEmail={user.email ?? null}>
-                <div className="mx-auto mt-10 max-w-2xl px-4">
-                    <Button asChild variant="ghost" className="mb-3 rounded-full">
-                        <Link href="/trips">
-                            <ArrowLeft className="mr-2 h-4 w-4"/> Back to trips
-                        </Link>
-                    </Button>
-                    <Card className="rounded-3xl border-none shadow-md">
-                        <CardHeader>
-                            <CardTitle>Couldn’t load itinerary items</CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-sm text-muted-foreground">
-                            {itemsErr.message ?? "Failed to load itinerary items"}
-                        </CardContent>
-                    </Card>
-                </div>
-            </AppShell>
+            <div className="mx-auto mt-10 max-w-2xl px-4">
+                <Button asChild variant="ghost" className="mb-3 rounded-full">
+                    <Link href="/trips">
+                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to trips
+                    </Link>
+                </Button>
+                <Card className="rounded-3xl border-none shadow-md">
+                    <CardHeader>
+                        <CardTitle>Couldn’t load itinerary items</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-muted-foreground">
+                        {itemsErr.message ?? "Failed to load itinerary items"}
+                    </CardContent>
+                </Card>
+            </div>
         );
     }
 
@@ -424,7 +452,7 @@ export default async function TripIdPage({
     ) as string[];
     let places: PlaceRow[] = [];
     if (placeIds.length) {
-        const {data: pRows} = await sb
+        const { data: pRows } = await sb
             .schema("itinero")
             .from("places")
             .select(
@@ -437,7 +465,7 @@ export default async function TripIdPage({
     // ---- Optional per-day polylines ----
     const polyByDate = new Map<string, string>();
     try {
-        const {data: routes} = await sb
+        const { data: routes } = await sb
             .schema("itinero")
             .from("trip_day_routes")
             .select("date,polyline6,polyline")
@@ -475,7 +503,7 @@ export default async function TripIdPage({
     let history: DestinationHistoryRow | null = null;
 
     if (trip.destination_id) {
-        const {data: dRow} = await sb
+        const { data: dRow } = await sb
             .schema("itinero")
             .from("destinations")
             .select("id,name,lat,lng,current_history_id")
@@ -484,7 +512,7 @@ export default async function TripIdPage({
         destination = dRow ?? null;
 
         if (destination?.current_history_id) {
-            const {data: hRow} = await sb
+            const { data: hRow } = await sb
                 .schema("itinero")
                 .from("destination_history")
                 .select(
@@ -496,7 +524,7 @@ export default async function TripIdPage({
         }
     }
 
-    const {meta: destMeta, heroUrl} =
+    const { meta: destMeta, heroUrl } =
         buildDestinationMetaFromHistoryRow(history);
 
     // ---- Inputs enrichment ----
@@ -535,7 +563,7 @@ export default async function TripIdPage({
 
     const enrichedInputs = {
         ...(parsedInputs ?? {}),
-        ...(enrichedDestList ? {destinations: enrichedDestList} : {}),
+        ...(enrichedDestList ? { destinations: enrichedDestList } : {}),
         ...(destMeta
             ? {
                 destination_meta: {
@@ -605,124 +633,77 @@ export default async function TripIdPage({
     })();
 
     return (
-        <AppShell userEmail={user.email ?? null}>
-            <div
-                className="min-h-screen bg-slate-50/50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900 transition-colors duration-300">
+        <div
+            className="min-h-screen bg-slate-50/50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900 transition-colors duration-300">
 
-                {/* Hero Header */}
-                <section
-                    className="relative h-[50vh] w-full overflow-hidden border-b border-slate-200 dark:border-slate-800">
-                    <div className="absolute inset-0 bg-slate-900">
-                        <Image
-                            src={heroBackground}
-                            alt={trip.title ?? "Trip Cover"}
-                            fill
-                            className="object-cover opacity-80"
-                            priority
-                        />
-                        <div
-                            className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
-                    </div>
-
-                    <div
-                        className="absolute inset-0 mx-auto flex max-w-6xl w-full flex-col justify-between p-6 md:p-10">
-                        <Button
-                            asChild
-                            variant="ghost"
-                            size="sm"
-                            className="self-start rounded-full border border-white/10 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 transition-all"
-                        >
-                            <Link href="/trips">
-                                <ArrowLeft className="mr-2 h-4 w-4"/> Back to Trips
-                            </Link>
-                        </Button>
-
-                        <div className="space-y-4">
-                            <div className="flex flex-wrap items-center gap-3">
-                                <Badge
-                                    variant="outline"
-                                    className="rounded-full border-white/30 bg-white/10 px-3 py-1 text-white backdrop-blur-md font-medium"
-                                >
-                                    <CalendarDays className="mr-2 h-3.5 w-3.5"/> {dateRange}
-                                </Badge>
-                                {typeof trip.est_total_cost === "number" && (
-                                    <Badge
-                                        variant="outline"
-                                        className="rounded-full border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-emerald-100 backdrop-blur-md font-medium"
-                                    >
-                                        <DollarSign className="mr-1 h-3.5 w-3.5"/>
-                                        Est. {tripCurrency} {Math.round(trip.est_total_cost)}
-                                    </Badge>
-                                )}
-                            </div>
-
-                            <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight text-white drop-shadow-lg leading-[1.1] md:text-6xl">
-                                {trip.title ?? "Untitled Trip"}
-                            </h1>
-
-                            <div className="flex flex-wrap gap-2 pt-2">
-                                <TripActionsClient
-                                    tripId={trip.id}
-                                    tripTitle={trip.title ?? "Trip"}
-                                    startDate={trip.start_date ?? undefined}
-                                    endDate={trip.end_date ?? undefined}
-                                    days={days}
-                                    useInputs={inputsForClient}
-                                    places={clientPlaces}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Main Content */}
-                <div className="relative z-10 -mt-8 mx-auto w-full max-w-6xl px-4 pb-20">
-
-                    {/* Viewer */}
-                    <div
-                        className="mb-12 overflow-hidden  dark:border-slate-800  transition-all">
-                        <TripViewerClient
-                            tripId={trip.id}
-                            data={previewLike}
-                            startDate={previewLike.trip_summary.start_date}
-                        />
-                    </div>
-
-                    {/* Trip Settings & Management Grid */}
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-2 px-2">
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Trip Settings</h3>
-                            <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800"/>
-                        </div>
-
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {/* 1. Share */}
-                            <ShareCard
-                                tripId={trip.id}
-                                publicId={trip.public_id}
-                                isPublic={!!trip.public_id}
-                            />
-
-                            {/* 2. Export */}
-                            <ExportCard
-                                tripId={trip.id}
-                                title={trip.title ?? "Trip"}
-                                days={days}
-                            />
-
-                            {/* 3. Collaborators */}
-                            <CollaboratorsCard/>
-
-                            {/* 4. Danger Zone (Full width on large screens) */}
-                            <div className="md:col-span-2 lg:col-span-3">
-                                <DangerZoneCard tripId={trip.id} title={trip.title ?? "Trip"}/>
-                            </div>
-                        </div>
-                    </div>
-
+            {/* Hero Header */}
+            <ParallaxHero
+                title={trip.title ?? "Untitled Trip"}
+                heroUrl={heroBackground}
+                startDate={trip.start_date ?? undefined}
+                estCost={typeof trip.est_total_cost === "number" ? Math.round(trip.est_total_cost) : undefined}
+                currency={tripCurrency}
+            >
+                <div className="flex flex-wrap gap-2 pt-2">
+                    <TripActionsClient
+                        tripId={trip.id}
+                        tripTitle={trip.title ?? "Trip"}
+                        startDate={trip.start_date ?? undefined}
+                        endDate={trip.end_date ?? undefined}
+                        days={days}
+                        useInputs={inputsForClient}
+                        places={clientPlaces}
+                    />
                 </div>
+            </ParallaxHero>
+
+            {/* Main Content */}
+            <div className="relative z-10 -mt-8 mx-auto w-full max-w-6xl px-4 pb-20">
+
+                {/* Viewer */}
+                <div
+                    className="mb-12 overflow-hidden  dark:border-slate-800  transition-all">
+                    <TripViewerClient
+                        tripId={trip.id}
+                        data={previewLike}
+                        startDate={previewLike.trip_summary.start_date}
+                    />
+                </div>
+
+                {/* Trip Settings & Management Grid */}
+                <div className="space-y-6">
+                    <div className="flex items-center gap-2 px-2">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Trip Settings</h3>
+                        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                    </div>
+
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {/* 1. Share */}
+                        <ShareCard
+                            tripId={trip.id}
+                            publicId={trip.public_id}
+                            isPublic={!!trip.public_id}
+                        />
+
+                        {/* 2. Export */}
+                        <ExportCard
+                            tripId={trip.id}
+                            title={trip.title ?? "Trip"}
+                            days={days}
+                        />
+
+                        {/* 3. Collaborators */}
+                        <CollaboratorsCard />
+
+                        {/* 4. Danger Zone (Full width on large screens) */}
+                        <div className="md:col-span-2 lg:col-span-3">
+                            <DangerZoneCard tripId={trip.id} title={trip.title ?? "Trip"} />
+                        </div>
+                    </div>
+                </div>
+
             </div>
-        </AppShell>
+        </div>
     );
 }
 
@@ -732,10 +713,10 @@ function groupItemsByDayIndex(items: ItemRow[]) {
     const map = new Map<number, { date: string | null; items: ItemRow[] }>();
     for (const it of items) {
         const key = it.day_index;
-        if (!map.has(key)) map.set(key, {date: it.date, items: []});
+        if (!map.has(key)) map.set(key, { date: it.date, items: [] });
         map.get(key)!.items.push(it);
     }
     return Array.from(map.entries())
         .sort((a, b) => a[0] - b[0])
-        .map(([dayIndex, v]) => ({dayIndex, date: v.date, items: v.items}));
+        .map(([dayIndex, v]) => ({ dayIndex, date: v.date, items: v.items }));
 }

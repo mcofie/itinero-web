@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {toast} from "sonner";
+import { toast } from "sonner";
 import {
     Card,
     CardContent,
@@ -10,9 +10,9 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
     Share2,
     Download,
@@ -27,10 +27,10 @@ import {
     Lock,
 } from "lucide-react";
 import DeleteTripClient from "./DeleteTripClient";
-import PublicToggle from "@/app/trips/PublicToggle";
-import {TripPrintDialogClient} from "@/app/trips/[id]/print/TripPrintDialogClient";
-import {cn} from "@/lib/utils";
-import type {Day} from "./page";
+import PublicToggle from "@/app/(main)/trips/PublicToggle";
+import { TripPrintDialogClient } from "@/app/trips/[id]/print/TripPrintDialogClient";
+import { cn } from "@/lib/utils";
+import type { Day } from "./page";
 
 /* --- Helper: ICS Download Logic --- */
 function downloadICS(title: string, days: Day[]) {
@@ -101,10 +101,10 @@ function escapeICS(s: string) {
 
 /* --- 1. Share Card --- */
 export function ShareCard({
-                              tripId,
-                              publicId,
-                              isPublic,
-                          }: {
+    tripId,
+    publicId,
+    isPublic,
+}: {
     tripId: string;
     publicId: string | null;
     isPublic: boolean;
@@ -130,7 +130,7 @@ export function ShareCard({
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
                         <CardTitle className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-                            <Share2 className="h-5 w-5 text-blue-600 dark:text-blue-500"/> Sharing
+                            <Share2 className="h-5 w-5 text-blue-600 dark:text-blue-500" /> Sharing
                         </CardTitle>
                         <CardDescription className="text-slate-500 dark:text-slate-400">
                             Control who can see this trip.
@@ -144,7 +144,7 @@ export function ShareCard({
                                 : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
                         )}
                     >
-                        {isPublic ? <Globe className="h-4 w-4"/> : <Lock className="h-4 w-4"/>}
+                        {isPublic ? <Globe className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                     </div>
                 </div>
             </CardHeader>
@@ -153,7 +153,7 @@ export function ShareCard({
                 {/* Toggle Section */}
                 <div
                     className="flex flex-col items-center justify-between rounded-xl bg-slate-50 dark:bg-slate-950/50 p-4 border border-slate-100 dark:border-slate-800">
-                    <PublicToggle tripId={tripId} publicId={publicId}/>
+                    <PublicToggle tripId={tripId} publicId={publicId} />
                 </div>
 
                 {/* Link Section */}
@@ -171,15 +171,15 @@ export function ShareCard({
                                     className="h-10 truncate rounded-xl border-slate-200 bg-white pr-10 text-sm font-medium text-slate-600 focus-visible:ring-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-300"
                                 />
                                 <div className="absolute right-0 top-0 flex h-full items-center px-3">
-                                    <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mr-3"/>
+                                    <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mr-3" />
                                     <button
                                         onClick={handleCopy}
                                         className="text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400 transition-colors"
                                     >
                                         {copied ? (
-                                            <Check className="h-4 w-4 text-emerald-500"/>
+                                            <Check className="h-4 w-4 text-emerald-500" />
                                         ) : (
-                                            <Copy className="h-4 w-4"/>
+                                            <Copy className="h-4 w-4" />
                                         )}
                                     </button>
                                 </div>
@@ -191,7 +191,7 @@ export function ShareCard({
                                 asChild
                             >
                                 <Link href={`/trips/share/${publicId}`} target="_blank">
-                                    <ExternalLink className="h-4 w-4"/>
+                                    <ExternalLink className="h-4 w-4" />
                                 </Link>
                             </Button>
                         </div>
@@ -204,10 +204,10 @@ export function ShareCard({
 
 /* --- 2. Exports Card --- */
 export function ExportCard({
-                               tripId,
-                               title,
-                               days,
-                           }: {
+    tripId,
+    title,
+    days,
+}: {
     tripId: string;
     title: string;
     days: Day[];
@@ -217,7 +217,7 @@ export function ExportCard({
             className="flex flex-col rounded-3xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-                    <Download className="h-5 w-5 text-emerald-600 dark:text-emerald-500"/> Export
+                    <Download className="h-5 w-5 text-emerald-600 dark:text-emerald-500" /> Export
                 </CardTitle>
                 <CardDescription className="text-slate-500 dark:text-slate-400">
                     Take your itinerary offline.
@@ -229,18 +229,18 @@ export function ExportCard({
                     className="group relative flex h-24 flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/50 transition-all hover:border-blue-200 hover:bg-blue-50 dark:bg-slate-950/50 dark:border-slate-800 dark:hover:border-blue-800 dark:hover:bg-slate-900">
                     {/* Invisible Trigger Overlay */}
                     <div className="absolute inset-0 z-10 opacity-0 [&_button]:h-full [&_button]:w-full">
-                        <TripPrintDialogClient tripId={tripId}/>
+                        <TripPrintDialogClient tripId={tripId} />
                     </div>
 
                     {/* Visual Representation */}
                     <div
                         className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-colors group-hover:text-blue-600 dark:bg-slate-800 dark:text-slate-500 dark:group-hover:text-blue-400">
-                        <FileText className="h-5 w-5"/>
+                        <FileText className="h-5 w-5" />
                     </div>
                     <span
                         className="text-xs font-bold text-slate-600 group-hover:text-blue-700 dark:text-slate-400 dark:group-hover:text-blue-400">
-            PDF Guide
-          </span>
+                        PDF Guide
+                    </span>
                 </div>
 
                 {/* Calendar Sync */}
@@ -251,7 +251,7 @@ export function ExportCard({
                 >
                     <div
                         className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-colors group-hover:text-purple-600 dark:bg-slate-800 dark:text-slate-500 dark:group-hover:text-purple-400">
-                        <Calendar className="h-5 w-5"/>
+                        <Calendar className="h-5 w-5" />
                     </div>
                     <span className="text-xs font-bold dark:text-slate-400">Sync Calendar</span>
                 </Button>
@@ -267,7 +267,7 @@ export function CollaboratorsCard() {
             className="flex flex-col rounded-3xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-                    <Users className="h-5 w-5 text-purple-600 dark:text-purple-500"/> Team
+                    <Users className="h-5 w-5 text-purple-600 dark:text-purple-500" /> Team
                 </CardTitle>
                 <CardDescription className="text-slate-500 dark:text-slate-400">
                     Plan together with friends.
@@ -281,7 +281,7 @@ export function CollaboratorsCard() {
                     </div>
                     <div
                         className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-slate-100 text-slate-300 dark:border-slate-900 dark:bg-slate-800 dark:text-slate-600">
-                        <Users className="h-4 w-4"/>
+                        <Users className="h-4 w-4" />
                     </div>
                 </div>
                 <Button
@@ -298,9 +298,9 @@ export function CollaboratorsCard() {
 
 /* --- 4. Danger Zone --- */
 export function DangerZoneCard({
-                                   tripId,
-                                   title,
-                               }: {
+    tripId,
+    title,
+}: {
     tripId: string;
     title: string;
 }) {
@@ -309,7 +309,7 @@ export function DangerZoneCard({
             className="rounded-3xl border border-red-100 bg-red-50/30 dark:bg-red-900/10 dark:border-red-900/50 shadow-none">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-red-900 dark:text-red-400">
-                    <Trash2 className="h-5 w-5"/> Danger Zone
+                    <Trash2 className="h-5 w-5" /> Danger Zone
                 </CardTitle>
                 <CardDescription className="text-red-700/80 dark:text-red-400/60">
                     Irreversible actions. Proceed with caution.
@@ -326,7 +326,7 @@ export function DangerZoneCard({
                             Once deleted, it will be gone forever.
                         </div>
                     </div>
-                    <DeleteTripClient tripId={tripId} title={title}/>
+                    <DeleteTripClient tripId={tripId} title={title} />
                 </div>
             </CardContent>
         </Card>

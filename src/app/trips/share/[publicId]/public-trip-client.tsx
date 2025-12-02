@@ -3,12 +3,12 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
-import {useTheme} from "next-themes";
-import {cn} from "@/lib/utils";
-import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
-import {ScrollArea} from "@/components/ui/scroll-area";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     CalendarDays,
     DollarSign,
@@ -68,10 +68,10 @@ type LeafletMapProps = {
 
 const LeafletMap = dynamic<LeafletMapProps>(
     () =>
-        import("@/app/preview/_leaflet/LeafletMap").then(
+        import("@/app/(main)/preview/_leaflet/LeafletMap").then(
             (m) => m.default as React.ComponentType<LeafletMapProps>
         ),
-    {ssr: false}
+    { ssr: false }
 );
 
 type Props = {
@@ -112,14 +112,14 @@ function toPlacesMap(src: PlaceLite[]): Map<string, LeafletPlaceProp> {
 }
 
 export default function PublicTripClient({
-                                             publicId,
-                                             currency,
-                                             estTotalCost,
-                                             tripSummary,
-                                             days,
-                                             places,
-                                         }: Props) {
-    const {resolvedTheme} = useTheme();
+    publicId,
+    currency,
+    estTotalCost,
+    tripSummary,
+    days,
+    places,
+}: Props) {
+    const { resolvedTheme } = useTheme();
     const theme: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light";
 
     const [activeDay, setActiveDay] = React.useState(0);
@@ -146,25 +146,25 @@ export default function PublicTripClient({
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                     <Badge variant="secondary" className="gap-1 rounded-full">
-                        <CalendarDays className="h-3.5 w-3.5"/>
+                        <CalendarDays className="h-3.5 w-3.5" />
                         {dateRange ?? "Flexible dates"}
                     </Badge>
                     {typeof estTotalCost === "number" && (
                         <Badge variant="outline" className="gap-1 rounded-full">
-                            <DollarSign className="h-3.5 w-3.5"/>
+                            <DollarSign className="h-3.5 w-3.5" />
                             est. {currency} {Math.round(estTotalCost)}
                         </Badge>
                     )}
                     {dest?.name && (
                         <Badge variant="outline" className="gap-1 rounded-full">
-                            <MapPin className="h-3.5 w-3.5"/>
+                            <MapPin className="h-3.5 w-3.5" />
                             {dest.name}
                         </Badge>
                     )}
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => openSelf()}>
-                        <ExternalLink className="mr-1 h-4 w-4"/>
+                        <ExternalLink className="mr-1 h-4 w-4" />
                         Open in new tab
                     </Button>
                     <Button
@@ -173,7 +173,7 @@ export default function PublicTripClient({
                         onClick={() => copyShareUrl(publicId)}
                         title="Copy share link"
                     >
-                        <LinkIcon className="h-4 w-4"/>
+                        <LinkIcon className="h-4 w-4" />
                         Copy link
                     </Button>
                 </div>
@@ -236,9 +236,9 @@ export default function PublicTripClient({
                                                     </p>
                                                 ) : null}
                                                 <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-                                                    <Chip label="Est. cost" value={fmtMoney(b?.est_cost)}/>
-                                                    <Chip label="Duration" value={fmtMin(b?.duration_min)}/>
-                                                    <Chip label="Travel" value={fmtMin(b?.travel_min_from_prev)}/>
+                                                    <Chip label="Est. cost" value={fmtMoney(b?.est_cost)} />
+                                                    <Chip label="Duration" value={fmtMin(b?.duration_min)} />
+                                                    <Chip label="Travel" value={fmtMin(b?.travel_min_from_prev)} />
                                                 </div>
                                             </div>
                                         </div>
@@ -282,7 +282,7 @@ async function copyShareUrl(publicId: string) {
             : `/t/${publicId}`;
     try {
         if (navigator.share) {
-            await navigator.share({url, title: "Shared Trip • Itinero"});
+            await navigator.share({ url, title: "Shared Trip • Itinero" });
             return;
         }
     } catch {
@@ -295,12 +295,12 @@ async function copyShareUrl(publicId: string) {
     }
 }
 
-function Chip({label, value}: { label: string; value: string }) {
+function Chip({ label, value }: { label: string; value: string }) {
     return (
         <span className="inline-flex items-center gap-1 rounded-md border px-2 py-1">
-      <span className="opacity-70">{label}:</span>
-      <span className="font-medium">{value}</span>
-    </span>
+            <span className="opacity-70">{label}:</span>
+            <span className="font-medium">{value}</span>
+        </span>
     );
 }
 

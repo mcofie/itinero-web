@@ -1,19 +1,79 @@
 {
   "node": {
-    "40b90ca448ebc92cbe6723b53e3c950a0732913303": {
+    "40438e594c1a910bf86a4a3b8c5d07d72fef5ce2c3": {
       "workers": {
-        "app/profile/page": {
-          "moduleId": "[project]/.next-internal/server/app/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/profile/server-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+        "app/(main)/profile/page": {
+          "moduleId": "73574",
           "async": false,
           "exportedName": "saveProfileAction",
-          "filename": "src/app/profile/server-actions.ts"
+          "filename": "src/app/(main)/profile/server-actions.ts"
         }
       },
       "layer": {
-        "app/profile/page": "action-browser"
+        "app/(main)/profile/page": "action-browser"
       },
-      "filename": "src/app/profile/server-actions.ts",
+      "filename": "src/app/(main)/profile/server-actions.ts",
       "exportedName": "saveProfileAction"
+    },
+    "60a0c9668dbf72c6e0ee53a3d882a435a8bf67c38c": {
+      "workers": {
+        "app/(main)/trips/[id]/page": {
+          "moduleId": "83382",
+          "async": false,
+          "exportedName": "updateTripNote",
+          "filename": "src/app/(main)/trips/[id]/actions.ts"
+        }
+      },
+      "layer": {
+        "app/(main)/trips/[id]/page": "action-browser"
+      },
+      "filename": "src/app/(main)/trips/[id]/actions.ts",
+      "exportedName": "updateTripNote"
+    },
+    "70ace659e56ff5023141e67bb073917e4bd1cb1274": {
+      "workers": {
+        "app/(main)/trips/[id]/page": {
+          "moduleId": "83382",
+          "async": false,
+          "exportedName": "updateDayNote",
+          "filename": "src/app/(main)/trips/[id]/actions.ts"
+        }
+      },
+      "layer": {
+        "app/(main)/trips/[id]/page": "action-browser"
+      },
+      "filename": "src/app/(main)/trips/[id]/actions.ts",
+      "exportedName": "updateDayNote"
+    },
+    "607838c0fdb9a9ce640454474b5b096bb8039264a8": {
+      "workers": {
+        "app/(main)/trips/[id]/page": {
+          "moduleId": "83382",
+          "async": false,
+          "exportedName": "updateItemNote",
+          "filename": "src/app/(main)/trips/[id]/actions.ts"
+        }
+      },
+      "layer": {
+        "app/(main)/trips/[id]/page": "action-browser"
+      },
+      "filename": "src/app/(main)/trips/[id]/actions.ts",
+      "exportedName": "updateItemNote"
+    },
+    "6048613a86a8e852c78511930a38055ebc15437adb": {
+      "workers": {
+        "app/(main)/trips/[id]/page": {
+          "moduleId": "83382",
+          "async": false,
+          "exportedName": "setTripPublic",
+          "filename": "src/app/actions/trips.ts"
+        }
+      },
+      "layer": {
+        "app/(main)/trips/[id]/page": "action-browser"
+      },
+      "filename": "src/app/actions/trips.ts",
+      "exportedName": "setTripPublic"
     }
   },
   "edge": {},

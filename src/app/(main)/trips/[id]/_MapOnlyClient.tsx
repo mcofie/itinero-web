@@ -6,7 +6,7 @@ import * as React from "react";
 import type { PreviewLike } from "./page";
 
 // reuse your Leaflet component
-const LeafletMap = dynamic(() => import("@/app/preview/_leaflet/LeafletMap"), { ssr: false });
+const LeafletMap = dynamic(() => import("@/app/(main)/preview/_leaflet/LeafletMap"), { ssr: false });
 import "leaflet/dist/leaflet.css";
 
 /**

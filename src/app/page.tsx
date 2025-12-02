@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useInView, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TripWizard from "@/components/landing/TripWizard";
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
+import Globe from "@/components/landing/Globe";
 
 /* ---------- Data ---------- */
 const SUPPORTED = [
@@ -65,7 +66,7 @@ const WHY = [
         icon: Users2,
         title: "Community Powered",
         desc: "Local tips and hidden gems contributed by real travellers. Verify info to earn points.",
-        image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2670&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2670&auto=format&fit=crop",
         color: "blue"
     },
     {
@@ -73,7 +74,7 @@ const WHY = [
         icon: FileText,
         title: "Visa-Ready Exports",
         desc: "Generate professional PDF itineraries instantly. Perfect for visa applications and offline use.",
-        image: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=2670&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=2670&auto=format&fit=crop",
         color: "emerald"
     },
     {
@@ -81,7 +82,7 @@ const WHY = [
         icon: Wallet,
         title: "Budget Control",
         desc: "Real-world price estimates for every activity. Plan confidently without breaking the bank.",
-        image: "https://images.unsplash.com/photo-1554224154-260327c00c4b?q=80&w=2670&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2670&auto=format&fit=crop",
         color: "amber"
     },
     {
@@ -89,7 +90,7 @@ const WHY = [
         icon: CalendarPlus,
         title: "Smart Sync",
         desc: "Push your entire trip to Google Calendar or Outlook with one click. Never miss a beat.",
-        image: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?q=80&w=2668&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1488085061387-422e29b40080?q=80&w=2662&auto=format&fit=crop",
         color: "purple"
     },
 ];
@@ -223,50 +224,55 @@ export default function LandingPage() {
                     </div>
                 </section>
 
+
+
+
+
                 {/* New Sticky Scroll Feature Section */}
-                <StickyFeatures />
+                <BentoFeatures />
 
-                {/* Destinations Grid */}
-                <section className="py-24 bg-white border-t border-slate-100 dark:bg-slate-900 dark:border-slate-800">
-                    <div className="mx-auto max-w-7xl px-6">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-                            <div className="max-w-2xl">
-                                <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 dark:text-white">Popular
-                                    Destinations</h2>
-                                <p className="text-lg text-slate-600 dark:text-slate-400">Deep local data, pricing, and
-                                    optimized routing available for these regions.</p>
-                            </div>
-                            <Link href={"/destinations"}>
-                                <Button variant="outline"
-                                    className="hidden md:flex gap-2 rounded-full border-slate-200 hover:border-blue-600 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-500">
-                                    View all destinations <ArrowRight className="h-4 w-4" />
-                                </Button>
-                            </Link>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                            {SUPPORTED.map((c, i) => (
-                                <motion.div
-                                    key={c.name}
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    whileInView={{ opacity: 1, scale: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: i * 0.05 }}
-                                    className="group relative aspect-[3/4] overflow-hidden rounded-3xl cursor-pointer"
-                                >
-                                    <Image src={c.image} alt={c.name} fill
-                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                    <div
-                                        className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                                    <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
-                                        <h3 className="text-xl font-bold tracking-tight transform translate-y-2 group-hover:translate-y-0 transition-transform">{c.name}</h3>
-                                        <p className="text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300 text-blue-200">{c.itineraries} Itineraries</p>
+                {/* Global Scale Section */}
+                <section className="py-24 bg-slate-900 text-white relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-900 to-slate-900 pointer-events-none" />
+                    <div className="mx-auto max-w-7xl px-6 relative z-10">
+                        <div className="grid lg:grid-cols-2 gap-12 items-center">
+                            <div>
+                                <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
+                                    Global reach, <br />
+                                    <span className="text-blue-400">local expertise.</span>
+                                </h2>
+                                <p className="text-xl text-slate-400 mb-8 leading-relaxed">
+                                    Whether you&apos;re planning a safari in Kenya, a culinary tour in Tokyo, or a business trip to New York, Itinero connects you with the best local insights.
+                                </p>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <div className="text-3xl font-bold text-white mb-1">120+</div>
+                                        <div className="text-sm text-slate-500 uppercase tracking-wider">Countries</div>
                                     </div>
-                                </motion.div>
-                            ))}
+                                    <div>
+                                        <div className="text-3xl font-bold text-white mb-1">50k+</div>
+                                        <div className="text-sm text-slate-500 uppercase tracking-wider">Itineraries</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-3xl font-bold text-white mb-1">1M+</div>
+                                        <div className="text-sm text-slate-500 uppercase tracking-wider">Travelers</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-3xl font-bold text-white mb-1">4.9/5</div>
+                                        <div className="text-sm text-slate-500 uppercase tracking-wider">App Rating</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="h-[500px] w-full flex items-center justify-center relative">
+                                <div className="absolute inset-0 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
+                                <Globe />
+                            </div>
                         </div>
                     </div>
                 </section>
+
+                {/* Destinations Grid (Parallax) */}
+                <ParallaxDestinations />
 
                 {/* CTA */}
                 <section className="py-24 bg-blue-600 text-white dark:bg-blue-700">
@@ -374,17 +380,11 @@ export default function LandingPage() {
     );
 }
 
-/* ---------- NEW STICKY COMPONENT (Revamped) ---------- */
-function StickyFeatures() {
-    const [activeFeature, setActiveFeature] = useState(0);
-
-    // We'll use Framer Motion to control the scroll-triggered switching if desired,
-    // but for simplicity and robustness, a manual click + auto-rotate or scroll-spy is best.
-    // Here we stick to a manual click interaction with a sticky layout.
-
+/* ---------- NEW BENTO GRID COMPONENT ---------- */
+function BentoFeatures() {
     return (
-        <section className="bg-slate-50 py-24 dark:bg-slate-950 relative">
-            <div className="mx-auto max-w-7xl px-6">
+        <section className="bg-slate-50 py-24 dark:bg-slate-950 relative overflow-hidden">
+            <div className="mx-auto max-w-7xl px-6 relative z-10">
                 <div className="mb-20 text-center max-w-3xl mx-auto">
                     <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 mb-6 dark:text-white">
                         Why travellers choose <span className="text-blue-600 dark:text-blue-500">Itinero</span>
@@ -394,113 +394,135 @@ function StickyFeatures() {
                     </p>
                 </div>
 
-                <div className="grid lg:grid-cols-12 gap-12 lg:gap-24 items-start">
-                    {/* Left: Feature List (Sticky) */}
-                    <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-32">
-                        {WHY.map((item, index) => (
-                            <div
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[400px]">
+                    {WHY.map((item, index) => {
+                        const isLarge = index === 0 || index === 3;
+                        return (
+                            <motion.div
                                 key={item.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: index * 0.1 }}
                                 className={cn(
-                                    "group p-6 rounded-3xl transition-all duration-300 cursor-pointer border-2 relative overflow-hidden",
-                                    activeFeature === index
-                                        ? "bg-white border-blue-100 shadow-xl shadow-blue-900/5 dark:bg-slate-900 dark:border-blue-900/50"
-                                        : "bg-transparent border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-900/30"
+                                    "group relative rounded-[2.5rem] overflow-hidden border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-500",
+                                    isLarge ? "lg:col-span-2" : "lg:col-span-1"
                                 )}
-                                onClick={() => setActiveFeature(index)}
                             >
-                                {/* Progress Bar Background for Active Item (Optional Idea) */}
-                                {activeFeature === index && (
-                                    <motion.div
-                                        layoutId="active-bg"
-                                        className="absolute inset-0 bg-blue-50/50 dark:bg-blue-900/10 -z-10"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
+                                {/* Background Image with Overlay */}
+                                <div className="absolute inset-0">
+                                    <Image
+                                        src={item.image}
+                                        alt={item.title}
+                                        fill
+                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
-                                )}
-
-                                <div className="flex gap-5">
                                     <div className={cn(
-                                        "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors shadow-sm",
-                                        activeFeature === index
-                                            ? `bg-${item.color}-100 text-${item.color}-600 dark:bg-${item.color}-900/30 dark:text-${item.color}-400`
-                                            : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-600"
+                                        "absolute inset-0 mix-blend-multiply opacity-60 transition-opacity duration-500 group-hover:opacity-70",
+                                        `bg-${item.color}-900`
+                                    )} />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                </div>
+
+                                {/* Content */}
+                                <div className="absolute inset-0 p-8 flex flex-col justify-between text-white">
+                                    <div className={cn(
+                                        "h-14 w-14 rounded-2xl flex items-center justify-center backdrop-blur-md bg-white/20 border border-white/30 shadow-lg",
+                                        `text-${item.color}-100`
                                     )}>
-                                        <item.icon className="h-6 w-6" />
+                                        <item.icon className="h-7 w-7" />
                                     </div>
-                                    <div>
-                                        <h3 className={cn(
-                                            "text-lg font-bold mb-2 transition-colors",
-                                            activeFeature === index ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"
-                                        )}>
-                                            {item.title}
-                                        </h3>
-                                        <p className={cn(
-                                            "text-sm leading-relaxed transition-colors",
-                                            activeFeature === index ? "text-slate-600 dark:text-slate-300" : "text-slate-400 dark:text-slate-600"
-                                        )}>
+
+                                    <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                                        <h3 className="text-3xl font-bold mb-3 tracking-tight">{item.title}</h3>
+                                        <p className="text-lg text-slate-200 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-75">
                                             {item.desc}
                                         </p>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
 
-                    {/* Right: Image Preview (Sticky/Fixed height) */}
-                    <div className="lg:col-span-7 relative">
-                        <div
-                            className="relative aspect-[4/3] md:aspect-[16/10] w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-900">
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={activeFeature}
-                                    initial={{ opacity: 0, scale: 1.05 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    transition={{ duration: 0.5, ease: "circOut" }}
-                                    className="absolute inset-0 h-full w-full"
-                                >
-                                    <Image
-                                        src={WHY[activeFeature].image}
-                                        alt={WHY[activeFeature].title}
-                                        fill
-                                        className="w-full h-full object-cover"
-                                    />
-                                    {/* Subtle Overlay */}
-                                    <div className={cn(
-                                        "absolute inset-0 mix-blend-multiply opacity-20",
-                                        `bg-${WHY[activeFeature].color}-900`
-                                    )} />
-                                    <div
-                                        className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-
-                                    {/* Floating Badge inside image */}
-                                    <div
-                                        className="absolute bottom-8 left-8 bg-white/90 backdrop-blur-md px-5 py-3 rounded-2xl shadow-lg border border-white/50 flex items-center gap-3 dark:bg-slate-900/90 dark:border-slate-700">
-                                        <div className={cn(
-                                            "h-10 w-10 rounded-full flex items-center justify-center text-white shadow-sm",
-                                            `bg-${WHY[activeFeature].color}-500`
-                                        )}>
-                                            <CheckCircle2 className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">Feature
-                                                Unlocked</p>
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white">{WHY[activeFeature].title}</p>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            </AnimatePresence>
-                        </div>
-
-                        {/* Decorative elements behind image */}
-                        <div
-                            className="absolute -top-10 -right-10 w-64 h-64 bg-blue-100/50 rounded-full blur-3xl -z-10 dark:bg-blue-900/20"></div>
-                        <div
-                            className="absolute -bottom-10 -left-10 w-64 h-64 bg-indigo-100/50 rounded-full blur-3xl -z-10 dark:bg-indigo-900/20"></div>
-                    </div>
+                                {/* Hover Glow Effect */}
+                                <div
+                                    className="absolute -inset-full top-0 block h-full w-1/2 -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-20 group-hover:animate-shine"
+                                />
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
         </section>
+    );
+}
+
+/* ---------- NEW PARALLAX DESTINATIONS COMPONENT ---------- */
+function ParallaxDestinations() {
+    const containerRef = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start end", "end start"]
+    });
+
+    const y1 = useTransform(scrollYProgress, [0, 1], [0, -100]);
+    const y2 = useTransform(scrollYProgress, [0, 1], [0, 100]);
+    const y3 = useTransform(scrollYProgress, [0, 1], [0, -50]);
+
+    // Split destinations into 3 columns
+    const col1 = SUPPORTED.filter((_, i) => i % 3 === 0);
+    const col2 = SUPPORTED.filter((_, i) => i % 3 === 1);
+    const col3 = SUPPORTED.filter((_, i) => i % 3 === 2);
+
+    return (
+        <section ref={containerRef} className="py-24 bg-white border-t border-slate-100 dark:bg-slate-900 dark:border-slate-800 overflow-hidden">
+            <div className="mx-auto max-w-7xl px-6">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                    <div className="max-w-2xl">
+                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 dark:text-white">Popular
+                            Destinations</h2>
+                        <p className="text-lg text-slate-600 dark:text-slate-400">Deep local data, pricing, and
+                            optimized routing available for these regions.</p>
+                    </div>
+                    <Link href={"/destinations"}>
+                        <Button variant="outline"
+                            className="hidden md:flex gap-2 rounded-full border-slate-200 hover:border-blue-600 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-500">
+                            View all destinations <ArrowRight className="h-4 w-4" />
+                        </Button>
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-[800px] overflow-hidden">
+                    <Column destinations={col1} y={y1} />
+                    <Column destinations={col2} y={y2} className="hidden md:flex" />
+                    <Column destinations={col3} y={y3} className="hidden lg:flex" />
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function Column({ destinations, y, className }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    destinations: any[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    y: any,
+    className?: string
+}) {
+    return (
+        <motion.div style={{ y }} className={cn("flex flex-col gap-6", className)}>
+            {destinations.map((c) => (
+                <div
+                    key={c.name}
+                    className="group relative aspect-[3/4] overflow-hidden rounded-3xl cursor-pointer shrink-0"
+                >
+                    <Image src={c.image} alt={c.name} fill
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <div
+                        className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                    <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
+                        <h3 className="text-xl font-bold tracking-tight transform translate-y-2 group-hover:translate-y-0 transition-transform">{c.name}</h3>
+                        <p className="text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300 text-blue-200">{c.itineraries} Itineraries</p>
+                    </div>
+                </div>
+            ))}
+        </motion.div>
     );
 }

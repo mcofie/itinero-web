@@ -4,7 +4,7 @@
 type AppRoutes = "/" | "/admin/itinero" | "/auth/callback" | "/checkout" | "/destinations" | "/login" | "/preview" | "/pricing" | "/profile" | "/rewards" | "/rewards/verify" | "/trip-maker" | "/trips" | "/trips/[id]" | "/trips/[id]/print" | "/trips/share/[publicId]"
 type AppRouteHandlerRoutes = "/api/paystack/init" | "/api/paystack/webhook" | "/api/points/quote" | "/api/rewards/verify" | "/api/trips/[id]/pdf"
 type PageRoutes = never
-type LayoutRoutes = "/" | "/trip-maker"
+type LayoutRoutes = "/" | "/login"
 type RedirectRoutes = never
 type RewriteRoutes = never
 type Routes = AppRoutes | PageRoutes | LayoutRoutes | RedirectRoutes | RewriteRoutes | AppRouteHandlerRoutes
@@ -39,7 +39,7 @@ export type ParamsOf<Route extends Routes> = ParamMap[Route]
 
 interface LayoutSlotMap {
   "/": never
-  "/trip-maker": never
+  "/login": never
 }
 
 

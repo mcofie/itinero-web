@@ -6,8 +6,8 @@ import { useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { saveProfileAction } from "@/app/profile/server-actions";
-import { PreferredCurrencyField } from "@/app/profile/PreferredCurrencyField";
+import { saveProfileAction } from "@/app/(main)/profile/server-actions";
+import { PreferredCurrencyField } from "@/app/(main)/profile/PreferredCurrencyField";
 import { User, AtSign, Loader2, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 

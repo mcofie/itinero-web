@@ -1,18 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import {useMemo, useState} from "react";
+import { useMemo, useState } from "react";
 import {
     Card, CardHeader, CardTitle, CardContent, CardFooter,
 } from "@/components/ui/card";
-import {Badge} from "@/components/ui/badge";
-import {Button} from "@/components/ui/button";
-import {Progress} from "@/components/ui/progress";
-import {Separator} from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import {
     Plane, Award, ShieldCheck, MapPin, Camera, Edit3, Trash2, Users, Info, Check
 } from "lucide-react";
-import {ThemeToggle} from "@/components/ThemeToggle";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 /* ================= Types & Data ================= */
 
@@ -158,10 +158,10 @@ const ACTIVITIES: Activity[] = [
 ];
 
 const TIERS = [
-    {key: "explorer", name: "Explorer", min: 0, perks: ["Starter badge", "Monthly challenges"]},
-    {key: "guide", name: "Guide", min: 500, perks: ["Profile flair", "Early feature access"]},
-    {key: "pathfinder", name: "Pathfinder", min: 2000, perks: ["Beta invites", "Priority reviews"]},
-    {key: "ambassador", name: "Ambassador", min: 6000, perks: ["Itinero merch", "Invite-only programs"]},
+    { key: "explorer", name: "Explorer", min: 0, perks: ["Starter badge", "Monthly challenges"] },
+    { key: "guide", name: "Guide", min: 500, perks: ["Profile flair", "Early feature access"] },
+    { key: "pathfinder", name: "Pathfinder", min: 2000, perks: ["Beta invites", "Priority reviews"] },
+    { key: "ambassador", name: "Ambassador", min: 6000, perks: ["Itinero merch", "Invite-only programs"] },
 ];
 
 // Demo points (wire this to user profile later)
@@ -195,38 +195,12 @@ export default function RewardsPage() {
         for (const a of ACTIVITIES) map.set(a.category, [...(map.get(a.category) ?? []), a]);
         return order
             .filter((k) => map.has(k))
-            .map((k) => ({category: k as Activity["category"], items: map.get(k)!}));
+            .map((k) => ({ category: k as Activity["category"], items: map.get(k)! }));
     }, []);
 
     return (
         <div
             className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 dark:bg-slate-950 dark:text-white dark:selection:bg-blue-900 dark:selection:text-white transition-colors duration-300">
-
-            {/* ===== Header ===== */}
-            <header
-                className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/80 backdrop-blur-md dark:bg-slate-950/80 dark:border-slate-800">
-                <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-                    <Link href="/"
-                          className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
-            <span
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
-              <Plane className="h-4 w-4"/>
-            </span>
-                        Itinero
-                    </Link>
-                    <nav className="flex items-center gap-4">
-                        <Link href="/login"
-                              className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors dark:text-slate-400 dark:hover:text-white">Log
-                            in</Link>
-                        <Link href="/signup">
-                            <Button
-                                className="rounded-full bg-blue-600 px-6 font-semibold text-white hover:bg-blue-700 shadow-md shadow-blue-600/20 dark:bg-blue-500 dark:hover:bg-blue-600">Sign
-                                up</Button>
-                        </Link>
-                        <ThemeToggle/>
-                    </nav>
-                </div>
-            </header>
 
             <main>
                 {/* ===== Hero Section ===== */}
@@ -241,12 +215,12 @@ export default function RewardsPage() {
                     <div className="relative mx-auto max-w-3xl">
                         <div
                             className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1 text-sm font-medium text-blue-700 mb-6 backdrop-blur-sm dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
-                            <Award className="h-4 w-4"/>
+                            <Award className="h-4 w-4" />
                             <span>Community Rewards</span>
                         </div>
 
                         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl mb-6 dark:text-white">
-                            Earn points by improving <br className="hidden sm:block"/>
+                            Earn points by improving <br className="hidden sm:block" />
                             <span
                                 className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">travel for everyone.</span>
                         </h1>
@@ -258,13 +232,13 @@ export default function RewardsPage() {
 
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Button size="lg"
-                                    className="rounded-full bg-blue-600 px-8 font-bold text-white shadow-lg hover:bg-blue-700 transition-all dark:bg-blue-500 dark:hover:bg-blue-600"
-                                    asChild>
+                                className="rounded-full bg-blue-600 px-8 font-bold text-white shadow-lg hover:bg-blue-700 transition-all dark:bg-blue-500 dark:hover:bg-blue-600"
+                                asChild>
                                 <Link href="/signup">Start Contributing</Link>
                             </Button>
                             <Button size="lg" variant="outline"
-                                    className="rounded-full border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-                                    asChild>
+                                className="rounded-full border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                                asChild>
                                 <Link href="/about">Contributor Guide</Link>
                             </Button>
                         </div>
@@ -299,8 +273,8 @@ export default function RewardsPage() {
                                         {nextTier ? (
                                             <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
                                                 Next: <span
-                                                className="text-blue-600 dark:text-blue-400">{nextTier.name}</span>
-                                                <br/>
+                                                    className="text-blue-600 dark:text-blue-400">{nextTier.name}</span>
+                                                <br />
                                                 <span
                                                     className="text-xs text-slate-400 dark:text-slate-600">{nextTier.min - points} pts to go</span>
                                             </div>
@@ -312,19 +286,18 @@ export default function RewardsPage() {
                                     </div>
                                 </div>
                                 <Progress value={progressPct}
-                                          className="h-3 rounded-full bg-slate-100 dark:bg-slate-800"
-                                          indicatorClassName="bg-blue-600 dark:bg-blue-500"/>
+                                    className="h-3 rounded-full bg-slate-100 dark:bg-slate-800"
+                                    indicatorClassName="bg-blue-600 dark:bg-blue-500" />
 
                                 <div className="mt-6 flex flex-wrap gap-2">
                                     {TIERS.map((t) => (
                                         <Badge
                                             key={t.key}
                                             variant="secondary"
-                                            className={`rounded-full px-3 py-1 border ${
-                                                t.key === tier.key
+                                            className={`rounded-full px-3 py-1 border ${t.key === tier.key
                                                     ? "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
                                                     : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700"
-                                            }`}
+                                                }`}
                                         >
                                             {t.name} {t.key === tier.key && "• Current"}
                                         </Badge>
@@ -345,19 +318,19 @@ export default function RewardsPage() {
                                 <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
                                     <div
                                         className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-                                        <MapPin className="h-4 w-4"/></div>
+                                        <MapPin className="h-4 w-4" /></div>
                                     <span>Add a new place</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
                                     <div
                                         className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
-                                        <ShieldCheck className="h-4 w-4"/></div>
+                                        <ShieldCheck className="h-4 w-4" /></div>
                                     <span>Verify details</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
                                     <div
                                         className="h-8 w-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 dark:bg-amber-900/20 dark:text-amber-400">
-                                        <Award className="h-4 w-4"/></div>
+                                        <Award className="h-4 w-4" /></div>
                                     <span>Review edits</span>
                                 </div>
                             </CardContent>
@@ -366,7 +339,7 @@ export default function RewardsPage() {
                                     className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold dark:bg-blue-500 dark:hover:bg-blue-600">Add
                                     Place</Button>
                                 <Button variant="outline"
-                                        className="flex-1 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">Verify</Button>
+                                    className="flex-1 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">Verify</Button>
                             </CardFooter>
                         </Card>
                     </div>
@@ -379,9 +352,9 @@ export default function RewardsPage() {
                         & human checks pass. High quality contributions earn more.</p>
 
                     <div className="space-y-8">
-                        {grouped.map(({category, items}) => (
+                        {grouped.map(({ category, items }) => (
                             <div key={category}
-                                 className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+                                className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
                                 <div
                                     className="px-6 py-4 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between dark:bg-slate-800/50 dark:border-slate-800">
                                     <div className="flex items-center gap-3">
@@ -394,7 +367,7 @@ export default function RewardsPage() {
                                 <div className="divide-y divide-slate-100 dark:divide-slate-800">
                                     {items.map((item) => (
                                         <div key={item.id}
-                                             className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/30">
+                                            className="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 transition-colors dark:hover:bg-slate-800/30">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
                                                     <span
@@ -435,7 +408,7 @@ export default function RewardsPage() {
                         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                             {TIERS.map((t) => (
                                 <div key={t.key}
-                                     className={`p-6 rounded-3xl border shadow-sm flex flex-col ${t.key === tier.key ? 'bg-white border-blue-500 ring-4 ring-blue-500/10 relative overflow-hidden dark:bg-slate-900 dark:ring-blue-500/20' : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800'}`}>
+                                    className={`p-6 rounded-3xl border shadow-sm flex flex-col ${t.key === tier.key ? 'bg-white border-blue-500 ring-4 ring-blue-500/10 relative overflow-hidden dark:bg-slate-900 dark:ring-blue-500/20' : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800'}`}>
                                     {t.key === tier.key &&
                                         <div className="absolute top-0 left-0 w-full h-1.5 bg-blue-500"></div>}
 
@@ -449,7 +422,7 @@ export default function RewardsPage() {
                                         {t.perks.map((p, i) => (
                                             <li key={i}
                                                 className="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-300">
-                                                <Check className="h-4 w-4 text-blue-500 shrink-0 mt-0.5"/>
+                                                <Check className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
                                                 <span>{p}</span>
                                             </li>
                                         ))}
@@ -473,7 +446,7 @@ export default function RewardsPage() {
                         <div className="space-y-3">
                             <div
                                 className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 mb-2 dark:bg-blue-900/20 dark:text-blue-400">
-                                <ShieldCheck className="h-5 w-5"/></div>
+                                <ShieldCheck className="h-5 w-5" /></div>
                             <h3 className="font-bold text-slate-900 dark:text-white">Verification</h3>
                             <p className="text-sm text-slate-500 leading-relaxed dark:text-slate-400">We use duplicate
                                 detection, EXIF checks, and peer review. Points may be revoked for inaccuracies.</p>
@@ -481,7 +454,7 @@ export default function RewardsPage() {
                         <div className="space-y-3">
                             <div
                                 className="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-2 dark:bg-emerald-900/20 dark:text-emerald-400">
-                                <Camera className="h-5 w-5"/></div>
+                                <Camera className="h-5 w-5" /></div>
                             <h3 className="font-bold text-slate-900 dark:text-white">Original Content</h3>
                             <p className="text-sm text-slate-500 leading-relaxed dark:text-slate-400">Only original
                                 photos and text. No AI-generated content, stock photos, or borrowed reviews.</p>
@@ -489,32 +462,13 @@ export default function RewardsPage() {
                         <div className="space-y-3">
                             <div
                                 className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-2 dark:bg-amber-900/20 dark:text-amber-400">
-                                <Info className="h-5 w-5"/></div>
+                                <Info className="h-5 w-5" /></div>
                             <h3 className="font-bold text-slate-900 dark:text-white">Appeals</h3>
                             <p className="text-sm text-slate-500 leading-relaxed dark:text-slate-400">Think a
                                 contribution was misjudged? You can appeal any rejection within 7 days.</p>
                         </div>
                     </div>
                 </section>
-
-                {/* ===== Footer ===== */}
-                <footer className="border-t border-slate-200 bg-white py-12 dark:bg-slate-950 dark:border-slate-800">
-                    <div
-                        className="mx-auto max-w-6xl px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-                            <div className="h-6 w-6 rounded bg-slate-900 dark:bg-white"></div>
-                            Itinero
-                        </div>
-                        <div className="text-sm text-slate-500 dark:text-slate-400">
-                            © {new Date().getFullYear()} Itinero Inc. All rights reserved.
-                        </div>
-                        <div className="flex gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
-                            <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400">Terms</Link>
-                            <Link href="/privacy"
-                                  className="hover:text-blue-600 dark:hover:text-blue-400">Privacy</Link>
-                        </div>
-                    </div>
-                </footer>
 
             </main>
         </div>
@@ -530,25 +484,25 @@ function categoryIcon(cat: Activity["category"]) {
     let icon;
     switch (cat) {
         case "Places":
-            icon = <MapPin className={cls}/>;
+            icon = <MapPin className={cls} />;
             break;
         case "Verification":
-            icon = <ShieldCheck className={cls}/>;
+            icon = <ShieldCheck className={cls} />;
             break;
         case "Media":
-            icon = <Camera className={cls}/>;
+            icon = <Camera className={cls} />;
             break;
         case "Edits":
-            icon = <Edit3 className={cls}/>;
+            icon = <Edit3 className={cls} />;
             break;
         case "Cleanup":
-            icon = <Trash2 className={cls}/>;
+            icon = <Trash2 className={cls} />;
             break;
         case "Community":
-            icon = <Users className={cls}/>;
+            icon = <Users className={cls} />;
             break;
         default:
-            icon = <Award className={cls}/>;
+            icon = <Award className={cls} />;
     }
 
     return <div className={wrap}>{icon}</div>;
