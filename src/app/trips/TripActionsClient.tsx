@@ -139,10 +139,10 @@ export default function TripActionsClient({
             setAddingForDate(null);
             return;
         }
-        console.log("[TripActionsClient] confirmAddItem started", { addingForDate, newBlock });
+
         setBusy(true);
         try {
-            console.log("[TripActionsClient] fetching last item order...");
+
             const { data: last, error: lastErr } = await sb
                 .schema("itinero")
                 .from("itinerary_items")
@@ -154,12 +154,12 @@ export default function TripActionsClient({
                 .maybeSingle<{ order_index: number }>();
 
             if (lastErr) console.error("[TripActionsClient] last item error:", lastErr);
-            else console.log("[TripActionsClient] last item fetched:", last);
+
 
             const order_index = (last?.order_index ?? -1) + 1;
             const when = (newBlock.when ?? "morning") as DayBlock["when"];
 
-            console.log("[TripActionsClient] inserting new item...");
+
             const { error } = await sb
                 .schema("itinero")
                 .from("itinerary_items")
@@ -181,7 +181,7 @@ export default function TripActionsClient({
                 console.error("[TripActionsClient] insert error:", error);
                 throw error;
             }
-            console.log("[TripActionsClient] insert success");
+
 
             setAddingForDate(null);
             router.refresh();
@@ -189,7 +189,7 @@ export default function TripActionsClient({
             console.error("[TripActionsClient] confirmAddItem caught error:", err);
         } finally {
             setBusy(false);
-            console.log("[TripActionsClient] confirmAddItem finished");
+
         }
     }
 

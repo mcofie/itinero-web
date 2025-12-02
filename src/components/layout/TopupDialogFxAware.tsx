@@ -6,11 +6,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import {Button} from "@/components/ui/button";
-import {Input} from "@/components/ui/input";
-import {getCurrencyMeta} from "@/lib/currency-data";
-import {POINT_UNIT_PRICE_GHS} from "@/lib/points";
-import {Coins, Loader2, Info} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { getCurrencyMeta } from "@/lib/currency-data";
+import { POINT_UNIT_PRICE_GHS } from "@/lib/points";
+import { Coins, Loader2, Info } from "lucide-react";
 
 type TopupDialogProps = {
     topupOpen: boolean;
@@ -28,17 +28,17 @@ type TopupDialogProps = {
 const QUICK_AMOUNTS = [50, 100, 200, 500];
 
 export function TopupDialogFxAware({
-                                       topupOpen,
-                                       setTopupOpen,
-                                       topupBusy,
-                                       pointsInput,
-                                       setPointsInput,
-                                       onPointsKeyDown,
-                                       startTopup,
-                                       ghsPreview,
-                                       userCurrency,
-                                       ghsToUserRate,
-                                   }: TopupDialogProps) {
+    topupOpen,
+    setTopupOpen,
+    topupBusy,
+    pointsInput,
+    setPointsInput,
+    onPointsKeyDown,
+    startTopup,
+    ghsPreview,
+    userCurrency,
+    ghsToUserRate,
+}: TopupDialogProps) {
     const unitPriceGhs = POINT_UNIT_PRICE_GHS;
 
     const meta = getCurrencyMeta(userCurrency);
@@ -61,7 +61,7 @@ export function TopupDialogFxAware({
     const disableConfirm =
         topupBusy || !Number.isFinite(numericPoints) || numericPoints <= 0;
 
-    console.log(userCurrency);
+
 
     return (
         <Dialog open={topupOpen} onOpenChange={setTopupOpen}>
@@ -69,17 +69,17 @@ export function TopupDialogFxAware({
                 <DialogHeader className="space-y-2">
                     <div className="flex items-center justify-between gap-2">
                         <DialogTitle className="flex items-center gap-2 text-base md:text-lg">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
-                <Coins className="h-4 w-4 text-primary"/>
-              </span>
+                            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+                                <Coins className="h-4 w-4 text-primary" />
+                            </span>
                             Top up points
                         </DialogTitle>
                         <div
                             className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-[11px] text-muted-foreground">
                             Paying in
                             <span className="ml-1 font-semibold">
-                {userCurrency.toUpperCase()}
-              </span>
+                                {userCurrency.toUpperCase()}
+                            </span>
                         </div>
                     </div>
 
@@ -119,8 +119,8 @@ export function TopupDialogFxAware({
                                 Points to buy
                             </label>
                             <span className="text-[11px] text-muted-foreground">
-                More points = more full itineraries
-              </span>
+                                More points = more full itineraries
+                            </span>
                         </div>
 
                         <Input
@@ -150,40 +150,40 @@ export function TopupDialogFxAware({
                                 </Button>
                             ))}
                             <span className="text-[11px] text-muted-foreground">
-                or enter a custom amount
-              </span>
+                                or enter a custom amount
+                            </span>
                         </div>
                     </div>
 
                     {/* Total cost summary */}
                     <div className="space-y-2 rounded-xl border border-border/60 bg-card/70 p-3 text-sm">
                         <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                Estimated charge
-              </span>
+                            <span className="text-xs text-muted-foreground">
+                                Estimated charge
+                            </span>
                             <span className="text-base font-semibold">
-                GHS {ghsPreview.toFixed(2)}
-              </span>
+                                GHS {ghsPreview.toFixed(2)}
+                            </span>
                         </div>
 
                         {formattedTotalForeign && userCurrency !== "GHS" && (
                             <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">
-                  Approx. in {userCurrency.toUpperCase()}
-                </span>
+                                <span className="text-muted-foreground">
+                                    Approx. in {userCurrency.toUpperCase()}
+                                </span>
                                 <span className="font-medium">
-                  {formattedTotalForeign} {userCurrency.toUpperCase()}
-                </span>
+                                    {formattedTotalForeign} {userCurrency.toUpperCase()}
+                                </span>
                             </div>
                         )}
 
                         <div className="mt-1 flex items-start gap-2 text-[11px] text-muted-foreground">
-                            <Info className="mt-[1px] h-3 w-3 flex-shrink-0"/>
+                            <Info className="mt-[1px] h-3 w-3 flex-shrink-0" />
                             <span>
-                After a successful payment, your points balance will update
-                automatically. FX conversions are indicative only – your bank
-                may apply a slightly different rate.
-              </span>
+                                After a successful payment, your points balance will update
+                                automatically. FX conversions are indicative only – your bank
+                                may apply a slightly different rate.
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -203,7 +203,7 @@ export function TopupDialogFxAware({
                     >
                         {topupBusy ? (
                             <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 Processing…
                             </>
                         ) : (

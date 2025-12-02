@@ -407,7 +407,7 @@ export default function ItineroDashboardClient({
             return setDestMessage("Name is required.");
 
         setDestSaving(true);
-        console.log("[ItineroDashboard] handleSaveDestination started", { destName, editingDestId });
+
         try {
             const latNum =
                 destLat.trim() !== "" ? Number(destLat.trim()) : null;
@@ -415,7 +415,7 @@ export default function ItineroDashboardClient({
                 destLng.trim() !== "" ? Number(destLng.trim()) : null;
 
             if (editingDestId) {
-                console.log("[ItineroDashboard] Updating destination...");
+
                 const { data, error } = await sb
                     .schema("itinero")
                     .from("destinations")
@@ -440,7 +440,7 @@ export default function ItineroDashboardClient({
                     );
                     return;
                 }
-                console.log("[ItineroDashboard] Update success:", data);
+
 
                 setDestinations((prev) =>
                     prev.map((d) =>
@@ -449,7 +449,7 @@ export default function ItineroDashboardClient({
                 );
                 setDestMessage("Destination updated.");
             } else {
-                console.log("[ItineroDashboard] Creating new destination...");
+
                 const { data, error } = await sb
                     .schema("itinero")
                     .from("destinations")
@@ -473,7 +473,7 @@ export default function ItineroDashboardClient({
                     );
                     return;
                 }
-                console.log("[ItineroDashboard] Creation success:", data);
+
 
                 setDestinations((prev) => [
                     ...prev,
@@ -487,7 +487,7 @@ export default function ItineroDashboardClient({
             setDestMessage("Error saving destination.");
         } finally {
             setDestSaving(false);
-            console.log("[ItineroDashboard] handleSaveDestination finished");
+
         }
     }
 

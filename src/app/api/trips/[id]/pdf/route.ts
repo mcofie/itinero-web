@@ -1,8 +1,8 @@
 // app/api/trips/[id]/pdf/route.ts
-import {NextRequest, NextResponse} from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import chromium from "@sparticuz/chromium";
 import puppeteerCore from "puppeteer-core";
-import {setTimeout as sleep} from "timers/promises";
+import { setTimeout as sleep } from "timers/promises";
 
 export const runtime = "nodejs";          // use Node runtime (not edge)
 export const dynamic = "force-dynamic";   // always run server-side
@@ -25,7 +25,7 @@ export async function GET(
     req: NextRequest,
     ctx: { params: Promise<{ id: string }> } // Next 15: params is a Promise
 ) {
-    const {id} = await ctx.params;
+    const { id } = await ctx.params;
     const origin = new URL(req.url).origin;
 
     // Optional: support one-time access tokens to bypass strict auth on print route
@@ -52,7 +52,7 @@ export async function GET(
             args: chromium.args,
             executablePath,
             headless: true,
-            defaultViewport: {width: 1200, height: 800, deviceScaleFactor: 2},
+            defaultViewport: { width: 1200, height: 800, deviceScaleFactor: 2 },
         });
 
         const page = await browser.newPage();
@@ -64,7 +64,7 @@ export async function GET(
         await page.emulateMediaType("print");
 
         if (isDev()) {
-            page.on("console", (msg) => console.log("[PDF][console]", msg.type(), msg.text()));
+
             page.on("pageerror", (err) => console.error("[PDF][pageerror]", err));
             page.on("requestfailed", (r) =>
                 console.warn("[PDF][requestfailed]", r.failure()?.errorText, "=>", r.url())
@@ -95,12 +95,12 @@ export async function GET(
         });
 
         // Navigate with resilience: try networkidle2, fall back to domcontentloaded
-        const nav = page.goto(targetUrl, {waitUntil: "networkidle2", timeout: 45_000});
+        const nav = page.goto(targetUrl, { waitUntil: "networkidle2", timeout: 45_000 });
         const fallback = (async () => {
             await sleep(10_000);
             // If still spinning, switch to a lighter wait
             try {
-                await page.goto(targetUrl, {waitUntil: "domcontentloaded", timeout: 20_000});
+                await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 20_000 });
             } catch {
             }
         })();
@@ -123,7 +123,7 @@ export async function GET(
         });
 
         // Wait for your custom "ready" flag (set by the print page)
-        await page.waitForSelector("html[data-hero-ready='1']", {timeout: 5000}).catch(() => {
+        await page.waitForSelector("html[data-hero-ready='1']", { timeout: 5000 }).catch(() => {
             if (isDev()) console.warn("[PDF] hero-ready flag not seen; continuing...");
         });
 
@@ -159,7 +159,7 @@ export async function GET(
         const pdfBytes = await page.pdf({
             format: "A4",
             printBackground: true,
-            margin: {top: "16mm", right: "16mm", bottom: "16mm", left: "16mm"},
+            margin: { top: "16mm", right: "16mm", bottom: "16mm", left: "16mm" },
             // displayHeaderFooter: true,
             // headerTemplate,
             // footerTemplate,
@@ -186,8 +186,8 @@ export async function GET(
         const e = toError(err);
         console.error("[PDF] ERROR:", e.stack || e);
         return NextResponse.json(
-            {error: "Failed to generate PDF", message: isDev() ? String(e.message || e) : undefined},
-            {status: 500}
+            { error: "Failed to generate PDF", message: isDev() ? String(e.message || e) : undefined },
+            { status: 500 }
         );
     } finally {
         if (browser) {

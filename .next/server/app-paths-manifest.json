@@ -1,12 +1,6 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/login/page": "app/login/page.js",
-  "/page": "app/page.js",
-  "/preview/page": "app/preview/page.js",
-  "/pricing/page": "app/pricing/page.js",
   "/profile/page": "app/profile/page.js",
-  "/rewards/page": "app/rewards/page.js",
   "/trip-maker/page": "app/trip-maker/page.js",
   "/trips/page": "app/trips/page.js"
 }

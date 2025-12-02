@@ -291,12 +291,12 @@ export default function AppShell({ children, userEmail }: Props) {
                     filter: `user_id=eq.${uid}`,
                 },
                 (payload) => {
-                    console.log("[AppShell] Realtime event received:", payload);
+
                     void refreshPoints(uid);
                 }
             )
             .subscribe((status) => {
-                console.log("[AppShell] Realtime subscription status:", status);
+
             });
 
         const chProfiles = sb

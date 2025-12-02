@@ -208,7 +208,7 @@ export default function TripWizard() {
         setBusy(true);
         try {
             const payload = toPayload(state);
-            console.log("[TripWizard] invoking build_preview_itinerary with payload:", payload);
+
 
             const { data, error } = await sb.functions.invoke("build_preview_itinerary", {
                 body: payload,
