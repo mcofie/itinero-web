@@ -333,12 +333,12 @@ export default function TripWizard() {
                             <div
                                 key={i}
                                 className={cn(
-                                    "h-1.5 w-8 rounded-full transition-colors duration-300",
+                                    "h-1.5 w-4 sm:w-8 rounded-full transition-colors duration-300",
                                     i <= step
                                         ? "bg-blue-600 dark:bg-blue-500"
                                         : "bg-slate-200 dark:bg-slate-800"
-                                )}
-                            />
+                                )
+                                } />
                         ))}
                     </div>
                 </div>
@@ -348,7 +348,7 @@ export default function TripWizard() {
                     layout
                     className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 flex flex-col dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
                 >
-                    <div className="p-6 md:p-8 flex-1">
+                    <div className="p-4 md:p-8 flex-1">
                         <AnimatePresence mode="wait">
                             {/* STEP 0: DESTINATION */}
                             {step === 0 && (
@@ -409,7 +409,7 @@ export default function TripWizard() {
                             {step === 2 && (
                                 <Slide key="budget">
                                     <FieldBlock label="What's your daily budget?" icon={Wallet}>
-                                        <div className="flex gap-4">
+                                        <div className="flex flex-col sm:flex-row gap-4">
                                             <div className="relative flex-1">
                                                 <div
                                                     className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -439,6 +439,7 @@ export default function TripWizard() {
                                                 onChange={(c) =>
                                                     setState((s) => ({ ...s, currency: c }))
                                                 }
+                                                className="h-12 w-full sm:w-[150px]"
                                             />
                                         </div>
 

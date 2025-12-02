@@ -2,14 +2,14 @@
 "use client";
 
 import * as React from "react";
-import {useTransition} from "react";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Button} from "@/components/ui/button";
-import {saveProfileAction} from "@/app/profile/server-actions";
-import {PreferredCurrencyField} from "@/app/profile/PreferredCurrencyField";
-import {User, AtSign, Loader2, Wallet} from "lucide-react";
-import {cn} from "@/lib/utils";
+import { useTransition } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { saveProfileAction } from "@/app/profile/server-actions";
+import { PreferredCurrencyField } from "@/app/profile/PreferredCurrencyField";
+import { User, AtSign, Loader2, Wallet } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Props = {
     userId: string;
@@ -19,11 +19,11 @@ type Props = {
 };
 
 export function ProfileForm({
-                                userId,
-                                fullName,
-                                username,
-                                preferredCurrency,
-                            }: Props) {
+    userId,
+    fullName,
+    username,
+    preferredCurrency,
+}: Props) {
     const [pending, startTransition] = useTransition();
 
     return (
@@ -36,9 +36,9 @@ export function ProfileForm({
                     }
                 })
             }
-            className="space-y-8 max-w-lg"
+            className="space-y-8 w-full max-w-lg"
         >
-            <input type="hidden" name="id" value={userId}/>
+            <input type="hidden" name="id" value={userId} />
 
             {/* --- Personal Info Section --- */}
             <div className="space-y-5">
@@ -52,7 +52,7 @@ export function ProfileForm({
                     <div className="relative group">
                         <div
                             className="absolute left-3 top-2.5 text-slate-400 group-focus-within:text-blue-500 transition-colors pointer-events-none">
-                            <User className="h-4 w-4"/>
+                            <User className="h-4 w-4" />
                         </div>
                         <Input
                             id="full_name"
@@ -77,7 +77,7 @@ export function ProfileForm({
                     <div className="relative group">
                         <div
                             className="absolute left-3 top-2.5 text-slate-400 group-focus-within:text-blue-500 transition-colors pointer-events-none">
-                            <AtSign className="h-4 w-4"/>
+                            <AtSign className="h-4 w-4" />
                         </div>
                         <Input
                             id="username"
@@ -94,7 +94,7 @@ export function ProfileForm({
             <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
                 <div className="space-y-2">
                     <Label className="text-sm font-semibold text-slate-900 dark:text-slate-200 flex items-center gap-2">
-                        <Wallet className="h-4 w-4 text-slate-400 dark:text-slate-500"/>
+                        <Wallet className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                         Preferred Currency
                     </Label>
 
@@ -106,7 +106,7 @@ export function ProfileForm({
             dark:[&_button]:bg-slate-950 dark:[&_button]:border-slate-800 dark:[&_button]:text-slate-100
             dark:[&_button:hover]:bg-slate-900 dark:[&_button:hover]:border-slate-700
           ">
-                        <PreferredCurrencyField initialCurrency={preferredCurrency ?? null}/>
+                        <PreferredCurrencyField initialCurrency={preferredCurrency ?? null} />
                     </div>
 
                     <p className="text-[0.8rem] text-slate-500 dark:text-slate-400">
@@ -116,12 +116,12 @@ export function ProfileForm({
             </div>
 
             {/* --- Action --- */}
-            <div className="flex items-center justify-end pt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-end pt-4">
                 <Button
                     type="submit"
                     disabled={pending}
                     className={cn(
-                        "min-w-[140px] rounded-full font-semibold transition-all shadow-md hover:shadow-lg",
+                        "w-full sm:w-auto min-w-[140px] rounded-full font-semibold transition-all shadow-md hover:shadow-lg",
                         pending
                             ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
                             : "bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-600 dark:hover:bg-blue-500"
@@ -129,7 +129,7 @@ export function ProfileForm({
                 >
                     {pending ? (
                         <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             Saving...
                         </>
                     ) : (

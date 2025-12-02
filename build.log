@@ -1,0 +1,160 @@
+
+> itinero@0.1.0 build
+> next build --turbopack
+
+   ▲ Next.js 15.5.5 (Turbopack)
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Finished writing to disk in 71ms
+ ✓ Compiled successfully in 5.2s
+   Linting and checking validity of types ...
+
+Failed to compile.
+
+./src/app/admin/itinero/ItineroDashboardClient.tsx
+1178:61  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+1879:11  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1899:4  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1922:4  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1944:11  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/checkout/checkout-client.tsx
+37:11  Warning: 'sb' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/destinations/page.tsx
+216:94  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/app/login/page.tsx
+189:56  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/app/page.tsx
+4:28  Warning: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+5:18  Warning: 'useScroll' is defined but never used.  @typescript-eslint/no-unused-vars
+5:29  Warning: 'useTransform' is defined but never used.  @typescript-eslint/no-unused-vars
+5:43  Warning: 'useInView' is defined but never used.  @typescript-eslint/no-unused-vars
+11:5  Warning: 'Compass' is defined but never used.  @typescript-eslint/no-unused-vars
+11:14  Warning: 'MapPin' is defined but never used.  @typescript-eslint/no-unused-vars
+12:25  Warning: 'Linkedin' is defined but never used.  @typescript-eslint/no-unused-vars
+12:43  Warning: 'Globe2' is defined but never used.  @typescript-eslint/no-unused-vars
+12:51  Warning: 'Camera' is defined but never used.  @typescript-eslint/no-unused-vars
+121:55  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+255:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+461:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/preview/PreviewClient.tsx
+11:9  Warning: 'Badge' is defined but never used.  @typescript-eslint/no-unused-vars
+21:5  Warning: 'Clock3' is defined but never used.  @typescript-eslint/no-unused-vars
+22:5  Warning: 'Check' is defined but never used.  @typescript-eslint/no-unused-vars
+27:5  Warning: 'Globe' is defined but never used.  @typescript-eslint/no-unused-vars
+29:5  Warning: 'Phone' is defined but never used.  @typescript-eslint/no-unused-vars
+411:8  Warning: React Hook React.useEffect has a missing dependency: 'inputs?.destinations'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+411:13  Warning: React Hook React.useEffect has a complex expression in the dependency array. Extract it to a separate variable so it can be statically checked.  react-hooks/exhaustive-deps
+771:27  Warning: 'dayIdx' is defined but never used.  @typescript-eslint/no-unused-vars
+865:11  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+1037:11  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/app/pricing/page.tsx
+10:5  Warning: 'Info' is defined but never used.  @typescript-eslint/no-unused-vars
+15:5  Warning: 'CreditCard' is defined but never used.  @typescript-eslint/no-unused-vars
+16:5  Warning: 'Globe' is defined but never used.  @typescript-eslint/no-unused-vars
+17:5  Warning: 'Moon' is defined but never used.  @typescript-eslint/no-unused-vars
+18:5  Warning: 'Sun' is defined but never used.  @typescript-eslint/no-unused-vars
+21:10  Warning: 'Badge' is defined but never used.  @typescript-eslint/no-unused-vars
+23:5  Warning: 'Card' is defined but never used.  @typescript-eslint/no-unused-vars
+24:5  Warning: 'CardContent' is defined but never used.  @typescript-eslint/no-unused-vars
+25:5  Warning: 'CardHeader' is defined but never used.  @typescript-eslint/no-unused-vars
+26:5  Warning: 'CardTitle' is defined but never used.  @typescript-eslint/no-unused-vars
+27:5  Warning: 'CardDescription' is defined but never used.  @typescript-eslint/no-unused-vars
+30:10  Warning: 'Separator' is defined but never used.  @typescript-eslint/no-unused-vars
+97:11  Warning: 'baseDisplayAmount' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/rewards/page.tsx
+11:9  Warning: 'Separator' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/trip-maker/layout.tsx
+12:12  Warning: 'preferredCurrency' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+12:31  Warning: 'setPreferredCurrency' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/trips/BlockEditControls.tsx
+4:20  Warning: 'useMemo' is defined but never used.  @typescript-eslint/no-unused-vars
+13:10  Warning: 'Separator' is defined but never used.  @typescript-eslint/no-unused-vars
+14:26  Warning: 'Plus' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/trips/PublicToggle.tsx
+8:9  Warning: 'Input' is defined but never used.  @typescript-eslint/no-unused-vars
+9:9  Warning: 'Label' is defined but never used.  @typescript-eslint/no-unused-vars
+11:17  Warning: 'LinkIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+12:9  Warning: 'cn' is defined but never used.  @typescript-eslint/no-unused-vars
+14:5  Warning: 'Tooltip' is defined but never used.  @typescript-eslint/no-unused-vars
+15:5  Warning: 'TooltipContent' is defined but never used.  @typescript-eslint/no-unused-vars
+16:5  Warning: 'TooltipProvider' is defined but never used.  @typescript-eslint/no-unused-vars
+17:5  Warning: 'TooltipTrigger' is defined but never used.  @typescript-eslint/no-unused-vars
+28:42  Warning: 'className' is defined but never used.  @typescript-eslint/no-unused-vars
+39:12  Warning: 'copied' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+73:20  Warning: 'copy' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/trips/TripActionsClient.tsx
+30:10  Warning: 'cn' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/trips/TripEditorClient.tsx
+37:20  Warning: 'updateItem' is defined but never used.  @typescript-eslint/no-unused-vars
+37:31  Warning: 'id' is defined but never used.  @typescript-eslint/no-unused-vars
+37:43  Warning: 'patch' is defined but never used.  @typescript-eslint/no-unused-vars
+42:20  Warning: 'deleteAnItem' is defined but never used.  @typescript-eslint/no-unused-vars
+42:33  Warning: 'id' is defined but never used.  @typescript-eslint/no-unused-vars
+47:20  Warning: 'addItem' is defined but never used.  @typescript-eslint/no-unused-vars
+47:28  Warning: 'dayKey' is defined but never used.  @typescript-eslint/no-unused-vars
+47:44  Warning: 'payload' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/trips/[id]/TripViewerClient.tsx
+398:54  Warning: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+599:5  Warning: 'id' is defined but never used.  @typescript-eslint/no-unused-vars
+904:34  Warning: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+965:46  Warning: 'e' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/trips/[id]/print/page.tsx
+153:16  Warning: '_' is defined but never used.  @typescript-eslint/no-unused-vars
+572:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+640:37  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/app/trips/page.tsx
+15:9  Warning: 'cn' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/trips/share/[publicId]/page.tsx
+16:5  Warning: 'CreditCard' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/app/trips/share/[publicId]/public-itinerary-client.tsx
+53:5  Warning: 'tripSummary' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/landing/BentoGrid.tsx
+4:44  Warning: 'CalendarPlus' is defined but never used.  @typescript-eslint/no-unused-vars
+55:25  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/landing/Testimonials.tsx
+61:33  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/landing/TripWizard.tsx
+12:10  Warning: 'Label' is defined but never used.  @typescript-eslint/no-unused-vars
+18:10  Warning: 'DateRange' is defined but never used.  @typescript-eslint/no-unused-vars
+32:5  Warning: 'Pencil' is defined but never used.  @typescript-eslint/no-unused-vars
+186:11  Warning: 'progress' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/components/layout/AppShell.tsx
+10:9  Warning: 'Badge' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/supabase/server.ts
+18:17  Warning: '_name' is defined but never used.  @typescript-eslint/no-unused-vars
+18:32  Warning: '_value' is defined but never used.  @typescript-eslint/no-unused-vars
+18:48  Warning: '_options' is defined but never used.  @typescript-eslint/no-unused-vars
+19:20  Warning: '_name' is defined but never used.  @typescript-eslint/no-unused-vars
+19:35  Warning: '_options' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/utils/currencyConvertor.ts
+6:5  Warning: 'base' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/lib/utils/helpers.ts
+23:10  Warning: 'formatISODate' is defined but never used.  @typescript-eslint/no-unused-vars
+29:10  Warning: 'formatDateRange' is defined but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules

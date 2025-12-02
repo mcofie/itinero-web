@@ -50,7 +50,7 @@ import { cn } from "@/lib/utils";
 export type DestinationOption = {
     id: string;
     name: string | null;
-    country?: string | null; // mapped from country_code in DB
+    country_code?: string | null; // mapped from country_code in DB
     lat?: number | null;
     lng?: number | null;
     cover_url?: string | null;
@@ -407,6 +407,7 @@ export default function ItineroDashboardClient({
             return setDestMessage("Name is required.");
 
         setDestSaving(true);
+        console.log("[ItineroDashboard] handleSaveDestination started", { destName, editingDestId });
         try {
             const latNum =
                 destLat.trim() !== "" ? Number(destLat.trim()) : null;
@@ -414,6 +415,7 @@ export default function ItineroDashboardClient({
                 destLng.trim() !== "" ? Number(destLng.trim()) : null;
 
             if (editingDestId) {
+                console.log("[ItineroDashboard] Updating destination...");
                 const { data, error } = await sb
                     .schema("itinero")
                     .from("destinations")
@@ -432,11 +434,13 @@ export default function ItineroDashboardClient({
                     .maybeSingle();
 
                 if (error || !data) {
+                    console.error("[ItineroDashboard] Update failed:", error);
                     setDestMessage(
                         error?.message ?? "Error updating destination."
                     );
                     return;
                 }
+                console.log("[ItineroDashboard] Update success:", data);
 
                 setDestinations((prev) =>
                     prev.map((d) =>
@@ -445,6 +449,7 @@ export default function ItineroDashboardClient({
                 );
                 setDestMessage("Destination updated.");
             } else {
+                console.log("[ItineroDashboard] Creating new destination...");
                 const { data, error } = await sb
                     .schema("itinero")
                     .from("destinations")
@@ -462,11 +467,13 @@ export default function ItineroDashboardClient({
                     .single();
 
                 if (error || !data) {
+                    console.error("[ItineroDashboard] Creation failed:", error);
                     setDestMessage(
                         error?.message ?? "Error creating destination."
                     );
                     return;
                 }
+                console.log("[ItineroDashboard] Creation success:", data);
 
                 setDestinations((prev) => [
                     ...prev,
@@ -475,17 +482,19 @@ export default function ItineroDashboardClient({
                 setDestMessage("Destination created.");
             }
             resetDestinationForm();
-        } catch {
+        } catch (err) {
+            console.error("[ItineroDashboard] handleSaveDestination exception:", err);
             setDestMessage("Error saving destination.");
         } finally {
             setDestSaving(false);
+            console.log("[ItineroDashboard] handleSaveDestination finished");
         }
     }
 
     function startEditDestination(d: DestinationOption) {
         setEditingDestId(d.id);
         setDestName(d.name ?? "");
-        setDestCountry(d.country ?? "");
+        setDestCountry(d.country_code ?? "");
         setDestLat(d.lat?.toString() ?? "");
         setDestLng(d.lng?.toString() ?? "");
         setDestImageUrl(d.cover_url ?? "");
@@ -989,7 +998,7 @@ export default function ItineroDashboardClient({
         return destinations.filter(
             (d) =>
                 (d.name ?? "").toLowerCase().includes(q) ||
-                (d.country ?? "").toLowerCase().includes(q)
+                (d.country_code ?? "").toLowerCase().includes(q)
         );
     }, [destinations, destSearch]);
 
@@ -1203,7 +1212,7 @@ export default function ItineroDashboardClient({
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
-                                                        {d.country}
+                                                        {d.country_code}
                                                     </td>
                                                     <td className="px-4 py-3 text-right">
                                                         <div className="flex justify-end gap-1">

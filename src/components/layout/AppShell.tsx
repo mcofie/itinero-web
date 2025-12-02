@@ -290,9 +290,14 @@ export default function AppShell({ children, userEmail }: Props) {
                     table: "points_ledger",
                     filter: `user_id=eq.${uid}`,
                 },
-                () => void refreshPoints(uid)
+                (payload) => {
+                    console.log("[AppShell] Realtime event received:", payload);
+                    void refreshPoints(uid);
+                }
             )
-            .subscribe();
+            .subscribe((status) => {
+                console.log("[AppShell] Realtime subscription status:", status);
+            });
 
         const chProfiles = sb
             .channel("profiles-live")
