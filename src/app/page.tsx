@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useInView, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -167,60 +167,72 @@ export default function LandingPage() {
             </header>
 
             <main>
-                {/* Hero Section */}
-                <section ref={heroRef} className="relative overflow-hidden pt-20 pb-32 lg:pt-32">
-                    {/* Background Gradients */}
-                    <div
-                        className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">
-                        <div
-                            className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-blue-100/50 blur-[100px] dark:bg-blue-900/20 mix-blend-multiply dark:mix-blend-screen animate-blob"></div>
-                        <div
-                            className="absolute top-[10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-indigo-100/50 blur-[100px] dark:bg-indigo-900/20 mix-blend-multiply dark:mix-blend-screen animate-blob animation-delay-2000"></div>
-                    </div>
+                {/* Hero Section - Split Portal Design */}
+                <section ref={heroRef} className="relative pt-8 pb-20 lg:pt-12 lg:pb-32 overflow-hidden">
+                    <div className="mx-auto max-w-7xl px-6">
+                        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                            {/* Left: Content */}
+                            <div className="relative z-10">
+                                <motion.h1
+                                    {...fadeUp}
+                                    transition={{ delay: 0.1, duration: 0.5 }}
+                                    className="text-6xl md:text-8xl font-bold tracking-tighter text-slate-900 mb-8 leading-[0.95] dark:text-white"
+                                >
+                                    The world <br />
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">awaits you.</span>
+                                </motion.h1>
 
-                    <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
-                        <motion.div {...fadeUp}
-                            className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/50 px-4 py-1.5 text-sm font-semibold text-blue-700 backdrop-blur-sm mb-8 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                            <Sparkles className="h-4 w-4" />
-                            <span>New: AI-Powered Trip Generation</span>
-                        </motion.div>
+                                <motion.p
+                                    {...fadeUp}
+                                    transition={{ delay: 0.2, duration: 0.5 }}
+                                    className="text-xl md:text-2xl text-slate-600 mb-10 leading-relaxed max-w-lg dark:text-slate-400"
+                                >
+                                    Build complete itineraries with activities, routes, and budgets in one place.
+                                </motion.p>
 
-                        <motion.h1
-                            {...fadeUp}
-                            transition={{ delay: 0.1, duration: 0.5 }}
-                            className="text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 leading-[1.1] dark:text-white"
-                        >
-                            Plan smarter trips <br />
-                            <span
-                                className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">in minutes.</span>
-                        </motion.h1>
+                                {/* Trip Wizard - Simplified/Integrated */}
+                                <motion.div
+                                    {...fadeUp}
+                                    transition={{ delay: 0.3, duration: 0.6 }}
+                                    className="relative max-w-xl"
+                                >
+                                    <div className="relative rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/50 overflow-hidden dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
+                                        <div className="p-1">
+                                            <TripWizard />
+                                        </div>
+                                    </div>
+                                </motion.div>
 
-                        <motion.p
-                            {...fadeUp}
-                            transition={{ delay: 0.2, duration: 0.5 }}
-                            className="mx-auto max-w-2xl text-xl text-slate-600 mb-12 leading-relaxed dark:text-slate-400"
-                        >
-                            Build complete itineraries with activities, routes, and budgets in one place.
-                            Stop stressing over spreadsheets and start enjoying the journey.
-                        </motion.p>
-
-                        {/* Trip Wizard Preview */}
-                        <motion.div
-                            {...fadeUp}
-                            transition={{ delay: 0.3, duration: 0.6 }}
-                            className="relative mx-auto max-w-4xl"
-                        >
-                            {/* Glow behind wizard */}
-                            <div
-                                className="absolute -inset-1 rounded-[2.5rem] bg-gradient-to-r from-blue-500 to-indigo-500 opacity-20 blur-lg dark:opacity-30"></div>
-
-                            <div
-                                className="relative rounded-[2rem] border border-slate-200 bg-white/80 backdrop-blur-xl shadow-2xl shadow-slate-200/50 overflow-hidden dark:bg-slate-900/80 dark:border-slate-800 dark:shadow-none">
-                                <div className="p-2 md:p-4">
-                                    <TripWizard />
-                                </div>
+                                {/* Social Proof */}
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.6, duration: 0.5 }}
+                                    className="mt-10 flex items-center gap-4"
+                                >
+                                    <div className="flex -space-x-3">
+                                        {[1, 2, 3, 4].map((i) => (
+                                            <div key={i} className="h-10 w-10 rounded-full border-2 border-white dark:border-slate-900 overflow-hidden bg-slate-200">
+                                                <Image
+                                                    src={`https://i.pravatar.cc/100?img=${i + 15}`}
+                                                    alt="User"
+                                                    width={40}
+                                                    height={40}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                                        Trusted by <span className="text-slate-900 font-bold dark:text-white">10,000+</span> travelers
+                                    </div>
+                                </motion.div>
                             </div>
-                        </motion.div>
+
+                            {/* Right: The Portal Visual */}
+                            <div className="relative hidden lg:block h-[800px] w-full">
+                                <PortalVisual />
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -524,5 +536,56 @@ function Column({ destinations, y, className }: {
                 </div>
             ))}
         </motion.div>
+    );
+}
+
+function PortalVisual() {
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setIndex((prev) => (prev + 1) % SUPPORTED.length);
+        }, 4000);
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <div className="relative h-full w-full">
+            {/* The Portal Shape */}
+            <div
+                className="absolute top-0 right-0 w-[90%] h-[90%] rounded-t-[15rem] rounded-b-[3rem] overflow-hidden shadow-2xl rotate-3 border-[8px] border-white dark:border-slate-800 isolate transform-gpu"
+                style={{ WebkitMaskImage: "-webkit-radial-gradient(white, black)" }}
+            >
+                <AnimatePresence>
+                    <motion.div
+                        key={index}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.5 }}
+                        className="absolute inset-0"
+                    >
+                        <Image
+                            src={SUPPORTED[index].image}
+                            alt="Travel"
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                        <div className="absolute inset-0 bg-black/10" />
+                    </motion.div>
+                </AnimatePresence>
+
+                {/* Floating Badge */}
+                <div className="absolute bottom-10 left-10 bg-white/90 backdrop-blur-md px-6 py-4 rounded-2xl shadow-lg z-10 dark:bg-slate-900/90">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Featured Destination</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white">{SUPPORTED[index].name}</p>
+                </div>
+            </div>
+
+            {/* Decorative Circle */}
+            <div className="absolute bottom-20 left-0 w-32 h-32 rounded-full bg-orange-400/20 blur-2xl -z-10" />
+            <div className="absolute top-20 right-10 w-40 h-40 rounded-full bg-blue-400/20 blur-2xl -z-10" />
+        </div>
     );
 }

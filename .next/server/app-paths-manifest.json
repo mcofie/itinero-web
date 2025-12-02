@@ -1,25 +1,4 @@
 {
-  "/(main)/destinations/page": "app/(main)/destinations/page.js",
-  "/(main)/preview/page": "app/(main)/preview/page.js",
-  "/(main)/profile/page": "app/(main)/profile/page.js",
-  "/(main)/rewards/page": "app/(main)/rewards/page.js",
-  "/(main)/rewards/verify/page": "app/(main)/rewards/verify/page.js",
-  "/(main)/trip-maker/page": "app/(main)/trip-maker/page.js",
-  "/(main)/trips/[id]/page": "app/(main)/trips/[id]/page.js",
-  "/(main)/trips/page": "app/(main)/trips/page.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/admin/itinero/page": "app/admin/itinero/page.js",
-  "/api/paystack/init/route": "app/api/paystack/init/route.js",
-  "/api/paystack/webhook/route": "app/api/paystack/webhook/route.js",
-  "/api/points/quote/route": "app/api/points/quote/route.js",
-  "/api/rewards/verify/route": "app/api/rewards/verify/route.js",
-  "/api/trips/[id]/pdf/route": "app/api/trips/[id]/pdf/route.js",
-  "/auth/callback/page": "app/auth/callback/page.js",
-  "/checkout/page": "app/checkout/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/login/page": "app/login/page.js",
-  "/page": "app/page.js",
-  "/pricing/page": "app/pricing/page.js",
-  "/trips/[id]/print/page": "app/trips/[id]/print/page.js",
-  "/trips/share/[publicId]/page": "app/trips/share/[publicId]/page.js"
+  "/page": "app/page.js"
 }
