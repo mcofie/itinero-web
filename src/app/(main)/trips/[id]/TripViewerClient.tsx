@@ -33,10 +33,13 @@ import {
     Star,
     Clock3,
     CalendarDays,
+    Calendar,
     Users2,
     Compass,
     NotebookPen,
     Pencil,
+    Sun,
+    Moon,
     Check,
     X,
     Loader2,
@@ -271,6 +274,12 @@ export default function TripViewerClient({
                                 className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
                             >
                                 Itinerary
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="calendar"
+                                className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
+                            >
+                                Calendar
                             </TabsTrigger>
                             <TabsTrigger
                                 value="places"
@@ -530,6 +539,22 @@ export default function TripViewerClient({
                                     onMarkerClick={scrollToItem}
                                 />
                             </div>
+                        </div>
+                    </TabsContent>
+
+                    {/* ---------- CALENDAR TAB ---------- */}
+                    <TabsContent
+                        value="calendar"
+                        className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+                    >
+                        <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm overflow-hidden">
+                            <CalendarView
+                                days={data.days}
+                                placesById={placesById}
+                                selectedItemId={selectedItemId}
+                                onItemClick={setSelectedItemId}
+                                tripCurrency={tripCurrency}
+                            />
                         </div>
                     </TabsContent>
 
@@ -1166,6 +1191,168 @@ function StatChip({
             <span className="opacity-70">{label}:</span>
             <span>{value}</span>
         </div>
+    );
+}
+
+
+
+/* ---------- Calendar View ---------- */
+
+function CalendarView({
+    days,
+    placesById,
+    selectedItemId,
+    onItemClick,
+    tripCurrency,
+}: {
+    days: Day[];
+    placesById: Map<string, Place>;
+    selectedItemId?: string | null;
+    onItemClick?: (id: string) => void;
+    tripCurrency?: string;
+}) {
+    const timeSlots = ["morning", "afternoon", "evening"] as const;
+
+    if (!days?.length) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+                <Calendar className="mb-4 h-12 w-12 text-slate-200 dark:text-slate-700" />
+                <p className="text-slate-500 dark:text-slate-400">No itinerary days found.</p>
+            </div>
+        );
+    }
+
+    return (
+        <ScrollArea className="w-full whitespace-nowrap pb-4">
+            <div className="flex gap-6 min-w-max px-2">
+                {/* Time Labels Column */}
+                <div className="sticky left-0 z-20 flex flex-col gap-4 pt-14 bg-white dark:bg-slate-900 pr-6 border-r border-slate-100 dark:border-slate-800">
+                    {timeSlots.map((slot) => (
+                        <div
+                            key={slot}
+                            className="flex h-56 w-24 items-center justify-center"
+                        >
+                            <div className="flex flex-col items-center gap-2">
+                                <div className={cn(
+                                    "p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500",
+                                    slot === "morning" && "text-orange-400 bg-orange-50 dark:bg-orange-950/30 dark:text-orange-400",
+                                    slot === "afternoon" && "text-blue-400 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400",
+                                    slot === "evening" && "text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 dark:text-indigo-400",
+                                )}>
+                                    {slot === "morning" && <Sun className="h-5 w-5" />}
+                                    {slot === "afternoon" && <Sun className="h-5 w-5" />}
+                                    {slot === "evening" && <Moon className="h-5 w-5" />}
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                    {slot}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Days Columns */}
+                {days.map((day, i) => {
+                    const dateLabel = formatISODate(day.date);
+                    const [weekday, rest] = splitDayLabel(dateLabel);
+
+                    return (
+                        <div key={day.date} className="flex w-80 flex-col gap-4">
+                            {/* Day Header */}
+                            <div className="sticky top-0 z-10 bg-white dark:bg-slate-900 pb-6 text-center border-b border-slate-100 dark:border-slate-800">
+                                <div className="inline-flex flex-col items-center">
+                                    <span className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
+                                        Day {i + 1}
+                                    </span>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                                            {weekday}
+                                        </span>
+                                        <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                                            {rest}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Time Slots */}
+                            {timeSlots.map((slot) => {
+                                const blocks = day.blocks.filter((b) => b.when === slot);
+                                return (
+                                    <div
+                                        key={`${day.date}-${slot}`}
+                                        className="relative flex h-56 flex-col gap-3 overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50/30 p-3 dark:border-slate-800 dark:bg-slate-900/30 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900/50"
+                                    >
+                                        {blocks.length > 0 ? (
+                                            blocks.map((b, idx) => {
+                                                const place = b.place_id ? placesById.get(b.place_id) : null;
+                                                const badgeColor = whenBadgeClasses(slot);
+                                                const isSelected = b.id === selectedItemId;
+
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        onClick={() => b.id && onItemClick?.(b.id)}
+                                                        className={cn(
+                                                            "group shrink-0 cursor-pointer rounded-xl border bg-white p-3.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:bg-slate-800",
+                                                            isSelected
+                                                                ? "border-blue-500 ring-1 ring-blue-500 shadow-md z-10"
+                                                                : "border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-slate-600"
+                                                        )}
+                                                    >
+                                                        <div className="mb-2 flex items-start justify-between gap-2">
+                                                            <span className={cn(
+                                                                "inline-flex items-center rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wide",
+                                                                badgeColor.badge
+                                                            )}>
+                                                                {b.title}
+                                                            </span>
+                                                            {b.duration_min > 0 && (
+                                                                <span className="flex items-center gap-1 text-[10px] font-medium text-slate-400">
+                                                                    <Clock3 className="h-3 w-3" />
+                                                                    {b.duration_min}m
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {place && (
+                                                            <div className="mb-2 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+                                                                <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                                                <span className="truncate font-medium">{place.name}</span>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="flex items-center justify-between gap-2 border-t border-slate-50 pt-2 dark:border-slate-700/50">
+                                                            {b.est_cost > 0 ? (
+                                                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded">
+                                                                    {tripCurrency} {b.est_cost}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-[10px] text-slate-400">Free</span>
+                                                            )}
+
+                                                            {b.notes && (
+                                                                <NotebookPen className="h-3 w-3 text-slate-300 dark:text-slate-600" />
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        ) : (
+                                            <div className="flex h-full flex-col items-center justify-center gap-2 text-slate-300 dark:text-slate-700">
+                                                <div className="h-1 w-1 rounded-full bg-current opacity-50" />
+                                                <span className="text-[10px] font-medium uppercase tracking-widest opacity-50">Free</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    );
+                })}
+            </div>
+            <ScrollBar orientation="horizontal" />
+        </ScrollArea>
     );
 }
 
