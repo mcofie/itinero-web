@@ -83,7 +83,7 @@ export async function updateDayNote(tripId: string, dateKey: string, note: strin
         .eq("id", tripId);
 
     if (error) throw new Error(error.message);
-    if (error) throw new Error(error.message);
+
     revalidatePath("/trips");
 }
 
