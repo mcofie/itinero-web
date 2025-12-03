@@ -15,6 +15,33 @@ import {
     TabsContent,
 } from "@/components/ui/tabs";
 import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+    SheetFooter,
+} from "@/components/ui/sheet";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
     Card,
     CardHeader,
     CardTitle,
@@ -28,6 +55,7 @@ import {
     SelectItem,
     SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
     Loader2,
@@ -40,7 +68,14 @@ import {
     Search,
     Flag,
     History,
+    MoreHorizontal,
+    LayoutDashboard,
+    ArrowLeft,
+    Filter,
+    Clock,
+    ChevronRight,
 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 /* =====================================================
@@ -50,12 +85,15 @@ import { cn } from "@/lib/utils";
 export type DestinationOption = {
     id: string;
     name: string | null;
-    country_code?: string | null; // mapped from country_code in DB
+    country_code?: string | null;
     lat?: number | null;
     lng?: number | null;
     cover_url?: string | null;
     image_attribution?: string | null;
     current_history_id?: string | null;
+    timezone?: string | null;
+    category?: string | null;
+    popularity?: number | null;
 };
 
 export type PlaceOption = {
@@ -70,6 +108,18 @@ export type PlaceOption = {
     popularity?: number | null;
     cost_typical?: number | null;
     cost_currency?: string | null;
+    kind?: string;
+    url?: string | null;
+    booking_url?: string | null;
+    is_partner?: boolean;
+};
+
+export type PlaceHour = {
+    id?: string;
+    place_id?: string;
+    day_of_week: number; // 0=Sun, 1=Mon...
+    open_time: string | null; // "HH:MM:SS" or "HH:MM"
+    close_time: string | null;
 };
 
 type ItineroDashboardClientProps = {
@@ -96,19 +146,11 @@ type DestinationHistoryRowUI = {
     id: string;
     destination_id: string;
     section: string | null;
+    content: string;
     payload: DestinationHistoryPayload | null;
     created_at: string | null;
     backdrop_image_url?: string | null;
     backdrop_image_attribution?: string | null;
-};
-
-type GuidedTour = {
-    id: string;
-    title: string;
-    destination_id: string;
-    summary: string;
-    days: number;
-    difficulty: "easy" | "moderate" | "intense";
 };
 
 /* =====================================================
@@ -126,21 +168,27 @@ export default function ItineroDashboardClient({
     );
     const [places, setPlaces] = React.useState<PlaceOption[]>(initialPlaces);
 
+    const [activeTab, setActiveTab] = React.useState<"destinations" | "history" | "places">("destinations");
+
     /* ------------ Destinations form state ------------ */
+    const [isDestSheetOpen, setIsDestSheetOpen] = React.useState(false);
     const [destName, setDestName] = React.useState("");
     const [destLat, setDestLat] = React.useState<string>("");
     const [destLng, setDestLng] = React.useState<string>("");
     const [destCountry, setDestCountry] = React.useState("");
     const [destImageUrl, setDestImageUrl] = React.useState("");
     const [destImageAttribution, setDestImageAttribution] = React.useState("");
+    const [destTimezone, setDestTimezone] = React.useState("");
+    const [destCategory, setDestCategory] = React.useState("");
+    const [destPopularity, setDestPopularity] = React.useState<string>("");
     const [destSaving, setDestSaving] = React.useState(false);
-    const [destMessage, setDestMessage] = React.useState<string | null>(null);
     const [editingDestId, setEditingDestId] = React.useState<string | null>(null);
     const [destSearch, setDestSearch] = React.useState("");
 
     /* ------------ Destination history form state ------------ */
     const [histDestinationId, setHistDestinationId] =
         React.useState<string>("");
+    const [histContent, setHistContent] = React.useState("");
     const [histAbout, setHistAbout] = React.useState("");
     const [histHistory, setHistHistory] = React.useState("");
     const [histCurrency, setHistCurrency] = React.useState("");
@@ -153,30 +201,20 @@ export default function ItineroDashboardClient({
     const [histBackdropAttribution, setHistBackdropAttribution] =
         React.useState("");
     const [histSaving, setHistSaving] = React.useState(false);
-    const [histMessage, setHistMessage] = React.useState<string | null>(null);
+    const [histSearch, setHistSearch] = React.useState("");
 
     const [historyList, setHistoryList] = React.useState<
         DestinationHistoryRowUI[]
     >([]);
     const [histLoadingList, setHistLoadingList] = React.useState(false);
+    const [isHistorySheetOpen, setIsHistorySheetOpen] = React.useState(false);
     const [editingHistId, setEditingHistId] =
         React.useState<string | null>(null);
 
-    /* ------------ Current-history selector state (Destinations tab) ------------ */
-    const [currentHistoryDestId, setCurrentHistoryDestId] =
-        React.useState<string>("");
-    const [currentHistoryList, setCurrentHistoryList] = React.useState<
-        DestinationHistoryRowUI[]
-    >([]);
-    const [currentHistoryId, setCurrentHistoryId] = React.useState<string>("");
-    const [currentHistoryLoading, setCurrentHistoryLoading] =
-        React.useState(false);
-    const [currentHistorySaving, setCurrentHistorySaving] =
-        React.useState(false);
-    const [currentHistoryMessage, setCurrentHistoryMessage] =
-        React.useState<string | null>(null);
+
 
     /* ------------ Places form state ------------ */
+    const [isPlaceSheetOpen, setIsPlaceSheetOpen] = React.useState(false);
     const [placeDestinationId, setPlaceDestinationId] =
         React.useState<string>("");
     const [placeName, setPlaceName] = React.useState("");
@@ -188,27 +226,24 @@ export default function ItineroDashboardClient({
     const [placePopularity, setPlacePopularity] = React.useState<string>("");
     const [placeCostTypical, setPlaceCostTypical] = React.useState<string>("");
     const [placeCostCurrency, setPlaceCostCurrency] = React.useState<string>("");
+    const [placeKind, setPlaceKind] = React.useState("poi");
+    const [placeUrl, setPlaceUrl] = React.useState("");
+    const [placeBookingUrl, setPlaceBookingUrl] = React.useState("");
+    const [placeIsPartner, setPlaceIsPartner] = React.useState(false);
+
+    // Hours state: 0=Sun, 1=Mon, ..., 6=Sat
+    // We'll store them in a map or array. Let's use an array of objects for the form.
+    const [placeHours, setPlaceHours] = React.useState<PlaceHour[]>([]);
+    const [hoursLoading, setHoursLoading] = React.useState(false);
+
     const [placeSaving, setPlaceSaving] = React.useState(false);
-    const [placeMessage, setPlaceMessage] = React.useState<string | null>(null);
     const [editingPlaceId, setEditingPlaceId] = React.useState<string | null>(
         null
     );
     const [placeSearch, setPlaceSearch] = React.useState("");
+    const [placeFilterDestId, setPlaceFilterDestId] = React.useState<string>("all");
 
-    /* ------------ Guided Tours ------------ */
-    const [guidedTours, setGuidedTours] = React.useState<GuidedTour[]>([]);
-    const [tourDestinationId, setTourDestinationId] =
-        React.useState<string>("");
-    const [tourTitle, setTourTitle] = React.useState("");
-    const [tourSummary, setTourSummary] = React.useState("");
-    const [tourDays, setTourDays] = React.useState<string>("3");
-    const [tourDifficulty, setTourDifficulty] =
-        React.useState<GuidedTour["difficulty"]>("easy");
-    const [tourMessage, setTourMessage] = React.useState<string | null>(null);
-    const [tourSaving, setTourSaving] = React.useState(false);
-    const [editingTourId, setEditingTourId] =
-        React.useState<string | null>(null);
-
+    /* --- Reset Helpers --- */
     /* --- Reset Helpers --- */
     function resetDestinationForm() {
         setDestName("");
@@ -217,11 +252,15 @@ export default function ItineroDashboardClient({
         setDestCountry("");
         setDestImageUrl("");
         setDestImageAttribution("");
+        setDestTimezone("");
+        setDestCategory("");
+        setDestPopularity("");
         setEditingDestId(null);
-        setDestMessage(null);
+        setIsDestSheetOpen(false);
     }
 
     function resetHistoryForm() {
+        setHistContent("");
         setHistAbout("");
         setHistHistory("");
         setHistCurrency("");
@@ -233,7 +272,8 @@ export default function ItineroDashboardClient({
         setHistBackdropUrl("");
         setHistBackdropAttribution("");
         setEditingHistId(null);
-        setHistMessage(null);
+        setEditingHistId(null);
+        setIsHistorySheetOpen(false);
     }
 
     function resetPlaceForm() {
@@ -246,17 +286,14 @@ export default function ItineroDashboardClient({
         setPlacePopularity("");
         setPlaceCostTypical("");
         setPlaceCostCurrency("");
+        setPlaceKind("poi");
+        setPlaceUrl("");
+        setPlaceBookingUrl("");
+        setPlaceIsPartner(false);
+        setPlaceHours([]);
         setEditingPlaceId(null);
-        setPlaceMessage(null);
-    }
-
-    function resetTourForm() {
-        setTourTitle("");
-        setTourSummary("");
-        setTourDays("3");
-        setTourDifficulty("easy");
-        setEditingTourId(null);
-        setTourMessage(null);
+        setEditingPlaceId(null);
+        setIsPlaceSheetOpen(false);
     }
 
     function tagsToString(tags?: string[] | null): string {
@@ -292,7 +329,6 @@ export default function ItineroDashboardClient({
         }
         (async () => {
             setHistLoadingList(true);
-            setHistMessage(null);
             try {
                 const { data, error } = await sb
                     .schema("itinero")
@@ -304,13 +340,16 @@ export default function ItineroDashboardClient({
                     .order("created_at", { ascending: false });
 
                 if (error) {
-                    setHistMessage(error.message ?? "Failed to load history.");
+                    console.error("Failed to load history:", error);
+                    toast.error("Failed to load history", { description: error.message });
                     setHistoryList([]);
                     return;
                 }
                 setHistoryList((data as DestinationHistoryRowUI[]) ?? []);
-            } catch {
-                setHistMessage("Unexpected error loading history.");
+            } catch (e: unknown) {
+                console.error(e);
+                const msg = e instanceof Error ? e.message : String(e);
+                toast.error("Unexpected error loading history", { description: msg });
                 setHistoryList([]);
             } finally {
                 setHistLoadingList(false);
@@ -318,176 +357,96 @@ export default function ItineroDashboardClient({
         })();
     }, [histDestinationId, sb]);
 
-    // Load guided tours when destination changes
+
+
+
+
+    // Load place hours when editingPlaceId changes
     React.useEffect(() => {
-        if (!tourDestinationId) {
-            setGuidedTours([]);
-            resetTourForm();
+        if (!editingPlaceId) {
+            setPlaceHours([]);
             return;
         }
         (async () => {
-            setTourMessage(null);
+            setHoursLoading(true);
             try {
                 const { data, error } = await sb
                     .schema("itinero")
-                    .from("guided_tours")
-                    .select("id,title,destination_id,summary,days,difficulty")
-                    .eq("destination_id", tourDestinationId)
-                    .order("created_at", { ascending: false });
+                    .from("place_hours")
+                    .select("*")
+                    .eq("place_id", editingPlaceId);
 
                 if (error) {
-                    setTourMessage(error.message ?? "Failed to load tours.");
-                    setGuidedTours([]);
+                    console.error("Error loading hours:", error);
                     return;
                 }
-                setGuidedTours((data as GuidedTour[]) ?? []);
-            } catch {
-                setTourMessage("Unexpected error loading tours.");
-                setGuidedTours([]);
-            }
-        })();
-    }, [tourDestinationId, sb]);
-
-    // Load history options for "current_history_id" selector in Destinations tab
-    React.useEffect(() => {
-        if (!currentHistoryDestId) {
-            setCurrentHistoryList([]);
-            setCurrentHistoryId("");
-            setCurrentHistoryMessage(null);
-            return;
-        }
-
-        (async () => {
-            setCurrentHistoryLoading(true);
-            setCurrentHistoryMessage(null);
-            try {
-                const { data, error } = await sb
-                    .schema("itinero")
-                    .from("destination_history")
-                    .select(
-                        "id,destination_id,section,payload,created_at,backdrop_image_url,backdrop_image_attribution"
-                    )
-                    .eq("destination_id", currentHistoryDestId)
-                    .order("created_at", { ascending: false });
-
-                if (error) {
-                    setCurrentHistoryMessage(
-                        error.message ?? "Failed to load history entries."
-                    );
-                    setCurrentHistoryList([]);
-                    return;
-                }
-                const list = (data as DestinationHistoryRowUI[]) ?? [];
-                setCurrentHistoryList(list);
-
-                // default selected = destination.current_history_id (if present)
-                const dest = destinations.find((d) => d.id === currentHistoryDestId);
-                if (dest?.current_history_id) {
-                    setCurrentHistoryId(dest.current_history_id);
-                } else if (list.length > 0) {
-                    setCurrentHistoryId(list[0].id);
-                } else {
-                    setCurrentHistoryId("");
-                }
-            } catch {
-                setCurrentHistoryMessage("Unexpected error loading history entries.");
-                setCurrentHistoryList([]);
+                setPlaceHours((data as PlaceHour[]) ?? []);
+            } catch (err) {
+                console.error("Error loading hours:", err);
             } finally {
-                setCurrentHistoryLoading(false);
+                setHoursLoading(false);
             }
         })();
-    }, [currentHistoryDestId, destinations, sb]);
+    }, [editingPlaceId, sb]);
 
     /* --- Handlers: Destinations --- */
 
     async function handleSaveDestination(e: React.FormEvent) {
         e.preventDefault();
-        setDestMessage(null);
-        if (!destName.trim())
-            return setDestMessage("Name is required.");
-
         setDestSaving(true);
 
+        const latNum = destLat ? parseFloat(destLat) : null;
+        const lngNum = destLng ? parseFloat(destLng) : null;
+        const popNum = destPopularity ? parseInt(destPopularity) : null;
+
+        const payload = {
+            name: destName.trim(),
+            country_code: destCountry.trim() || null,
+            lat: latNum,
+            lng: lngNum,
+            cover_url: destImageUrl.trim() || null,
+            image_attribution: destImageAttribution.trim() || null,
+            timezone: destTimezone.trim() || null,
+            category: destCategory.trim() || null,
+            popularity: popNum,
+        };
+
         try {
-            const latNum =
-                destLat.trim() !== "" ? Number(destLat.trim()) : null;
-            const lngNum =
-                destLng.trim() !== "" ? Number(destLng.trim()) : null;
-
             if (editingDestId) {
-
+                // Update
                 const { data, error } = await sb
-                    .schema("itinero")
                     .from("destinations")
-                    .update({
-                        name: destName.trim(),
-                        country_code: destCountry.trim() || null,
-                        lat: latNum,
-                        lng: lngNum,
-                        cover_url: destImageUrl.trim() || null,
-                        image_attribution: destImageAttribution.trim() || null,
-                    })
+                    .update(payload)
                     .eq("id", editingDestId)
-                    .select(
-                        "id,name,country:country_code,lat,lng,cover_url,image_attribution,current_history_id"
-                    )
-                    .maybeSingle();
-
-                if (error || !data) {
-                    console.error("[ItineroDashboard] Update failed:", error);
-                    setDestMessage(
-                        error?.message ?? "Error updating destination."
-                    );
-                    return;
-                }
-
-
-                setDestinations((prev) =>
-                    prev.map((d) =>
-                        d.id === editingDestId ? (data as DestinationOption) : d
-                    )
-                );
-                setDestMessage("Destination updated.");
-            } else {
-
-                const { data, error } = await sb
-                    .schema("itinero")
-                    .from("destinations")
-                    .insert({
-                        name: destName.trim(),
-                        country_code: destCountry.trim() || null,
-                        lat: latNum,
-                        lng: lngNum,
-                        cover_url: destImageUrl.trim() || null,
-                        image_attribution: destImageAttribution.trim() || null,
-                    })
-                    .select(
-                        "id,name,country:country_code,lat,lng,cover_url,image_attribution,current_history_id"
-                    )
+                    .select()
                     .single();
 
-                if (error || !data) {
-                    console.error("[ItineroDashboard] Creation failed:", error);
-                    setDestMessage(
-                        error?.message ?? "Error creating destination."
-                    );
-                    return;
-                }
+                if (error) throw error;
 
+                setDestinations((prev) =>
+                    prev.map((d) => (d.id === editingDestId ? data : d))
+                );
+                toast.success("Destination updated successfully");
+            } else {
+                // Create
+                const { data, error } = await sb
+                    .from("destinations")
+                    .insert(payload)
+                    .select()
+                    .single();
 
-                setDestinations((prev) => [
-                    ...prev,
-                    data as DestinationOption,
-                ]);
-                setDestMessage("Destination created.");
+                if (error) throw error;
+                setDestinations((prev) => [data, ...prev]);
+                toast.success("Destination created successfully");
             }
+
             resetDestinationForm();
-        } catch (err) {
-            console.error("[ItineroDashboard] handleSaveDestination exception:", err);
-            setDestMessage("Error saving destination.");
+        } catch (e: unknown) {
+            console.error(e);
+            const msg = e instanceof Error ? e.message : String(e);
+            toast.error("Failed to save destination", { description: msg });
         } finally {
             setDestSaving(false);
-
         }
     }
 
@@ -499,25 +458,24 @@ export default function ItineroDashboardClient({
         setDestLng(d.lng?.toString() ?? "");
         setDestImageUrl(d.cover_url ?? "");
         setDestImageAttribution(d.image_attribution ?? "");
-        setDestMessage(null);
+        setDestTimezone(d.timezone ?? "");
+        setDestCategory(d.category ?? "");
+        setDestPopularity(d.popularity ? String(d.popularity) : "");
+        setIsDestSheetOpen(true);
     }
 
     async function handleDeleteDestination(id: string) {
         if (!confirm("Delete this destination?")) return;
-        setDestMessage(null);
         try {
-            const { error } = await sb
-                .schema("itinero")
-                .from("destinations")
-                .delete()
-                .eq("id", id);
-
+            const { error } = await sb.from("destinations").delete().eq("id", id);
             if (error) {
-                setDestMessage(error.message ?? "Error deleting destination.");
+                console.error(error);
+                toast.error("Failed to delete destination", { description: error.message });
                 return;
             }
 
             setDestinations((prev) => prev.filter((d) => d.id !== id));
+            toast.success("Destination deleted");
 
             // Also clean dependent state
             if (histDestinationId === id) {
@@ -526,73 +484,26 @@ export default function ItineroDashboardClient({
             if (placeDestinationId === id) {
                 setPlaceDestinationId("");
             }
-            if (tourDestinationId === id) {
-                setTourDestinationId("");
-            }
-            if (currentHistoryDestId === id) {
-                setCurrentHistoryDestId("");
-            }
-        } catch {
-            setDestMessage("Unexpected error deleting destination.");
+
+        } catch (e: unknown) {
+            console.error(e);
+            const msg = e instanceof Error ? e.message : String(e);
+            toast.error("Unexpected error deleting destination.", { description: msg });
         }
     }
 
-    async function handleSetCurrentHistory(e: React.FormEvent) {
-        e.preventDefault();
-        setCurrentHistoryMessage(null);
-        if (!currentHistoryDestId) {
-            setCurrentHistoryMessage("Select a destination first.");
-            return;
-        }
-        if (!currentHistoryId) {
-            setCurrentHistoryMessage("Select a history entry to set as current.");
-            return;
-        }
 
-        setCurrentHistorySaving(true);
-        try {
-            const { data, error } = await sb
-                .schema("itinero")
-                .from("destinations")
-                .update({
-                    current_history_id: currentHistoryId,
-                })
-                .eq("id", currentHistoryDestId)
-                .select(
-                    "id,name,country:country_code,lat,lng,cover_url,image_attribution,current_history_id"
-                )
-                .maybeSingle();
-
-            if (error || !data) {
-                setCurrentHistoryMessage(
-                    error?.message ?? "Error setting current history."
-                );
-                return;
-            }
-
-            const updated = data as DestinationOption;
-            setDestinations((prev) =>
-                prev.map((d) => (d.id === updated.id ? updated : d))
-            );
-            setCurrentHistoryMessage("Current history updated.");
-        } catch {
-            setCurrentHistoryMessage("Unexpected error updating current history.");
-        } finally {
-            setCurrentHistorySaving(false);
-        }
-    }
 
     /* --- Handlers: History / KBYG --- */
 
     async function handleSaveHistory(e: React.FormEvent) {
         e.preventDefault();
         if (!histDestinationId) {
-            setHistMessage("Select a destination first.");
+            toast.error("Select a destination first.");
             return;
         }
 
         setHistSaving(true);
-        setHistMessage(null);
         try {
             const languagesVal =
                 histLanguages.trim() === ""
@@ -617,9 +528,9 @@ export default function ItineroDashboardClient({
 
             if (editingHistId) {
                 const { data, error } = await sb
-                    .schema("itinero")
                     .from("destination_history")
                     .update({
+                        content: histContent.trim(),
                         payload,
                         backdrop_image_url: histBackdropUrl.trim() || null,
                         backdrop_image_attribution:
@@ -627,59 +538,51 @@ export default function ItineroDashboardClient({
                     })
                     .eq("id", editingHistId)
                     .select(
-                        "id,destination_id,section,payload,created_at,backdrop_image_url,backdrop_image_attribution"
+                        "id,destination_id,section,content,payload,created_at,backdrop_image_url,backdrop_image_attribution"
                     )
-                    .maybeSingle();
+                    .single();
 
-                if (error || !data) {
-                    setHistMessage(
-                        error?.message ?? "Error updating history entry."
-                    );
-                    return;
-                }
+                if (error) throw error;
 
                 setHistoryList((prev) =>
                     prev.map((h) =>
                         h.id === editingHistId
-                            ? (data as DestinationHistoryRowUI)
+                            ? data
                             : h
                     )
                 );
-                setHistMessage("History entry updated.");
+                toast.success("History entry updated successfully");
             } else {
                 const { data, error } = await sb
-                    .schema("itinero")
                     .from("destination_history")
                     .insert({
                         destination_id: histDestinationId,
                         section: "kbyg",
+                        content: histContent.trim(),
                         payload,
                         backdrop_image_url: histBackdropUrl.trim() || null,
                         backdrop_image_attribution:
                             histBackdropAttribution.trim() || null,
                     })
                     .select(
-                        "id,destination_id,section,payload,created_at,backdrop_image_url,backdrop_image_attribution"
+                        "id,destination_id,section,content,payload,created_at,backdrop_image_url,backdrop_image_attribution"
                     )
                     .single();
 
-                if (error || !data) {
-                    setHistMessage(
-                        error?.message ?? "Error creating history entry."
-                    );
-                    return;
-                }
+                if (error) throw error;
 
                 setHistoryList((prev) => [
-                    data as DestinationHistoryRowUI,
+                    data,
                     ...prev,
                 ]);
-                setHistMessage("History entry created.");
+                toast.success("History entry created successfully");
             }
 
             resetHistoryForm();
-        } catch {
-            setHistMessage("Unexpected error saving history entry.");
+        } catch (e: unknown) {
+            console.error(e);
+            const msg = e instanceof Error ? e.message : String(e);
+            toast.error("Failed to save history entry", { description: msg });
         } finally {
             setHistSaving(false);
         }
@@ -687,6 +590,7 @@ export default function ItineroDashboardClient({
 
     function startEditHistory(h: DestinationHistoryRowUI) {
         setEditingHistId(h.id);
+        setHistContent(h.content ?? "");
         const payload = h.payload ?? {};
         setHistAbout(payload.about ?? "");
         setHistHistory(payload.history ?? "");
@@ -705,43 +609,111 @@ export default function ItineroDashboardClient({
         setHistEsim(k.esim ?? "");
         setHistPrimaryCity(k.primary_city ?? "");
         setHistBackdropUrl(h.backdrop_image_url ?? "");
+        setHistBackdropUrl(h.backdrop_image_url ?? "");
         setHistBackdropAttribution(h.backdrop_image_attribution ?? "");
-        setHistMessage(null);
+        setIsHistorySheetOpen(true);
     }
 
     async function handleDeleteHistory(id: string) {
         if (!confirm("Delete this history entry?")) return;
-        setHistMessage(null);
         try {
             const { error } = await sb
-                .schema("itinero")
                 .from("destination_history")
                 .delete()
                 .eq("id", id);
 
             if (error) {
-                setHistMessage(error.message ?? "Error deleting history.");
+                console.error(error);
+                toast.error("Failed to delete history", { description: error.message });
                 return;
             }
 
             setHistoryList((prev) => prev.filter((h) => h.id !== id));
+            toast.success("History entry deleted");
             if (editingHistId === id) {
                 resetHistoryForm();
             }
-        } catch {
-            setHistMessage("Unexpected error deleting history entry.");
+        } catch (e: unknown) {
+            console.error(e);
+            const msg = e instanceof Error ? e.message : String(e);
+            toast.error("Failed to delete history entry", { description: msg });
+        }
+    }
+
+    async function handleSetCurrentHistory(h: DestinationHistoryRowUI) {
+        try {
+            const { error } = await sb
+                .from("destinations")
+                .update({ current_history_id: h.id })
+                .eq("id", h.destination_id);
+
+            if (error) {
+                console.error(error);
+                toast.error("Failed to set current history", { description: error.message });
+                return;
+            }
+
+            setDestinations(prev => prev.map(d =>
+                d.id === h.destination_id
+                    ? { ...d, current_history_id: h.id }
+                    : d
+            ));
+            toast.success("Set as current history for destination");
+        } catch (e: unknown) {
+            console.error(e);
+            const msg = e instanceof Error ? e.message : String(e);
+            toast.error("Unexpected error", { description: msg });
         }
     }
 
     /* --- Handlers: Places --- */
 
+    function updateHour(day: number, field: "open" | "close", value: string) {
+        setPlaceHours((prev) => {
+            const existing = prev.find((h) => h.day_of_week === day);
+            if (existing) {
+                return prev.map((h) =>
+                    h.day_of_week === day
+                        ? { ...h, [field === "open" ? "open_time" : "close_time"]: value }
+                        : h
+                );
+            } else {
+                return [
+                    ...prev,
+                    {
+                        day_of_week: day,
+                        open_time: field === "open" ? value : null,
+                        close_time: field === "close" ? value : null,
+                    },
+                ];
+            }
+        });
+    }
+
+    function toggleClosed(day: number, isClosed: boolean) {
+        if (isClosed) {
+            // Remove entry or set times to null
+            setPlaceHours((prev) => prev.filter((h) => h.day_of_week !== day));
+        } else {
+            // Add entry with default times? Or just empty?
+            // Let's add empty
+            setPlaceHours((prev) => [
+                ...prev,
+                { day_of_week: day, open_time: "", close_time: "" },
+            ]);
+        }
+    }
+
     async function handleSavePlace(e: React.FormEvent) {
         e.preventDefault();
-        setPlaceMessage(null);
-        if (!placeDestinationId)
-            return setPlaceMessage("Select a destination first.");
-        if (!placeName.trim())
-            return setPlaceMessage("Name is required.");
+        if (!placeDestinationId) {
+            toast.error("Select a destination first.");
+            return;
+        }
+        if (!placeName.trim()) {
+            toast.error("Name is required.");
+            return;
+        }
 
         setPlaceSaving(true);
         try {
@@ -761,76 +733,99 @@ export default function ItineroDashboardClient({
             const costCurrencyVal =
                 placeCostCurrency.trim() !== "" ? placeCostCurrency.trim() : null;
 
+            const payload = {
+                destination_id: placeDestinationId,
+                name: placeName.trim(),
+                category: placeCategory.trim() || null,
+                lat: latNum,
+                lng: lngNum,
+                tags: tagsArr.length ? tagsArr : null,
+                description: placeDescription.trim() || null,
+                popularity: popularityNum,
+                cost_typical: costTypicalNum,
+                cost_currency: costCurrencyVal,
+                kind: placeKind,
+                url: placeUrl.trim() || null,
+                booking_url: placeBookingUrl.trim() || null,
+                is_partner: placeIsPartner,
+            };
+
             if (editingPlaceId) {
                 const { data, error } = await sb
-                    .schema("itinero")
                     .from("places")
-                    .update({
-                        destination_id: placeDestinationId,
-                        name: placeName.trim(),
-                        category: placeCategory.trim() || null,
-                        lat: latNum,
-                        lng: lngNum,
-                        tags: tagsArr.length ? tagsArr : null,
-                        description: placeDescription.trim() || null,
-                        popularity: popularityNum,
-                        cost_typical: costTypicalNum,
-                        cost_currency: costCurrencyVal,
-                    })
+                    .update(payload)
                     .eq("id", editingPlaceId)
-                    .select(
-                        "id,name,category,lat,lng,tags,description,destination_id,popularity,cost_typical,cost_currency"
-                    )
-                    .maybeSingle();
+                    .select()
+                    .single();
 
-                if (error || !data) {
-                    setPlaceMessage(
-                        error?.message ?? "Error updating place."
-                    );
-                    return;
-                }
+                if (error) throw error;
 
                 setPlaces((prev) =>
                     prev.map((p) =>
-                        p.id === editingPlaceId ? (data as PlaceOption) : p
+                        p.id === editingPlaceId ? data : p
                     )
                 );
-                setPlaceMessage("Place updated.");
+                toast.success("Place updated successfully");
+
+                // Update hours
+                await sb
+                    .from("place_hours")
+                    .delete()
+                    .eq("place_id", editingPlaceId);
+
+                if (placeHours.length > 0) {
+                    const hoursPayload = placeHours.map((h) => ({
+                        place_id: editingPlaceId,
+                        day_of_week: h.day_of_week,
+                        open_time: h.open_time || null,
+                        close_time: h.close_time || null,
+                    }));
+                    const { error: hoursError } = await sb
+                        .from("place_hours")
+                        .insert(hoursPayload);
+
+                    if (hoursError) {
+                        console.error("Error saving hours:", hoursError);
+                        toast.error("Place updated, but error saving hours.");
+                    }
+                }
             } else {
+                // Create
                 const { data, error } = await sb
-                    .schema("itinero")
                     .from("places")
-                    .insert({
-                        destination_id: placeDestinationId,
-                        name: placeName.trim(),
-                        category: placeCategory.trim() || null,
-                        lat: latNum,
-                        lng: lngNum,
-                        tags: tagsArr.length ? tagsArr : null,
-                        description: placeDescription.trim() || null,
-                        popularity: popularityNum,
-                        cost_typical: costTypicalNum,
-                        cost_currency: costCurrencyVal,
-                    })
-                    .select(
-                        "id,name,category,lat,lng,tags,description,destination_id,popularity,cost_typical,cost_currency"
-                    )
+                    .insert(payload)
+                    .select()
                     .single();
 
-                if (error || !data) {
-                    setPlaceMessage(
-                        error?.message ?? "Error creating place."
-                    );
-                    return;
-                }
+                if (error) throw error;
 
-                setPlaces((prev) => [...prev, data as PlaceOption]);
-                setPlaceMessage("Place created.");
+                setPlaces((prev) => [data, ...prev]);
+                toast.success("Place created successfully");
+
+                // If we have hours, insert them
+                if (placeHours.length > 0) {
+                    const hoursPayload = placeHours.map((h) => ({
+                        place_id: data.id,
+                        day_of_week: h.day_of_week,
+                        open_time: h.open_time || null,
+                        close_time: h.close_time || null,
+                    }));
+                    const { error: hoursError } = await sb
+                        .from("place_hours")
+                        .insert(hoursPayload);
+
+                    if (hoursError) {
+                        console.error("Error saving hours:", hoursError);
+                        toast.error("Place created, but error saving hours");
+                    }
+                }
             }
 
             resetPlaceForm();
-        } catch {
-            setPlaceMessage("Unexpected error saving place.");
+        } catch (e: unknown) {
+            console.error(e);
+            const msg = e instanceof Error ? e.message : String(e);
+            toast.error("Failed to save place", { description: msg });
         } finally {
             setPlaceSaving(false);
         }
@@ -838,157 +833,42 @@ export default function ItineroDashboardClient({
 
     function startEditPlace(p: PlaceOption) {
         setEditingPlaceId(p.id);
-        setPlaceDestinationId(p.destination_id ?? "");
         setPlaceName(p.name);
         setPlaceCategory(p.category ?? "");
         setPlaceLat(p.lat?.toString() ?? "");
         setPlaceLng(p.lng?.toString() ?? "");
         setPlaceTags(tagsToString(p.tags));
         setPlaceDescription(p.description ?? "");
-        setPlacePopularity(
-            typeof p.popularity === "number" ? p.popularity.toString() : ""
-        );
-        setPlaceCostTypical(
-            typeof p.cost_typical === "number" ? p.cost_typical.toString() : ""
-        );
+        setPlacePopularity(p.popularity?.toString() ?? "");
+        setPlaceCostTypical(p.cost_typical?.toString() ?? "");
         setPlaceCostCurrency(p.cost_currency ?? "");
-        setPlaceMessage(null);
+        setPlaceKind(p.kind ?? "poi");
+        setPlaceUrl(p.url ?? "");
+        setPlaceBookingUrl(p.booking_url ?? "");
+        setPlaceIsPartner(p.is_partner ?? false);
+        setIsPlaceSheetOpen(true);
     }
 
     async function handleDeletePlace(id: string) {
         if (!confirm("Delete this place?")) return;
-        setPlaceMessage(null);
         try {
-            const { error } = await sb
-                .schema("itinero")
-                .from("places")
-                .delete()
-                .eq("id", id);
-
+            const { error } = await sb.from("places").delete().eq("id", id);
             if (error) {
-                setPlaceMessage(error.message ?? "Error deleting place.");
+                console.error(error);
+                toast.error("Failed to delete place", { description: error.message });
                 return;
             }
 
             setPlaces((prev) => prev.filter((p) => p.id !== id));
-        } catch {
-            setPlaceMessage("Unexpected error deleting place.");
+            toast.success("Place deleted");
+        } catch (e: unknown) {
+            console.error(e);
+            const msg = e instanceof Error ? e.message : String(e);
+            toast.error("Failed to delete place", { description: msg });
         }
     }
 
-    /* --- Handlers: Guided Tours --- */
 
-    async function handleSaveTour(e: React.FormEvent) {
-        e.preventDefault();
-        setTourMessage(null);
-        if (!tourDestinationId)
-            return setTourMessage("Select a destination first.");
-        if (!tourTitle.trim())
-            return setTourMessage("Title is required.");
-
-        const days = parseDays(tourDays);
-        setTourSaving(true);
-        try {
-            if (editingTourId) {
-                const { data, error } = await sb
-                    .schema("itinero")
-                    .from("guided_tours")
-                    .update({
-                        destination_id: tourDestinationId,
-                        title: tourTitle.trim(),
-                        summary: tourSummary.trim() || null,
-                        days,
-                        difficulty: tourDifficulty,
-                    })
-                    .eq("id", editingTourId)
-                    .select(
-                        "id,title,destination_id,summary,days,difficulty"
-                    )
-                    .maybeSingle();
-
-                if (error || !data) {
-                    setTourMessage(
-                        error?.message ?? "Error updating tour."
-                    );
-                    return;
-                }
-
-                setGuidedTours((prev) =>
-                    prev.map((t) =>
-                        t.id === editingTourId ? (data as GuidedTour) : t
-                    )
-                );
-                setTourMessage("Tour updated.");
-            } else {
-                const { data, error } = await sb
-                    .schema("itinero")
-                    .from("guided_tours")
-                    .insert({
-                        destination_id: tourDestinationId,
-                        title: tourTitle.trim(),
-                        summary: tourSummary.trim() || null,
-                        days,
-                        difficulty: tourDifficulty,
-                    })
-                    .select(
-                        "id,title,destination_id,summary,days,difficulty"
-                    )
-                    .single();
-
-                if (error || !data) {
-                    setTourMessage(
-                        error?.message ?? "Error creating tour."
-                    );
-                    return;
-                }
-
-                setGuidedTours((prev) => [
-                    data as GuidedTour,
-                    ...prev,
-                ]);
-                setTourMessage("Tour created.");
-            }
-            resetTourForm();
-        } catch {
-            setTourMessage("Unexpected error saving tour.");
-        } finally {
-            setTourSaving(false);
-        }
-    }
-
-    function startEditTour(t: GuidedTour) {
-        setEditingTourId(t.id);
-        setTourDestinationId(t.destination_id);
-        setTourTitle(t.title);
-        setTourSummary(t.summary);
-        setTourDays(String(t.days));
-        setTourDifficulty(t.difficulty);
-        setTourMessage(null);
-    }
-
-    async function handleDeleteTour(id: string) {
-        if (!confirm("Delete this tour?")) return;
-        setTourMessage(null);
-        try {
-            const { error } = await sb
-                .schema("itinero")
-                .from("guided_tours")
-                .delete()
-                .eq("id", id);
-
-            if (error) {
-                setTourMessage(error.message ?? "Error deleting tour.");
-                return;
-            }
-
-            setGuidedTours((prev) => prev.filter((t) => t.id !== id));
-            if (editingTourId === id) {
-                resetTourForm();
-            }
-        } catch {
-            setTourMessage("Unexpected error deleting tour.");
-        }
-    }
 
     /* --- Derived --- */
 
@@ -1001,6 +881,25 @@ export default function ItineroDashboardClient({
                 (d.country_code ?? "").toLowerCase().includes(q)
         );
     }, [destinations, destSearch]);
+
+    const filteredPlaces = React.useMemo(() => {
+        if (!placeSearch.trim()) return places;
+        const q = placeSearch.trim().toLowerCase();
+        return places.filter(
+            (p) =>
+                p.name.toLowerCase().includes(q) ||
+                (p.category ?? "").toLowerCase().includes(q)
+        );
+    }, [places, placeSearch]);
+
+    const filteredHistory = React.useMemo(() => {
+        if (!histSearch.trim()) return historyList;
+        const q = histSearch.trim().toLowerCase();
+        return historyList.filter((h) => {
+            const destName = destinations.find(d => d.id === h.destination_id)?.name || "";
+            return destName.toLowerCase().includes(q) || h.content.toLowerCase().includes(q);
+        });
+    }, [historyList, histSearch, destinations]);
 
     const visiblePlaces = React.useMemo(() => {
         let list = places;
@@ -1016,711 +915,299 @@ export default function ItineroDashboardClient({
                     (p.category ?? "").toLowerCase().includes(q)
             );
         }
+        if (placeFilterDestId && placeFilterDestId !== "all") {
+            list = list.filter((p) => p.destination_id === placeFilterDestId);
+        }
         return list;
-    }, [places, placeDestinationId, placeSearch]);
+    }, [places, placeDestinationId, placeSearch, placeFilterDestId]);
 
     const selectedDestLabel =
         destinations.find((d) => d.id === placeDestinationId)?.name ??
         "Select destination";
 
+    /* --- Render --- */
     return (
-        <div className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 dark:bg-slate-950 dark:text-white">
-            <div className="mx-auto max-w-6xl space-y-8">
-                {/* Header */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                    <div className="space-y-1">
-                        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                            Content Dashboard
-                        </h1>
-                        <p className="text-slate-500 dark:text-slate-400 max-w-xl text-sm">
-                            Manage destinations, places, history and guided tours for
-                            the Itinero platform.
-                        </p>
-                    </div>
-                    <div className="flex gap-2">
-                        <Badge
-                            className="rounded-full bg-white border-slate-200 text-slate-600 px-3 py-1 shadow-sm dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400">
-                            <MapPin className="mr-1.5 h-3.5 w-3.5 text-blue-600" />{" "}
-                            {destinations.length} Destinations
-                        </Badge>
-                        <Badge
-                            className="rounded-full bg-white border-slate-200 text-slate-600 px-3 py-1 shadow-sm dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400">
-                            <Database className="mr-1.5 h-3.5 w-3.5 text-emerald-600" />{" "}
-                            {places.length} Places
-                        </Badge>
+        <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
+            {/* Sidebar */}
+            <aside className="w-64 flex-shrink-0 border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+                <div className="flex h-16 items-center px-6 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2 font-bold text-lg text-slate-900 dark:text-white">
+                        <LayoutDashboard className="h-5 w-5 text-blue-600" />
+                        Itinero Admin
                     </div>
                 </div>
+                <nav className="p-4 space-y-1">
+                    <Button
+                        variant={activeTab === "destinations" ? "secondary" : "ghost"}
+                        className={cn(
+                            "w-full justify-start gap-3",
+                            activeTab === "destinations" && "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                        )}
+                        onClick={() => setActiveTab("destinations")}
+                    >
+                        <Globe className="h-4 w-4" />
+                        Destinations
+                    </Button>
+                    <Button
+                        variant={activeTab === "places" ? "secondary" : "ghost"}
+                        className={cn(
+                            "w-full justify-start gap-3",
+                            activeTab === "places" && "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                        )}
+                        onClick={() => setActiveTab("places")}
+                    >
+                        <MapPin className="h-4 w-4" />
+                        Places
+                    </Button>
+                    <Button
+                        variant={activeTab === "history" ? "secondary" : "ghost"}
+                        className={cn(
+                            "w-full justify-start gap-3",
+                            activeTab === "history" && "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                        )}
+                        onClick={() => setActiveTab("history")}
+                    >
+                        <History className="h-4 w-4" />
+                        History & KBYG
+                    </Button>
+                </nav>
+                <div className="p-4 mt-auto border-t border-slate-100 dark:border-slate-800">
+                    <Button variant="outline" className="w-full gap-2 justify-start text-slate-600 dark:text-slate-400" asChild>
+                        <a href="/admin">
+                            <ArrowLeft className="h-4 w-4" />
+                            Back to Main Admin
+                        </a>
+                    </Button>
+                </div>
+            </aside>
 
-                <Tabs defaultValue="destinations" className="w-full">
-                    <div className="overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
-                        <TabsList
-                            className="inline-flex h-11 items-center justify-start rounded-full bg-slate-200/60 p-1 text-slate-500 w-full md:w-auto dark:bg-slate-800">
-                            <TabPill value="destinations" icon={Globe} label="Destinations" />
-                            <TabPill value="history" icon={History} label="History / KBYG" />
-                            <TabPill value="places" icon={MapPin} label="Places" />
-                            <TabPill value="guided" icon={Flag} label="Guided Tours" />
-                        </TabsList>
-                    </div>
-
-                    {/* DESTINATIONS */}
-                    <TabsContent value="destinations" className="mt-6 space-y-6">
-                        <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-                            <Card className="border-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                                <CardHeader>
-                                    <CardTitle className="text-lg font-bold text-slate-900 dark:text-white">
-                                        {editingDestId ? "Edit Destination" : "Add Destination"}
-                                    </CardTitle>
-                                    <CardDescription>Add or update city details.</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <form
-                                        className="space-y-4"
-                                        onSubmit={handleSaveDestination}
-                                    >
-                                        <div className="grid gap-4 sm:grid-cols-2">
-                                            <FormInput
-                                                label="Name"
-                                                value={destName}
-                                                onChange={setDestName}
-                                                placeholder="e.g. Cape Town"
-                                            />
-                                            <FormInput
-                                                label="Country"
-                                                value={destCountry}
-                                                onChange={setDestCountry}
-                                                placeholder="e.g. South Africa"
-                                            />
-                                            <FormInput
-                                                label="Latitude"
-                                                value={destLat}
-                                                onChange={setDestLat}
-                                                placeholder="-33.92"
-                                                type="number"
-                                            />
-                                            <FormInput
-                                                label="Longitude"
-                                                value={destLng}
-                                                onChange={setDestLng}
-                                                placeholder="18.42"
-                                                type="number"
-                                            />
-                                        </div>
-
-                                        <div className="grid gap-4 sm:grid-cols-2">
-                                            <FormInput
-                                                label="Image URL"
-                                                value={destImageUrl}
-                                                onChange={setDestImageUrl}
-                                                placeholder="https://images.unsplash.com/..."
-                                            />
-                                            <FormInput
-                                                label="Image Attribution"
-                                                value={destImageAttribution}
-                                                onChange={setDestImageAttribution}
-                                                placeholder="Photo by Jane Doe / Unsplash"
-                                            />
-                                        </div>
-
-                                        {destMessage && (
-                                            <p className="text-xs text-slate-500 pt-1">
-                                                {destMessage}
-                                            </p>
-                                        )}
-                                        <div className="flex justify-between pt-2">
-                                            {editingDestId && (
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    onClick={resetDestinationForm}
-                                                >
-                                                    Cancel
-                                                </Button>
-                                            )}
-                                            <Button
-                                                type="submit"
-                                                className="ml-auto bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6"
-                                                disabled={destSaving}
-                                            >
-                                                {destSaving ? (
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <Plus className="mr-2 h-4 w-4" />
-                                                )}
-                                                {editingDestId ? "Save Changes" : "Add Destination"}
-                                            </Button>
-                                        </div>
-                                    </form>
-                                </CardContent>
-                            </Card>
-
-                            <Card
-                                className="border-slate-200 shadow-sm flex flex-col h-[600px] dark:border-slate-800 dark:bg-slate-900">
-                                <div
-                                    className="p-4 border-b border-slate-100 bg-slate-50/50 rounded-t-xl flex gap-3 dark:border-slate-800 dark:bg-slate-900">
-                                    <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                                        <Input
-                                            placeholder="Search..."
-                                            value={destSearch}
-                                            onChange={(e) => setDestSearch(e.target.value)}
-                                            className="pl-9 h-9 bg-white border-slate-200 dark:bg-slate-950 dark:border-slate-800"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex-1 overflow-auto p-0">
-                                    <table className="w-full text-sm text-left">
-                                        <thead
-                                            className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0 dark:bg-slate-950 dark:text-slate-400">
-                                            <tr>
-                                                <th className="px-4 py-3">Image</th>
-                                                <th className="px-4 py-3">Name</th>
-                                                <th className="px-4 py-3">Country</th>
-                                                <th className="px-4 py-3 text-right">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                            {filteredDestinations.map((d) => (
-                                                <tr
-                                                    key={d.id}
-                                                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50"
-                                                >
-                                                    <td className="px-4 py-3">
-                                                        {d.cover_url ? (
-                                                            <Image
-                                                                src={d.cover_url}
-                                                                alt={d.name ?? "Destination"}
-                                                                width={64}
-                                                                height={40}
-                                                                className="h-10 w-16 object-cover rounded-md border border-slate-200 dark:border-slate-700"
-                                                            />
-                                                        ) : (
-                                                            <div
-                                                                className="h-10 w-16 rounded-md bg-slate-100 text-[10px] text-slate-400 flex items-center justify-center dark:bg-slate-800">
-                                                                No image
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
-                                                        <div className="flex flex-col gap-0.5">
-                                                            <span>{d.name}</span>
-                                                            {d.current_history_id && (
-                                                                <span
-                                                                    className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                                                                    • Current history set
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
-                                                        {d.country_code}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right">
-                                                        <div className="flex justify-end gap-1">
-                                                            <ActionBtn
-                                                                icon={Pencil}
-                                                                onClick={() => startEditDestination(d)}
-                                                            />
-                                                            <ActionBtn
-                                                                icon={Trash2}
-                                                                onClick={() =>
-                                                                    handleDeleteDestination(d.id)
-                                                                }
-                                                                destructive
-                                                            />
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                    {!filteredDestinations.length && (
-                                        <div className="p-6 text-center text-xs text-slate-500">
-                                            No destinations.
-                                        </div>
-                                    )}
-                                </div>
-                            </Card>
+            {/* Main Content Area */}
+            <main className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/50">
+                <div className="container mx-auto max-w-7xl px-6 py-8 space-y-8">
+                    {/* Header */}
+                    <header className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                                <span>Admin</span>
+                                <ChevronRight className="h-4 w-4" />
+                                <span className="font-medium text-foreground capitalize">{activeTab}</span>
+                            </div>
+                            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+                                {activeTab === "destinations" && "Destinations"}
+                                {activeTab === "places" && "Places"}
+                                {activeTab === "history" && "History & Content"}
+                            </h1>
+                            <p className="text-slate-500 dark:text-slate-400">
+                                {activeTab === "destinations" && "Manage your travel destinations and their metadata."}
+                                {activeTab === "places" && "Curate places, attractions, and hotels for each destination."}
+                                {activeTab === "history" && "Edit rich content, history, and practical information."}
+                            </p>
                         </div>
+                    </header>
 
-                        {/* Current history selector for destinations */}
-                        <Card className="border-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                            <CardHeader>
-                                <CardTitle className="text-sm font-semibold">
-                                    Current History Mapping
-                                </CardTitle>
-                                <CardDescription className="text-xs">
-                                    Choose which history entry should be treated as the current
-                                    one for a destination. This sets{" "}
-                                    <code className="text-[11px] bg-slate-800/60 px-1 py-0.5 rounded">
-                                        destinations.current_history_id
-                                    </code>
-                                    .
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <form
-                                    className="grid gap-4 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_auto]"
-                                    onSubmit={handleSetCurrentHistory}
-                                >
-                                    <div className="space-y-1.5">
-                                        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-                                            Destination
-                                        </Label>
-                                        <Select
-                                            value={currentHistoryDestId}
-                                            onValueChange={(v) => {
-                                                setCurrentHistoryDestId(v);
-                                            }}
-                                        >
-                                            <SelectTrigger
-                                                className="bg-slate-50 border-slate-200 h-10 rounded-lg dark:bg-slate-950 dark:border-slate-800">
-                                                <SelectValue placeholder="Pick destination..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {destinations.map((d) => (
-                                                    <SelectItem key={d.id} value={d.id}>
-                                                        {d.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-                                            History Entry
-                                        </Label>
-                                        {currentHistoryLoading ? (
-                                            <div className="flex items-center text-xs text-slate-400 h-10">
-                                                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                                                Loading history entries…
-                                            </div>
-                                        ) : currentHistoryList.length === 0 ? (
-                                            <div className="text-xs text-slate-400 h-10 flex items-center">
-                                                {currentHistoryDestId
-                                                    ? "No history entries for this destination yet."
-                                                    : "Select a destination first."}
-                                            </div>
-                                        ) : (
-                                            <Select
-                                                value={currentHistoryId}
-                                                onValueChange={setCurrentHistoryId}
-                                            >
-                                                <SelectTrigger
-                                                    className="bg-slate-50 border-slate-200 h-10 rounded-lg dark:bg-slate-950 dark:border-slate-800">
-                                                    <SelectValue placeholder="Choose history entry…" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {currentHistoryList.map((h) => (
-                                                        <SelectItem key={h.id} value={h.id}>
-                                                            {formatDateShort(h.created_at)} •{" "}
-                                                            {h.section ?? "mixed"}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        )}
-                                    </div>
-
-                                    <div className="flex items-end">
-                                        <Button
-                                            type="submit"
-                                            className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
-                                            disabled={
-                                                !currentHistoryDestId ||
-                                                !currentHistoryId ||
-                                                currentHistorySaving
-                                            }
-                                        >
-                                            {currentHistorySaving && (
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            )}
-                                            Set Current
-                                        </Button>
-                                    </div>
-                                </form>
-
-                                {currentHistoryMessage && (
-                                    <p className="text-xs text-slate-400">
-                                        {currentHistoryMessage}
-                                    </p>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-
-                    {/* HISTORY / KBYG */}
-                    <TabsContent value="history" className="mt-6">
-                        <Card className="border-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                            <CardHeader>
-                                <CardTitle className="text-lg font-bold">
-                                    Destination Metadata
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                {/* Select Destination first */}
-                                <div className="max-w-md">
-                                    <Label className="text-xs font-bold uppercase text-slate-500 mb-1.5 block">
-                                        Select Destination
-                                    </Label>
-                                    <Select
-                                        value={histDestinationId}
-                                        onValueChange={(v) => {
-                                            setHistDestinationId(v);
-                                            resetHistoryForm();
-                                        }}
-                                    >
-                                        <SelectTrigger
-                                            className="bg-slate-50 border-slate-200 h-11 rounded-xl dark:bg-slate-950 dark:border-slate-800">
-                                            <SelectValue placeholder="Choose a city..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {destinations.map((d) => (
-                                                <SelectItem key={d.id} value={d.id}>
-                                                    {d.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {histDestinationId && (
-                                    <div className="grid gap-8 lg:grid-cols-2">
-                                        <form className="space-y-5" onSubmit={handleSaveHistory}>
-                                            <div className="space-y-4">
-                                                <FormTextarea
-                                                    label="About"
-                                                    value={histAbout}
-                                                    onChange={setHistAbout}
-                                                    rows={3}
-                                                    placeholder="High-level description of this destination."
-                                                />
-                                                <FormTextarea
-                                                    label="History"
-                                                    value={histHistory}
-                                                    onChange={setHistHistory}
-                                                    rows={3}
-                                                    placeholder="Interesting historical context, eras, key events..."
-                                                />
-                                                <div className="grid sm:grid-cols-2 gap-4">
-                                                    <FormInput
-                                                        label="Currency"
-                                                        value={histCurrency}
-                                                        onChange={setHistCurrency}
-                                                        placeholder="e.g. GHS"
-                                                    />
-                                                    <FormInput
-                                                        label="Plugs"
-                                                        value={histPlugs}
-                                                        onChange={setHistPlugs}
-                                                        placeholder="Type G / 230V"
-                                                    />
-                                                </div>
-                                                <FormInput
-                                                    label="Languages"
-                                                    value={histLanguages}
-                                                    onChange={setHistLanguages}
-                                                    placeholder="comma-separated, e.g. English, Twi"
-                                                />
-                                                <FormInput
-                                                    label="Getting Around"
-                                                    value={histGettingAround}
-                                                    onChange={setHistGettingAround}
-                                                    placeholder="Metro, Uber, walking..."
-                                                />
-                                                <FormInput
-                                                    label="eSIM Provider"
-                                                    value={histEsim}
-                                                    onChange={setHistEsim}
-                                                    placeholder="e.g. Airalo"
-                                                />
-                                                <FormInput
-                                                    label="Primary City"
-                                                    value={histPrimaryCity}
-                                                    onChange={setHistPrimaryCity}
-                                                    placeholder="e.g. Accra"
-                                                />
-                                                <FormInput
-                                                    label="Backdrop URL"
-                                                    value={histBackdropUrl}
-                                                    onChange={setHistBackdropUrl}
-                                                    placeholder="Optional hero image url"
-                                                />
-                                                <FormInput
-                                                    label="Backdrop Attribution"
-                                                    value={histBackdropAttribution}
-                                                    onChange={setHistBackdropAttribution}
-                                                    placeholder="Photo credit / source"
-                                                />
-                                            </div>
-                                            {histMessage && (
-                                                <p className="text-xs text-slate-400">
-                                                    {histMessage}
-                                                </p>
-                                            )}
-                                            <Button
-                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
-                                                type="submit"
-                                                disabled={histSaving}
-                                            >
-                                                {histSaving && (
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                )}
-                                                {editingHistId ? "Save Changes" : "Save History"}
-                                            </Button>
-                                        </form>
-
-                                        <div
-                                            className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 h-96 overflow-auto dark:border-slate-800 dark:bg-slate-950">
-                                            <h4 className="text-xs font-bold uppercase text-slate-400 mb-3">
-                                                Existing Entries
-                                            </h4>
-                                            {histLoadingList ? (
-                                                <div
-                                                    className="flex items-center justify-center py-10 text-xs text-slate-500">
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                    Loading history…
-                                                </div>
-                                            ) : historyList.length === 0 ? (
-                                                <p className="text-sm text-slate-500 italic text-center py-10">
-                                                    No history entries found.
-                                                </p>
-                                            ) : (
-                                                <div className="space-y-3">
-                                                    {historyList.map((h) => (
-                                                        <div
-                                                            key={h.id}
-                                                            className={cn(
-                                                                "bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-sm flex justify-between gap-3 items-start dark:bg-slate-900 dark:border-slate-800",
-                                                                editingHistId === h.id &&
-                                                                "ring-2 ring-blue-500 ring-offset-1"
-                                                            )}
-                                                        >
-                                                            <div>
-                                                                <div
-                                                                    className="font-medium text-slate-900 dark:text-white text-xs">
-                                                                    {formatDateShort(h.created_at)}
-                                                                </div>
-                                                                <div
-                                                                    className="text-slate-500 mt-1 line-clamp-2 text-xs">
-                                                                    {h.payload?.about || "No description"}
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex gap-1">
-                                                                <ActionBtn
-                                                                    icon={Pencil}
-                                                                    onClick={() => startEditHistory(h)}
-                                                                />
-                                                                <ActionBtn
-                                                                    icon={Trash2}
-                                                                    onClick={() => handleDeleteHistory(h.id)}
-                                                                    destructive
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-
-                    {/* PLACES */}
-                    <TabsContent value="places" className="mt-6">
-                        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-                            <Card className="border-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                                <CardHeader>
-                                    <CardTitle className="text-lg font-bold">
-                                        {editingPlaceId ? "Edit Place" : "Manage Places"}
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-                                    <div className="space-y-1">
-                                        <Label className="text-xs font-bold text-slate-500 uppercase">
-                                            Destination
-                                        </Label>
-                                        <Select
-                                            value={placeDestinationId}
-                                            onValueChange={setPlaceDestinationId}
-                                        >
-                                            <SelectTrigger
-                                                className="bg-slate-50 border-slate-200 h-10 rounded-lg dark:bg-slate-950 dark:border-slate-800">
-                                                <SelectValue
-                                                    placeholder="Filter map..."
-                                                    defaultValue={selectedDestLabel}
-                                                />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {destinations.map((d) => (
-                                                    <SelectItem key={d.id} value={d.id}>
-                                                        {d.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <form className="space-y-4" onSubmit={handleSavePlace}>
-                                        <FormInput
-                                            label="Place Name"
-                                            value={placeName}
-                                            onChange={setPlaceName}
-                                        />
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <FormInput
-                                                label="Lat"
-                                                value={placeLat}
-                                                onChange={setPlaceLat}
-                                                type="number"
-                                            />
-                                            <FormInput
-                                                label="Lng"
-                                                value={placeLng}
-                                                onChange={setPlaceLng}
-                                                type="number"
-                                            />
-                                        </div>
-                                        <FormInput
-                                            label="Category"
-                                            value={placeCategory}
-                                            onChange={setPlaceCategory}
-                                            placeholder="Restaurant, Museum..."
-                                        />
-                                        <FormInput
-                                            label="Tags"
-                                            value={placeTags}
-                                            onChange={setPlaceTags}
-                                            placeholder="comma-separated, e.g. food, nightlife"
-                                        />
-                                        <FormTextarea
-                                            label="Description"
-                                            value={placeDescription}
-                                            onChange={setPlaceDescription}
-                                            rows={2}
-                                            placeholder="Short note about this place..."
-                                        />
-                                        {placeMessage && (
-                                            <p className="text-xs text-slate-400">
-                                                {placeMessage}
-                                            </p>
-                                        )}
-                                        <div className="flex justify-between gap-2">
-                                            {editingPlaceId && (
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    onClick={resetPlaceForm}
-                                                >
-                                                    Cancel
-                                                </Button>
-                                            )}
-                                            <Button
-                                                type="submit"
-                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
-                                                disabled={!placeDestinationId || placeSaving}
-                                            >
-                                                {placeSaving && (
-                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                )}
-                                                {editingPlaceId ? "Save Place" : "Add Place"}
-                                            </Button>
-                                        </div>
-                                    </form>
-                                </CardContent>
-                            </Card>
-
-                            <Card
-                                className="border-slate-200 shadow-sm flex flex-col h-[700px] dark:border-slate-800 dark:bg-slate-900">
-                                <div
-                                    className="p-3 border-b border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-950">
+                    {activeTab === "destinations" && (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div className="relative w-72">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
                                     <Input
-                                        placeholder="Search places..."
-                                        value={placeSearch}
-                                        onChange={(e) => setPlaceSearch(e.target.value)}
-                                        className="bg-white border-slate-200 h-9 dark:bg-slate-900 dark:border-slate-800"
+                                        placeholder="Search destinations..."
+                                        className="pl-9 bg-white dark:bg-slate-900"
+                                        value={destSearch}
+                                        onChange={(e) => setDestSearch(e.target.value)}
                                     />
                                 </div>
-                                <div className="flex-1 overflow-auto p-0">
-                                    {visiblePlaces.length === 0 ? (
-                                        <div className="p-8 text-center text-slate-500 text-sm">
-                                            No places found.
+                                <Sheet open={isDestSheetOpen} onOpenChange={setIsDestSheetOpen}>
+                                    <SheetTrigger asChild>
+                                        <Button onClick={resetDestinationForm} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                                            <Plus className="h-4 w-4" />
+                                            Add Destination
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+                                        <SheetHeader>
+                                            <SheetTitle>
+                                                {editingDestId ? "Edit Destination" : "New Destination"}
+                                            </SheetTitle>
+                                            <SheetDescription>
+                                                {editingDestId
+                                                    ? "Update destination details below."
+                                                    : "Add a new destination to the database."}
+                                            </SheetDescription>
+                                        </SheetHeader>
+                                        <div className="py-6">
+                                            <form id="dest-form" onSubmit={handleSaveDestination} className="space-y-4">
+                                                <div className="space-y-4">
+                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Basic Information</div>
+                                                    <FormInput
+                                                        label="Name (Required)"
+                                                        value={destName}
+                                                        onChange={setDestName}
+                                                        placeholder="e.g. Paris"
+                                                    />
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <FormInput
+                                                            label="Country Code"
+                                                            value={destCountry}
+                                                            onChange={setDestCountry}
+                                                            placeholder="FR"
+                                                        />
+                                                        <FormInput
+                                                            label="Category"
+                                                            value={destCategory}
+                                                            onChange={setDestCategory}
+                                                            placeholder="city, region..."
+                                                        />
+                                                    </div>
+                                                    <FormInput
+                                                        label="Popularity (0-100)"
+                                                        value={destPopularity}
+                                                        onChange={setDestPopularity}
+                                                        placeholder="85"
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Location</div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <FormInput
+                                                            label="Latitude"
+                                                            value={destLat}
+                                                            onChange={setDestLat}
+                                                            placeholder="48.8566"
+                                                        />
+                                                        <FormInput
+                                                            label="Longitude"
+                                                            value={destLng}
+                                                            onChange={setDestLng}
+                                                            placeholder="2.3522"
+                                                        />
+                                                    </div>
+                                                    <FormInput
+                                                        label="Timezone"
+                                                        value={destTimezone}
+                                                        onChange={setDestTimezone}
+                                                        placeholder="Europe/Paris"
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Media</div>
+                                                    <FormInput
+                                                        label="Cover Image URL"
+                                                        value={destImageUrl}
+                                                        onChange={setDestImageUrl}
+                                                        placeholder="https://..."
+                                                    />
+                                                    <FormInput
+                                                        label="Image Attribution"
+                                                        value={destImageAttribution}
+                                                        onChange={setDestImageAttribution}
+                                                        placeholder="Photo by..."
+                                                    />
+                                                </div>
+                                            </form>
                                         </div>
-                                    ) : (
-                                        <table className="w-full text-sm text-left">
-                                            <thead
-                                                className="bg-slate-50 text-xs font-bold text-slate-500 uppercase sticky top-0 dark:bg-slate-950">
-                                                <tr>
-                                                    <th className="px-4 py-2">Name</th>
-                                                    <th className="px-4 py-2">Category</th>
-                                                    <th className="px-4 py-2 text-right">Edit</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                                {visiblePlaces.map((p) => (
-                                                    <tr
-                                                        key={p.id}
-                                                        className="hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                                                    >
-                                                        <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
-                                                            {p.name}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-slate-500 dark:text-slate-400">
-                                                            {p.category}
-                                                        </td>
-                                                        <td className="px-4 py-3 text-right">
-                                                            <div className="flex justify-end gap-1">
-                                                                <ActionBtn
-                                                                    icon={Pencil}
-                                                                    onClick={() => startEditPlace(p)}
-                                                                />
-                                                                <ActionBtn
-                                                                    icon={Trash2}
-                                                                    onClick={() => handleDeletePlace(p.id)}
-                                                                    destructive
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    )}
-                                </div>
+                                        <SheetFooter>
+                                            <Button type="submit" form="dest-form" disabled={destSaving}>
+                                                {destSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                {editingDestId ? "Save Changes" : "Create Destination"}
+                                            </Button>
+                                        </SheetFooter>
+                                    </SheetContent>
+                                </Sheet>
+                            </div>
+
+                            <Card className="border-0 shadow-none">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Name</TableHead>
+                                            <TableHead>Country</TableHead>
+                                            <TableHead>Category</TableHead>
+                                            <TableHead>Popularity</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredDestinations.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                                    No destinations found.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            filteredDestinations.map((d) => (
+                                                <TableRow key={d.id}>
+                                                    <TableCell className="font-medium">
+                                                        <div className="flex items-center gap-3">
+                                                            <TableImage url={d.cover_url} alt={d.name ?? "Destination"} icon={Globe} />
+                                                            {d.name}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>{d.country_code}</TableCell>
+                                                    <TableCell>
+                                                        {d.category && (
+                                                            <Badge variant="outline" className="capitalize">
+                                                                {d.category}
+                                                            </Badge>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>{d.popularity}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                    <span className="sr-only">Open menu</span>
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                                <DropdownMenuItem onClick={() => startEditDestination(d)}>
+                                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem
+                                                                    onClick={() => handleDeleteDestination(d.id)}
+                                                                    className="text-red-600 focus:text-red-600"
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
                             </Card>
                         </div>
-                    </TabsContent>
-                    {/* GUIDED TOURS */}
-                    <TabsContent value="guided" className="mt-6">
-                        <Card className="border-slate-200 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                            <CardHeader>
-                                <CardTitle className="text-lg font-bold">
-                                    Guided Tours
-                                </CardTitle>
-                                <CardDescription>
-                                    Create curated multi-day experiences attached to a
-                                    destination.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="max-w-md space-y-2">
-                                    <Label className="text-xs font-bold uppercase text-slate-500">
-                                        Destination
-                                    </Label>
-                                    <Select
-                                        value={tourDestinationId}
-                                        onValueChange={(v) => {
-                                            setTourDestinationId(v);
-                                            resetTourForm();
-                                        }}
-                                    >
-                                        <SelectTrigger
-                                            className="bg-slate-50 border-slate-200 h-10 rounded-lg dark:bg-slate-950 dark:border-slate-800">
-                                            <SelectValue placeholder="Pick destination..." />
+                    )}
+
+                    {/* Placeholder for other tabs to be implemented next */}
+                    {activeTab === "places" && (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div className="relative w-72 flex items-center gap-2">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                                        <Input
+                                            placeholder="Search places..."
+                                            className="pl-9 bg-white dark:bg-slate-900"
+                                            value={placeSearch}
+                                            onChange={(e) => setPlaceSearch(e.target.value)}
+                                        />
+                                    </div>
+                                    <Select value={placeFilterDestId} onValueChange={setPlaceFilterDestId}>
+                                        <SelectTrigger className="w-[180px] bg-white dark:bg-slate-900">
+                                            <SelectValue placeholder="Filter by Destination" />
                                         </SelectTrigger>
                                         <SelectContent>
+                                            <SelectItem value="all">All Destinations</SelectItem>
                                             {destinations.map((d) => (
                                                 <SelectItem key={d.id} value={d.id}>
                                                     {d.name}
@@ -1729,177 +1216,562 @@ export default function ItineroDashboardClient({
                                         </SelectContent>
                                     </Select>
                                 </div>
-
-                                {tourDestinationId && (
-                                    <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-                                        <form
-                                            className="space-y-4"
-                                            onSubmit={handleSaveTour}
-                                        >
-                                            <FormInput
-                                                label="Tour Title"
-                                                value={tourTitle}
-                                                onChange={setTourTitle}
-                                                placeholder="e.g. 3-Day Food & Culture in Accra"
-                                            />
-                                            <FormTextarea
-                                                label="Summary"
-                                                value={tourSummary}
-                                                onChange={setTourSummary}
-                                                rows={3}
-                                                placeholder="Short overview of what this tour covers..."
-                                            />
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <FormInput
-                                                    label="Days"
-                                                    value={tourDays}
-                                                    onChange={setTourDays}
-                                                    type="number"
-                                                />
-                                                <div className="space-y-1.5">
-                                                    <Label
-                                                        className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-                                                        Difficulty
-                                                    </Label>
-                                                    <Select
-                                                        value={tourDifficulty}
-                                                        onValueChange={(v) =>
-                                                            setTourDifficulty(
-                                                                v as GuidedTour["difficulty"]
-                                                            )
-                                                        }
-                                                    >
-                                                        <SelectTrigger
-                                                            className="bg-slate-50 border-slate-200 h-10 rounded-lg dark:bg-slate-950 dark:border-slate-800">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="easy">
-                                                                Easy (chill)
-                                                            </SelectItem>
-                                                            <SelectItem value="moderate">
-                                                                Moderate (balanced)
-                                                            </SelectItem>
-                                                            <SelectItem value="intense">
-                                                                Intense (packed)
-                                                            </SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                            </div>
-                                            {tourMessage && (
-                                                <p className="text-xs text-slate-400">
-                                                    {tourMessage}
-                                                </p>
-                                            )}
-                                            <div className="flex gap-2">
-                                                {editingTourId && (
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        onClick={resetTourForm}
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    type="submit"
-                                                    className="ml-auto bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6"
-                                                    disabled={tourSaving}
-                                                >
-                                                    {tourSaving && (
-                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                    )}
-                                                    {editingTourId ? "Save Tour" : "Add Tour"}
-                                                </Button>
-                                            </div>
-                                        </form>
-
-                                        <div
-                                            className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 h-[420px] overflow-auto dark:border-slate-800 dark:bg-slate-950">
-                                            <h4 className="text-xs font-bold uppercase text-slate-400 mb-3">
-                                                Existing Tours
-                                            </h4>
-                                            {guidedTours.length === 0 ? (
-                                                <p className="text-sm text-slate-500 italic text-center py-10">
-                                                    No tours for this destination yet.
-                                                </p>
-                                            ) : (
-                                                <div className="space-y-3">
-                                                    {guidedTours.map((t) => (
-                                                        <div
-                                                            key={t.id}
-                                                            className={cn(
-                                                                "bg-white p-3 rounded-xl border border-slate-200 shadow-sm text-sm flex justify-between gap-3 items-start dark:bg-slate-900 dark:border-slate-800",
-                                                                editingTourId === t.id &&
-                                                                "ring-2 ring-blue-500 ring-offset-1"
-                                                            )}
+                                <Sheet open={isPlaceSheetOpen} onOpenChange={setIsPlaceSheetOpen}>
+                                    <SheetTrigger asChild>
+                                        <Button onClick={resetPlaceForm} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                                            <Plus className="h-4 w-4" />
+                                            Add Place
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent className="w-[400px] sm:w-[600px] overflow-y-auto">
+                                        <SheetHeader>
+                                            <SheetTitle>
+                                                {editingPlaceId ? "Edit Place" : "New Place"}
+                                            </SheetTitle>
+                                            <SheetDescription>
+                                                {editingPlaceId
+                                                    ? "Update place details below."
+                                                    : "Add a new place to the database."}
+                                            </SheetDescription>
+                                        </SheetHeader>
+                                        <div className="py-6">
+                                            <form id="place-form" onSubmit={handleSavePlace} className="space-y-4">
+                                                <div className="space-y-4">
+                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Basic Info</div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                                            Destination (Required)
+                                                        </Label>
+                                                        <Select
+                                                            value={placeDestinationId}
+                                                            onValueChange={setPlaceDestinationId}
                                                         >
-                                                            <div className="space-y-1">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="font-semibold text-slate-900 dark:text-white text-sm">
-                                                                        {t.title}
-                                                                    </span>
-                                                                    <Badge
-                                                                        variant="outline"
-                                                                        className="text-[10px] rounded-full px-2 py-0.5"
-                                                                    >
-                                                                        {t.days} days •{" "}
-                                                                        {t.difficulty.toUpperCase()}
-                                                                    </Badge>
+                                                            <SelectTrigger className="bg-slate-50 border-slate-200 dark:bg-slate-950 dark:border-slate-800">
+                                                                <SelectValue placeholder="Select a destination" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {destinations.map((d) => (
+                                                                    <SelectItem key={d.id} value={d.id}>
+                                                                        {d.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+
+                                                    <FormInput
+                                                        label="Name (Required)"
+                                                        value={placeName}
+                                                        onChange={setPlaceName}
+                                                        placeholder="e.g. Eiffel Tower"
+                                                    />
+                                                    <FormTextarea
+                                                        label="Description"
+                                                        value={placeDescription}
+                                                        onChange={setPlaceDescription}
+                                                        placeholder="Brief description..."
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Details</div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <FormInput
+                                                            label="Category"
+                                                            value={placeCategory}
+                                                            onChange={setPlaceCategory}
+                                                            placeholder="landmark, restaurant..."
+                                                        />
+                                                        <div className="space-y-1.5">
+                                                            <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                                                Kind
+                                                            </Label>
+                                                            <Select value={placeKind} onValueChange={setPlaceKind}>
+                                                                <SelectTrigger className="bg-slate-50 border-slate-200 dark:bg-slate-950 dark:border-slate-800">
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="poi">POI</SelectItem>
+                                                                    <SelectItem value="restaurant">Restaurant</SelectItem>
+                                                                    <SelectItem value="hotel">Hotel</SelectItem>
+                                                                    <SelectItem value="activity">Activity</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                    </div>
+                                                    <div className="grid grid-cols-3 gap-4">
+                                                        <FormInput
+                                                            label="Popularity"
+                                                            value={placePopularity}
+                                                            onChange={setPlacePopularity}
+                                                            placeholder="0-100"
+                                                        />
+                                                        <FormInput
+                                                            label="Cost Typical"
+                                                            value={placeCostTypical}
+                                                            onChange={setPlaceCostTypical}
+                                                            placeholder="e.g. 20"
+                                                        />
+                                                        <FormInput
+                                                            label="Currency"
+                                                            value={placeCostCurrency}
+                                                            onChange={setPlaceCostCurrency}
+                                                            placeholder="EUR"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Location</div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <FormInput
+                                                            label="Latitude"
+                                                            value={placeLat}
+                                                            onChange={setPlaceLat}
+                                                            placeholder="48.8584"
+                                                        />
+                                                        <FormInput
+                                                            label="Longitude"
+                                                            value={placeLng}
+                                                            onChange={setPlaceLng}
+                                                            placeholder="2.2945"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Links & Media</div>
+                                                    <FormInput
+                                                        label="Tags (comma separated)"
+                                                        value={placeTags}
+                                                        onChange={setPlaceTags}
+                                                        placeholder="romantic, view, history"
+                                                    />
+
+                                                    <FormInput
+                                                        label="Website URL"
+                                                        value={placeUrl}
+                                                        onChange={setPlaceUrl}
+                                                        placeholder="https://..."
+                                                    />
+
+                                                    <FormInput
+                                                        label="Booking URL"
+                                                        value={placeBookingUrl}
+                                                        onChange={setPlaceBookingUrl}
+                                                        placeholder="https://..."
+                                                    />
+
+                                                    <div className="flex items-center space-x-2 pt-2">
+                                                        <Checkbox
+                                                            id="is_partner"
+                                                            checked={placeIsPartner}
+                                                            onCheckedChange={(c) => setPlaceIsPartner(!!c)}
+                                                        />
+                                                        <Label htmlFor="is_partner" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                                            Is Partner / Promoted?
+                                                        </Label>
+                                                    </div>
+                                                </div>
+
+                                                <Separator />
+
+                                                <div className="space-y-3">
+                                                    <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                                                        Opening Hours
+                                                    </Label>
+                                                    <div className="space-y-2">
+                                                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((dayName, idx) => {
+                                                            const hour = placeHours.find((h) => h.day_of_week === idx);
+                                                            const isOpen = !!hour;
+                                                            return (
+                                                                <div key={idx} className="flex items-center gap-3 text-sm">
+                                                                    <div className="w-10 font-medium text-slate-500">{dayName}</div>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Checkbox
+                                                                            checked={isOpen}
+                                                                            onCheckedChange={(checked) => toggleClosed(idx, !checked)}
+                                                                        />
+                                                                        <span className={cn("text-xs w-12", isOpen ? "text-green-600 font-medium" : "text-slate-400")}>
+                                                                            {isOpen ? "Open" : "Closed"}
+                                                                        </span>
+                                                                    </div>
+                                                                    {isOpen && (
+                                                                        <div className="flex items-center gap-2 flex-1">
+                                                                            <Input
+                                                                                value={hour.open_time ?? ""}
+                                                                                onChange={(e) => updateHour(idx, "open", e.target.value)}
+                                                                                placeholder="09:00"
+                                                                                className="h-7 w-20 text-xs"
+                                                                            />
+                                                                            <span className="text-slate-400">-</span>
+                                                                            <Input
+                                                                                value={hour.close_time ?? ""}
+                                                                                onChange={(e) => updateHour(idx, "close", e.target.value)}
+                                                                                placeholder="17:00"
+                                                                                className="h-7 w-20 text-xs"
+                                                                            />
+                                                                        </div>
+                                                                    )}
                                                                 </div>
-                                                                {t.summary && (
-                                                                    <p className="text-xs text-slate-500 line-clamp-2">
-                                                                        {t.summary}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                            <div className="flex gap-1">
-                                                                <ActionBtn
-                                                                    icon={Pencil}
-                                                                    onClick={() => startEditTour(t)}
-                                                                />
-                                                                <ActionBtn
-                                                                    icon={Trash2}
-                                                                    onClick={() => handleDeleteTour(t.id)}
-                                                                    destructive
-                                                                />
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <SheetFooter>
+                                            <Button type="submit" form="place-form" disabled={placeSaving}>
+                                                {placeSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                {editingPlaceId ? "Save Changes" : "Create Place"}
+                                            </Button>
+                                        </SheetFooter>
+                                    </SheetContent>
+                                </Sheet>
+                            </div>
+
+                            <Card className="border-0 shadow-none">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Name</TableHead>
+                                            <TableHead>Destination</TableHead>
+                                            <TableHead>Category</TableHead>
+                                            <TableHead>Kind</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredPlaces.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                                    No places found.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            filteredPlaces.map((p) => (
+                                                <TableRow key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                                                    <TableCell className="font-medium">
+                                                        <div className="flex items-center gap-3">
+                                                            <TableImage url={null} alt={p.name} icon={MapPin} />
+                                                            <div className="flex flex-col">
+                                                                <div className="flex items-center gap-2">
+                                                                    {p.is_partner && <Badge variant="secondary" className="text-[10px] h-5 px-1 bg-amber-100 text-amber-700">PRO</Badge>}
+                                                                    <span>{p.name}</span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    ))}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {destinations.find(d => d.id === p.destination_id)?.name || "-"}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {p.category && (
+                                                            <Badge variant="outline" className="capitalize">
+                                                                {p.category}
+                                                            </Badge>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="capitalize">{p.kind}</TableCell>
+                                                    <TableCell className="text-right">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                    <span className="sr-only">Open menu</span>
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                                <DropdownMenuItem onClick={() => startEditPlace(p)}>
+                                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem
+                                                                    onClick={() => handleDeletePlace(p.id)}
+                                                                    className="text-red-600 focus:text-red-600"
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </Card>
+                        </div>
+                    )}
+                    {activeTab === "history" && (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div className="relative w-72">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                                    <Input
+                                        placeholder="Search history..."
+                                        className="pl-9 bg-white dark:bg-slate-900"
+                                        value={histSearch}
+                                        onChange={(e) => setHistSearch(e.target.value)}
+                                    />
+                                </div>
+                                <Sheet open={isHistorySheetOpen} onOpenChange={setIsHistorySheetOpen}>
+                                    <SheetTrigger asChild>
+                                        <Button onClick={resetHistoryForm} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                                            <Plus className="h-4 w-4" />
+                                            Add Entry
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent className="w-[400px] sm:w-[600px] overflow-y-auto">
+                                        <SheetHeader>
+                                            <SheetTitle>
+                                                {editingHistId ? "Edit History Entry" : "New History Entry"}
+                                            </SheetTitle>
+                                            <SheetDescription>
+                                                {editingHistId
+                                                    ? "Update history/KBYG details below."
+                                                    : "Add a new history/KBYG entry."}
+                                            </SheetDescription>
+                                        </SheetHeader>
+                                        <div className="py-6">
+                                            <form id="hist-form" onSubmit={handleSaveHistory} className="space-y-4">
+                                                <div className="space-y-4">
+                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Context</div>
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                                            Destination (Required)
+                                                        </Label>
+                                                        <Select
+                                                            value={histDestinationId}
+                                                            onValueChange={setHistDestinationId}
+                                                        >
+                                                            <SelectTrigger className="bg-slate-50 border-slate-200 dark:bg-slate-950 dark:border-slate-800">
+                                                                <SelectValue placeholder="Select a destination" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {destinations.map((d) => (
+                                                                    <SelectItem key={d.id} value={d.id}>
+                                                                        {d.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
                                                 </div>
-                                            )}
+
+                                                <div className="space-y-4">
+                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Content</div>
+                                                    <FormTextarea
+                                                        label="Content (Main)"
+                                                        value={histContent}
+                                                        onChange={setHistContent}
+                                                        placeholder="Main history content..."
+                                                        rows={6}
+                                                    />
+                                                    <FormTextarea
+                                                        label="About"
+                                                        value={histAbout}
+                                                        onChange={setHistAbout}
+                                                        placeholder="About this destination..."
+                                                        rows={3}
+                                                    />
+                                                    <FormTextarea
+                                                        label="History"
+                                                        value={histHistory}
+                                                        onChange={setHistHistory}
+                                                        placeholder="Historical background..."
+                                                        rows={3}
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Details</div>
+                                                    <FormTextarea
+                                                        label="Getting Around"
+                                                        value={histGettingAround}
+                                                        onChange={setHistGettingAround}
+                                                        placeholder="Transportation info..."
+                                                        rows={3}
+                                                    />
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <FormInput
+                                                            label="Currency"
+                                                            value={histCurrency}
+                                                            onChange={setHistCurrency}
+                                                            placeholder="EUR"
+                                                        />
+                                                        <FormInput
+                                                            label="Plugs"
+                                                            value={histPlugs}
+                                                            onChange={setHistPlugs}
+                                                            placeholder="Type C, E"
+                                                        />
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <FormInput
+                                                            label="Languages"
+                                                            value={histLanguages}
+                                                            onChange={setHistLanguages}
+                                                            placeholder="French, English"
+                                                        />
+                                                        <FormInput
+                                                            label="Primary City"
+                                                            value={histPrimaryCity}
+                                                            onChange={setHistPrimaryCity}
+                                                            placeholder="Paris"
+                                                        />
+                                                    </div>
+                                                    <FormInput
+                                                        label="eSIM Info"
+                                                        value={histEsim}
+                                                        onChange={setHistEsim}
+                                                        placeholder="eSIM details..."
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Media</div>
+                                                    <FormInput
+                                                        label="Backdrop Image URL"
+                                                        value={histBackdropUrl}
+                                                        onChange={setHistBackdropUrl}
+                                                        placeholder="https://..."
+                                                    />
+                                                    <FormInput
+                                                        label="Backdrop Attribution"
+                                                        value={histBackdropAttribution}
+                                                        onChange={setHistBackdropAttribution}
+                                                        placeholder="Photo by..."
+                                                    />
+                                                </div>
+
+
+                                            </form>
                                         </div>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
-            </div>
-        </div>
+                                        <SheetFooter>
+                                            <Button type="submit" form="hist-form" disabled={histSaving}>
+                                                {histSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                {editingHistId ? "Save Changes" : "Create Entry"}
+                                            </Button>
+                                        </SheetFooter>
+                                    </SheetContent>
+                                </Sheet>
+                            </div>
+
+                            <Card className="border-0 shadow-none">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Destination</TableHead>
+                                            <TableHead>Content Preview</TableHead>
+                                            <TableHead>Created At</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredHistory.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                                                    No history entries found.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            filteredHistory.map((h) => (
+                                                <TableRow key={h.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                                                    <TableCell className="font-medium">
+                                                        <div className="flex items-center gap-3">
+                                                            <TableImage url={h.backdrop_image_url} alt="Backdrop" icon={History} />
+                                                            <div className="flex flex-col">
+                                                                <div className="flex items-center gap-2">
+                                                                    {destinations.find(d => d.id === h.destination_id)?.current_history_id === h.id && (
+                                                                        <Badge variant="secondary" className="text-[10px] h-5 px-1 bg-green-100 text-green-700">Current</Badge>
+                                                                    )}
+                                                                    <span>{destinations.find(d => d.id === h.destination_id)?.name || "Unknown"}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="max-w-md truncate">
+                                                        {h.content}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {h.created_at ? new Date(h.created_at).toLocaleDateString() : "-"}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                    <span className="sr-only">Open menu</span>
+                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end">
+                                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                                <DropdownMenuItem onClick={() => handleSetCurrentHistory(h)}>
+                                                                    <Flag className="mr-2 h-4 w-4" />
+                                                                    Set as Current
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem onClick={() => startEditHistory(h)}>
+                                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                                    Edit
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem
+                                                                    onClick={() => handleDeleteHistory(h.id)}
+                                                                    className="text-red-600 focus:text-red-600"
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </Card>
+                        </div >
+                    )
+                    }
+                </div >
+            </main >
+        </div >
     );
 }
 
 /* ---------- Sub-components for clean code ---------- */
 
-function TabPill({
-    value,
+function TableImage({
+    url,
+    alt,
     icon: Icon,
-    label,
 }: {
-    value: string;
+    url?: string | null;
+    alt: string;
     icon: React.ElementType;
-    label: string;
 }) {
+    if (url) {
+        return (
+            <div className="h-9 w-9 rounded-md bg-slate-100 overflow-hidden relative border border-slate-200 dark:border-slate-700 dark:bg-slate-800 flex-shrink-0">
+                <Image
+                    src={url}
+                    alt={alt}
+                    fill
+                    className="object-cover"
+                />
+            </div>
+        );
+    }
     return (
-        <TabsTrigger
-            value={value}
-            className="rounded-full px-4 py-2 text-sm font-medium gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-900 dark:data-[state=active]:text-blue-400"
-        >
-            <Icon className="h-4 w-4" />
-            {label}
-        </TabsTrigger>
+        <div className="h-9 w-9 rounded-md bg-slate-100 flex items-center justify-center border border-slate-200 dark:border-slate-700 dark:bg-slate-800 flex-shrink-0">
+            <Icon className="h-4 w-4 text-slate-400" />
+        </div>
     );
 }
 

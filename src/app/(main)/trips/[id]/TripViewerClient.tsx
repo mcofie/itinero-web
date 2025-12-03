@@ -44,12 +44,15 @@ import {
     X,
     Loader2,
     ExternalLink,
+    Sparkles,
 } from "lucide-react";
 import { AddItemUnderDay } from "@/app/(main)/trips/AddItemUnderDay";
 import { DestinationMeta, TripConfig } from "@/app/(main)/trips/TripActionsClient";
 import { formatDateRange } from "@/lib/trip-dates";
 import { WeatherWidget } from "@/components/trips/WeatherWidget";
 import { ExchangeRateCard } from "@/components/trips/ExchangeRateCard";
+import { StoryView } from "./StoryView";
+import { ImmersiveMap } from "./ImmersiveMap";
 
 /* ---------- Map (allow nullable day) ---------- */
 type LeafletMapProps = {
@@ -262,7 +265,7 @@ export default function TripViewerClient({
                 <Tabs defaultValue="overview" className="w-full">
                     <div className="sticky top-4 z-30 flex justify-center mb-8 pointer-events-none">
                         <TabsList
-                            className="pointer-events-auto inline-flex h-14 items-center justify-center rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 p-1.5 shadow-sm">
+                            className="pointer-events-auto inline-flex h-14 items-center justify-center rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-700/60 p-1.5 shadow-sm overflow-x-auto max-w-full">
                             <TabsTrigger
                                 value="overview"
                                 className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
@@ -270,10 +273,22 @@ export default function TripViewerClient({
                                 Overview
                             </TabsTrigger>
                             <TabsTrigger
+                                value="story"
+                                className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
+                            >
+                                Story
+                            </TabsTrigger>
+                            <TabsTrigger
                                 value="days"
                                 className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
                             >
                                 Itinerary
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="map"
+                                className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
+                            >
+                                Map
                             </TabsTrigger>
                             <TabsTrigger
                                 value="calendar"
@@ -303,33 +318,12 @@ export default function TripViewerClient({
                     >
                         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
                             <div className="space-y-8">
-                                {/* Hero Destination Card */}
-                                <div
-                                    className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white via-slate-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-900/50 dark:to-slate-950 p-8 shadow-sm">
-                                    <div className="mb-8">
-                                        <div className="mb-3 flex items-center gap-2">
-                                            <div className="h-px w-8 bg-blue-600 dark:bg-blue-500" />
-                                            <span
-                                                className="text-xs font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                                                Destination
-                                            </span>
-                                        </div>
-                                        <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                                            {primaryDestination?.name ??
-                                                destinationMeta?.city ??
-                                                "Destination"}
-                                        </h2>
-                                        {primaryDestination &&
-                                            primaryDestination.lat != null &&
-                                            primaryDestination.lng != null && (
-                                                <div
-                                                    className="mt-3 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-                                                    <MapPin className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-                                                    {primaryDestination.lat.toFixed(4)},{" "}
-                                                    {primaryDestination.lng.toFixed(4)}
-                                                </div>
-                                            )}
-                                    </div>
+                                {/* Trip Highlights */}
+                                <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm">
+                                    <h2 className="mb-6 text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                        <Sparkles className="h-5 w-5 text-amber-500" />
+                                        Trip Highlights
+                                    </h2>
 
                                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                                         <MetricTile
@@ -363,9 +357,6 @@ export default function TripViewerClient({
                                             value={`${Math.round(totals.travelMin / 60)}h`}
                                             icon={MoveRight}
                                         />
-                                        <div className="col-span-2 sm:col-span-1">
-                                            <WeatherWidget meta={destinationMeta} className="h-full" />
-                                        </div>
                                     </div>
                                 </div>
 
@@ -478,6 +469,18 @@ export default function TripViewerClient({
                         </div>
                     </TabsContent>
 
+                    {/* ---------- STORY TAB ---------- */}
+                    <TabsContent
+                        value="story"
+                        className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+                    >
+                        <StoryView
+                            days={data.days}
+                            placesById={placesById}
+                            currency={tripCurrency}
+                        />
+                    </TabsContent>
+
                     {/* ---------- ITINERARY TAB ---------- */}
                     <TabsContent
                         value="days"
@@ -540,6 +543,18 @@ export default function TripViewerClient({
                                 />
                             </div>
                         </div>
+                    </TabsContent>
+
+                    {/* ---------- MAP TAB ---------- */}
+                    <TabsContent
+                        value="map"
+                        className="mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
+                    >
+                        <ImmersiveMap
+                            days={data.days}
+                            placesById={placesById}
+                            theme={theme}
+                        />
                     </TabsContent>
 
                     {/* ---------- CALENDAR TAB ---------- */}

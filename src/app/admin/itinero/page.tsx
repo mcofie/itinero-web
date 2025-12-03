@@ -1,7 +1,7 @@
 // app/admin/itinero/page.tsx
 import * as React from "react";
-import {redirect} from "next/navigation";
-import {createClientServerRSC} from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { createClientServerRSC } from "@/lib/supabase/server";
 import ItineroDashboardClient, {
     DestinationOption,
     PlaceOption,
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function ItineroAdminPage() {
     const sb = await createClientServerRSC();
     const {
-        data: {user},
+        data: { user },
     } = await sb.auth.getUser();
 
     if (!user) {
@@ -20,18 +20,22 @@ export default async function ItineroAdminPage() {
     }
 
     // Fetch minimal lists for selects
-    const {data: destRows} = await sb
+    const { data: destRows } = await sb
         .schema("itinero")
         .from("destinations")
-        .select("id,name")
-        .order("name", {ascending: true})
+        .select(
+            "id,name,country_code,lat,lng,cover_url,image_attribution,current_history_id,timezone,category,popularity"
+        )
+        .order("name", { ascending: true })
         .returns<DestinationOption[]>();
 
-    const {data: placeRows} = await sb
+    const { data: placeRows } = await sb
         .schema("itinero")
         .from("places")
-        .select("id,name,category")
-        .order("name", {ascending: true})
+        .select(
+            "id,name,category,lat,lng,tags,description,destination_id,popularity,cost_typical,cost_currency,kind,url,booking_url,is_partner"
+        )
+        .order("name", { ascending: true })
         .returns<PlaceOption[]>();
 
     return (

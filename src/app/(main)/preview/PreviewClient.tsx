@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,7 @@ import {
     Wallet,
     X,
     ExternalLink, SmartphoneNfc,
+    ArrowRight,
 } from "lucide-react";
 
 import {
@@ -272,6 +274,11 @@ export default function PreviewClient({
     const [destMetaFromDb, setDestMetaFromDb] =
         React.useState<DestinationMetaLike | null>(null);
 
+    // Scroll for parallax
+    const { scrollY } = useScroll();
+    const y1 = useTransform(scrollY, [0, 300], [0, 100]);
+    const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+
     // Load preview from localStorage
     React.useEffect(() => {
         if (typeof window === "undefined") return;
@@ -490,52 +497,56 @@ export default function PreviewClient({
     return (
         <>
             {/* HERO */}
-            <section className="relative bg-slate-50 pb-12 pt-8 dark:bg-slate-950">
-                <div className="mx-auto w-full max-w-5xl px-4 md:max-w-6xl">
-                    <div className="flex flex-col gap-8 md:flex-row md:items-center">
-                        {/* Cover Image */}
-                        <div
-                            className="relative h-64 w-full overflow-hidden rounded-3xl shadow-lg md:h-80 md:w-1/2 lg:w-5/12">
-                            <Image
-                                src={coverUrl}
-                                alt={tripTitle}
-                                priority
-                                fill
-                                className="object-cover"
-                                sizes="(max-width: 768px) 100vw, 50vw"
-                            />
+            <section className="relative h-[50vh] min-h-[400px] w-full overflow-hidden">
+                <motion.div
+                    style={{ y: y1 }}
+                    className="absolute inset-0 h-[120%] w-full"
+                >
+                    <Image
+                        src={coverUrl}
+                        alt={tripTitle}
+                        priority
+                        fill
+                        className="object-cover"
+                        sizes="100vw"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+                </motion.div>
+
+                <div className="absolute inset-0 flex items-end pb-12 md:pb-16">
+                    <div className="mx-auto w-full max-w-5xl px-4 md:max-w-6xl">
+                        <motion.div
+                            style={{ opacity }}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="max-w-3xl space-y-4"
+                        >
                             <div
-                                className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-slate-900 backdrop-blur-md shadow-sm dark:bg-slate-900/90 dark:text-white">
-                                <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white backdrop-blur-md ring-1 ring-white/20">
+                                <Sparkles className="h-3.5 w-3.5 text-blue-400" />
                                 Preview Mode
                             </div>
-                        </div>
 
-                        {/* Trip Details */}
-                        <div className="flex-1 space-y-4">
-                            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl lg:text-5xl dark:text-white">
+                            <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl lg:text-6xl drop-shadow-lg">
                                 {tripTitle}
                             </h1>
 
-                            <div
-                                className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-600 dark:text-slate-300">
-                                <span
-                                    className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-                                    <CalendarDays className="h-4 w-4 text-slate-400" />
+                            <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-200">
+                                <span className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 backdrop-blur-md ring-1 ring-white/10">
+                                    <CalendarDays className="h-4 w-4 text-slate-300" />
                                     {formatDateRange(preview.trip_summary)}
                                 </span>
 
                                 {typeof estTotal === "number" && (
-                                    <span
-                                        className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-                                        <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                    <span className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 backdrop-blur-md ring-1 ring-white/10">
+                                        <DollarSign className="h-4 w-4 text-emerald-400" />
                                         Est. {currency} {estTotal}
                                     </span>
                                 )}
 
                                 {modeIcon && (
-                                    <span
-                                        className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 border border-slate-200 capitalize dark:bg-slate-900 dark:border-slate-800">
+                                    <span className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 backdrop-blur-md ring-1 ring-white/10 capitalize">
                                         {modeIcon}
                                         {inputs?.mode}
                                     </span>
@@ -544,10 +555,10 @@ export default function PreviewClient({
 
                             {!!inputs?.interests?.length && (
                                 <div className="pt-2">
-                                    <InterestChips interests={inputs!.interests!} />
+                                    <InterestChips interests={inputs!.interests!} dark />
                                 </div>
                             )}
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
             </section>
@@ -610,7 +621,7 @@ export default function PreviewClient({
                     </div>
 
                     {/* RIGHT: Sidebar */}
-                    <div className="space-y-6">
+                    <div className="space-y-6 lg:sticky lg:top-8 h-fit">
                         {placesWithCoords.length > 0 && (
                             <div
                                 className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
@@ -620,7 +631,7 @@ export default function PreviewClient({
                                         <MapIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Map View
                                     </h3>
                                 </div>
-                                <div className="h-64 w-full bg-slate-100 dark:bg-slate-800">
+                                <div className="h-64 w-full bg-slate-100 dark:bg-slate-800 relative group">
                                     <MapSection
                                         places={placesWithCoords.map((p) => ({
                                             id: p.id,
@@ -629,20 +640,26 @@ export default function PreviewClient({
                                             lng: p.lng!,
                                         }))}
                                     />
+                                    {/* Overlay to indicate interactivity */}
+                                    <div className="absolute inset-0 bg-slate-900/0 pointer-events-none group-hover:bg-slate-900/5 transition-colors" />
                                 </div>
                             </div>
                         )}
 
                         {hasDestMeta(destinationMeta) && (
                             <div
-                                className="rounded-3xl border border-slate-200 bg-white shadow-sm p-5 space-y-4 dark:bg-slate-900 dark:border-slate-800">
-                                <h3 className="font-bold text-slate-900 text-sm dark:text-white">Local Guide</h3>
+                                className="rounded-3xl border border-slate-200 bg-white shadow-sm p-6 space-y-6 dark:bg-slate-900 dark:border-slate-800">
+                                <div className="flex items-center gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
+                                    <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                    <h3 className="font-bold text-slate-900 text-sm dark:text-white">Local Guide</h3>
+                                </div>
+
                                 {destinationMeta?.description && (
-                                    <div className="text-xs text-slate-600 leading-relaxed dark:text-slate-400">
-                                        {destinationMeta.description.slice(0, 150)}...
+                                    <div className="text-sm text-slate-600 leading-relaxed dark:text-slate-400">
+                                        {destinationMeta.description.slice(0, 200)}...
                                     </div>
                                 )}
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     <IconFact label="City" value={destinationMeta?.city} icon={MapPin} />
                                     <IconFact label="Currency" value={destinationMeta?.currency_code}
                                         icon={DollarSign} />
@@ -663,7 +680,7 @@ export default function PreviewClient({
                                     <IconFact
                                         label="eSIM"
                                         value={destinationMeta?.esim_provider || "Find eSIM"}
-                                        icon={SmartphoneNfc} // Make sure SmartphoneNfc is imported, or use Phone
+                                        icon={SmartphoneNfc}
                                         href="https://www.airalo.com/"
                                     />
                                 </div>
@@ -781,7 +798,14 @@ function ItineraryDay({
     const [weekday, rest] = formatted.split(",");
 
     return (
-        <div className="space-y-8">
+        <motion.div
+            key={dayIdx}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-8"
+        >
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="text-3xl font-bold text-slate-900 dark:text-white">{weekday}</div>
                 <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700"></div>
@@ -794,17 +818,23 @@ function ItineraryDay({
                     const badgeClasses = whenBadgeClasses(b.when);
 
                     return (
-                        <div key={i} className="relative group">
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.1 }}
+                            className="relative group"
+                        >
                             {/* Timeline Dot */}
                             <div
                                 className={cn(
-                                    "absolute -left-[39px] top-0 h-5 w-5 rounded-full border-4 border-white shadow-sm z-10 dark:border-slate-900",
+                                    "absolute -left-[39px] top-0 h-5 w-5 rounded-full border-4 border-white shadow-sm z-10 dark:border-slate-900 transition-transform group-hover:scale-110",
                                     badgeClasses.dot
                                 )}
                             />
 
                             <div
-                                className="rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-md transition-shadow dark:bg-slate-900 dark:border-slate-800">
+                                className="rounded-2xl border border-slate-200 bg-white p-5 hover:shadow-lg hover:border-blue-200 transition-all duration-300 dark:bg-slate-900 dark:border-slate-800 dark:hover:border-blue-800">
                                 <div className="flex items-start justify-between gap-4 mb-3">
                                     <div>
                                         <span
@@ -815,14 +845,17 @@ function ItineraryDay({
                                         >
                                             {b.when}
                                         </span>
-                                        <h4 className="text-base font-bold text-slate-900 dark:text-white">
+                                        <h4 className="text-base font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                             {b.title}
                                         </h4>
                                     </div>
                                     <div className="text-right text-xs font-medium text-slate-500 dark:text-slate-400">
-                                        <div>{b.duration_min} min</div>
+                                        <div className="flex items-center gap-1 justify-end">
+                                            <Clock3 className="h-3 w-3" />
+                                            {b.duration_min} min
+                                        </div>
                                         {b.est_cost > 0 && (
-                                            <div className="text-emerald-600 font-bold mt-0.5 dark:text-emerald-400">
+                                            <div className="text-emerald-600 font-bold mt-1 dark:text-emerald-400">
                                                 {currency} {b.est_cost}
                                             </div>
                                         )}
@@ -830,26 +863,36 @@ function ItineraryDay({
                                 </div>
 
                                 {b.notes && (
-                                    <p className="text-sm text-slate-600 leading-relaxed mb-3 dark:text-slate-400">
+                                    <p className="text-sm text-slate-600 leading-relaxed mb-4 dark:text-slate-400">
                                         {b.notes}
                                     </p>
                                 )}
 
                                 {place && (
                                     <div
-                                        className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
-                                        <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                                        <span className="font-medium text-slate-700 dark:text-slate-300">
-                                            {place.name}
-                                        </span>
+                                        className="flex items-center gap-3 text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 group/place hover:bg-blue-50 hover:border-blue-100 transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-blue-900/20 dark:hover:border-blue-800">
+                                        <div className="h-8 w-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm dark:bg-slate-900 dark:border-slate-700">
+                                            <MapPin className="h-4 w-4 text-blue-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="font-bold text-slate-900 dark:text-white group-hover/place:text-blue-700 dark:group-hover/place:text-blue-400">
+                                                {place.name}
+                                            </div>
+                                            {place.category && (
+                                                <div className="text-[10px] uppercase tracking-wider font-medium text-slate-400 mt-0.5">
+                                                    {place.category}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <ArrowRight className="h-4 w-4 text-slate-300 group-hover/place:text-blue-400 transition-colors" />
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </motion.div>
                     );
                 })}
             </div>
-        </div>
+        </motion.div>
     );
 }
 
@@ -898,13 +941,18 @@ function IconFact({
     return Content;
 }
 
-function InterestChips({ interests }: { interests: string[] }) {
+function InterestChips({ interests, dark }: { interests: string[]; dark?: boolean }) {
     return (
         <div className="flex flex-wrap gap-2">
             {interests.map((raw) => (
                 <span
                     key={raw}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm capitalize dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300"
+                    className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium shadow-sm capitalize backdrop-blur-md transition-colors",
+                        dark
+                            ? "bg-white/10 border border-white/20 text-white"
+                            : "bg-white border border-slate-200 text-slate-700 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300"
+                    )}
                 >
                     <span>{emojiFor(raw)}</span>
                     {raw}
@@ -944,130 +992,146 @@ function FullScreenPaywallOverlay({
     };
 
     return (
-        <div
-            data-theme={forceTheme}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-500"
-        >
-            <div className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] bg-white shadow-2xl ring-1 ring-white/10 dark:bg-slate-950 dark:ring-slate-800">
-                {/* Close Button */}
-                <button
-                    onClick={onClose}
-                    className="absolute right-5 top-5 z-20 rounded-full bg-black/10 p-2 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/20 hover:text-white dark:bg-white/10 dark:hover:bg-white/20"
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                data-theme={forceTheme}
+                className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4"
+            >
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                    className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] bg-white shadow-2xl ring-1 ring-white/10 dark:bg-slate-950 dark:ring-slate-800"
                 >
-                    <X className="h-5 w-5" />
-                </button>
+                    {/* Close Button */}
+                    <button
+                        onClick={onClose}
+                        className="absolute right-5 top-5 z-20 rounded-full bg-black/10 p-2 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/20 hover:text-white dark:bg-white/10 dark:hover:bg-white/20"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
 
-                {/* Premium Header */}
-                <div className="relative flex h-64 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-violet-600 via-blue-600 to-indigo-600 text-center text-white">
-                    <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20 mix-blend-overlay" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                    {/* Premium Header */}
+                    <div className="relative flex h-64 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-violet-600 via-blue-600 to-indigo-600 text-center text-white">
+                        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20 mix-blend-overlay" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
 
-                    <div className="relative z-10 flex flex-col items-center gap-4 p-6">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 shadow-inner backdrop-blur-md ring-1 ring-white/30">
-                            <Sparkles className="h-8 w-8 text-white" />
-                        </div>
-                        <div className="space-y-1">
-                            <h2 className="text-3xl font-black tracking-tight md:text-4xl">
-                                Unlock Your Full Trip
-                            </h2>
-                            <p className="text-blue-100 font-medium text-lg">
-                                Get the complete itinerary, maps, and offline access.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-8 md:p-10">
-                    {/* Perks Grid */}
-                    <div className="mb-10 grid gap-x-8 gap-y-6 sm:grid-cols-2">
-                        <PerkItem
-                            icon={MapIcon}
-                            title="Interactive Maps"
-                            desc="Navigate easily with pinned locations."
-                        />
-                        <PerkItem
-                            icon={Download}
-                            title="PDF Export"
-                            desc="Save offline for when signal drops."
-                        />
-                        <PerkItem
-                            icon={CalendarDays}
-                            title="Calendar Sync"
-                            desc="Add to Google/Apple Calendar."
-                        />
-                        <PerkItem
-                            icon={PencilLine}
-                            title="Full Customization"
-                            desc="Edit every detail of your plan."
-                        />
+                        <motion.div
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="relative z-10 flex flex-col items-center gap-4 p-6"
+                        >
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 shadow-inner backdrop-blur-md ring-1 ring-white/30">
+                                <Sparkles className="h-8 w-8 text-white" />
+                            </div>
+                            <div className="space-y-1">
+                                <h2 className="text-3xl font-black tracking-tight md:text-4xl">
+                                    Unlock Your Full Trip
+                                </h2>
+                                <p className="text-blue-100 font-medium text-lg">
+                                    Get the complete itinerary, maps, and offline access.
+                                </p>
+                            </div>
+                        </motion.div>
                     </div>
 
-                    {/* Cost & Actions */}
-                    <div className="flex flex-col items-center gap-6">
-                        {/* Points Status */}
-                        <div className="flex items-center gap-3 rounded-full bg-slate-50 px-5 py-2.5 text-sm font-medium text-slate-600 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-800">
-                            <span className="flex items-center gap-1.5">
-                                <span className="text-slate-400">Cost:</span>
-                                <span className="font-bold text-slate-900 dark:text-white">{required} pts</span>
-                            </span>
-                            <span className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
-                            <span className="flex items-center gap-1.5">
-                                <span className="text-slate-400">Balance:</span>
-                                <span
+                    {/* Content */}
+                    <div className="p-8 md:p-10">
+                        {/* Perks Grid */}
+                        <div className="mb-10 grid gap-x-8 gap-y-6 sm:grid-cols-2">
+                            <PerkItem
+                                icon={MapIcon}
+                                title="Interactive Maps"
+                                desc="Navigate easily with pinned locations."
+                            />
+                            <PerkItem
+                                icon={Download}
+                                title="PDF Export"
+                                desc="Save offline for when signal drops."
+                            />
+                            <PerkItem
+                                icon={CalendarDays}
+                                title="Calendar Sync"
+                                desc="Add to Google/Apple Calendar."
+                            />
+                            <PerkItem
+                                icon={PencilLine}
+                                title="Full Customization"
+                                desc="Edit every detail of your plan."
+                            />
+                        </div>
+
+                        {/* Cost & Actions */}
+                        <div className="flex flex-col items-center gap-6">
+                            {/* Points Status */}
+                            <div className="flex items-center gap-3 rounded-full bg-slate-50 px-5 py-2.5 text-sm font-medium text-slate-600 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-800">
+                                <span className="flex items-center gap-1.5">
+                                    <span className="text-slate-400">Cost:</span>
+                                    <span className="font-bold text-slate-900 dark:text-white">{required} pts</span>
+                                </span>
+                                <span className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
+                                <span className="flex items-center gap-1.5">
+                                    <span className="text-slate-400">Balance:</span>
+                                    <span
+                                        className={cn(
+                                            "font-bold",
+                                            hasEnough
+                                                ? "text-emerald-600 dark:text-emerald-400"
+                                                : "text-rose-500 dark:text-rose-400"
+                                        )}
+                                    >
+                                        {points ?? "..."} pts
+                                    </span>
+                                </span>
+                            </div>
+
+                            {/* Buttons */}
+                            <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
+                                <Button
+                                    size="lg"
+                                    onClick={handlePrimaryAction}
+                                    disabled={saving}
                                     className={cn(
-                                        "font-bold",
+                                        "relative h-14 flex-1 rounded-2xl text-base font-bold shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]",
                                         hasEnough
-                                            ? "text-emerald-600 dark:text-emerald-400"
-                                            : "text-rose-500 dark:text-rose-400"
+                                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 hover:shadow-blue-500/25"
+                                            : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
                                     )}
                                 >
-                                    {points ?? "..."} pts
-                                </span>
-                            </span>
-                        </div>
+                                    {saving ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                            Processing...
+                                        </>
+                                    ) : hasEnough ? (
+                                        <span className="flex items-center gap-2">
+                                            Unlock Itinerary <Sparkles className="h-4 w-4" />
+                                        </span>
+                                    ) : (
+                                        "Top Up Points"
+                                    )}
+                                </Button>
 
-                        {/* Buttons */}
-                        <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-                            <Button
-                                size="lg"
-                                onClick={handlePrimaryAction}
-                                disabled={saving}
-                                className={cn(
-                                    "relative h-14 flex-1 rounded-2xl text-base font-bold shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]",
-                                    hasEnough
-                                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 hover:shadow-blue-500/25"
-                                        : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
-                                )}
-                            >
-                                {saving ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                        Processing...
-                                    </>
-                                ) : hasEnough ? (
-                                    <span className="flex items-center gap-2">
-                                        Unlock Itinerary <Sparkles className="h-4 w-4" />
-                                    </span>
-                                ) : (
-                                    "Top Up Points"
-                                )}
-                            </Button>
-
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                onClick={onSave}
-                                disabled={saving}
-                                className="h-14 flex-1 rounded-2xl border-2 border-slate-200 bg-transparent text-base font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
-                            >
-                                Save Draft
-                            </Button>
+                                <Button
+                                    size="lg"
+                                    variant="outline"
+                                    onClick={onSave}
+                                    disabled={saving}
+                                    className="h-14 flex-1 rounded-2xl border-2 border-slate-200 bg-transparent text-base font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
+                                >
+                                    Save Draft
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
     );
 }
 
