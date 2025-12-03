@@ -1,11 +1,12 @@
 {
   "/(main)/preview/page": "app/(main)/preview/page.js",
+  "/(main)/pricing/page": "app/(main)/pricing/page.js",
+  "/(main)/rewards/page": "app/(main)/rewards/page.js",
+  "/(main)/trip-maker/page": "app/(main)/trip-maker/page.js",
   "/(main)/trips/[id]/page": "app/(main)/trips/[id]/page.js",
   "/(main)/trips/page": "app/(main)/trips/page.js",
   "/_not-found/page": "app/_not-found/page.js",
   "/admin/itinero/page": "app/admin/itinero/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/login/page": "app/login/page.js",
-  "/page": "app/page.js",
-  "/trips/[id]/print/page": "app/trips/[id]/print/page.js"
+  "/page": "app/page.js"
 }

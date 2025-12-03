@@ -3,14 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
-import { motion, AnimatePresence, useInView, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TripWizard from "@/components/landing/TripWizard";
 import {
-    Users2, FileText, Wallet, CalendarPlus, Plane, Sparkles,
-    Compass, MapPin, Ticket, Mail, ArrowRight, CheckCircle2,
-    Star, Twitter, Instagram, Linkedin, Github, Facebook, Menu, X
+    Users2, FileText, Wallet, CalendarPlus, Plane,
+    Ticket, Mail, ArrowRight, Twitter, Instagram, Github
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
