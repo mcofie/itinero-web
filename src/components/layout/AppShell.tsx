@@ -42,6 +42,7 @@ import {
     Bell,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { TopupDialogFxAware } from "@/components/layout/TopupDialogFxAware";
 import { FxSnapshot } from "@/lib/fx/types";
 import { convertUsingSnapshot, getLatestFxSnapshot } from "@/lib/fx/fx";
@@ -672,7 +673,8 @@ export default function AppShell({ children, userEmail }: Props) {
                         <div className="text-sm text-slate-500 dark:text-slate-400">
                             © {year} Itinero Inc. All rights reserved.
                         </div>
-                        <div className="flex gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
+                        <div className="flex gap-6 text-sm font-medium text-slate-600 dark:text-slate-400 items-center">
+                            <LocaleSwitcher />
                             <Link
                                 href="/terms"
                                 className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"

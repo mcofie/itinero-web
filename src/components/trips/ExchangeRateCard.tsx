@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { DestinationMeta } from "@/app/(main)/trips/TripActionsClient";
+import { DestinationMeta } from "@/app/[locale]/(main)/trips/TripActionsClient";
 import { Coins, ArrowRightLeft, Loader2, RefreshCw } from "lucide-react";
 import { getLatestFxSnapshot, convertUsingSnapshot } from "@/lib/fx/fx";
 import { FxSnapshot } from "@/lib/fx/types";

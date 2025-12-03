@@ -1,17 +1,21 @@
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
         remotePatterns: [
             {
-                protocol: 'https',
+                protocol: 'https' as const,
                 hostname: 'images.unsplash.com',
             },
             {
-                protocol: 'https',
+                protocol: 'https' as const,
                 hostname: 'images.pexels.com',
             },
             {
-                protocol: 'https',
+                protocol: 'https' as const,
                 hostname: 'i.pravatar.cc',
             },
         ],
@@ -32,4 +36,4 @@ const nextConfig = {
     skipTrailingSlashRedirect: true,
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

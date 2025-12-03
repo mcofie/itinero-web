@@ -1,0 +1,12 @@
+{
+    "HomePage": {
+        "title": "Welcome to Itinero",
+        "subtitle": "Plan your next adventure"
+    },
+    "TripWizard": {
+        "step1": "Where to?",
+        "step2": "When?",
+        "step3": "Who?",
+        "step4": "Budget?"
+    }
+}

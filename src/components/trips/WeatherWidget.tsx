@@ -15,7 +15,7 @@ import {
     Droplets,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DestinationMeta } from "@/app/(main)/trips/TripActionsClient";
+import { DestinationMeta } from "@/app/[locale]/(main)/trips/TripActionsClient";
 
 type Props = {
     meta: DestinationMeta | null;
