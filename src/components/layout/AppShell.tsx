@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +39,7 @@ import {
     Plane,
     CreditCard,
     Heart,
+    Bell,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TopupDialogFxAware } from "@/components/layout/TopupDialogFxAware";
@@ -400,6 +402,12 @@ export default function AppShell({ children, userEmail }: Props) {
 
     const year = new Date().getFullYear();
 
+
+
+    // ... (existing imports)
+
+    // ... (inside AppShell component, before return)
+
     return (
         <TooltipProvider delayDuration={150}>
             <div
@@ -556,7 +564,32 @@ export default function AppShell({ children, userEmail }: Props) {
                                 <TooltipContent>Top up your balance</TooltipContent>
                             </Tooltip>
 
-                            {/* 3. AVATAR MENU */}
+                            {/* 3. NOTIFICATIONS */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="relative h-9 w-9 rounded-full text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                                    >
+                                        <Bell className="h-5 w-5" />
+                                        <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-950" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-80 p-0 rounded-xl border-slate-100 shadow-xl dark:bg-slate-900 dark:border-slate-800">
+                                    <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                                        <h3 className="font-semibold text-slate-900 dark:text-white">Notifications</h3>
+                                    </div>
+                                    <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                                        <div className="mx-auto h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center mb-3 dark:bg-slate-800">
+                                            <Bell className="h-6 w-6 text-slate-400" />
+                                        </div>
+                                        <p className="text-sm">No new notifications</p>
+                                    </div>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            {/* 4. AVATAR MENU */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
@@ -686,13 +719,20 @@ function NavItem({
         <Link
             href={href}
             className={cn(
-                "relative px-4 py-2 text-sm font-medium transition-all rounded-full",
+                "relative px-4 py-2 text-sm font-medium transition-colors rounded-full",
                 active
-                    ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white"
+                    ? "text-slate-900 dark:text-white"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
             )}
         >
-            {children}
+            {active && (
+                <motion.span
+                    layoutId="navbar-active"
+                    className="absolute inset-0 rounded-full bg-slate-100 dark:bg-slate-800"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+            )}
+            <span className="relative z-10">{children}</span>
         </Link>
     );
 }

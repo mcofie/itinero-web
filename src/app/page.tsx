@@ -149,14 +149,10 @@ export default function LandingPage() {
                             className="hidden sm:inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
                             Pricing
                         </Link>
-                        <Link href="/login"
-                            className="h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 hidden sm:inline-flex dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
-                            Log in
-                        </Link>
-                        <Link href="/signup">
+                        <Link href="/login">
                             <Button
                                 className="rounded-full bg-blue-600 px-6 font-semibold text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 dark:bg-blue-500 dark:hover:bg-blue-600">
-                                Sign up
+                                Get Started
                             </Button>
                         </Link>
                         <div className="ml-2">

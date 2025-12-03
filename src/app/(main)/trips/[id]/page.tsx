@@ -268,7 +268,7 @@ function coercePayload(p: unknown): DestinationHistoryPayload {
         else if (isString(languagesRaw)) kb.languages = languagesRaw;
 
         const weatherRaw = kbygRaw["weather"];
-        if (isUnknownRecord(weatherRaw) || Array.isArray(weatherRaw))
+        if (isUnknownRecord(weatherRaw) || Array.isArray(weatherRaw) || isString(weatherRaw))
             kb.weather = weatherRaw as JSONValue;
 
         const gettingAround = kbygRaw["getting_around"];
@@ -325,8 +325,14 @@ function buildDestinationMetaFromHistoryRow(
                 ? k.languages
                 : undefined,
         weather_desc:
-            weatherObj && isString(weatherObj["summary"])
-                ? (weatherObj["summary"] as string)
+            isString(weatherObj)
+                ? weatherObj
+                : weatherObj && isString(weatherObj["summary"])
+                    ? (weatherObj["summary"] as string)
+                    : undefined,
+        weather_temp_c:
+            weatherObj && typeof weatherObj["temperature"] === "number"
+                ? (weatherObj["temperature"] as number)
                 : undefined,
         transport: isString(k.getting_around)
             ? k
@@ -380,6 +386,16 @@ export default async function TripIdPage({
         data: { user },
     } = await sb.auth.getUser();
     if (!user) redirect("/login");
+
+    // Fetch User Profile for Preferred Currency
+    const { data: profile } = await sb
+        .schema("itinero")
+        .from("profiles")
+        .select("preferred_currency")
+        .eq("id", user.id)
+        .single();
+
+    const userPreferredCurrency = profile?.preferred_currency ?? "USD";
 
     // ---- Trip ----
     const { data: trip, error: tripErr } = await sb
@@ -667,6 +683,7 @@ export default async function TripIdPage({
                         tripId={trip.id}
                         data={previewLike}
                         startDate={previewLike.trip_summary.start_date}
+                        userPreferredCurrency={userPreferredCurrency}
                     />
                 </div>
 

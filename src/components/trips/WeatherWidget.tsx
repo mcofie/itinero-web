@@ -23,10 +23,21 @@ type Props = {
 };
 
 export function WeatherWidget({ meta, className }: Props) {
-    if (!meta) return null;
+    const { weather_desc, weather_temp_c } = meta || {};
 
-    const { weather_desc, weather_temp_c } = meta;
-    if (!weather_desc && weather_temp_c == null) return null;
+    if (!weather_desc && weather_temp_c == null) {
+        return (
+            <div className={cn("relative overflow-hidden rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 shadow-sm", className)}>
+                <div className="flex items-center gap-4 opacity-50">
+                    <Cloud className="h-10 w-10 text-slate-400" />
+                    <div className="flex flex-col">
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Weather</span>
+                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Not available</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     // Simple heuristic to pick an icon based on description
     const desc = (weather_desc || "").toLowerCase();

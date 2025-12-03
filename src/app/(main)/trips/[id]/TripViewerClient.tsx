@@ -46,6 +46,7 @@ import { AddItemUnderDay } from "@/app/(main)/trips/AddItemUnderDay";
 import { DestinationMeta, TripConfig } from "@/app/(main)/trips/TripActionsClient";
 import { formatDateRange } from "@/lib/trip-dates";
 import { WeatherWidget } from "@/components/trips/WeatherWidget";
+import { ExchangeRateCard } from "@/components/trips/ExchangeRateCard";
 
 /* ---------- Map (allow nullable day) ---------- */
 type LeafletMapProps = {
@@ -81,10 +82,12 @@ export default function TripViewerClient({
     tripId,
     startDate,
     data,
+    userPreferredCurrency,
 }: {
     tripId: string;
     data: PreviewLike;
     startDate?: string;
+    userPreferredCurrency?: string;
 }) {
     const { resolvedTheme } = useTheme();
     const theme: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light";
@@ -412,16 +415,7 @@ export default function TripViewerClient({
                                         <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Local Guide
                                     </h3>
                                     <ul className="space-y-4">
-                                        <SidebarFact
-                                            label="Currency"
-                                            value={destinationMeta?.currency_code}
-                                            sub={
-                                                destinationMeta?.fx_rate &&
-                                                destinationMeta.fx_base &&
-                                                `1 ${destinationMeta.fx_base} ≈ ${destinationMeta.fx_rate} ${destinationMeta.currency_code}`
-                                            }
-                                            icon={DollarSign}
-                                        />
+
 
 
 
@@ -450,6 +444,15 @@ export default function TripViewerClient({
                                         />
                                     </ul>
                                 </div>
+
+                                {/* Weather Card */}
+                                <WeatherWidget meta={destinationMeta} />
+
+                                {/* Exchange Rate Card */}
+                                <ExchangeRateCard
+                                    meta={destinationMeta}
+                                    baseCurrency={userPreferredCurrency}
+                                />
                             </aside>
                         </div>
                     </TabsContent>
