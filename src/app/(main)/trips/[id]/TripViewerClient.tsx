@@ -53,6 +53,8 @@ type LeafletMapProps = {
     theme?: "light" | "dark";
     day: Day | null;
     placesById: Map<string, Place>;
+    selectedItemId?: string | null;
+    onMarkerClick?: (itemId: string) => void;
 };
 
 const LeafletMap = dynamic<LeafletMapProps>(
@@ -93,6 +95,16 @@ export default function TripViewerClient({
     const theme: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light";
 
     const [activeDayIdx, setActiveDayIdx] = useState(0);
+    const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+    // Scroll to item when selected from map
+    const scrollToItem = (itemId: string) => {
+        setSelectedItemId(itemId);
+        const el = document.getElementById(`block-${itemId}`);
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    };
 
     // Clamp the active day index whenever the days length changes
     React.useEffect(() => {
@@ -501,6 +513,8 @@ export default function TripViewerClient({
                                             tripInputs={inputs}
                                             placesById={placesById}
                                             tripCurrency={tripCurrency}
+                                            selectedItemId={selectedItemId}
+                                            onItemClick={setSelectedItemId}
                                         />
                                     </div>
                                 </ScrollArea>
@@ -512,6 +526,8 @@ export default function TripViewerClient({
                                     day={activeDay}
                                     placesById={placesById}
                                     theme={theme}
+                                    selectedItemId={selectedItemId}
+                                    onMarkerClick={scrollToItem}
                                 />
                             </div>
                         </div>
@@ -812,6 +828,8 @@ function EditableDay({
     tripConfig,
     tripInputs,
     tripCurrency,
+    selectedItemId,
+    onItemClick,
 }: {
     dayIdx: number;
     day: Day | null;
@@ -823,6 +841,8 @@ function EditableDay({
     tripConfig: TripConfig | null;
     tripInputs: TripInputs;
     tripCurrency: string;
+    selectedItemId?: string | null;
+    onItemClick?: (id: string) => void;
 }) {
     const blocks = React.useMemo(() => day?.blocks ?? [], [day?.blocks]);
 
@@ -962,6 +982,8 @@ function EditableDay({
                                         toast.error("Failed to save note");
                                     }
                                 }}
+                                isSelected={b.id === selectedItemId}
+                                onClick={() => b.id && onItemClick?.(b.id)}
                             />
                         </li>
                     );
@@ -995,7 +1017,9 @@ function BlockCard({
     coords,
     stats,
     actions,
-    onUpdateNote
+    onUpdateNote,
+    isSelected,
+    onClick
 }: {
     id: string;
     title: string;
@@ -1006,6 +1030,8 @@ function BlockCard({
     stats: Array<{ kind: StatKind; label: string; value: string | number }>;
     actions?: React.ReactNode;
     onUpdateNote: (id: string, note: string) => Promise<void>;
+    isSelected?: boolean;
+    onClick?: () => void;
 }) {
     const whenUi = whenBadgeClasses(when);
     const hasMeta = !!place || !!coords;
@@ -1013,7 +1039,13 @@ function BlockCard({
 
     return (
         <div
-            className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:hover:border-slate-700">
+            onClick={onClick}
+            className={cn(
+                "group relative overflow-hidden rounded-2xl border bg-white dark:bg-slate-900 p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md cursor-pointer",
+                isSelected
+                    ? "border-blue-500 ring-1 ring-blue-500 shadow-md"
+                    : "border-slate-200 dark:border-slate-800 hover:border-blue-200 dark:hover:border-slate-700"
+            )}>
             {/* Header */}
             <div className="mb-3 relative z-10 flex items-start justify-between gap-4">
                 <div className="space-y-1">

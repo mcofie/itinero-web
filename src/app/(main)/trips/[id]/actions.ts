@@ -83,5 +83,26 @@ export async function updateDayNote(tripId: string, dateKey: string, note: strin
         .eq("id", tripId);
 
     if (error) throw new Error(error.message);
+    if (error) throw new Error(error.message);
+    revalidatePath("/trips");
+}
+
+/**
+ * 4. Update Trip Dates
+ * Stored in: itinero.trips (columns: start_date, end_date)
+ */
+export async function updateTripDates(tripId: string, startDate: string, endDate: string) {
+    const supabase = await createClientServerRSC();
+
+    const { error } = await supabase
+        .schema("itinero")
+        .from("trips")
+        .update({
+            start_date: startDate,
+            end_date: endDate,
+        })
+        .eq("id", tripId);
+
+    if (error) throw new Error(error.message);
     revalidatePath("/trips");
 }

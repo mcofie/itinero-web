@@ -41,7 +41,7 @@ L.Icon.Default.mergeOptions({
 
 type Day = {
     date: string;
-    blocks: Array<{ when: "morning" | "afternoon" | "evening"; place_id: string | null }>;
+    blocks: Array<{ id?: string; when: "morning" | "afternoon" | "evening"; place_id: string | null }>;
     map_polyline?: string;
     lodging?: { name: string; lat: number; lng: number } | null;
 };
@@ -60,13 +60,17 @@ const DARK_TILES = {
 };
 
 export default function LeafletMap({
-                                       theme = "light",
-                                       day,
-                                       placesById,
-                                   }: {
+    theme = "light",
+    day,
+    placesById,
+    selectedItemId,
+    onMarkerClick,
+}: {
     theme?: "light" | "dark";
-    day: Day | null;               // <-- allow null
+    day: Day | null;
     placesById: Map<string, Place>;
+    selectedItemId?: string | null;
+    onMarkerClick?: (itemId: string) => void;
 }) {
     // Decode / build route points safely
     const poly: LatLngTuple[] = React.useMemo(() => {
@@ -78,7 +82,7 @@ export default function LeafletMap({
                 try {
                     return decodePolyline(day.map_polyline, 1e5);
                 } catch {
-                    // fall through to waypoint collection below
+                    // fall through
                 }
             }
         }
@@ -102,13 +106,17 @@ export default function LeafletMap({
 
     const markers = React.useMemo(() => {
         if (!day) return [];
-        const out: Array<{ pos: LatLngTuple; label: string }> = [];
+        const out: Array<{ pos: LatLngTuple; label: string; itemId: string }> = [];
         const blocks = Array.isArray(day.blocks) ? day.blocks : [];
         for (const b of blocks) {
             if (!b?.place_id) continue;
             const p = placesById.get(b.place_id);
             if (typeof p?.lat === "number" && typeof p?.lng === "number") {
-                out.push({ pos: [p.lat, p.lng], label: `${capitalize(b.when)} • ${p.name}` });
+                out.push({
+                    pos: [p.lat, p.lng],
+                    label: `${capitalize(b.when)} • ${p.name}`,
+                    itemId: b.id || "",
+                });
             }
         }
         return out;
@@ -121,14 +129,35 @@ export default function LeafletMap({
 
     const tiles = theme === "dark" ? DARK_TILES : LIGHT_TILES;
 
-    // Helper to invalidate size when theme or container changes to avoid grey tiles.
+    // Helper to invalidate size when theme or container changes
     function InvalidateOnThemeChange({ deps }: { deps: React.DependencyList }) {
-        const map = useMap();
+        const m = useMap();
         React.useEffect(() => {
-            const t = setTimeout(() => map.invalidateSize(), 60);
+            const t = setTimeout(() => m.invalidateSize(), 60);
             return () => clearTimeout(t);
             // eslint-disable-next-line react-hooks/exhaustive-deps
         }, deps);
+        return null;
+    }
+
+    // Sub-component to handle map effects (flyTo)
+    function MapController({
+        selectedItemId,
+        markers,
+    }: {
+        selectedItemId?: string | null;
+        markers: Array<{ pos: LatLngTuple; itemId: string }>;
+    }) {
+        const map = useMap();
+
+        React.useEffect(() => {
+            if (!selectedItemId) return;
+            const m = markers.find((x) => x.itemId === selectedItemId);
+            if (m) {
+                map.flyTo(m.pos, 15, { duration: 1.5 });
+            }
+        }, [selectedItemId, markers, map]);
+
         return null;
     }
 
@@ -148,13 +177,13 @@ export default function LeafletMap({
                     key={day.date}
                     bounds={bounds}
                     boundsOptions={{ padding: [24, 24] }}
-                    className="h-full w-full"                 // fill parent; parent controls height
+                    className="h-full w-full"
                     scrollWheelZoom={false}
                 >
                     <TileLayer url={tiles.url} attribution={tiles.attribution} />
 
-                    {/* Recalculate size when theme flips */}
                     <InvalidateOnThemeChange deps={[theme]} />
+                    <MapController selectedItemId={selectedItemId} markers={markers} />
 
                     {!!poly.length && <Polyline positions={poly as LatLngExpression[]} />}
 
@@ -168,11 +197,25 @@ export default function LeafletMap({
                         <Polyline positions={[poly[poly.length - 1], lodgingPos] as LatLngExpression[]} />
                     ) : null}
 
-                    {markers.map((m, idx) => (
-                        <Marker key={idx} position={m.pos as LatLngExpression}>
-                            <Popup>{m.label}</Popup>
-                        </Marker>
-                    ))}
+                    {markers.map((m, idx) => {
+                        const isSelected = m.itemId === selectedItemId;
+                        return (
+                            <Marker
+                                key={`${idx}-${isSelected}`} // Force re-render to open popup if needed
+                                position={m.pos as LatLngExpression}
+                                eventHandlers={{
+                                    click: () => onMarkerClick?.(m.itemId),
+                                }}
+                                ref={(ref) => {
+                                    if (ref && isSelected) {
+                                        ref.openPopup();
+                                    }
+                                }}
+                            >
+                                <Popup>{m.label}</Popup>
+                            </Marker>
+                        );
+                    })}
                 </MapContainer>
             ) : (
                 <div className="grid h-full min-h-48 place-items-center text-sm text-muted-foreground">

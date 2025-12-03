@@ -282,8 +282,12 @@ export default function AppShell({ children, userEmail }: Props) {
     React.useEffect(() => {
         if (!uid) return;
 
+        // Use unique channel names to avoid collisions in Strict Mode or fast remounts
+        const ledgerChannelName = `points-ledger-live-${uid}`;
+        const profilesChannelName = `profiles-live-${uid}`;
+
         const chLedger = sb
-            .channel("points-ledger-live")
+            .channel(ledgerChannelName)
             .on(
                 "postgres_changes",
                 {
@@ -293,16 +297,13 @@ export default function AppShell({ children, userEmail }: Props) {
                     filter: `user_id=eq.${uid}`,
                 },
                 (payload) => {
-
                     void refreshPoints(uid);
                 }
             )
-            .subscribe((status) => {
-
-            });
+            .subscribe();
 
         const chProfiles = sb
-            .channel("profiles-live")
+            .channel(profilesChannelName)
             .on(
                 "postgres_changes",
                 {
@@ -319,8 +320,13 @@ export default function AppShell({ children, userEmail }: Props) {
             .subscribe();
 
         return () => {
-            void sb.removeChannel(chLedger);
-            void sb.removeChannel(chProfiles);
+            // Cleanup channels safely
+            try {
+                void sb.removeChannel(chLedger);
+                void sb.removeChannel(chProfiles);
+            } catch (e) {
+                console.error("[AppShell] removeChannel error:", e);
+            }
         };
     }, [uid, sb, refreshPoints, refreshPreferredCurrency]);
 

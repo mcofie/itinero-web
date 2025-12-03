@@ -80,6 +80,8 @@ export default function TripActionsClient({
     tripId,
     tripTitle,
     days,
+    startDate,
+    endDate,
 }: Props) {
     const sb = getSupabaseBrowser();
     const router = useRouter();
@@ -252,7 +254,17 @@ export default function TripActionsClient({
             {/* Separator */}
             <div className="h-4 w-px bg-white/20 mx-1" />
 
-            {/* --- 2. Add Activity Action --- */}
+            {/* --- 2. Date Edit Action --- */}
+            <DateEditor
+                tripId={tripId}
+                initialStart={startDate}
+                initialEnd={endDate}
+            />
+
+            {/* Separator */}
+            <div className="h-4 w-px bg-white/20 mx-1" />
+
+            {/* --- 3. Add Activity Action --- */}
             {days.length > 0 && (
                 <Button
                     size="sm"
@@ -432,5 +444,116 @@ export default function TripActionsClient({
                 </DialogContent>
             </Dialog>
         </div>
+    );
+}
+
+/* ---------------- Sub-Component: Date Editor ---------------- */
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import DateRangePicker from "@/components/landing/DateRangePicker";
+import { updateTripDates } from "@/app/(main)/trips/[id]/actions";
+import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
+
+function DateEditor({
+    tripId,
+    initialStart,
+    initialEnd,
+}: {
+    tripId: string;
+    initialStart?: string;
+    initialEnd?: string;
+}) {
+    const [open, setOpen] = useState(false);
+    const [range, setRange] = useState<DateRange | undefined>(() => {
+        if (!initialStart || !initialEnd) return undefined;
+        return {
+            from: new Date(initialStart),
+            to: new Date(initialEnd),
+        };
+    });
+    const [saving, setSaving] = useState(false);
+
+    // Sync if props change externally
+    useEffect(() => {
+        if (initialStart && initialEnd) {
+            setRange({
+                from: new Date(initialStart),
+                to: new Date(initialEnd),
+            });
+        }
+    }, [initialStart, initialEnd]);
+
+    async function handleSave() {
+        if (!range?.from || !range?.to) return;
+        setSaving(true);
+        try {
+            // Format as YYYY-MM-DD
+            const s = format(range.from, "yyyy-MM-dd");
+            const e = format(range.to, "yyyy-MM-dd");
+            await updateTripDates(tripId, s, e);
+            setOpen(false);
+        } catch (err) {
+            console.error("Failed to update dates", err);
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 gap-2 rounded-full text-white/80 hover:bg-white/10 hover:text-white border border-transparent transition-all"
+                >
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline text-xs font-medium uppercase tracking-wide">
+                        Edit Dates
+                    </span>
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 rounded-2xl border-none shadow-xl" align="start">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                            Change Trip Dates
+                        </h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            Adjusting dates will regenerate the itinerary days.
+                        </p>
+                    </div>
+                    <div className="p-2">
+                        <DateRangePicker
+                            value={range}
+                            onChange={setRange}
+                            className="border-0 shadow-none"
+                        />
+                    </div>
+                    <div className="p-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 bg-slate-50/50 dark:bg-slate-950/50">
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setOpen(false)}
+                            className="h-8 text-xs"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            size="sm"
+                            onClick={handleSave}
+                            disabled={saving || !range?.from || !range?.to}
+                            className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                            {saving ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                                "Update Dates"
+                            )}
+                        </Button>
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
     );
 }
