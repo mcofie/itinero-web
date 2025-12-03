@@ -59,6 +59,21 @@
       },
       "filename": "src/app/actions/trips.ts",
       "exportedName": "setTripPublic"
+    },
+    "40438e594c1a910bf86a4a3b8c5d07d72fef5ce2c3": {
+      "workers": {
+        "app/(main)/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/(main)/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/(main)/profile/server-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveProfileAction",
+          "filename": "src/app/(main)/profile/server-actions.ts"
+        }
+      },
+      "layer": {
+        "app/(main)/profile/page": "action-browser"
+      },
+      "filename": "src/app/(main)/profile/server-actions.ts",
+      "exportedName": "saveProfileAction"
     }
   },
   "edge": {},

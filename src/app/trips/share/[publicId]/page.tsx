@@ -672,7 +672,7 @@ export default async function PublicTripPage({
             className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-sans selection:bg-blue-100 selection:text-blue-900 transition-colors duration-300">
             {/* 1. HERO SECTION (Immersive) */}
             <header
-                className="relative h-[45vh] md:h-[55vh] w-full overflow-hidden border-b border-slate-200 dark:border-slate-800">
+                className="relative h-[50vh] md:h-[60vh] w-full overflow-hidden border-b border-slate-200 dark:border-slate-800">
                 <Image
                     src={cover}
                     alt={title}
@@ -682,7 +682,7 @@ export default async function PublicTripPage({
                     sizes="100vw"
                 />
                 <div
-                    className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-90" />
+                    className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-transparent opacity-90" />
 
                 {/* Top Nav */}
                 <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-30">
@@ -690,51 +690,51 @@ export default async function PublicTripPage({
                         href="/public"
                         className="flex items-center gap-2 font-bold text-xl tracking-tight text-white hover:text-blue-100 transition-colors"
                     >
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-blue-600">
-                            <Plane className="h-4 w-4" />
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg">
+                            <Plane className="h-5 w-5" />
                         </div>
-                        Itinero
+                        <span className="drop-shadow-md">Itinero</span>
                     </Link>
                     <Button
                         asChild
                         variant="secondary"
-                        className="rounded-full bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border border-white/10 font-semibold transition-colors"
+                        className="rounded-full bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border border-white/10 font-semibold transition-all hover:scale-105"
                     >
                         <Link href="/trip-maker">Create Your Own</Link>
                     </Button>
                 </div>
 
                 {/* Hero Content Layer */}
-                <div className="absolute inset-x-0 bottom-0 z-20 pb-10 md:pb-16">
-                    <div className="mx-auto max-w-6xl px-6 flex flex-col items-start gap-5">
-                        <div className="flex flex-wrap gap-3 items-center">
+                <div className="absolute inset-x-0 bottom-0 z-20 pb-12 md:pb-20">
+                    <div className="mx-auto max-w-6xl px-6 flex flex-col items-start gap-6">
+                        <div className="flex flex-wrap gap-3 items-center animate-in fade-in slide-in-from-bottom-4 duration-700">
                             <Badge
                                 variant="secondary"
-                                className="rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 hover:bg-white/20 transition-colors font-medium"
+                                className="rounded-full bg-black/30 backdrop-blur-md text-white border border-white/20 px-4 py-1.5 hover:bg-black/40 transition-colors font-medium text-sm"
                             >
-                                <CalendarDays className="w-3.5 h-3.5 mr-1.5" />
+                                <CalendarDays className="w-4 h-4 mr-2 text-blue-300" />
                                 {dateRange}
                             </Badge>
                             {dest?.name && (
                                 <Badge
                                     variant="secondary"
-                                    className="rounded-full bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 hover:bg-white/20 transition-colors font-medium"
+                                    className="rounded-full bg-black/30 backdrop-blur-md text-white border border-white/20 px-4 py-1.5 hover:bg-black/40 transition-colors font-medium text-sm"
                                 >
-                                    <Globe className="w-3.5 h-3.5 mr-1.5" />
+                                    <Globe className="w-4 h-4 mr-2 text-emerald-300" />
                                     {dest.name}
                                 </Badge>
                             )}
                         </div>
 
-                        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white drop-shadow-sm max-w-4xl leading-[1.1]">
+                        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white drop-shadow-lg max-w-5xl leading-[1.1] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
                             {title}
                         </h1>
 
-                        <div className="flex items-center gap-4 pt-2">
+                        <div className="flex items-center gap-6 pt-2 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
                             {ownerName && (
-                                <div className="flex items-center gap-3 pr-6 border-r border-white/20">
+                                <div className="flex items-center gap-4 pr-6 border-r border-white/20">
                                     <div
-                                        className="relative h-10 w-10 rounded-full overflow-hidden bg-white/10 ring-2 ring-white/20">
+                                        className="relative h-12 w-12 rounded-full overflow-hidden bg-white/10 ring-2 ring-white/30 shadow-lg">
                                         {ownerAvatar ? (
                                             <Image
                                                 src={ownerAvatar}
@@ -743,19 +743,19 @@ export default async function PublicTripPage({
                                                 className="object-cover"
                                             />
                                         ) : (
-                                            <User2 className="h-5 w-5 text-white absolute inset-0 m-auto" />
+                                            <User2 className="h-6 w-6 text-white absolute inset-0 m-auto" />
                                         )}
                                     </div>
                                     <div>
-                                        <p className="text-white font-semibold text-sm">
+                                        <p className="text-white font-bold text-base drop-shadow-md">
                                             {ownerName}
                                         </p>
-                                        <p className="text-white/60 text-xs">Curator</p>
+                                        <p className="text-blue-200 text-xs font-medium uppercase tracking-wider">Trip Curator</p>
                                     </div>
                                 </div>
                             )}
-                            <div className="text-white/80 text-xs font-medium tracking-wide">
-                                SHARED ITINERARY
+                            <div className="text-white/80 text-xs font-bold tracking-widest uppercase border border-white/20 rounded-lg px-3 py-1 bg-white/5 backdrop-blur-sm">
+                                Shared Itinerary
                             </div>
                         </div>
                     </div>

@@ -3,18 +3,24 @@
 import * as React from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { format } from "date-fns";
-import { MapPin, Clock3, DollarSign, CalendarDays, ArrowRight, Quote } from "lucide-react";
+import { MapPin, Clock3, CalendarDays, ArrowRight, Quote } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Day, Place } from "./page";
+import { FxSnapshot } from "@/lib/fx/types";
+import { convertUsingSnapshot } from "@/lib/fx/fx";
 
 export function StoryView({
     days,
     placesById,
     currency,
+    fxSnapshot,
+    userPreferredCurrency,
 }: {
     days: Day[];
     placesById: Map<string, Place>;
     currency: string;
+    fxSnapshot?: FxSnapshot | null;
+    userPreferredCurrency?: string;
 }) {
     return (
         <div className="relative mx-auto max-w-3xl space-y-24 pb-32 pt-12">
@@ -28,6 +34,8 @@ export function StoryView({
                     dayIdx={dayIdx}
                     placesById={placesById}
                     currency={currency}
+                    fxSnapshot={fxSnapshot}
+                    userPreferredCurrency={userPreferredCurrency}
                 />
             ))}
         </div>
@@ -39,11 +47,15 @@ function StoryChapter({
     dayIdx,
     placesById,
     currency,
+    fxSnapshot,
+    userPreferredCurrency,
 }: {
     day: Day;
     dayIdx: number;
     placesById: Map<string, Place>;
     currency: string;
+    fxSnapshot?: FxSnapshot | null;
+    userPreferredCurrency?: string;
 }) {
     const date = new Date(day.date);
     const weekday = format(date, "EEEE");
@@ -82,6 +94,8 @@ function StoryChapter({
                             block={block}
                             place={place}
                             currency={currency}
+                            fxSnapshot={fxSnapshot}
+                            userPreferredCurrency={userPreferredCurrency}
                             isEven={isEven}
                         />
                     );
@@ -96,11 +110,15 @@ function StoryBlock({
     place,
     currency,
     isEven,
+    fxSnapshot,
+    userPreferredCurrency,
 }: {
     block: Day["blocks"][0];
     place: Place | null | undefined;
     currency: string;
     isEven: boolean;
+    fxSnapshot?: FxSnapshot | null;
+    userPreferredCurrency?: string;
 }) {
     const ref = React.useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({
@@ -137,8 +155,13 @@ function StoryBlock({
                             </span>
                             {block.est_cost > 0 && (
                                 <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                                    <DollarSign className="h-3.5 w-3.5" />
+                                    <span className="text-[10px] font-bold uppercase">{currency}</span>
                                     {block.est_cost}
+                                    {fxSnapshot && userPreferredCurrency && currency !== userPreferredCurrency && (
+                                        <span className="ml-1 opacity-70 font-normal text-[10px]">
+                                            (~ {userPreferredCurrency} {Math.round(convertUsingSnapshot(fxSnapshot, block.est_cost, currency, userPreferredCurrency) || 0)})
+                                        </span>
+                                    )}
                                 </span>
                             )}
                         </div>

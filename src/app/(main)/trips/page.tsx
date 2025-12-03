@@ -15,7 +15,10 @@ import {
     Clock,
     AlertCircle,
     ArrowRight,
+    RefreshCw,
 } from "lucide-react";
+import { convertUsingSnapshot } from "@/lib/fx/fx";
+import type { FxSnapshot } from "@/lib/fx/types";
 
 
 export const dynamic = "force-dynamic";
@@ -53,6 +56,22 @@ export default async function TripsPage() {
         )
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
+
+    // Fetch User Profile for Preferred Currency
+    const { data: profile } = await sb
+        .schema("itinero")
+        .from("profiles")
+        .select("preferred_currency")
+        .eq("id", user.id)
+        .single();
+
+    const userPreferredCurrency = profile?.preferred_currency ?? "USD";
+
+    // Fetch FX Snapshot (USD base)
+    const { data: fxSnapshot } = await sb
+        .schema("itinero")
+        .rpc("fx_latest_snapshot", { p_base: "USD" })
+        .single<FxSnapshot | null>();
 
     const tripsSafe: TripRow[] = (trips ?? []) as TripRow[];
     const hasTrips = tripsSafe.length > 0;
@@ -127,7 +146,12 @@ export default async function TripsPage() {
                         </Link>
 
                         {tripsSafe.map((t) => (
-                            <TripCard key={t.id} trip={t} />
+                            <TripCard
+                                key={t.id}
+                                trip={t}
+                                userPreferredCurrency={userPreferredCurrency}
+                                fxSnapshot={fxSnapshot}
+                            />
                         ))}
                     </div>
                 ) : (
@@ -139,7 +163,15 @@ export default async function TripsPage() {
 }
 
 /** ---------- TripCard Component ---------- */
-function TripCard({ trip }: { trip: TripRow }) {
+function TripCard({
+    trip,
+    userPreferredCurrency,
+    fxSnapshot,
+}: {
+    trip: TripRow;
+    userPreferredCurrency?: string;
+    fxSnapshot?: FxSnapshot | null;
+}) {
     const title = trip.title?.trim() || "Untitled Trip";
     const dateRange = formatDateRange(trip.start_date, trip.end_date);
     const created = trip.created_at
@@ -155,6 +187,31 @@ function TripCard({ trip }: { trip: TripRow }) {
                 maximumFractionDigits: 0,
             }).format(trip.est_total_cost)
             : null;
+
+    // Converted Currency
+    const convertedAmount = React.useMemo(() => {
+        if (
+            typeof trip.est_total_cost !== "number" ||
+            !userPreferredCurrency ||
+            !fxSnapshot ||
+            trip.currency === userPreferredCurrency
+        ) {
+            return null;
+        }
+        const val = convertUsingSnapshot(
+            fxSnapshot,
+            trip.est_total_cost,
+            trip.currency ?? "USD",
+            userPreferredCurrency
+        );
+        if (!val) return null;
+
+        return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: userPreferredCurrency,
+            maximumFractionDigits: 0,
+        }).format(val);
+    }, [trip.est_total_cost, trip.currency, userPreferredCurrency, fxSnapshot]);
 
     // Fallback image
     const imageUrl =
@@ -180,6 +237,11 @@ function TripCard({ trip }: { trip: TripRow }) {
                     <div
                         className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-slate-900 shadow-sm backdrop-blur-sm dark:bg-slate-950/90 dark:text-white">
                         {amount}
+                        {convertedAmount && (
+                            <span className="ml-1 text-slate-400 dark:text-slate-500 font-normal">
+                                (~{convertedAmount})
+                            </span>
+                        )}
                     </div>
                 )}
             </div>

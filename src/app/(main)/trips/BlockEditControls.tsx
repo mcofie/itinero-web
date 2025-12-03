@@ -106,6 +106,7 @@ export function BlockActions({
                 .eq("id", item.id);
 
             if (error) throw error;
+            setDeleteOpen(false);
             setBusy(false);
             router.refresh();
         } finally {

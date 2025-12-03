@@ -53,6 +53,8 @@ import { WeatherWidget } from "@/components/trips/WeatherWidget";
 import { ExchangeRateCard } from "@/components/trips/ExchangeRateCard";
 import { StoryView } from "./StoryView";
 import { ImmersiveMap } from "./ImmersiveMap";
+import { getLatestFxSnapshot, convertUsingSnapshot } from "@/lib/fx/fx";
+import type { FxSnapshot } from "@/lib/fx/types";
 
 /* ---------- Map (allow nullable day) ---------- */
 type LeafletMapProps = {
@@ -100,8 +102,26 @@ export default function TripViewerClient({
     const { resolvedTheme } = useTheme();
     const theme: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light";
 
+    // Extract Trip Currency
+    const tripCurrency = data.trip_summary.currency ?? "USD";
+
     const [activeDayIdx, setActiveDayIdx] = useState(0);
     const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+    const [fxSnapshot, setFxSnapshot] = useState<FxSnapshot | null>(null);
+
+    React.useEffect(() => {
+        getLatestFxSnapshot("USD").then(setFxSnapshot);
+    }, []);
+
+    const getConvertedCost = React.useCallback(
+        (amount: number | null | undefined) => {
+            if (amount == null || !userPreferredCurrency || !fxSnapshot) return null;
+            if (tripCurrency === userPreferredCurrency) return null;
+            const val = convertUsingSnapshot(fxSnapshot, amount, tripCurrency, userPreferredCurrency);
+            return val ? Math.round(val) : null;
+        },
+        [userPreferredCurrency, tripCurrency, fxSnapshot]
+    );
 
     // Scroll to item when selected from map
     const scrollToItem = (itemId: string) => {
@@ -129,9 +149,6 @@ export default function TripViewerClient({
         : 0;
 
     const inputs: TripInputs = data.trip_summary.inputs as TripInputs;
-
-    // Extract Trip Currency
-    const tripCurrency = data.trip_summary.currency ?? "USD";
 
     const tripConfig: TripConfig | null = useMemo(() => {
         const raw = data.trip_summary.inputs;
@@ -343,7 +360,16 @@ export default function TripViewerClient({
                                         />
                                         <MetricTile
                                             label="Total Cost"
-                                            value={`${tripCurrency} ${totals.estCost}`}
+                                            value={
+                                                <span>
+                                                    {tripCurrency} {totals.estCost}
+                                                    {getConvertedCost(totals.estCost) !== null && (
+                                                        <span className="ml-1.5 opacity-70 text-sm font-normal">
+                                                            (~ {userPreferredCurrency} {getConvertedCost(totals.estCost)})
+                                                        </span>
+                                                    )}
+                                                </span>
+                                            }
                                             highlight
                                             icon={DollarSign}
                                         />
@@ -478,6 +504,8 @@ export default function TripViewerClient({
                             days={data.days}
                             placesById={placesById}
                             currency={tripCurrency}
+                            fxSnapshot={fxSnapshot}
+                            userPreferredCurrency={userPreferredCurrency}
                         />
                     </TabsContent>
 
@@ -527,6 +555,8 @@ export default function TripViewerClient({
                                             tripCurrency={tripCurrency}
                                             selectedItemId={selectedItemId}
                                             onItemClick={setSelectedItemId}
+                                            fxSnapshot={fxSnapshot}
+                                            userPreferredCurrency={userPreferredCurrency}
                                         />
                                     </div>
                                 </ScrollArea>
@@ -569,6 +599,8 @@ export default function TripViewerClient({
                                 selectedItemId={selectedItemId}
                                 onItemClick={setSelectedItemId}
                                 tripCurrency={tripCurrency}
+                                fxSnapshot={fxSnapshot}
+                                userPreferredCurrency={userPreferredCurrency}
                             />
                         </div>
                     </TabsContent>
@@ -870,6 +902,8 @@ function EditableDay({
     tripCurrency,
     selectedItemId,
     onItemClick,
+    fxSnapshot,
+    userPreferredCurrency,
 }: {
     dayIdx: number;
     day: Day | null;
@@ -883,6 +917,8 @@ function EditableDay({
     tripCurrency: string;
     selectedItemId?: string | null;
     onItemClick?: (id: string) => void;
+    fxSnapshot?: FxSnapshot | null;
+    userPreferredCurrency?: string;
 }) {
     const blocks = React.useMemo(() => day?.blocks ?? [], [day?.blocks]);
 
@@ -896,6 +932,12 @@ function EditableDay({
             ),
         [blocks]
     );
+
+    const convertedDayCost = React.useMemo(() => {
+        if (!fxSnapshot || !userPreferredCurrency || tripCurrency === userPreferredCurrency) return null;
+        const val = convertUsingSnapshot(fxSnapshot, dayCost, tripCurrency, userPreferredCurrency);
+        return val ? Math.round(val) : null;
+    }, [fxSnapshot, userPreferredCurrency, tripCurrency, dayCost]);
 
     const hasRealIds = items.every((it) => !String(it.id).startsWith("no-id-"));
 
@@ -942,6 +984,11 @@ function EditableDay({
                     className="border-emerald-100 bg-emerald-50 px-3 py-1 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900"
                 >
                     Est. {tripCurrency} {dayCost}
+                    {convertedDayCost !== null && (
+                        <span className="ml-1 opacity-80 font-normal">
+                            (~ {userPreferredCurrency} {convertedDayCost})
+                        </span>
+                    )}
                 </Badge>
             </div>
 
@@ -1014,7 +1061,10 @@ function EditableDay({
                                     {
                                         kind: "cost",
                                         label: "Est.",
-                                        value: `${tripCurrency} ${b.est_cost ?? 0}`,
+                                        value: `${tripCurrency} ${b.est_cost ?? 0}${fxSnapshot && userPreferredCurrency && tripCurrency !== userPreferredCurrency && b.est_cost
+                                            ? ` (~ ${userPreferredCurrency} ${Math.round(convertUsingSnapshot(fxSnapshot, b.est_cost, tripCurrency, userPreferredCurrency) || 0)})`
+                                            : ""
+                                            }`,
                                     },
                                     {
                                         kind: "duration",
@@ -1233,12 +1283,16 @@ function CalendarView({
     selectedItemId,
     onItemClick,
     tripCurrency,
+    fxSnapshot,
+    userPreferredCurrency,
 }: {
     days: Day[];
     placesById: Map<string, Place>;
     selectedItemId?: string | null;
     onItemClick?: (id: string) => void;
     tripCurrency?: string;
+    fxSnapshot?: FxSnapshot | null;
+    userPreferredCurrency?: string;
 }) {
     const timeSlots = ["morning", "afternoon", "evening"] as const;
 
@@ -1355,6 +1409,11 @@ function CalendarView({
                                                             {b.est_cost > 0 ? (
                                                                 <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded">
                                                                     {tripCurrency} {b.est_cost}
+                                                                    {fxSnapshot && userPreferredCurrency && tripCurrency && tripCurrency !== userPreferredCurrency && (
+                                                                        <span className="opacity-70 font-normal ml-1">
+                                                                            (~ {userPreferredCurrency} {Math.round(convertUsingSnapshot(fxSnapshot, b.est_cost, tripCurrency, userPreferredCurrency) || 0)})
+                                                                        </span>
+                                                                    )}
                                                                 </span>
                                                             ) : (
                                                                 <span className="text-[10px] text-slate-400">Free</span>

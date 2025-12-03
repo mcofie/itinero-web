@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import {useRouter} from "next/navigation";
 import Image from "next/image";
-import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import {getSupabaseBrowser} from "@/lib/supabase/browser-singleton";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import {Textarea} from "@/components/ui/textarea";
 import {
     Tabs,
     TabsList,
@@ -31,8 +31,8 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import {ScrollArea} from "@/components/ui/scroll-area";
+import {Separator} from "@/components/ui/separator";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -55,8 +55,8 @@ import {
     SelectItem,
     SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
+import {Checkbox} from "@/components/ui/checkbox";
+import {Badge} from "@/components/ui/badge";
 import {
     Loader2,
     MapPin,
@@ -75,8 +75,8 @@ import {
     Clock,
     ChevronRight,
 } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import {toast} from "sonner";
+import {cn} from "@/lib/utils";
 
 /* =====================================================
    Types
@@ -158,9 +158,9 @@ type DestinationHistoryRowUI = {
 ===================================================== */
 
 export default function ItineroDashboardClient({
-    initialDestinations,
-    initialPlaces,
-}: ItineroDashboardClientProps) {
+                                                   initialDestinations,
+                                                   initialPlaces,
+                                               }: ItineroDashboardClientProps) {
     const sb = React.useMemo(() => getSupabaseBrowser(), []);
 
     const [destinations, setDestinations] = React.useState<DestinationOption[]>(
@@ -212,7 +212,6 @@ export default function ItineroDashboardClient({
         React.useState<string | null>(null);
 
 
-
     /* ------------ Places form state ------------ */
     const [isPlaceSheetOpen, setIsPlaceSheetOpen] = React.useState(false);
     const [placeDestinationId, setPlaceDestinationId] =
@@ -244,6 +243,7 @@ export default function ItineroDashboardClient({
     const [placeFilterDestId, setPlaceFilterDestId] = React.useState<string>("all");
 
     /* --- Reset Helpers --- */
+
     /* --- Reset Helpers --- */
     function resetDestinationForm() {
         setDestName("");
@@ -330,18 +330,18 @@ export default function ItineroDashboardClient({
         (async () => {
             setHistLoadingList(true);
             try {
-                const { data, error } = await sb
+                const {data, error} = await sb
                     .schema("itinero")
                     .from("destination_history")
                     .select(
                         "id,destination_id,section,payload,created_at,backdrop_image_url,backdrop_image_attribution"
                     )
                     .eq("destination_id", histDestinationId)
-                    .order("created_at", { ascending: false });
+                    .order("created_at", {ascending: false});
 
                 if (error) {
                     console.error("Failed to load history:", error);
-                    toast.error("Failed to load history", { description: error.message });
+                    toast.error("Failed to load history", {description: error.message});
                     setHistoryList([]);
                     return;
                 }
@@ -349,16 +349,13 @@ export default function ItineroDashboardClient({
             } catch (e: unknown) {
                 console.error(e);
                 const msg = e instanceof Error ? e.message : String(e);
-                toast.error("Unexpected error loading history", { description: msg });
+                toast.error("Unexpected error loading history", {description: msg});
                 setHistoryList([]);
             } finally {
                 setHistLoadingList(false);
             }
         })();
     }, [histDestinationId, sb]);
-
-
-
 
 
     // Load place hours when editingPlaceId changes
@@ -370,7 +367,7 @@ export default function ItineroDashboardClient({
         (async () => {
             setHoursLoading(true);
             try {
-                const { data, error } = await sb
+                const {data, error} = await sb
                     .schema("itinero")
                     .from("place_hours")
                     .select("*")
@@ -414,7 +411,8 @@ export default function ItineroDashboardClient({
         try {
             if (editingDestId) {
                 // Update
-                const { data, error } = await sb
+                const {data, error} = await sb
+                    .schema('itinero')
                     .from("destinations")
                     .update(payload)
                     .eq("id", editingDestId)
@@ -429,7 +427,8 @@ export default function ItineroDashboardClient({
                 toast.success("Destination updated successfully");
             } else {
                 // Create
-                const { data, error } = await sb
+                const {data, error} = await sb
+                    .schema('itinero')
                     .from("destinations")
                     .insert(payload)
                     .select()
@@ -444,7 +443,7 @@ export default function ItineroDashboardClient({
         } catch (e: unknown) {
             console.error(e);
             const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Failed to save destination", { description: msg });
+            toast.error("Failed to save destination", {description: msg});
         } finally {
             setDestSaving(false);
         }
@@ -467,10 +466,11 @@ export default function ItineroDashboardClient({
     async function handleDeleteDestination(id: string) {
         if (!confirm("Delete this destination?")) return;
         try {
-            const { error } = await sb.from("destinations").delete().eq("id", id);
+            const {error} = await sb
+                .schema("itinero").from("destinations").delete().eq("id", id);
             if (error) {
                 console.error(error);
-                toast.error("Failed to delete destination", { description: error.message });
+                toast.error("Failed to delete destination", {description: error.message});
                 return;
             }
 
@@ -488,10 +488,9 @@ export default function ItineroDashboardClient({
         } catch (e: unknown) {
             console.error(e);
             const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Unexpected error deleting destination.", { description: msg });
+            toast.error("Unexpected error deleting destination.", {description: msg});
         }
     }
-
 
 
     /* --- Handlers: History / KBYG --- */
@@ -527,7 +526,7 @@ export default function ItineroDashboardClient({
             };
 
             if (editingHistId) {
-                const { data, error } = await sb
+                const {data, error} = await sb
                     .from("destination_history")
                     .update({
                         content: histContent.trim(),
@@ -553,7 +552,7 @@ export default function ItineroDashboardClient({
                 );
                 toast.success("History entry updated successfully");
             } else {
-                const { data, error } = await sb
+                const {data, error} = await sb
                     .from("destination_history")
                     .insert({
                         destination_id: histDestinationId,
@@ -582,7 +581,7 @@ export default function ItineroDashboardClient({
         } catch (e: unknown) {
             console.error(e);
             const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Failed to save history entry", { description: msg });
+            toast.error("Failed to save history entry", {description: msg});
         } finally {
             setHistSaving(false);
         }
@@ -617,14 +616,14 @@ export default function ItineroDashboardClient({
     async function handleDeleteHistory(id: string) {
         if (!confirm("Delete this history entry?")) return;
         try {
-            const { error } = await sb
+            const {error} = await sb
                 .from("destination_history")
                 .delete()
                 .eq("id", id);
 
             if (error) {
                 console.error(error);
-                toast.error("Failed to delete history", { description: error.message });
+                toast.error("Failed to delete history", {description: error.message});
                 return;
             }
 
@@ -636,33 +635,34 @@ export default function ItineroDashboardClient({
         } catch (e: unknown) {
             console.error(e);
             const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Failed to delete history entry", { description: msg });
+            toast.error("Failed to delete history entry", {description: msg});
         }
     }
 
     async function handleSetCurrentHistory(h: DestinationHistoryRowUI) {
         try {
-            const { error } = await sb
+            const {error} = await sb
+                .schema('itinero')
                 .from("destinations")
-                .update({ current_history_id: h.id })
+                .update({current_history_id: h.id})
                 .eq("id", h.destination_id);
 
             if (error) {
                 console.error(error);
-                toast.error("Failed to set current history", { description: error.message });
+                toast.error("Failed to set current history", {description: error.message});
                 return;
             }
 
             setDestinations(prev => prev.map(d =>
                 d.id === h.destination_id
-                    ? { ...d, current_history_id: h.id }
+                    ? {...d, current_history_id: h.id}
                     : d
             ));
             toast.success("Set as current history for destination");
         } catch (e: unknown) {
             console.error(e);
             const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Unexpected error", { description: msg });
+            toast.error("Unexpected error", {description: msg});
         }
     }
 
@@ -674,7 +674,7 @@ export default function ItineroDashboardClient({
             if (existing) {
                 return prev.map((h) =>
                     h.day_of_week === day
-                        ? { ...h, [field === "open" ? "open_time" : "close_time"]: value }
+                        ? {...h, [field === "open" ? "open_time" : "close_time"]: value}
                         : h
                 );
             } else {
@@ -699,7 +699,7 @@ export default function ItineroDashboardClient({
             // Let's add empty
             setPlaceHours((prev) => [
                 ...prev,
-                { day_of_week: day, open_time: "", close_time: "" },
+                {day_of_week: day, open_time: "", close_time: ""},
             ]);
         }
     }
@@ -751,7 +751,7 @@ export default function ItineroDashboardClient({
             };
 
             if (editingPlaceId) {
-                const { data, error } = await sb
+                const {data, error} = await sb
                     .from("places")
                     .update(payload)
                     .eq("id", editingPlaceId)
@@ -780,7 +780,7 @@ export default function ItineroDashboardClient({
                         open_time: h.open_time || null,
                         close_time: h.close_time || null,
                     }));
-                    const { error: hoursError } = await sb
+                    const {error: hoursError} = await sb
                         .from("place_hours")
                         .insert(hoursPayload);
 
@@ -791,7 +791,7 @@ export default function ItineroDashboardClient({
                 }
             } else {
                 // Create
-                const { data, error } = await sb
+                const {data, error} = await sb
                     .from("places")
                     .insert(payload)
                     .select()
@@ -810,7 +810,7 @@ export default function ItineroDashboardClient({
                         open_time: h.open_time || null,
                         close_time: h.close_time || null,
                     }));
-                    const { error: hoursError } = await sb
+                    const {error: hoursError} = await sb
                         .from("place_hours")
                         .insert(hoursPayload);
 
@@ -825,7 +825,7 @@ export default function ItineroDashboardClient({
         } catch (e: unknown) {
             console.error(e);
             const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Failed to save place", { description: msg });
+            toast.error("Failed to save place", {description: msg});
         } finally {
             setPlaceSaving(false);
         }
@@ -852,10 +852,10 @@ export default function ItineroDashboardClient({
     async function handleDeletePlace(id: string) {
         if (!confirm("Delete this place?")) return;
         try {
-            const { error } = await sb.from("places").delete().eq("id", id);
+            const {error} = await sb.from("places").delete().eq("id", id);
             if (error) {
                 console.error(error);
-                toast.error("Failed to delete place", { description: error.message });
+                toast.error("Failed to delete place", {description: error.message});
                 return;
             }
 
@@ -864,10 +864,9 @@ export default function ItineroDashboardClient({
         } catch (e: unknown) {
             console.error(e);
             const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Failed to delete place", { description: msg });
+            toast.error("Failed to delete place", {description: msg});
         }
     }
-
 
 
     /* --- Derived --- */
@@ -929,10 +928,11 @@ export default function ItineroDashboardClient({
     return (
         <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
             {/* Sidebar */}
-            <aside className="w-64 flex-shrink-0 border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+            <aside
+                className="w-64 flex-shrink-0 border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
                 <div className="flex h-16 items-center px-6 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2 font-bold text-lg text-slate-900 dark:text-white">
-                        <LayoutDashboard className="h-5 w-5 text-blue-600" />
+                        <LayoutDashboard className="h-5 w-5 text-blue-600"/>
                         Itinero Admin
                     </div>
                 </div>
@@ -945,7 +945,7 @@ export default function ItineroDashboardClient({
                         )}
                         onClick={() => setActiveTab("destinations")}
                     >
-                        <Globe className="h-4 w-4" />
+                        <Globe className="h-4 w-4"/>
                         Destinations
                     </Button>
                     <Button
@@ -956,7 +956,7 @@ export default function ItineroDashboardClient({
                         )}
                         onClick={() => setActiveTab("places")}
                     >
-                        <MapPin className="h-4 w-4" />
+                        <MapPin className="h-4 w-4"/>
                         Places
                     </Button>
                     <Button
@@ -967,14 +967,15 @@ export default function ItineroDashboardClient({
                         )}
                         onClick={() => setActiveTab("history")}
                     >
-                        <History className="h-4 w-4" />
+                        <History className="h-4 w-4"/>
                         History & KBYG
                     </Button>
                 </nav>
                 <div className="p-4 mt-auto border-t border-slate-100 dark:border-slate-800">
-                    <Button variant="outline" className="w-full gap-2 justify-start text-slate-600 dark:text-slate-400" asChild>
+                    <Button variant="outline" className="w-full gap-2 justify-start text-slate-600 dark:text-slate-400"
+                            asChild>
                         <a href="/admin">
-                            <ArrowLeft className="h-4 w-4" />
+                            <ArrowLeft className="h-4 w-4"/>
                             Back to Main Admin
                         </a>
                     </Button>
@@ -985,11 +986,12 @@ export default function ItineroDashboardClient({
             <main className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/50">
                 <div className="container mx-auto max-w-7xl px-6 py-8 space-y-8">
                     {/* Header */}
-                    <header className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800">
+                    <header
+                        className="flex items-center justify-between pb-6 border-b border-slate-200 dark:border-slate-800">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                                 <span>Admin</span>
-                                <ChevronRight className="h-4 w-4" />
+                                <ChevronRight className="h-4 w-4"/>
                                 <span className="font-medium text-foreground capitalize">{activeTab}</span>
                             </div>
                             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
@@ -1009,7 +1011,7 @@ export default function ItineroDashboardClient({
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <div className="relative w-72">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"/>
                                     <Input
                                         placeholder="Search destinations..."
                                         className="pl-9 bg-white dark:bg-slate-900"
@@ -1019,8 +1021,9 @@ export default function ItineroDashboardClient({
                                 </div>
                                 <Sheet open={isDestSheetOpen} onOpenChange={setIsDestSheetOpen}>
                                     <SheetTrigger asChild>
-                                        <Button onClick={resetDestinationForm} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
-                                            <Plus className="h-4 w-4" />
+                                        <Button onClick={resetDestinationForm}
+                                                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                                            <Plus className="h-4 w-4"/>
                                             Add Destination
                                         </Button>
                                     </SheetTrigger>
@@ -1038,7 +1041,10 @@ export default function ItineroDashboardClient({
                                         <div className="py-6">
                                             <form id="dest-form" onSubmit={handleSaveDestination} className="space-y-4">
                                                 <div className="space-y-4">
-                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Basic Information</div>
+                                                    <div
+                                                        className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Basic
+                                                        Information
+                                                    </div>
                                                     <FormInput
                                                         label="Name (Required)"
                                                         value={destName}
@@ -1068,7 +1074,9 @@ export default function ItineroDashboardClient({
                                                 </div>
 
                                                 <div className="space-y-4">
-                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Location</div>
+                                                    <div
+                                                        className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Location
+                                                    </div>
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <FormInput
                                                             label="Latitude"
@@ -1092,7 +1100,9 @@ export default function ItineroDashboardClient({
                                                 </div>
 
                                                 <div className="space-y-4">
-                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Media</div>
+                                                    <div
+                                                        className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Media
+                                                    </div>
                                                     <FormInput
                                                         label="Cover Image URL"
                                                         value={destImageUrl}
@@ -1110,7 +1120,7 @@ export default function ItineroDashboardClient({
                                         </div>
                                         <SheetFooter>
                                             <Button type="submit" form="dest-form" disabled={destSaving}>
-                                                {destSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                {destSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                                 {editingDestId ? "Save Changes" : "Create Destination"}
                                             </Button>
                                         </SheetFooter>
@@ -1132,7 +1142,8 @@ export default function ItineroDashboardClient({
                                     <TableBody>
                                         {filteredDestinations.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                                <TableCell colSpan={5}
+                                                           className="h-24 text-center text-muted-foreground">
                                                     No destinations found.
                                                 </TableCell>
                                             </TableRow>
@@ -1141,7 +1152,8 @@ export default function ItineroDashboardClient({
                                                 <TableRow key={d.id}>
                                                     <TableCell className="font-medium">
                                                         <div className="flex items-center gap-3">
-                                                            <TableImage url={d.cover_url} alt={d.name ?? "Destination"} icon={Globe} />
+                                                            <TableImage url={d.cover_url} alt={d.name ?? "Destination"}
+                                                                        icon={Globe}/>
                                                             {d.name}
                                                         </div>
                                                     </TableCell>
@@ -1159,21 +1171,22 @@ export default function ItineroDashboardClient({
                                                             <DropdownMenuTrigger asChild>
                                                                 <Button variant="ghost" className="h-8 w-8 p-0">
                                                                     <span className="sr-only">Open menu</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                    <MoreHorizontal className="h-4 w-4"/>
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
                                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                                <DropdownMenuItem onClick={() => startEditDestination(d)}>
-                                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                                <DropdownMenuItem
+                                                                    onClick={() => startEditDestination(d)}>
+                                                                    <Pencil className="mr-2 h-4 w-4"/>
                                                                     Edit
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuSeparator/>
                                                                 <DropdownMenuItem
                                                                     onClick={() => handleDeleteDestination(d.id)}
                                                                     className="text-red-600 focus:text-red-600"
                                                                 >
-                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    <Trash2 className="mr-2 h-4 w-4"/>
                                                                     Delete
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
@@ -1194,7 +1207,7 @@ export default function ItineroDashboardClient({
                             <div className="flex items-center justify-between">
                                 <div className="relative w-72 flex items-center gap-2">
                                     <div className="relative flex-1">
-                                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"/>
                                         <Input
                                             placeholder="Search places..."
                                             className="pl-9 bg-white dark:bg-slate-900"
@@ -1204,7 +1217,7 @@ export default function ItineroDashboardClient({
                                     </div>
                                     <Select value={placeFilterDestId} onValueChange={setPlaceFilterDestId}>
                                         <SelectTrigger className="w-[180px] bg-white dark:bg-slate-900">
-                                            <SelectValue placeholder="Filter by Destination" />
+                                            <SelectValue placeholder="Filter by Destination"/>
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="all">All Destinations</SelectItem>
@@ -1218,8 +1231,9 @@ export default function ItineroDashboardClient({
                                 </div>
                                 <Sheet open={isPlaceSheetOpen} onOpenChange={setIsPlaceSheetOpen}>
                                     <SheetTrigger asChild>
-                                        <Button onClick={resetPlaceForm} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
-                                            <Plus className="h-4 w-4" />
+                                        <Button onClick={resetPlaceForm}
+                                                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                                            <Plus className="h-4 w-4"/>
                                             Add Place
                                         </Button>
                                     </SheetTrigger>
@@ -1237,17 +1251,22 @@ export default function ItineroDashboardClient({
                                         <div className="py-6">
                                             <form id="place-form" onSubmit={handleSavePlace} className="space-y-4">
                                                 <div className="space-y-4">
-                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Basic Info</div>
+                                                    <div
+                                                        className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Basic
+                                                        Info
+                                                    </div>
                                                     <div className="space-y-1.5">
-                                                        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                                        <Label
+                                                            className="text-xs font-bold text-slate-500 uppercase tracking-wide">
                                                             Destination (Required)
                                                         </Label>
                                                         <Select
                                                             value={placeDestinationId}
                                                             onValueChange={setPlaceDestinationId}
                                                         >
-                                                            <SelectTrigger className="bg-slate-50 border-slate-200 dark:bg-slate-950 dark:border-slate-800">
-                                                                <SelectValue placeholder="Select a destination" />
+                                                            <SelectTrigger
+                                                                className="bg-slate-50 border-slate-200 dark:bg-slate-950 dark:border-slate-800">
+                                                                <SelectValue placeholder="Select a destination"/>
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 {destinations.map((d) => (
@@ -1274,7 +1293,9 @@ export default function ItineroDashboardClient({
                                                 </div>
 
                                                 <div className="space-y-4">
-                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Details</div>
+                                                    <div
+                                                        className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Details
+                                                    </div>
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <FormInput
                                                             label="Category"
@@ -1283,16 +1304,19 @@ export default function ItineroDashboardClient({
                                                             placeholder="landmark, restaurant..."
                                                         />
                                                         <div className="space-y-1.5">
-                                                            <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                                            <Label
+                                                                className="text-xs font-bold text-slate-500 uppercase tracking-wide">
                                                                 Kind
                                                             </Label>
                                                             <Select value={placeKind} onValueChange={setPlaceKind}>
-                                                                <SelectTrigger className="bg-slate-50 border-slate-200 dark:bg-slate-950 dark:border-slate-800">
-                                                                    <SelectValue />
+                                                                <SelectTrigger
+                                                                    className="bg-slate-50 border-slate-200 dark:bg-slate-950 dark:border-slate-800">
+                                                                    <SelectValue/>
                                                                 </SelectTrigger>
                                                                 <SelectContent>
                                                                     <SelectItem value="poi">POI</SelectItem>
-                                                                    <SelectItem value="restaurant">Restaurant</SelectItem>
+                                                                    <SelectItem
+                                                                        value="restaurant">Restaurant</SelectItem>
                                                                     <SelectItem value="hotel">Hotel</SelectItem>
                                                                     <SelectItem value="activity">Activity</SelectItem>
                                                                 </SelectContent>
@@ -1322,7 +1346,9 @@ export default function ItineroDashboardClient({
                                                 </div>
 
                                                 <div className="space-y-4">
-                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Location</div>
+                                                    <div
+                                                        className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Location
+                                                    </div>
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <FormInput
                                                             label="Latitude"
@@ -1340,7 +1366,10 @@ export default function ItineroDashboardClient({
                                                 </div>
 
                                                 <div className="space-y-4">
-                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Links & Media</div>
+                                                    <div
+                                                        className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Links
+                                                        & Media
+                                                    </div>
                                                     <FormInput
                                                         label="Tags (comma separated)"
                                                         value={placeTags}
@@ -1368,16 +1397,18 @@ export default function ItineroDashboardClient({
                                                             checked={placeIsPartner}
                                                             onCheckedChange={(c) => setPlaceIsPartner(!!c)}
                                                         />
-                                                        <Label htmlFor="is_partner" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                                        <Label htmlFor="is_partner"
+                                                               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                                                             Is Partner / Promoted?
                                                         </Label>
                                                     </div>
                                                 </div>
 
-                                                <Separator />
+                                                <Separator/>
 
                                                 <div className="space-y-3">
-                                                    <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                                                    <Label
+                                                        className="text-sm font-bold text-slate-700 dark:text-slate-300">
                                                         Opening Hours
                                                     </Label>
                                                     <div className="space-y-2">
@@ -1385,14 +1416,17 @@ export default function ItineroDashboardClient({
                                                             const hour = placeHours.find((h) => h.day_of_week === idx);
                                                             const isOpen = !!hour;
                                                             return (
-                                                                <div key={idx} className="flex items-center gap-3 text-sm">
-                                                                    <div className="w-10 font-medium text-slate-500">{dayName}</div>
+                                                                <div key={idx}
+                                                                     className="flex items-center gap-3 text-sm">
+                                                                    <div
+                                                                        className="w-10 font-medium text-slate-500">{dayName}</div>
                                                                     <div className="flex items-center gap-2">
                                                                         <Checkbox
                                                                             checked={isOpen}
                                                                             onCheckedChange={(checked) => toggleClosed(idx, !checked)}
                                                                         />
-                                                                        <span className={cn("text-xs w-12", isOpen ? "text-green-600 font-medium" : "text-slate-400")}>
+                                                                        <span
+                                                                            className={cn("text-xs w-12", isOpen ? "text-green-600 font-medium" : "text-slate-400")}>
                                                                             {isOpen ? "Open" : "Closed"}
                                                                         </span>
                                                                     </div>
@@ -1422,7 +1456,7 @@ export default function ItineroDashboardClient({
                                         </div>
                                         <SheetFooter>
                                             <Button type="submit" form="place-form" disabled={placeSaving}>
-                                                {placeSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                {placeSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                                 {editingPlaceId ? "Save Changes" : "Create Place"}
                                             </Button>
                                         </SheetFooter>
@@ -1444,19 +1478,22 @@ export default function ItineroDashboardClient({
                                     <TableBody>
                                         {filteredPlaces.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                                <TableCell colSpan={5}
+                                                           className="h-24 text-center text-muted-foreground">
                                                     No places found.
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
                                             filteredPlaces.map((p) => (
-                                                <TableRow key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                                                <TableRow key={p.id}
+                                                          className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
                                                     <TableCell className="font-medium">
                                                         <div className="flex items-center gap-3">
-                                                            <TableImage url={null} alt={p.name} icon={MapPin} />
+                                                            <TableImage url={null} alt={p.name} icon={MapPin}/>
                                                             <div className="flex flex-col">
                                                                 <div className="flex items-center gap-2">
-                                                                    {p.is_partner && <Badge variant="secondary" className="text-[10px] h-5 px-1 bg-amber-100 text-amber-700">PRO</Badge>}
+                                                                    {p.is_partner && <Badge variant="secondary"
+                                                                                            className="text-[10px] h-5 px-1 bg-amber-100 text-amber-700">PRO</Badge>}
                                                                     <span>{p.name}</span>
                                                                 </div>
                                                             </div>
@@ -1478,21 +1515,21 @@ export default function ItineroDashboardClient({
                                                             <DropdownMenuTrigger asChild>
                                                                 <Button variant="ghost" className="h-8 w-8 p-0">
                                                                     <span className="sr-only">Open menu</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                    <MoreHorizontal className="h-4 w-4"/>
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
                                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                                 <DropdownMenuItem onClick={() => startEditPlace(p)}>
-                                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                                    <Pencil className="mr-2 h-4 w-4"/>
                                                                     Edit
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuSeparator/>
                                                                 <DropdownMenuItem
                                                                     onClick={() => handleDeletePlace(p.id)}
                                                                     className="text-red-600 focus:text-red-600"
                                                                 >
-                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    <Trash2 className="mr-2 h-4 w-4"/>
                                                                     Delete
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
@@ -1510,7 +1547,7 @@ export default function ItineroDashboardClient({
                         <div className="space-y-6">
                             <div className="flex items-center justify-between">
                                 <div className="relative w-72">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"/>
                                     <Input
                                         placeholder="Search history..."
                                         className="pl-9 bg-white dark:bg-slate-900"
@@ -1520,8 +1557,9 @@ export default function ItineroDashboardClient({
                                 </div>
                                 <Sheet open={isHistorySheetOpen} onOpenChange={setIsHistorySheetOpen}>
                                     <SheetTrigger asChild>
-                                        <Button onClick={resetHistoryForm} className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
-                                            <Plus className="h-4 w-4" />
+                                        <Button onClick={resetHistoryForm}
+                                                className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+                                            <Plus className="h-4 w-4"/>
                                             Add Entry
                                         </Button>
                                     </SheetTrigger>
@@ -1539,17 +1577,21 @@ export default function ItineroDashboardClient({
                                         <div className="py-6">
                                             <form id="hist-form" onSubmit={handleSaveHistory} className="space-y-4">
                                                 <div className="space-y-4">
-                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Context</div>
+                                                    <div
+                                                        className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Context
+                                                    </div>
                                                     <div className="space-y-1.5">
-                                                        <Label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                                                        <Label
+                                                            className="text-xs font-bold text-slate-500 uppercase tracking-wide">
                                                             Destination (Required)
                                                         </Label>
                                                         <Select
                                                             value={histDestinationId}
                                                             onValueChange={setHistDestinationId}
                                                         >
-                                                            <SelectTrigger className="bg-slate-50 border-slate-200 dark:bg-slate-950 dark:border-slate-800">
-                                                                <SelectValue placeholder="Select a destination" />
+                                                            <SelectTrigger
+                                                                className="bg-slate-50 border-slate-200 dark:bg-slate-950 dark:border-slate-800">
+                                                                <SelectValue placeholder="Select a destination"/>
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 {destinations.map((d) => (
@@ -1563,7 +1605,9 @@ export default function ItineroDashboardClient({
                                                 </div>
 
                                                 <div className="space-y-4">
-                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Content</div>
+                                                    <div
+                                                        className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Content
+                                                    </div>
                                                     <FormTextarea
                                                         label="Content (Main)"
                                                         value={histContent}
@@ -1588,7 +1632,9 @@ export default function ItineroDashboardClient({
                                                 </div>
 
                                                 <div className="space-y-4">
-                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Details</div>
+                                                    <div
+                                                        className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Details
+                                                    </div>
                                                     <FormTextarea
                                                         label="Getting Around"
                                                         value={histGettingAround}
@@ -1633,7 +1679,9 @@ export default function ItineroDashboardClient({
                                                 </div>
 
                                                 <div className="space-y-4">
-                                                    <div className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Media</div>
+                                                    <div
+                                                        className="font-medium text-sm text-slate-900 dark:text-white border-b pb-2">Media
+                                                    </div>
                                                     <FormInput
                                                         label="Backdrop Image URL"
                                                         value={histBackdropUrl}
@@ -1653,7 +1701,7 @@ export default function ItineroDashboardClient({
                                         </div>
                                         <SheetFooter>
                                             <Button type="submit" form="hist-form" disabled={histSaving}>
-                                                {histSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                {histSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                                 {editingHistId ? "Save Changes" : "Create Entry"}
                                             </Button>
                                         </SheetFooter>
@@ -1674,20 +1722,24 @@ export default function ItineroDashboardClient({
                                     <TableBody>
                                         {filteredHistory.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                                                <TableCell colSpan={4}
+                                                           className="h-24 text-center text-muted-foreground">
                                                     No history entries found.
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
                                             filteredHistory.map((h) => (
-                                                <TableRow key={h.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                                                <TableRow key={h.id}
+                                                          className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
                                                     <TableCell className="font-medium">
                                                         <div className="flex items-center gap-3">
-                                                            <TableImage url={h.backdrop_image_url} alt="Backdrop" icon={History} />
+                                                            <TableImage url={h.backdrop_image_url} alt="Backdrop"
+                                                                        icon={History}/>
                                                             <div className="flex flex-col">
                                                                 <div className="flex items-center gap-2">
                                                                     {destinations.find(d => d.id === h.destination_id)?.current_history_id === h.id && (
-                                                                        <Badge variant="secondary" className="text-[10px] h-5 px-1 bg-green-100 text-green-700">Current</Badge>
+                                                                        <Badge variant="secondary"
+                                                                               className="text-[10px] h-5 px-1 bg-green-100 text-green-700">Current</Badge>
                                                                     )}
                                                                     <span>{destinations.find(d => d.id === h.destination_id)?.name || "Unknown"}</span>
                                                                 </div>
@@ -1705,26 +1757,27 @@ export default function ItineroDashboardClient({
                                                             <DropdownMenuTrigger asChild>
                                                                 <Button variant="ghost" className="h-8 w-8 p-0">
                                                                     <span className="sr-only">Open menu</span>
-                                                                    <MoreHorizontal className="h-4 w-4" />
+                                                                    <MoreHorizontal className="h-4 w-4"/>
                                                                 </Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end">
                                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                                <DropdownMenuItem onClick={() => handleSetCurrentHistory(h)}>
-                                                                    <Flag className="mr-2 h-4 w-4" />
+                                                                <DropdownMenuItem
+                                                                    onClick={() => handleSetCurrentHistory(h)}>
+                                                                    <Flag className="mr-2 h-4 w-4"/>
                                                                     Set as Current
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuSeparator/>
                                                                 <DropdownMenuItem onClick={() => startEditHistory(h)}>
-                                                                    <Pencil className="mr-2 h-4 w-4" />
+                                                                    <Pencil className="mr-2 h-4 w-4"/>
                                                                     Edit
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuSeparator/>
                                                                 <DropdownMenuItem
                                                                     onClick={() => handleDeleteHistory(h.id)}
                                                                     className="text-red-600 focus:text-red-600"
                                                                 >
-                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    <Trash2 className="mr-2 h-4 w-4"/>
                                                                     Delete
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
@@ -1736,29 +1789,30 @@ export default function ItineroDashboardClient({
                                     </TableBody>
                                 </Table>
                             </Card>
-                        </div >
+                        </div>
                     )
                     }
-                </div >
-            </main >
-        </div >
+                </div>
+            </main>
+        </div>
     );
 }
 
 /* ---------- Sub-components for clean code ---------- */
 
 function TableImage({
-    url,
-    alt,
-    icon: Icon,
-}: {
+                        url,
+                        alt,
+                        icon: Icon,
+                    }: {
     url?: string | null;
     alt: string;
     icon: React.ElementType;
 }) {
     if (url) {
         return (
-            <div className="h-9 w-9 rounded-md bg-slate-100 overflow-hidden relative border border-slate-200 dark:border-slate-700 dark:bg-slate-800 flex-shrink-0">
+            <div
+                className="h-9 w-9 rounded-md bg-slate-100 overflow-hidden relative border border-slate-200 dark:border-slate-700 dark:bg-slate-800 flex-shrink-0">
                 <Image
                     src={url}
                     alt={alt}
@@ -1769,19 +1823,20 @@ function TableImage({
         );
     }
     return (
-        <div className="h-9 w-9 rounded-md bg-slate-100 flex items-center justify-center border border-slate-200 dark:border-slate-700 dark:bg-slate-800 flex-shrink-0">
-            <Icon className="h-4 w-4 text-slate-400" />
+        <div
+            className="h-9 w-9 rounded-md bg-slate-100 flex items-center justify-center border border-slate-200 dark:border-slate-700 dark:bg-slate-800 flex-shrink-0">
+            <Icon className="h-4 w-4 text-slate-400"/>
         </div>
     );
 }
 
 function FormInput({
-    label,
-    value,
-    onChange,
-    placeholder,
-    type = "text",
-}: {
+                       label,
+                       value,
+                       onChange,
+                       placeholder,
+                       type = "text",
+                   }: {
     label: string;
     value: string;
     onChange: (val: string) => void;
@@ -1805,12 +1860,12 @@ function FormInput({
 }
 
 function FormTextarea({
-    label,
-    value,
-    onChange,
-    placeholder,
-    rows,
-}: {
+                          label,
+                          value,
+                          onChange,
+                          placeholder,
+                          rows,
+                      }: {
     label: string;
     value: string;
     onChange: (val: string) => void;
@@ -1834,10 +1889,10 @@ function FormTextarea({
 }
 
 function ActionBtn({
-    icon: Icon,
-    onClick,
-    destructive,
-}: {
+                       icon: Icon,
+                       onClick,
+                       destructive,
+                   }: {
     icon: React.ElementType;
     onClick: () => void;
     destructive?: boolean;
@@ -1853,7 +1908,7 @@ function ActionBtn({
                     : "text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
             )}
         >
-            <Icon className="h-4 w-4" />
+            <Icon className="h-4 w-4"/>
         </button>
     );
 }

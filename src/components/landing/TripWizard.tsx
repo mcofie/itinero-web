@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { CurrencySelect } from "@/components/CurrencySelect";
 import { getCurrencyMeta } from "@/lib/currency-data";
@@ -14,6 +15,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { getLatestFxSnapshot, convertUsingSnapshot } from "@/lib/fx/fx";
 
 
 import {
@@ -209,6 +211,59 @@ export default function TripWizard() {
         try {
             const payload = toPayload(state);
 
+            // --- Currency Conversion Logic ---
+            const destId = payload.destinations[0]?.id;
+            if (destId) {
+                try {
+                    // 1. Get destination currency from a place in that destination
+                    // We'll just grab one place that has a currency defined
+                    const { data: placeData } = await sb
+                        .schema("itinero")
+                        .from("places")
+                        .select("cost_currency")
+                        .eq("destination_id", destId)
+                        .not("cost_currency", "is", null)
+                        .limit(1)
+                        .maybeSingle();
+
+                    const destCurrency = placeData?.cost_currency;
+
+                    if (destCurrency && destCurrency !== state.currency) {
+                        // 2. Get FX rates
+                        const fx = await getLatestFxSnapshot("USD");
+
+                        // 3. Convert budget
+                        if (fx && payload.budget_daily > 0) {
+                            const converted = convertUsingSnapshot(
+                                fx,
+                                payload.budget_daily,
+                                state.currency,
+                                destCurrency
+                            );
+                            if (converted) {
+                                payload.budget_daily = Math.round(converted);
+                                payload.currency = destCurrency;
+                            } else {
+                                toast.warning(`Could not convert budget to ${destCurrency}. Using ${state.currency}.`);
+                                // If no budget or conversion failed, still switch currency context
+                                // payload.currency = destCurrency; // <-- This was the bug? No, if I uncomment this, I force JPY.
+                                // But if I force JPY with GHS budget, it's wrong.
+                                // So I keep it commented or remove it.
+                                // Actually, I should probably NOT switch currency if conversion fails.
+                            }
+                        } else {
+                            // If no budget (0), we can safely switch to destination currency
+                            payload.currency = destCurrency;
+                        }
+                    } else if (!destCurrency) {
+                        // Optional: warn if we couldn't find destination currency
+                        // toast.info("Could not determine destination currency.");
+                    }
+                } catch (e) {
+                    console.error("[TripWizard] Currency conversion failed:", e);
+                    // Fallback: proceed with original currency/budget
+                }
+            }
 
             const { data, error } = await sb.functions.invoke("build_preview_itinerary", {
                 body: payload,
@@ -733,6 +788,23 @@ function SelectionCard({
     );
 }
 
+/* --- HELPERS --- */
+function getFlagEmoji(countryCode: string) {
+    const codePoints = countryCode
+        .toUpperCase()
+        .split("")
+        .map((char) => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+}
+
+function getCountryName(countryCode: string) {
+    try {
+        return new Intl.DisplayNames(["en"], { type: "region" }).of(countryCode);
+    } catch {
+        return countryCode;
+    }
+}
+
 // --- DESTINATION FIELD ---
 function DestinationField({
     value,
@@ -743,7 +815,7 @@ function DestinationField({
 }) {
     const sb = getSupabaseBrowser();
     const [q, setQ] = useState(value.name);
-    const [rows, setRows] = useState<Destination[]>([]);
+    const [rows, setRows] = useState<(Destination & { country_code?: string })[]>([]);
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
@@ -758,7 +830,7 @@ function DestinationField({
                 const { data, error } = await sb
                     .schema("itinero")
                     .from("destinations")
-                    .select("id,name,lat,lng")
+                    .select("id,name,lat,lng,country_code")
                     .ilike("name", `%${term}%`)
                     .limit(5);
 
@@ -794,25 +866,35 @@ function DestinationField({
             {open && rows.length > 0 && (
                 <div
                     className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl dark:bg-slate-900 dark:border-slate-800">
-                    {rows.map((r) => (
-                        <button
-                            key={r.id}
-                            type="button"
-                            className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-blue-50 dark:hover:bg-slate-800"
-                            onClick={() => {
-                                onChange(r);
-                                setQ(r.name);
-                                setOpen(false);
-                            }}
-                        >
-                            <span className="font-medium text-slate-700 dark:text-slate-200">
-                                {r.name}
-                            </span>
-                            <span className="text-xs text-slate-400 dark:text-slate-500">
-                                Select
-                            </span>
-                        </button>
-                    ))}
+                    {rows.map((r) => {
+                        const flag = r.country_code ? getFlagEmoji(r.country_code) : "🌍";
+                        const countryName = r.country_code ? getCountryName(r.country_code) : "";
+
+                        return (
+                            <button
+                                key={r.id}
+                                type="button"
+                                onClick={() => {
+                                    setQ(r.name);
+                                    onChange(r);
+                                    setOpen(false);
+                                }}
+                                className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+                            >
+                                <span className="text-2xl">{flag}</span>
+                                <div>
+                                    <div className="font-medium text-slate-900 dark:text-white">
+                                        {r.name}
+                                    </div>
+                                    {countryName && (
+                                        <div className="text-xs text-slate-500 dark:text-slate-400">
+                                            {countryName}
+                                        </div>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
                 </div>
             )}
         </div>
