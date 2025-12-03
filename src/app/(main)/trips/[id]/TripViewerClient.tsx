@@ -956,6 +956,20 @@ function EditableDay({
                 </div>
             )}
 
+            {/* Add Item Top */}
+            <div className="pl-8">
+                <AddItemUnderDay
+                    tripId={tripId}
+                    dayIndex={dayIdx}
+                    date={day.date}
+                    tripStartDate={startDate}
+                    destinationLat={tripConfig?.destinations?.[0]?.lat}
+                    destinationLng={tripConfig?.destinations?.[0]?.lng}
+                    preferenceTags={tripConfig?.interests}
+                    nextOrderIndex={items.length > 0 ? items[0].order_index - 1 : nextOrderIndex}
+                />
+            </div>
+
             {/* Timeline */}
             <div className="relative space-y-8 border-l-2 border-slate-200 dark:border-slate-800 pl-8">
                 {blocks.map((b, i) => {

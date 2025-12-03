@@ -946,77 +946,120 @@ function FullScreenPaywallOverlay({
     return (
         <div
             data-theme={forceTheme}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 dark:bg-black/80 animate-in fade-in duration-300"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-500"
         >
-            <div
-                className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden dark:bg-slate-900 dark:border dark:border-slate-800 relative">
-                <button onClick={onClose}
-                    className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors">
+            <div className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] bg-white shadow-2xl ring-1 ring-white/10 dark:bg-slate-950 dark:ring-slate-800">
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute right-5 top-5 z-20 rounded-full bg-black/10 p-2 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/20 hover:text-white dark:bg-white/10 dark:hover:bg-white/20"
+                >
                     <X className="h-5 w-5" />
                 </button>
-                <div className="relative h-40 bg-blue-600 overflow-hidden dark:bg-blue-700">
-                    <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20"></div>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                        <Sparkles className="h-10 w-10 mb-2" />
-                        <h2 className="text-2xl font-bold">Unlock Full Itinerary</h2>
+
+                {/* Premium Header */}
+                <div className="relative flex h-64 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-violet-600 via-blue-600 to-indigo-600 text-center text-white">
+                    <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20 mix-blend-overlay" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+
+                    <div className="relative z-10 flex flex-col items-center gap-4 p-6">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 shadow-inner backdrop-blur-md ring-1 ring-white/30">
+                            <Sparkles className="h-8 w-8 text-white" />
+                        </div>
+                        <div className="space-y-1">
+                            <h2 className="text-3xl font-black tracking-tight md:text-4xl">
+                                Unlock Your Full Trip
+                            </h2>
+                            <p className="text-blue-100 font-medium text-lg">
+                                Get the complete itinerary, maps, and offline access.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                <div className="p-8">
-                    <div className="grid gap-6 sm:grid-cols-2 mb-8">
-                        <PerkItem icon={MapIcon} title="Interactive Maps"
-                            desc="Navigate easily with pinned locations." />
-                        <PerkItem icon={Download} title="PDF Export" desc="Save offline for when signal drops." />
-                        <PerkItem icon={CalendarDays} title="Calendar Sync" desc="Add to Google/Apple Calendar." />
-                        <PerkItem icon={PencilLine} title="Edit & Customize" desc="Full control to tweak your plan." />
+                {/* Content */}
+                <div className="p-8 md:p-10">
+                    {/* Perks Grid */}
+                    <div className="mb-10 grid gap-x-8 gap-y-6 sm:grid-cols-2">
+                        <PerkItem
+                            icon={MapIcon}
+                            title="Interactive Maps"
+                            desc="Navigate easily with pinned locations."
+                        />
+                        <PerkItem
+                            icon={Download}
+                            title="PDF Export"
+                            desc="Save offline for when signal drops."
+                        />
+                        <PerkItem
+                            icon={CalendarDays}
+                            title="Calendar Sync"
+                            desc="Add to Google/Apple Calendar."
+                        />
+                        <PerkItem
+                            icon={PencilLine}
+                            title="Full Customization"
+                            desc="Edit every detail of your plan."
+                        />
                     </div>
 
-                    <div className="flex flex-col items-center gap-4">
-                        <div
-                            className="flex items-center gap-2 text-sm font-medium text-slate-600 bg-slate-100 px-4 py-2 rounded-full dark:bg-slate-800 dark:text-slate-300">
-                            <span>Cost: {required} pts</span>
-                            <span className="text-slate-300 dark:text-slate-600">|</span>
-                            <span>
-                                You have:{" "}
+                    {/* Cost & Actions */}
+                    <div className="flex flex-col items-center gap-6">
+                        {/* Points Status */}
+                        <div className="flex items-center gap-3 rounded-full bg-slate-50 px-5 py-2.5 text-sm font-medium text-slate-600 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-800">
+                            <span className="flex items-center gap-1.5">
+                                <span className="text-slate-400">Cost:</span>
+                                <span className="font-bold text-slate-900 dark:text-white">{required} pts</span>
+                            </span>
+                            <span className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
+                            <span className="flex items-center gap-1.5">
+                                <span className="text-slate-400">Balance:</span>
                                 <span
-                                    className={
-                                        points === null
-                                            ? "font-bold"
-                                            : hasEnough
-                                                ? "text-emerald-600 font-bold dark:text-emerald-400"
-                                                : "text-red-600 font-bold dark:text-red-400"
-                                    }
+                                    className={cn(
+                                        "font-bold",
+                                        hasEnough
+                                            ? "text-emerald-600 dark:text-emerald-400"
+                                            : "text-rose-500 dark:text-rose-400"
+                                    )}
                                 >
-                                    {points ?? "..."}
-                                </span>{" "}
-                                pts
+                                    {points ?? "..."} pts
+                                </span>
                             </span>
                         </div>
 
-                        <div className="flex gap-3 w-full sm:w-auto">
+                        {/* Buttons */}
+                        <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
                             <Button
                                 size="lg"
                                 onClick={handlePrimaryAction}
                                 disabled={saving}
-                                className="flex-1 sm:flex-initial rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+                                className={cn(
+                                    "relative h-14 flex-1 rounded-2xl text-base font-bold shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]",
+                                    hasEnough
+                                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 hover:shadow-blue-500/25"
+                                        : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+                                )}
                             >
                                 {saving ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                         Processing...
                                     </>
                                 ) : hasEnough ? (
-                                    "Unlock Now"
+                                    <span className="flex items-center gap-2">
+                                        Unlock Itinerary <Sparkles className="h-4 w-4" />
+                                    </span>
                                 ) : (
                                     "Top Up Points"
                                 )}
                             </Button>
+
                             <Button
                                 size="lg"
                                 variant="outline"
                                 onClick={onSave}
                                 disabled={saving}
-                                className="flex-1 sm:flex-initial rounded-xl border-slate-200 dark:border-slate-700 dark:bg-transparent dark:text-slate-300"
+                                className="h-14 flex-1 rounded-2xl border-2 border-slate-200 bg-transparent text-base font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
                             >
                                 Save Draft
                             </Button>
@@ -1038,14 +1081,15 @@ function PerkItem({
     desc: string;
 }) {
     return (
-        <div className="flex gap-3">
-            <div
-                className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 dark:bg-blue-900/30 dark:text-blue-400">
-                <Icon className="h-5 w-5" />
+        <div className="flex gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                <Icon className="h-6 w-6" />
             </div>
             <div>
-                <h4 className="font-bold text-slate-900 text-sm dark:text-white">{title}</h4>
-                <p className="text-xs text-slate-500 leading-relaxed dark:text-slate-400">{desc}</p>
+                <h4 className="font-bold text-slate-900 dark:text-white">{title}</h4>
+                <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                    {desc}
+                </p>
             </div>
         </div>
     );
