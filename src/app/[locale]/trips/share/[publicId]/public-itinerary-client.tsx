@@ -50,7 +50,6 @@ type PlaceDetail = {
 export default function PublicItineraryClient({
     currency,
     estTotalCost,
-    tripSummary: _tripSummary, // unused here, but kept to preserve prop shape
     days,
     places,
     placeDetails = [],

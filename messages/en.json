@@ -8,5 +8,101 @@
         "step2": "When?",
         "step3": "Who?",
         "step4": "Budget?"
+    },
+    "Navigation": {
+        "trips": "Trips",
+        "preview": "Preview",
+        "rewards": "Rewards",
+        "profile": "Profile",
+        "billing": "Billing",
+        "pricing": "Pricing",
+        "getStarted": "Get Started",
+        "theme": "Theme",
+        "logout": "Log out"
+    },
+    "Actions": {
+        "newTrip": "New Trip",
+        "topUp": "Top Up",
+        "balance": "Balance"
+    },
+    "Footer": {
+        "rights": "All rights reserved.",
+        "terms": "Terms",
+        "privacy": "Privacy",
+        "madeWith": "Made with"
+    },
+    "Auth": {
+        "welcome": "Welcome back",
+        "startJourney": "Start your journey",
+        "signInDesc": "Sign in to access your saved trips and plans.",
+        "signUpDesc": "Create an account to build, save, and share itineraries.",
+        "email": "Email address",
+        "password": "Password",
+        "signIn": "Sign in",
+        "createAccount": "Create account",
+        "wait": "Please wait",
+        "continueWith": "Or continue with",
+        "google": "Google",
+        "noAccount": "Don't have an account? Sign up",
+        "hasAccount": "Already have an account? Sign in",
+        "agreement": "By continuing, you agree to Itinero's",
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy",
+        "successSignIn": "Signed in",
+        "successSignUp": "Account created",
+        "errorAuth": "Authentication failed",
+        "errorGoogle": "Google sign-in failed"
+    },
+    "Landing": {
+        "Hero": {
+            "title1": "The world",
+            "title2": "awaits you.",
+            "subtitle": "Build complete itineraries with activities, routes, and budgets in one place.",
+            "trustedBy": "Trusted by",
+            "travelers": "travelers"
+        },
+        "Features": {
+            "title1": "Why travellers choose",
+            "title2": "Itinero",
+            "subtitle": "Everything you need to go from idea to departure in one seamless flow.",
+            "communityTitle": "Community Powered",
+            "communityDesc": "Local tips and hidden gems contributed by real travellers. Verify info to earn points.",
+            "exportTitle": "Visa-Ready Exports",
+            "exportDesc": "Generate professional PDF itineraries instantly. Perfect for visa applications and offline use.",
+            "budgetTitle": "Budget Control",
+            "budgetDesc": "Real-world price estimates for every activity. Plan confidently without breaking the bank.",
+            "syncTitle": "Smart Sync",
+            "syncDesc": "Push your entire trip to Google Calendar or Outlook with one click. Never miss a beat."
+        },
+        "GlobalScale": {
+            "title1": "Global reach,",
+            "title2": "local expertise.",
+            "desc": "Whether you're planning a safari in Kenya, a culinary tour in Tokyo, or a business trip to New York, Itinero connects you with the best local insights.",
+            "countries": "Countries",
+            "itineraries": "Itineraries",
+            "travelers": "Travelers",
+            "rating": "App Rating"
+        },
+        "Destinations": {
+            "title": "Popular Destinations",
+            "desc": "Deep local data, pricing, and optimized routing available for these regions.",
+            "viewAll": "View all destinations",
+            "itinerariesSuffix": "Itineraries",
+            "featured": "Featured Destination"
+        },
+        "CTA": {
+            "title1": "Start your next",
+            "title2": "adventure today.",
+            "desc": "Join thousands of travellers who have stopped stressing over spreadsheets and started enjoying the journey.",
+            "startFree": "Start Free Itinerary",
+            "viewPricing": "View Pricing"
+        },
+        "Footer": {
+            "desc": "The all-in-one workspace for modern travellers. Plan, budget, and explore the world with confidence.",
+            "product": "Product",
+            "company": "Company",
+            "stayUpdated": "Stay Updated",
+            "emailPlaceholder": "Email"
+        }
     }
 }

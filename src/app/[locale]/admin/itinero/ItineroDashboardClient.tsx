@@ -1,19 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+
 import Image from "next/image";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-    Tabs,
-    TabsList,
-    TabsTrigger,
-    TabsContent,
-} from "@/components/ui/tabs";
+
 import {
     Sheet,
     SheetContent,
@@ -31,7 +26,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Separator } from "@/components/ui/separator";
 import {
     DropdownMenu,
@@ -43,10 +38,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
     Card,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
 } from "@/components/ui/card";
 import {
     Select,
@@ -62,17 +53,14 @@ import {
     MapPin,
     Globe,
     Plus,
-    Database,
+    Search,
+    MoreHorizontal,
     Pencil,
     Trash2,
-    Search,
     Flag,
-    History,
-    MoreHorizontal,
+    History as HistoryIcon,
     LayoutDashboard,
     ArrowLeft,
-    Filter,
-    Clock,
     ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -207,7 +195,7 @@ export default function ItineroDashboardClient({
     const [historyList, setHistoryList] = React.useState<
         DestinationHistoryRowUI[]
     >([]);
-    const [histLoadingList, setHistLoadingList] = React.useState(false);
+
     const [isHistorySheetOpen, setIsHistorySheetOpen] = React.useState(false);
     const [editingHistId, setEditingHistId] =
         React.useState<string | null>(null);
@@ -234,7 +222,7 @@ export default function ItineroDashboardClient({
     // Hours state: 0=Sun, 1=Mon, ..., 6=Sat
     // We'll store them in a map or array. Let's use an array of objects for the form.
     const [placeHours, setPlaceHours] = React.useState<PlaceHour[]>([]);
-    const [hoursLoading, setHoursLoading] = React.useState(false);
+
 
     const [placeSaving, setPlaceSaving] = React.useState(false);
     const [editingPlaceId, setEditingPlaceId] = React.useState<string | null>(
@@ -301,23 +289,7 @@ export default function ItineroDashboardClient({
         return tags && tags.length ? tags.join(", ") : "";
     }
 
-    function formatDateShort(iso?: string | null): string {
-        if (!iso) return "—";
-        try {
-            return new Date(iso).toLocaleString(undefined, {
-                year: "numeric",
-                month: "short",
-                day: "2-digit",
-            });
-        } catch {
-            return iso;
-        }
-    }
 
-    function parseDays(v: string): number {
-        const n = Number(v);
-        return Number.isFinite(n) && n > 0 ? Math.round(n) : 1;
-    }
 
     /* --- Effects --- */
 
@@ -329,7 +301,7 @@ export default function ItineroDashboardClient({
             return;
         }
         (async () => {
-            setHistLoadingList(true);
+            // setHistLoadingList(true);
             try {
                 const { data, error } = await sb
                     .schema("itinero")
@@ -353,7 +325,7 @@ export default function ItineroDashboardClient({
                 toast.error("Unexpected error loading history", { description: msg });
                 setHistoryList([]);
             } finally {
-                setHistLoadingList(false);
+                // setHistLoadingList(false);
             }
         })();
     }, [histDestinationId, sb]);
@@ -366,7 +338,7 @@ export default function ItineroDashboardClient({
             return;
         }
         (async () => {
-            setHoursLoading(true);
+            // setHoursLoading(true);
             try {
                 const { data, error } = await sb
                     .schema("itinero")
@@ -382,7 +354,7 @@ export default function ItineroDashboardClient({
             } catch (err) {
                 console.error("Error loading hours:", err);
             } finally {
-                setHoursLoading(false);
+                // setHoursLoading(false);
             }
         })();
     }, [editingPlaceId, sb]);
@@ -901,29 +873,7 @@ export default function ItineroDashboardClient({
         });
     }, [historyList, histSearch, destinations]);
 
-    const visiblePlaces = React.useMemo(() => {
-        let list = places;
-        if (placeDestinationId)
-            list = list.filter(
-                (p) => p.destination_id === placeDestinationId
-            );
-        if (placeSearch.trim()) {
-            const q = placeSearch.trim().toLowerCase();
-            list = list.filter(
-                (p) =>
-                    p.name.toLowerCase().includes(q) ||
-                    (p.category ?? "").toLowerCase().includes(q)
-            );
-        }
-        if (placeFilterDestId && placeFilterDestId !== "all") {
-            list = list.filter((p) => p.destination_id === placeFilterDestId);
-        }
-        return list;
-    }, [places, placeDestinationId, placeSearch, placeFilterDestId]);
 
-    const selectedDestLabel =
-        destinations.find((d) => d.id === placeDestinationId)?.name ??
-        "Select destination";
 
     /* --- Render --- */
     return (
@@ -968,7 +918,7 @@ export default function ItineroDashboardClient({
                         )}
                         onClick={() => setActiveTab("history")}
                     >
-                        <History className="h-4 w-4" />
+                        <HistoryIcon className="h-4 w-4" />
                         History & KBYG
                     </Button>
                 </nav>
@@ -1735,7 +1685,7 @@ export default function ItineroDashboardClient({
                                                     <TableCell className="font-medium">
                                                         <div className="flex items-center gap-3">
                                                             <TableImage url={h.backdrop_image_url} alt="Backdrop"
-                                                                icon={History} />
+                                                                icon={HistoryIcon} />
                                                             <div className="flex flex-col">
                                                                 <div className="flex items-center gap-2">
                                                                     {destinations.find(d => d.id === h.destination_id)?.current_history_id === h.id && (
@@ -1886,30 +1836,5 @@ function FormTextarea({
                 className="bg-slate-50 border-slate-200 rounded-xl resize-none focus-visible:ring-blue-600 dark:bg-slate-950 dark:border-slate-800"
             />
         </div>
-    );
-}
-
-function ActionBtn({
-    icon: Icon,
-    onClick,
-    destructive,
-}: {
-    icon: React.ElementType;
-    onClick: () => void;
-    destructive?: boolean;
-}) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={cn(
-                "h-8 w-8 rounded-lg flex items-center justify-center transition-colors",
-                destructive
-                    ? "text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20"
-                    : "text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
-            )}
-        >
-            <Icon className="h-4 w-4" />
-        </button>
     );
 }

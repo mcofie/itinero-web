@@ -387,7 +387,7 @@ export default async function TripPrintPage({
     const totalCost = trip.est_total_cost ?? safeItems.reduce((s, it) => s + (it.est_cost ?? 0), 0);
 
     // 6. Metadata
-    const title = `${trip.title ?? "Trip"} – Printable`;
+
 
     return (
         <div className="print-page bg-white text-slate-900 min-h-screen">

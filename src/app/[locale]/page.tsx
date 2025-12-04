@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
@@ -14,6 +15,7 @@ import {
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import Globe from "@/components/landing/Globe";
+import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 
 /* ---------- Data ---------- */
 const SUPPORTED = [
@@ -59,60 +61,9 @@ const SUPPORTED = [
     },
 ];
 
-const WHY = [
-    {
-        id: "community",
-        icon: Users2,
-        title: "Community Powered",
-        desc: "Local tips and hidden gems contributed by real travellers. Verify info to earn points.",
-        image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2670&auto=format&fit=crop",
-        color: "blue"
-    },
-    {
-        id: "export",
-        icon: FileText,
-        title: "Visa-Ready Exports",
-        desc: "Generate professional PDF itineraries instantly. Perfect for visa applications and offline use.",
-        image: "https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=2670&auto=format&fit=crop",
-        color: "emerald"
-    },
-    {
-        id: "budget",
-        icon: Wallet,
-        title: "Budget Control",
-        desc: "Real-world price estimates for every activity. Plan confidently without breaking the bank.",
-        image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2670&auto=format&fit=crop",
-        color: "amber"
-    },
-    {
-        id: "sync",
-        icon: CalendarPlus,
-        title: "Smart Sync",
-        desc: "Push your entire trip to Google Calendar or Outlook with one click. Never miss a beat.",
-        image: "https://images.unsplash.com/photo-1488085061387-422e29b40080?q=80&w=2662&auto=format&fit=crop",
-        color: "purple"
-    },
-];
 
-const FOOTER_LINKS = {
-    product: [
-        { label: "Features", href: "/features" },
-        { label: "Pricing", href: "/pricing" },
-        { label: "Trip Wizard", href: "/trip-maker" },
-        { label: "Destinations", href: "/destinations" },
-    ],
-    company: [
-        { label: "About Us", href: "/about" },
-        { label: "Careers", href: "/careers" },
-        { label: "Blog", href: "/blog" },
-        { label: "Contact", href: "/contact" },
-    ],
-    legal: [
-        { label: "Privacy Policy", href: "/privacy" },
-        { label: "Terms of Service", href: "/terms" },
-        { label: "Cookie Policy", href: "/cookies" },
-    ]
-};
+
+
 
 /* ---------- Animation Variants ---------- */
 const fadeUp = {
@@ -126,6 +77,9 @@ const fadeUp = {
 /* ---------- Page Component ---------- */
 export default function LandingPage() {
     const heroRef = useRef(null);
+    const tNav = useTranslations("Navigation");
+    const tFooter = useTranslations("Footer");
+    const tLanding = useTranslations("Landing");
 
     return (
         <div
@@ -146,15 +100,16 @@ export default function LandingPage() {
                     <nav className="flex items-center gap-1 md:gap-2">
                         <Link href="/pricing"
                             className="hidden sm:inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
-                            Pricing
+                            {tNav("pricing")}
                         </Link>
                         <Link href="/login">
                             <Button
                                 className="rounded-full bg-blue-600 px-6 font-semibold text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 dark:bg-blue-500 dark:hover:bg-blue-600">
-                                Get Started
+                                {tNav("getStarted")}
                             </Button>
                         </Link>
-                        <div className="ml-2">
+                        <div className="ml-2 flex items-center gap-2">
+                            <LocaleSwitcher />
                             <ThemeToggle />
                         </div>
                     </nav>
@@ -173,8 +128,8 @@ export default function LandingPage() {
                                     transition={{ delay: 0.1, duration: 0.5 }}
                                     className="text-6xl md:text-8xl font-bold tracking-tighter text-slate-900 mb-8 leading-[0.95] dark:text-white"
                                 >
-                                    The world <br />
-                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">awaits you.</span>
+                                    {tLanding("Hero.title1")} <br />
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">{tLanding("Hero.title2")}</span>
                                 </motion.h1>
 
                                 <motion.p
@@ -182,7 +137,7 @@ export default function LandingPage() {
                                     transition={{ delay: 0.2, duration: 0.5 }}
                                     className="text-xl md:text-2xl text-slate-600 mb-10 leading-relaxed max-w-lg dark:text-slate-400"
                                 >
-                                    Build complete itineraries with activities, routes, and budgets in one place.
+                                    {tLanding("Hero.subtitle")}
                                 </motion.p>
 
                                 {/* Trip Wizard - Simplified/Integrated */}
@@ -218,7 +173,7 @@ export default function LandingPage() {
                                         ))}
                                     </div>
                                     <div className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                        Trusted by <span className="text-slate-900 font-bold dark:text-white">10,000+</span> travelers
+                                        {tLanding("Hero.trustedBy")} <span className="text-slate-900 font-bold dark:text-white">10,000+</span> {tLanding("Hero.travelers")}
                                     </div>
                                 </motion.div>
                             </div>
@@ -245,28 +200,28 @@ export default function LandingPage() {
                         <div className="grid lg:grid-cols-2 gap-12 items-center">
                             <div>
                                 <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
-                                    Global reach, <br />
-                                    <span className="text-blue-400">local expertise.</span>
+                                    {tLanding("GlobalScale.title1")} <br />
+                                    <span className="text-blue-400">{tLanding("GlobalScale.title2")}</span>
                                 </h2>
                                 <p className="text-xl text-slate-400 mb-8 leading-relaxed">
-                                    Whether you&apos;re planning a safari in Kenya, a culinary tour in Tokyo, or a business trip to New York, Itinero connects you with the best local insights.
+                                    {tLanding("GlobalScale.desc")}
                                 </p>
                                 <div className="grid grid-cols-2 gap-6">
                                     <div>
                                         <div className="text-3xl font-bold text-white mb-1">120+</div>
-                                        <div className="text-sm text-slate-500 uppercase tracking-wider">Countries</div>
+                                        <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.countries")}</div>
                                     </div>
                                     <div>
                                         <div className="text-3xl font-bold text-white mb-1">50k+</div>
-                                        <div className="text-sm text-slate-500 uppercase tracking-wider">Itineraries</div>
+                                        <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.itineraries")}</div>
                                     </div>
                                     <div>
                                         <div className="text-3xl font-bold text-white mb-1">1M+</div>
-                                        <div className="text-sm text-slate-500 uppercase tracking-wider">Travelers</div>
+                                        <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.travelers")}</div>
                                     </div>
                                     <div>
                                         <div className="text-3xl font-bold text-white mb-1">4.9/5</div>
-                                        <div className="text-sm text-slate-500 uppercase tracking-wider">App Rating</div>
+                                        <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.rating")}</div>
                                     </div>
                                 </div>
                             </div>
@@ -289,21 +244,20 @@ export default function LandingPage() {
                             <Ticket className="h-8 w-8 text-white" />
                         </div>
                         <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-                            Start your next <br className="hidden sm:block" />
-                            <span className="text-blue-200">adventure today.</span>
+                            {tLanding("CTA.title1")} <br className="hidden sm:block" />
+                            <span className="text-blue-200">{tLanding("CTA.title2")}</span>
                         </h2>
                         <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-                            Join thousands of travellers who have stopped stressing over spreadsheets and started
-                            enjoying the journey.
+                            {tLanding("CTA.desc")}
                         </p>
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <Button asChild size="lg"
                                 className="h-14 px-8 rounded-full bg-white text-blue-600 hover:bg-blue-50 font-bold text-base shadow-xl">
-                                <Link href="/trip-maker">Start Free Itinerary</Link>
+                                <Link href="/trip-maker">{tLanding("CTA.startFree")}</Link>
                             </Button>
                             <Button asChild variant="outline" size="lg"
                                 className="h-14 px-8 rounded-full border-blue-400 bg-blue-700/50 text-white hover:bg-blue-700 hover:text-white font-bold text-base backdrop-blur-sm">
-                                <Link href="/pricing">View Pricing</Link>
+                                <Link href="/pricing">{tLanding("CTA.viewPricing")}</Link>
                             </Button>
                         </div>
                     </div>
@@ -324,37 +278,34 @@ export default function LandingPage() {
                                     Itinero
                                 </Link>
                                 <p className="text-slate-500 text-sm leading-relaxed max-w-xs mb-6 dark:text-slate-400">
-                                    The all-in-one workspace for modern travellers. Plan, budget, and explore the world
-                                    with confidence.
+                                    {tLanding("Footer.desc")}
                                 </p>
                             </div>
 
                             <div>
-                                <h3 className="font-bold text-slate-900 mb-4 dark:text-white">Product</h3>
+                                <h3 className="font-bold text-slate-900 mb-4 dark:text-white">{tLanding("Footer.product")}</h3>
                                 <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
-                                    {FOOTER_LINKS.product.map(link => (
-                                        <li key={link.label}><Link href={link.href}
-                                            className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">{link.label}</Link>
-                                        </li>
-                                    ))}
+                                    <li><Link href="/features" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Features</Link></li>
+                                    <li><Link href="/pricing" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">{tNav("pricing")}</Link></li>
+                                    <li><Link href="/trip-maker" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Trip Wizard</Link></li>
+                                    <li><Link href="/destinations" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Destinations</Link></li>
                                 </ul>
                             </div>
 
                             <div>
-                                <h3 className="font-bold text-slate-900 mb-4 dark:text-white">Company</h3>
+                                <h3 className="font-bold text-slate-900 mb-4 dark:text-white">{tLanding("Footer.company")}</h3>
                                 <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
-                                    {FOOTER_LINKS.company.map(link => (
-                                        <li key={link.label}><Link href={link.href}
-                                            className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">{link.label}</Link>
-                                        </li>
-                                    ))}
+                                    <li><Link href="/about" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">About Us</Link></li>
+                                    <li><Link href="/careers" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Careers</Link></li>
+                                    <li><Link href="/blog" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Blog</Link></li>
+                                    <li><Link href="/contact" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Contact</Link></li>
                                 </ul>
                             </div>
 
                             <div>
-                                <h3 className="font-bold text-slate-900 mb-4 dark:text-white">Stay Updated</h3>
+                                <h3 className="font-bold text-slate-900 mb-4 dark:text-white">{tLanding("Footer.stayUpdated")}</h3>
                                 <div className="flex gap-2">
-                                    <Input placeholder="Email"
+                                    <Input placeholder={tLanding("Footer.emailPlaceholder")}
                                         className="bg-slate-50 border-slate-200 dark:bg-slate-900 dark:border-slate-800" />
                                     <Button size="sm"
                                         className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500"><Mail
@@ -367,7 +318,7 @@ export default function LandingPage() {
                             className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 dark:border-slate-800">
                             <div
                                 className="text-sm text-slate-500 dark:text-slate-400">© {new Date().getFullYear()} Itinero
-                                Inc. All rights reserved.
+                                Inc. {tFooter("rights")}
                             </div>
                             <div className="flex gap-6">
                                 <Link href="#" className="text-slate-400 hover:text-blue-600 transition-colors"><Twitter
@@ -389,15 +340,51 @@ export default function LandingPage() {
 
 /* ---------- NEW BENTO GRID COMPONENT ---------- */
 function BentoFeatures() {
+    const tLanding = useTranslations("Landing");
+    const WHY = [
+        {
+            id: "community",
+            icon: Users2,
+            title: tLanding("Features.communityTitle"),
+            desc: tLanding("Features.communityDesc"),
+            image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2670&auto=format&fit=crop",
+            color: "blue"
+        },
+        {
+            id: "export",
+            icon: FileText,
+            title: tLanding("Features.exportTitle"),
+            desc: tLanding("Features.exportDesc"),
+            image: "https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=2670&auto=format&fit=crop",
+            color: "emerald"
+        },
+        {
+            id: "budget",
+            icon: Wallet,
+            title: tLanding("Features.budgetTitle"),
+            desc: tLanding("Features.budgetDesc"),
+            image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2670&auto=format&fit=crop",
+            color: "amber"
+        },
+        {
+            id: "sync",
+            icon: CalendarPlus,
+            title: tLanding("Features.syncTitle"),
+            desc: tLanding("Features.syncDesc"),
+            image: "https://images.unsplash.com/photo-1488085061387-422e29b40080?q=80&w=2662&auto=format&fit=crop",
+            color: "purple"
+        },
+    ];
+
     return (
         <section className="bg-slate-50 py-24 dark:bg-slate-950 relative overflow-hidden">
             <div className="mx-auto max-w-7xl px-6 relative z-10">
                 <div className="mb-20 text-center max-w-3xl mx-auto">
                     <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-slate-900 mb-6 dark:text-white">
-                        Why travellers choose <span className="text-blue-600 dark:text-blue-500">Itinero</span>
+                        {tLanding("Features.title1")} <span className="text-blue-600 dark:text-blue-500">{tLanding("Features.title2")}</span>
                     </h2>
                     <p className="text-xl text-slate-600 dark:text-slate-400">
-                        Everything you need to go from idea to departure in one seamless flow.
+                        {tLanding("Features.subtitle")}
                     </p>
                 </div>
 
@@ -463,6 +450,7 @@ function BentoFeatures() {
 
 /* ---------- NEW PARALLAX DESTINATIONS COMPONENT ---------- */
 function ParallaxDestinations() {
+    const tLanding = useTranslations("Landing");
     const containerRef = useRef(null);
     const { scrollYProgress } = useScroll({
         target: containerRef,
@@ -483,15 +471,13 @@ function ParallaxDestinations() {
             <div className="mx-auto max-w-7xl px-6">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                     <div className="max-w-2xl">
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 dark:text-white">Popular
-                            Destinations</h2>
-                        <p className="text-lg text-slate-600 dark:text-slate-400">Deep local data, pricing, and
-                            optimized routing available for these regions.</p>
+                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4 dark:text-white">{tLanding("Destinations.title")}</h2>
+                        <p className="text-lg text-slate-600 dark:text-slate-400">{tLanding("Destinations.desc")}</p>
                     </div>
                     <Link href={"/destinations"}>
                         <Button variant="outline"
                             className="hidden md:flex gap-2 rounded-full border-slate-200 hover:border-blue-600 hover:text-blue-600 dark:border-slate-700 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-500">
-                            View all destinations <ArrowRight className="h-4 w-4" />
+                            {tLanding("Destinations.viewAll")} <ArrowRight className="h-4 w-4" />
                         </Button>
                     </Link>
                 </div>
@@ -535,6 +521,7 @@ function Column({ destinations, y, className }: {
 }
 
 function PortalVisual() {
+    const tLanding = useTranslations("Landing");
     const [index, setIndex] = useState(0);
 
     useEffect(() => {
@@ -573,7 +560,7 @@ function PortalVisual() {
 
                 {/* Floating Badge */}
                 <div className="absolute bottom-10 left-10 bg-white/90 backdrop-blur-md px-6 py-4 rounded-2xl shadow-lg z-10 dark:bg-slate-900/90">
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Featured Destination</p>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">{tLanding("Destinations.featured")}</p>
                     <p className="text-xl font-bold text-slate-900 dark:text-white">{SUPPORTED[index].name}</p>
                 </div>
             </div>

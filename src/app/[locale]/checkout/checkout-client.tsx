@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {useSearchParams, useRouter} from "next/navigation";
-import {getSupabaseBrowser} from "@/lib/supabase/browser-singleton";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
     Loader2,
     CreditCard,
@@ -12,7 +11,7 @@ import {
     Wallet,
 } from "lucide-react";
 
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     Card,
     CardContent,
@@ -21,20 +20,20 @@ import {
     CardDescription,
     CardFooter,
 } from "@/components/ui/card";
-import {Input} from "@/components/ui/input";
-import {Label} from "@/components/ui/label";
-import {Separator} from "@/components/ui/separator";
-import {getLatestFxSnapshot, convertUsingSnapshot} from "@/lib/fx/fx";
-import {FxSnapshot} from "@/lib/fx/types";
-import {toast} from "sonner";
-import {cn} from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { getLatestFxSnapshot, convertUsingSnapshot } from "@/lib/fx/fx";
+import { FxSnapshot } from "@/lib/fx/types";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 const POINT_UNIT_PRICE_GHS = 0.4; // 40 pesewas base
 
-export default function CheckoutClient({userEmail}: { userEmail: string }) {
+export default function CheckoutClient({ userEmail }: { userEmail: string }) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const sb = React.useMemo(() => getSupabaseBrowser(), []);
+
 
     // -- State --
     const [points, setPoints] = React.useState<number>(100);
@@ -96,8 +95,8 @@ export default function CheckoutClient({userEmail}: { userEmail: string }) {
             // 1. Get Server Quote
             const qRes = await fetch("/api/points/quote", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({points}),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ points }),
             });
 
             if (!qRes.ok) throw new Error("Failed to generate quote");
@@ -106,7 +105,7 @@ export default function CheckoutClient({userEmail}: { userEmail: string }) {
             // 2. Initialize Paystack
             const initRes = await fetch("/api/paystack/init", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     quoteId: quote.quoteId,
                     email: userEmail,
@@ -129,7 +128,7 @@ export default function CheckoutClient({userEmail}: { userEmail: string }) {
     if (loadingFx) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400"/>
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
             </div>
         );
     }
@@ -145,12 +144,12 @@ export default function CheckoutClient({userEmail}: { userEmail: string }) {
                         className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
                         <div
                             className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
-                            <CreditCard className="h-4 w-4"/>
+                            <CreditCard className="h-4 w-4" />
                         </div>
                         Itinero Checkout
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => router.back()}>
-                        <ArrowLeft className="mr-2 h-4 w-4"/> Cancel
+                        <ArrowLeft className="mr-2 h-4 w-4" /> Cancel
                     </Button>
                 </div>
             </header>
@@ -192,8 +191,8 @@ export default function CheckoutClient({userEmail}: { userEmail: string }) {
                                         >
                                             <span className="text-lg font-bold">{val}</span>
                                             <span className="text-xs font-medium opacity-70">
-                        Points
-                      </span>
+                                                Points
+                                            </span>
                                         </button>
                                     ))}
                                 </div>
@@ -202,7 +201,7 @@ export default function CheckoutClient({userEmail}: { userEmail: string }) {
                                 <div className="space-y-2">
                                     <Label htmlFor="custom-amount">Custom Amount</Label>
                                     <div className="relative">
-                                        <Wallet className="absolute left-3 top-2.5 h-5 w-5 text-slate-400"/>
+                                        <Wallet className="absolute left-3 top-2.5 h-5 w-5 text-slate-400" />
                                         <Input
                                             id="custom-amount"
                                             type="number"
@@ -221,7 +220,7 @@ export default function CheckoutClient({userEmail}: { userEmail: string }) {
 
                         <div
                             className="flex items-start gap-3 rounded-xl bg-emerald-50 p-4 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/50">
-                            <ShieldCheck className="h-5 w-5 shrink-0 mt-0.5"/>
+                            <ShieldCheck className="h-5 w-5 shrink-0 mt-0.5" />
                             <div className="text-sm">
                                 <strong>Secure Payment:</strong> Your transaction is processed
                                 securely via Paystack. We do not store your card details.
@@ -234,38 +233,38 @@ export default function CheckoutClient({userEmail}: { userEmail: string }) {
                         <div className="sticky top-24">
                             <Card
                                 className="border-slate-200 shadow-lg overflow-hidden dark:bg-slate-900 dark:border-slate-800">
-                                <div className="h-2 w-full bg-blue-600 dark:bg-blue-500"/>
+                                <div className="h-2 w-full bg-blue-600 dark:bg-blue-500" />
                                 <CardHeader
                                     className="bg-slate-50/50 border-b border-slate-100 pb-4 dark:bg-slate-950/50 dark:border-slate-800">
                                     <CardTitle className="flex items-center gap-2">
-                                        <Sparkles className="h-5 w-5 text-amber-500"/>
+                                        <Sparkles className="h-5 w-5 text-amber-500" />
                                         Order Summary
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="pt-6 space-y-4">
                                     <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-600 dark:text-slate-400">
-                      Item
-                    </span>
+                                        <span className="text-slate-600 dark:text-slate-400">
+                                            Item
+                                        </span>
                                         <span className="font-medium text-slate-900 dark:text-white">
-                      {points} Itinero Points
-                    </span>
+                                            {points} Itinero Points
+                                        </span>
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-600 dark:text-slate-400">
-                      Rate
-                    </span>
+                                        <span className="text-slate-600 dark:text-slate-400">
+                                            Rate
+                                        </span>
                                         <span className="font-medium text-slate-900 dark:text-white">
-                      {POINT_UNIT_PRICE_GHS.toFixed(2)} GHS / point
-                    </span>
+                                            {POINT_UNIT_PRICE_GHS.toFixed(2)} GHS / point
+                                        </span>
                                     </div>
 
-                                    <Separator className="my-2 dark:bg-slate-800"/>
+                                    <Separator className="my-2 dark:bg-slate-800" />
 
                                     <div className="flex justify-between items-end">
-                    <span className="text-base font-bold text-slate-700 dark:text-slate-300">
-                      Total
-                    </span>
+                                        <span className="text-base font-bold text-slate-700 dark:text-slate-300">
+                                            Total
+                                        </span>
                                         <div className="text-right">
                                             <div className="text-3xl font-extrabold text-slate-900 dark:text-white">
                                                 GHS {totalCostGHS.toFixed(2)}
@@ -288,7 +287,7 @@ export default function CheckoutClient({userEmail}: { userEmail: string }) {
                                     >
                                         {isProcessing ? (
                                             <>
-                                                <Loader2 className="mr-2 h-5 w-5 animate-spin"/>
+                                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                                 Processing...
                                             </>
                                         ) : (
@@ -301,7 +300,7 @@ export default function CheckoutClient({userEmail}: { userEmail: string }) {
                             <div className="mt-6 text-center">
                                 <p className="text-xs text-slate-400 dark:text-slate-600">
                                     By continuing, you agree to our Terms of Service.
-                                    <br/>
+                                    <br />
                                     Points are non-refundable.
                                 </p>
                             </div>

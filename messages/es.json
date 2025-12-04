@@ -8,5 +8,101 @@
         "step2": "¿Cuándo?",
         "step3": "¿Quiénes?",
         "step4": "¿Presupuesto?"
+    },
+    "Navigation": {
+        "trips": "Viajes",
+        "preview": "Vista previa",
+        "rewards": "Recompensas",
+        "profile": "Perfil",
+        "billing": "Facturación",
+        "pricing": "Precios",
+        "getStarted": "Empezar",
+        "theme": "Tema",
+        "logout": "Cerrar sesión"
+    },
+    "Actions": {
+        "newTrip": "Nuevo Viaje",
+        "topUp": "Recargar",
+        "balance": "Saldo"
+    },
+    "Footer": {
+        "rights": "Todos los derechos reservados.",
+        "terms": "Términos",
+        "privacy": "Privacidad",
+        "madeWith": "Hecho con"
+    },
+    "Auth": {
+        "welcome": "Bienvenido de nuevo",
+        "startJourney": "Comienza tu viaje",
+        "signInDesc": "Inicia sesión para acceder a tus viajes y planes guardados.",
+        "signUpDesc": "Crea una cuenta para construir, guardar y compartir itinerarios.",
+        "email": "Dirección de correo electrónico",
+        "password": "Contraseña",
+        "signIn": "Iniciar sesión",
+        "createAccount": "Crear cuenta",
+        "wait": "Por favor espera",
+        "continueWith": "O continúa con",
+        "google": "Google",
+        "noAccount": "¿No tienes una cuenta? Regístrate",
+        "hasAccount": "¿Ya tienes una cuenta? Inicia sesión",
+        "agreement": "Al continuar, aceptas los",
+        "terms": "Términos de servicio",
+        "privacy": "Política de privacidad",
+        "successSignIn": "Sesión iniciada",
+        "successSignUp": "Cuenta creada",
+        "errorAuth": "Error de autenticación",
+        "errorGoogle": "Error de inicio de sesión con Google"
+    },
+    "Landing": {
+        "Hero": {
+            "title1": "El mundo",
+            "title2": "te espera.",
+            "subtitle": "Crea itinerarios completos con actividades, rutas y presupuestos en un solo lugar.",
+            "trustedBy": "Con la confianza de",
+            "travelers": "viajeros"
+        },
+        "Features": {
+            "title1": "Por qué los viajeros eligen",
+            "title2": "Itinero",
+            "subtitle": "Todo lo que necesitas para ir de la idea a la salida en un flujo fluido.",
+            "communityTitle": "Impulsado por la comunidad",
+            "communityDesc": "Consejos locales y joyas ocultas aportados por viajeros reales. Verifica la información para ganar puntos.",
+            "exportTitle": "Exportaciones listas para visa",
+            "exportDesc": "Genera itinerarios profesionales en PDF al instante. Perfecto para solicitudes de visa y uso sin conexión.",
+            "budgetTitle": "Control de presupuesto",
+            "budgetDesc": "Estimaciones de precios del mundo real para cada actividad. Planifica con confianza sin arruinarte.",
+            "syncTitle": "Sincronización inteligente",
+            "syncDesc": "Envía todo tu viaje a Google Calendar o Outlook con un solo clic. Nunca pierdas el ritmo."
+        },
+        "GlobalScale": {
+            "title1": "Alcance global,",
+            "title2": "experiencia local.",
+            "desc": "Ya sea que estés planeando un safari en Kenia, a un tour culinario en Tokio o un viaje de negocios a Nueva York, Itinero te conecta con los mejores conocimientos locales.",
+            "countries": "Países",
+            "itineraries": "Itinerarios",
+            "travelers": "Viajeros",
+            "rating": "Calificación de la aplicación"
+        },
+        "Destinations": {
+            "title": "Destinos populares",
+            "desc": "Datos locales profundos, precios y rutas optimizadas disponibles para estas regiones.",
+            "viewAll": "Ver todos los destinos",
+            "itinerariesSuffix": "Itinerarios",
+            "featured": "Destino destacado"
+        },
+        "CTA": {
+            "title1": "Comienza tu próxima",
+            "title2": "aventura hoy.",
+            "desc": "Únete a miles de viajeros que han dejado de estresarse con las hojas de cálculo y han comenzado a disfrutar del viaje.",
+            "startFree": "Iniciar itinerario gratis",
+            "viewPricing": "Ver precios"
+        },
+        "Footer": {
+            "desc": "El espacio de trabajo todo en uno para viajeros modernos. Planifica, presupuesta y explora el mundo con confianza.",
+            "product": "Producto",
+            "company": "Compañía",
+            "stayUpdated": "Mantente actualizado",
+            "emailPlaceholder": "Correo electrónico"
+        }
     }
 }

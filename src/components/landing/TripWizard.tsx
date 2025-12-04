@@ -184,7 +184,7 @@ export default function TripWizard() {
         };
     }, [sb, router]);
 
-    const progress = ((step + 1) / STEPS.length) * 100;
+
 
     const isValid = useMemo(() => {
         if (step === 0) return state.destinations[0]?.name.trim().length > 1;
