@@ -104,5 +104,77 @@
             "stayUpdated": "Mantente actualizado",
             "emailPlaceholder": "Correo electrónico"
         }
+    },
+    "TripDetails": {
+        "Header": {
+            "titleFallback": "Viaje sin título",
+            "notFoundTitle": "Viaje no encontrado",
+            "notFoundDesc": "El viaje solicitado no existe o no tienes acceso a él.",
+            "loadErrorTitle": "No se pudo cargar el viaje",
+            "backToTrips": "Volver a viajes",
+            "itemsErrorTitle": "No se pudieron cargar los elementos del itinerario",
+            "itemsErrorDesc": "Error al cargar los elementos del itinerario",
+            "tripSettings": "Configuración del viaje"
+        },
+        "Tabs": {
+            "overview": "Resumen",
+            "story": "Historia",
+            "itinerary": "Itinerario",
+            "map": "Mapa",
+            "calendar": "Calendario",
+            "places": "Lugares",
+            "tours": "Tours"
+        },
+        "Highlights": {
+            "title": "Destacados del viaje",
+            "dates": "Fechas",
+            "duration": "Duración",
+            "places": "Lugares",
+            "totalCost": "Costo total",
+            "activityTime": "Tiempo de actividad",
+            "travelTime": "Tiempo de viaje",
+            "days": "Días"
+        },
+        "About": {
+            "title": "Acerca de",
+            "noDesc": "No hay descripción disponible.",
+            "historyTitle": "Historia",
+            "noHistory": "No hay detalles históricos disponibles."
+        },
+        "Sidebar": {
+            "tripNotes": "Notas del viaje",
+            "localGuide": "Guía local",
+            "plugs": "Enchufes",
+            "languages": "Idiomas",
+            "transport": "Transporte",
+            "esim": "eSIM",
+            "findEsim": "Buscar eSIM"
+        },
+        "Places": {
+            "allPlaces": "Todos los lugares",
+            "locations": "Ubicaciones"
+        },
+        "Tours": {
+            "comingSoon": "Próximamente",
+            "title": "Explora con un local",
+            "desc": "Estamos evaluando a los mejores guías locales para brindarte experiencias exclusivas y verificadas que se integran directamente en tu itinerario.",
+            "verifiedGuides": "Guías verificados",
+            "verifiedGuidesDesc": "Locales evaluados por calidad y seguridad.",
+            "curatedTours": "Tours seleccionados",
+            "curatedToursDesc": "Experiencias únicas que no encontrarás en otro lugar."
+        },
+        "Notes": {
+            "add": "Añadir",
+            "save": "Guardar",
+            "saving": "Guardando...",
+            "cancel": "Cancelar",
+            "placeholder": "Añadir notas...",
+            "saved": "Nota de viaje guardada",
+            "failed": "Error al guardar la nota"
+        },
+        "Progress": {
+            "label": "Progreso del viaje",
+            "day": "Día"
+        }
     }
 }

@@ -303,7 +303,7 @@ export default async function ProfilePage() {
                     <div className="lg:col-span-2 space-y-6">
 
                         {/* 1. Stats Grid */}
-                        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+                        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
                             <StatTile
                                 label="Available Points"
                                 value={fmtInt(points)}
@@ -355,7 +355,7 @@ export default async function ProfilePage() {
 
                             <CardContent className="p-0">
                                 <ScrollArea className="h-[400px] w-full">
-                                    <table className="w-full text-sm text-left">
+                                    <table className="w-full min-w-[600px] text-sm text-left">
                                         <thead
                                             className="bg-slate-50 text-xs uppercase text-slate-500 font-semibold sticky top-0 z-10 shadow-sm dark:bg-slate-950 dark:text-slate-400 dark:shadow-none">
                                             <tr>

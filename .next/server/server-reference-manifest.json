@@ -1,5 +1,21 @@
 {
-  "node": {},
+  "node": {
+    "40bd8211128ab1e13e8227a9030a93f76bc72bd053": {
+      "workers": {
+        "app/[locale]/(main)/profile/page": {
+          "moduleId": "[project]/.next-internal/server/app/[locale]/(main)/profile/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/app/[locale]/(main)/profile/server-actions.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "saveProfileAction",
+          "filename": "src/app/[locale]/(main)/profile/server-actions.ts"
+        }
+      },
+      "layer": {
+        "app/[locale]/(main)/profile/page": "action-browser"
+      },
+      "filename": "src/app/[locale]/(main)/profile/server-actions.ts",
+      "exportedName": "saveProfileAction"
+    }
+  },
   "edge": {},
   "encryptionKey": "2q2DebqYI+QOsnxxtfw+/1MRIlT2VBCQNMg/P26CRJo="
 }

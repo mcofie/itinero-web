@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import TripWizard from "@/components/landing/TripWizard";
 import {
     Users2, FileText, Wallet, CalendarPlus, Plane,
-    Ticket, Mail, ArrowRight, Twitter, Instagram, Github
+    Ticket, Mail, ArrowRight, Twitter, Instagram, Github, Menu
 } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import Globe from "@/components/landing/Globe";
@@ -97,7 +98,8 @@ export default function LandingPage() {
                         </span>
                         Itinero
                     </Link>
-                    <nav className="flex items-center gap-1 md:gap-2">
+                    {/* Desktop Nav */}
+                    <nav className="hidden md:flex items-center gap-1 md:gap-2">
                         <Link href="/pricing"
                             className="hidden sm:inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
                             {tNav("pricing")}
@@ -113,6 +115,40 @@ export default function LandingPage() {
                             <ThemeToggle />
                         </div>
                     </nav>
+
+                    {/* Mobile Nav */}
+                    <div className="flex md:hidden items-center gap-2">
+                        <LocaleSwitcher />
+                        <ThemeToggle />
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon" className="md:hidden">
+                                    <Menu className="h-5 w-5" />
+                                    <span className="sr-only">Toggle menu</span>
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="right">
+                                <div className="flex flex-col gap-6 mt-8">
+                                    <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
+                                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
+                                            <Plane className="h-4 w-4" />
+                                        </span>
+                                        Itinero
+                                    </Link>
+                                    <div className="flex flex-col gap-4">
+                                        <Link href="/pricing" className="text-lg font-medium text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400">
+                                            {tNav("pricing")}
+                                        </Link>
+                                        <Link href="/login">
+                                            <Button className="w-full rounded-full bg-blue-600 font-semibold text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20">
+                                                {tNav("getStarted")}
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </SheetContent>
+                        </Sheet>
+                    </div>
                 </div>
             </header>
 
