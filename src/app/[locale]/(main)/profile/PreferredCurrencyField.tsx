@@ -32,8 +32,12 @@ export function PreferredCurrencyField({ initialCurrency }: Props) {
                 value={value}
             />
 
-            <div className="flex items-center gap-3">
-                <CurrencySelect value={value} onChange={setValue} />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <CurrencySelect
+                    value={value}
+                    onChange={setValue}
+                    className="w-full sm:w-[150px]"
+                />
 
                 <div className="text-xs text-muted-foreground">
                     <div className="font-medium">
