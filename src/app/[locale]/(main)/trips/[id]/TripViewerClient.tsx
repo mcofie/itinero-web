@@ -4,6 +4,7 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import { useMemo, useState, useTransition } from "react";
 import { useTheme } from "next-themes";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -101,6 +102,7 @@ export default function TripViewerClient({
 }) {
     const { resolvedTheme } = useTheme();
     const theme: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light";
+    const t = useTranslations("TripDetails");
 
     // Extract Trip Currency
     const tripCurrency = data.trip_summary.currency ?? "USD";
@@ -242,11 +244,11 @@ export default function TripViewerClient({
                             <div
                                 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                                 <Clock3 className="h-3.5 w-3.5" />
-                                Trip Progress
+                                {t("Progress.label")}
                             </div>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                                    Day {Math.min(activeDayIdx + 1, Math.max(1, totalDays))}
+                                    {t("Progress.day")} {Math.min(activeDayIdx + 1, Math.max(1, totalDays))}
                                 </span>
                                 <span className="text-lg font-medium text-slate-400 dark:text-slate-500">
                                     / {totalDays || "—"}
@@ -287,43 +289,43 @@ export default function TripViewerClient({
                                 value="overview"
                                 className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
                             >
-                                Overview
+                                {t("Tabs.overview")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="story"
                                 className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
                             >
-                                Story
+                                {t("Tabs.story")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="days"
                                 className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
                             >
-                                Itinerary
+                                {t("Tabs.itinerary")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="map"
                                 className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
                             >
-                                Map
+                                {t("Tabs.map")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="calendar"
                                 className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
                             >
-                                Calendar
+                                {t("Tabs.calendar")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="places"
                                 className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
                             >
-                                Places
+                                {t("Tabs.places")}
                             </TabsTrigger>
                             <TabsTrigger
                                 value="raw"
                                 className="rounded-full px-6 py-2.5 text-sm font-medium text-slate-500 dark:text-slate-400 transition-all data-[state=active]:bg-slate-900 dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md"
                             >
-                                Tours
+                                {t("Tabs.tours")}
                             </TabsTrigger>
                         </TabsList>
                     </div>
@@ -339,27 +341,27 @@ export default function TripViewerClient({
                                 <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm">
                                     <h2 className="mb-6 text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                         <Sparkles className="h-5 w-5 text-amber-500" />
-                                        Trip Highlights
+                                        {t("Highlights.title")}
                                     </h2>
 
                                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                                         <MetricTile
-                                            label="Dates"
+                                            label={t("Highlights.dates")}
                                             value={formatDateRange(metricStart, metricEnd)}
                                             icon={CalendarDays}
                                         />
                                         <MetricTile
-                                            label="Duration"
+                                            label={t("Highlights.duration")}
                                             value={`${totalDays} Days`}
                                             icon={Clock3}
                                         />
                                         <MetricTile
-                                            label="Places"
+                                            label={t("Highlights.places")}
                                             value={String(data.places.length)}
                                             icon={MapPin}
                                         />
                                         <MetricTile
-                                            label="Total Cost"
+                                            label={t("Highlights.totalCost")}
                                             value={
                                                 <span>
                                                     {tripCurrency} {totals.estCost}
@@ -374,12 +376,12 @@ export default function TripViewerClient({
                                             icon={DollarSign}
                                         />
                                         <MetricTile
-                                            label="Activity Time"
+                                            label={t("Highlights.activityTime")}
                                             value={`${Math.round(totals.durationMin / 60)}h`}
                                             icon={Star}
                                         />
                                         <MetricTile
-                                            label="Travel Time"
+                                            label={t("Highlights.travelTime")}
                                             value={`${Math.round(totals.travelMin / 60)}h`}
                                             icon={MoveRight}
                                         />
@@ -392,7 +394,7 @@ export default function TripViewerClient({
                                         className="h-full rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm transition-shadow hover:shadow-md">
                                         <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                             <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                                            About
+                                            {t("About.title")}
                                         </h3>
                                         {destinationMeta?.description ? (
                                             <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
@@ -400,7 +402,7 @@ export default function TripViewerClient({
                                             </p>
                                         ) : (
                                             <p className="text-sm italic text-slate-400 dark:text-slate-500">
-                                                No description available.
+                                                {t("About.noDesc")}
                                             </p>
                                         )}
                                     </div>
@@ -408,7 +410,7 @@ export default function TripViewerClient({
                                         className="h-full rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm transition-shadow hover:shadow-md">
                                         <h3 className="mb-4 text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                             <div className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-                                            History
+                                            {t("About.historyTitle")}
                                         </h3>
                                         {destinationMeta?.history ? (
                                             <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
@@ -416,7 +418,7 @@ export default function TripViewerClient({
                                             </p>
                                         ) : (
                                             <p className="text-sm italic text-slate-400 dark:text-slate-500">
-                                                No history details available.
+                                                {t("About.noHistory")}
                                             </p>
                                         )}
                                     </div>
@@ -429,19 +431,19 @@ export default function TripViewerClient({
                                 <div
                                     className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-950/10 p-6 shadow-sm">
                                     <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">
-                                        <NotebookPen className="h-4 w-4 text-amber-600 dark:text-amber-500" /> Trip Notes
+                                        <NotebookPen className="h-4 w-4 text-amber-600 dark:text-amber-500" /> {t("Sidebar.tripNotes")}
                                     </h3>
                                     <InlineNoteEditor
                                         id="trip-notes"
                                         initialValue={inputs?.notes}
-                                        label="general trip notes"
+                                        label={t("Sidebar.tripNotes")}
                                         variant="card"
                                         onSave={async (val) => {
                                             try {
                                                 await updateTripNote(tripId, val);
-                                                toast.success("Trip note saved");
+                                                toast.success(t("Notes.saved"));
                                             } catch {
-                                                toast.error("Failed to save note");
+                                                toast.error(t("Notes.failed"));
                                             }
                                         }}
                                     />
@@ -450,7 +452,7 @@ export default function TripViewerClient({
                                 <div
                                     className="sticky top-24 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm">
                                     <h3 className="mb-6 flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-4">
-                                        <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Local Guide
+                                        <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" /> {t("Sidebar.localGuide")}
                                     </h3>
                                     <ul className="space-y-4">
 
@@ -458,25 +460,25 @@ export default function TripViewerClient({
 
 
                                         <SidebarFact
-                                            label="Plugs"
+                                            label={t("Sidebar.plugs")}
                                             value={joinArr(destinationMeta?.plugs)}
                                             icon={Plug}
                                         />
                                         <SidebarFact
-                                            label="Languages"
+                                            label={t("Sidebar.languages")}
                                             value={joinArr(destinationMeta?.languages)}
                                             icon={LanguagesIcon}
                                         />
                                         <SidebarFact
-                                            label="Transport"
+                                            label={t("Sidebar.transport")}
                                             value={joinArr(destinationMeta?.transport)}
                                             icon={TrainFront}
                                         />
 
                                         {/* eSIM: Links to Airalo */}
                                         <SidebarFact
-                                            label="eSIM"
-                                            value={destinationMeta?.esim_provider || "Find eSIM"}
+                                            label={t("Sidebar.esim")}
+                                            value={destinationMeta?.esim_provider || t("Sidebar.findEsim")}
                                             icon={SmartphoneNfc}
                                             href="https://www.airalo.com/"
                                         />
@@ -532,7 +534,7 @@ export default function TripViewerClient({
                                                             : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                                                     )}
                                                 >
-                                                    Day {i + 1}
+                                                    {t("Progress.day")} {i + 1}
                                                 </button>
                                             ))}
                                         </div>
@@ -613,10 +615,10 @@ export default function TripViewerClient({
                         <div
                             className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm">
                             <div className="mb-8 flex items-center justify-between">
-                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">All Places</h2>
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t("Places.allPlaces")}</h2>
                                 <span
                                     className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
-                                    {data.places?.length ?? 0} Locations
+                                    {data.places?.length ?? 0} {t("Places.locations")}
                                 </span>
                             </div>
                             <PlacesList places={data.places} />
@@ -633,14 +635,13 @@ export default function TripViewerClient({
                             <div className="relative z-10 mx-auto max-w-lg">
                                 <div
                                     className="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                    Coming Soon
+                                    {t("Tours.comingSoon")}
                                 </div>
                                 <h2 className="mb-4 text-3xl font-extrabold text-slate-900 dark:text-white">
-                                    Explore with a Local
+                                    {t("Tours.title")}
                                 </h2>
                                 <p className="mb-10 leading-relaxed text-slate-600 dark:text-slate-400">
-                                    We&apos;re vetting the best local guides to bring you exclusive,
-                                    verified experiences that plug directly into your itinerary.
+                                    {t("Tours.desc")}
                                 </p>
 
                                 <div className="grid gap-4 text-left sm:grid-cols-2">
@@ -648,20 +649,20 @@ export default function TripViewerClient({
                                         className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                                         <Users2 className="mb-3 h-6 w-6 text-blue-600 dark:text-blue-400" />
                                         <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                                            Verified Guides
+                                            {t("Tours.verifiedGuides")}
                                         </h4>
                                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                            Locals vetted for quality & safety.
+                                            {t("Tours.verifiedGuidesDesc")}
                                         </p>
                                     </div>
                                     <div
                                         className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
                                         <Compass className="mb-3 h-6 w-6 text-purple-600 dark:text-purple-400" />
                                         <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                                            Curated Tours
+                                            {t("Tours.curatedTours")}
                                         </h4>
                                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                            Unique experiences you can&apos;t find elsewhere.
+                                            {t("Tours.curatedToursDesc")}
                                         </p>
                                     </div>
                                 </div>
@@ -695,6 +696,7 @@ function InlineNoteEditor({
     const [isEditing, setIsEditing] = useState(false);
     const [value, setValue] = useState(initialValue || "");
     const [isSaving, startTransition] = useTransition();
+    const t = useTranslations("TripDetails");
 
     React.useEffect(() => {
         setValue(initialValue || "");
@@ -718,18 +720,18 @@ function InlineNoteEditor({
                 <Textarea
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    placeholder={`Add ${label?.toLowerCase() || "notes"}...`}
+                    placeholder={t("Notes.placeholder")}
                     className="bg-white dark:bg-slate-950 min-h-[100px] text-sm border-slate-200 dark:border-slate-800 dark:text-white"
                     autoFocus
                 />
                 <div className="flex justify-end gap-2">
                     <Button size="sm" variant="ghost" onClick={handleCancel} disabled={isSaving}>
-                        <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                        <X className="h-3.5 w-3.5 mr-1" /> {t("Notes.cancel")}
                     </Button>
                     <Button size="sm" onClick={handleSave} disabled={isSaving}>
                         {isSaving ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> :
                             <Check className="h-3.5 w-3.5 mr-1" />}
-                        {isSaving ? "Saving..." : "Save"}
+                        {isSaving ? t("Notes.saving") : t("Notes.save")}
                     </Button>
                 </div>
             </div>
@@ -744,7 +746,7 @@ function InlineNoteEditor({
                 className="text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors group"
             >
                 <Pencil className="h-3 w-3 opacity-50 group-hover:opacity-100" />
-                Add {label || "notes"}
+                {t("Notes.add")}
             </button>
         );
     }

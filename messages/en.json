@@ -104,5 +104,77 @@
             "stayUpdated": "Stay Updated",
             "emailPlaceholder": "Email"
         }
+    },
+    "TripDetails": {
+        "Header": {
+            "titleFallback": "Untitled Trip",
+            "notFoundTitle": "Trip not found",
+            "notFoundDesc": "The requested trip doesn’t exist or you don’t have access to it.",
+            "loadErrorTitle": "Couldn’t load trip",
+            "backToTrips": "Back to trips",
+            "itemsErrorTitle": "Couldn’t load itinerary items",
+            "itemsErrorDesc": "Failed to load itinerary items",
+            "tripSettings": "Trip Settings"
+        },
+        "Tabs": {
+            "overview": "Overview",
+            "story": "Story",
+            "itinerary": "Itinerary",
+            "map": "Map",
+            "calendar": "Calendar",
+            "places": "Places",
+            "tours": "Tours"
+        },
+        "Highlights": {
+            "title": "Trip Highlights",
+            "dates": "Dates",
+            "duration": "Duration",
+            "places": "Places",
+            "totalCost": "Total Cost",
+            "activityTime": "Activity Time",
+            "travelTime": "Travel Time",
+            "days": "Days"
+        },
+        "About": {
+            "title": "About",
+            "noDesc": "No description available.",
+            "historyTitle": "History",
+            "noHistory": "No history details available."
+        },
+        "Sidebar": {
+            "tripNotes": "Trip Notes",
+            "localGuide": "Local Guide",
+            "plugs": "Plugs",
+            "languages": "Languages",
+            "transport": "Transport",
+            "esim": "eSIM",
+            "findEsim": "Find eSIM"
+        },
+        "Places": {
+            "allPlaces": "All Places",
+            "locations": "Locations"
+        },
+        "Tours": {
+            "comingSoon": "Coming Soon",
+            "title": "Explore with a Local",
+            "desc": "We're vetting the best local guides to bring you exclusive, verified experiences that plug directly into your itinerary.",
+            "verifiedGuides": "Verified Guides",
+            "verifiedGuidesDesc": "Locals vetted for quality & safety.",
+            "curatedTours": "Curated Tours",
+            "curatedToursDesc": "Unique experiences you can't find elsewhere."
+        },
+        "Notes": {
+            "add": "Add",
+            "save": "Save",
+            "saving": "Saving...",
+            "cancel": "Cancel",
+            "placeholder": "Add notes...",
+            "saved": "Trip note saved",
+            "failed": "Failed to save note"
+        },
+        "Progress": {
+            "label": "Trip Progress",
+            "day": "Day"
+        }
     }
 }

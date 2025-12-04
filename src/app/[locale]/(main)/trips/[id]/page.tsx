@@ -24,6 +24,7 @@ import Image from "next/image";
 import { formatDateRange } from "@/lib/trip-dates";
 import { ParallaxHero } from "@/components/trips/ParallaxHero";
 import { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 
 // --- NEW IMPORTS ---
 import {
@@ -377,7 +378,9 @@ export default async function TripIdPage({
     params: Promise<{ id: string }>;
 }) {
     const { id } = await params;
+
     const tripId = id;
+    const t = await getTranslations("TripDetails");
 
     const sb = await createClientServerRSC();
 
@@ -410,18 +413,18 @@ export default async function TripIdPage({
             <div className="mx-auto mt-10 max-w-2xl px-4">
                 <Button asChild variant="ghost" className="mb-3 rounded-full">
                     <Link href="/trips">
-                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to trips
+                        <ArrowLeft className="mr-2 h-4 w-4" /> {t("Header.backToTrips")}
                     </Link>
                 </Button>
                 <Card className="rounded-3xl border-none shadow-md">
                     <CardHeader>
                         <CardTitle>
-                            {tripErr ? "Couldn’t load trip" : "Trip not found"}
+                            {tripErr ? t("Header.loadErrorTitle") : t("Header.notFoundTitle")}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
                         {tripErr?.message ??
-                            "The requested trip doesn’t exist or you don’t have access to it."}
+                            t("Header.notFoundDesc")}
                     </CardContent>
                 </Card>
             </div>
@@ -445,15 +448,15 @@ export default async function TripIdPage({
             <div className="mx-auto mt-10 max-w-2xl px-4">
                 <Button asChild variant="ghost" className="mb-3 rounded-full">
                     <Link href="/trips">
-                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to trips
+                        <ArrowLeft className="mr-2 h-4 w-4" /> {t("Header.backToTrips")}
                     </Link>
                 </Button>
                 <Card className="rounded-3xl border-none shadow-md">
                     <CardHeader>
-                        <CardTitle>Couldn’t load itinerary items</CardTitle>
+                        <CardTitle>{t("Header.itemsErrorTitle")}</CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-muted-foreground">
-                        {itemsErr.message ?? "Failed to load itinerary items"}
+                        {itemsErr.message ?? t("Header.itemsErrorDesc")}
                     </CardContent>
                 </Card>
             </div>
@@ -654,7 +657,7 @@ export default async function TripIdPage({
 
             {/* Hero Header */}
             <ParallaxHero
-                title={trip.title ?? "Untitled Trip"}
+                title={trip.title ?? t("Header.titleFallback")}
                 heroUrl={heroBackground}
                 startDate={trip.start_date ?? undefined}
                 estCost={typeof trip.est_total_cost === "number" ? Math.round(trip.est_total_cost) : undefined}
@@ -690,7 +693,7 @@ export default async function TripIdPage({
                 {/* Trip Settings & Management Grid */}
                 <div className="space-y-6">
                     <div className="flex items-center gap-2 px-2">
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Trip Settings</h3>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t("Header.tripSettings")}</h3>
                         <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
                     </div>
 
