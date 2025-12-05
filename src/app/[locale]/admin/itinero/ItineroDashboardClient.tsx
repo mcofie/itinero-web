@@ -855,14 +855,23 @@ export default function ItineroDashboardClient({
     }, [destinations, destSearch]);
 
     const filteredPlaces = React.useMemo(() => {
-        if (!placeSearch.trim()) return places;
-        const q = placeSearch.trim().toLowerCase();
-        return places.filter(
-            (p) =>
-                p.name.toLowerCase().includes(q) ||
-                (p.category ?? "").toLowerCase().includes(q)
-        );
-    }, [places, placeSearch]);
+        let result = places;
+
+        if (placeFilterDestId && placeFilterDestId !== "all") {
+            result = result.filter((p) => p.destination_id === placeFilterDestId);
+        }
+
+        if (placeSearch.trim()) {
+            const q = placeSearch.trim().toLowerCase();
+            result = result.filter(
+                (p) =>
+                    p.name.toLowerCase().includes(q) ||
+                    (p.category ?? "").toLowerCase().includes(q)
+            );
+        }
+
+        return result;
+    }, [places, placeSearch, placeFilterDestId]);
 
     const filteredHistory = React.useMemo(() => {
         if (!histSearch.trim()) return historyList;
