@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Plane, ArrowRight } from "lucide-react";
+import { Loader2, Plane, ArrowRight, CheckCircle2, Globe2, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function LoginPage() {
     const sb = getSupabaseBrowser();
@@ -83,67 +84,144 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans text-foreground">
+        <div className="min-h-screen w-full flex bg-background font-sans text-foreground overflow-hidden">
+            {/* Left Side - Visual/Brand */}
+            <div className="hidden lg:flex lg:w-1/2 relative bg-primary overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary/70" />
 
-            <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
-                <Link href="/" className="inline-flex items-center gap-2 font-bold text-2xl tracking-tight text-primary mb-6">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-                        <Plane className="h-5 w-5" />
-                    </span>
-                    Itinero
-                </Link>
-                <h2 className="text-3xl font-extrabold text-foreground tracking-tight">
-                    {mode === "login" ? tAuth("welcome") : tAuth("startJourney")}
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground max-w-xs mx-auto">
-                    {mode === "login"
-                        ? tAuth("signInDesc")
-                        : tAuth("signUpDesc")}
-                </p>
+                <div className="relative z-10 flex flex-col justify-between w-full p-12 text-primary-foreground">
+                    <div>
+                        <Link href="/" className="inline-flex items-center gap-3 font-bold text-3xl tracking-tight text-white">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm border border-white/10 shadow-xl">
+                                <Plane className="h-6 w-6 text-white" />
+                            </span>
+                            Itinero
+                        </Link>
+                    </div>
+
+                    <div className="space-y-8 max-w-lg">
+                        <motion.h1
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-5xl font-extrabold leading-tight tracking-tight"
+                        >
+                            {tAuth("startJourney")}
+                        </motion.h1>
+                        <motion.p
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="text-lg text-primary-foreground/80 leading-relaxed"
+                        >
+                            Join thousands of travelers planning their next adventure with Itinero. Experience seamless trip organization like never before.
+                        </motion.p>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="space-y-4 pt-4"
+                        >
+                            {[
+                                { icon: Globe2, text: "Explore destinations worldwide" },
+                                { icon: CheckCircle2, text: "Smart itinerary planning" },
+                                { icon: ShieldCheck, text: "Secure and reliable" }
+                            ].map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-3">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">
+                                        <item.icon className="h-4 w-4" />
+                                    </div>
+                                    <span className="font-medium">{item.text}</span>
+                                </div>
+                            ))}
+                        </motion.div>
+                    </div>
+
+                    <div className="text-sm text-primary-foreground/60">
+                        © 2025 Itinero Inc. All rights reserved.
+                    </div>
+                </div>
             </div>
 
-            <div className="sm:mx-auto sm:w-full sm:max-w-[400px]">
-                <div className="bg-card py-8 px-4 shadow-xl shadow-black/5 sm:rounded-3xl sm:px-10 border border-border">
+            {/* Right Side - Form */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative">
+                {/* Mobile Logo */}
+                <div className="absolute top-6 left-6 lg:hidden">
+                    <Link href="/" className="inline-flex items-center gap-2 font-bold text-xl tracking-tight text-primary">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                            <Plane className="h-4 w-4" />
+                        </span>
+                        Itinero
+                    </Link>
+                </div>
+
+                <div className="w-full max-w-[420px] space-y-8">
+                    <div className="text-center lg:text-left">
+                        <h2 className="text-3xl font-bold tracking-tight">
+                            {mode === "login" ? tAuth("welcome") : tAuth("createAccount")}
+                        </h2>
+                        <p className="mt-2 text-muted-foreground">
+                            {mode === "login" ? tAuth("signInDesc") : tAuth("signUpDesc")}
+                        </p>
+                    </div>
+
                     <div className="space-y-6">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={mode}
+                                initial={{ opacity: 0, x: mode === "login" ? -20 : 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: mode === "login" ? 20 : -20 }}
+                                transition={{ duration: 0.2 }}
+                                className="space-y-4"
+                            >
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Email address</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        autoComplete="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="h-12 rounded-xl bg-muted/30 border-input focus-visible:ring-primary/30 transition-all"
+                                        placeholder="name@example.com"
+                                    />
+                                </div>
 
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="email" className="text-foreground font-semibold mb-1.5 block">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    autoComplete="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="h-11 rounded-xl bg-background border-input focus-visible:ring-ring"
-                                    placeholder="you@example.com"
-                                />
-                            </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor="pwd">{tAuth("password")}</Label>
+                                        {mode === "login" && (
+                                            <Link href="/forgot-password" className="text-xs font-medium text-primary hover:underline">
+                                                Forgot password?
+                                            </Link>
+                                        )}
+                                    </div>
+                                    <Input
+                                        id="pwd"
+                                        type="password"
+                                        autoComplete={mode === "login" ? "current-password" : "new-password"}
+                                        value={pwd}
+                                        onChange={(e) => setPwd(e.target.value)}
+                                        className="h-12 rounded-xl bg-muted/30 border-input focus-visible:ring-primary/30 transition-all"
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                            </motion.div>
+                        </AnimatePresence>
 
-                            <div>
-                                <Label htmlFor="pwd" className="text-foreground font-semibold mb-1.5 block">{tAuth("password")}</Label>
-                                <Input
-                                    id="pwd"
-                                    type="password"
-                                    autoComplete={mode === "login" ? "current-password" : "new-password"}
-                                    value={pwd}
-                                    onChange={(e) => setPwd(e.target.value)}
-                                    className="h-11 rounded-xl bg-background border-input focus-visible:ring-ring"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-4">
                             <Button
                                 onClick={handleEmail}
                                 disabled={busy}
-                                className="h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
+                                className="h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
                             >
                                 {busy ? (
-                                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {tAuth("wait")}</>
+                                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> {tAuth("wait")}</>
                                 ) : mode === "login" ? (
-                                    <>{tAuth("signIn")} <ArrowRight className="ml-2 h-4 w-4 opacity-80" /></>
+                                    <>{tAuth("signIn")} <ArrowRight className="ml-2 h-5 w-5" /></>
                                 ) : (
                                     tAuth("createAccount")
                                 )}
@@ -154,7 +232,7 @@ export default function LoginPage() {
                                     <div className="w-full border-t border-border" />
                                 </div>
                                 <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-card px-2 text-muted-foreground font-medium">{tAuth("continueWith")}</span>
+                                    <span className="bg-background px-2 text-muted-foreground font-medium">{tAuth("continueWith")}</span>
                                 </div>
                             </div>
 
@@ -162,34 +240,31 @@ export default function LoginPage() {
                                 variant="outline"
                                 onClick={handleGoogle}
                                 disabled={busy}
-                                className="h-11 rounded-xl border-border text-foreground font-semibold hover:bg-muted hover:text-foreground"
+                                className="h-12 rounded-xl border-border bg-background hover:bg-muted/50 text-foreground font-medium transition-all hover:-translate-y-0.5"
                             >
-                                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
+                                <svg className="mr-2 h-5 w-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
                                 {tAuth("google")}
                             </Button>
                         </div>
                     </div>
 
-                    <div className="mt-6">
-                        <div className="relative">
-                            <div className="relative flex justify-center text-sm">
-                                <button
-                                    type="button"
-                                    className="font-medium text-primary hover:text-primary/80 transition-colors"
-                                    onClick={() => setMode((m) => (m === "login" ? "signup" : "login"))}
-                                >
-                                    {mode === "login"
-                                        ? tAuth("noAccount")
-                                        : tAuth("hasAccount")}
-                                </button>
-                            </div>
-                        </div>
+                    <div className="text-center text-sm">
+                        <span className="text-muted-foreground">
+                            {mode === "login" ? tAuth("noAccount") : tAuth("hasAccount")}{" "}
+                        </span>
+                        <button
+                            type="button"
+                            className="font-semibold text-primary hover:underline transition-all"
+                            onClick={() => setMode((m) => (m === "login" ? "signup" : "login"))}
+                        >
+                            {mode === "login" ? "Sign up" : "Sign in"}
+                        </button>
                     </div>
-                </div>
 
-                <p className="mt-8 text-center text-xs text-muted-foreground">
-                    {tAuth("agreement")} <Link href="/terms" className="underline hover:text-foreground">{tAuth("terms")}</Link> and <Link href="/privacy" className="underline hover:text-foreground">{tAuth("privacy")}</Link>.
-                </p>
+                    <p className="text-center text-xs text-muted-foreground px-8">
+                        {tAuth("agreement")} <Link href="/terms" className="underline hover:text-foreground">{tAuth("terms")}</Link> and <Link href="/privacy" className="underline hover:text-foreground">{tAuth("privacy")}</Link>.
+                    </p>
+                </div>
             </div>
         </div>
     );
