@@ -1,11 +1,11 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import AppShell from "@/components/layout/AppShell";
+import { createClientServerRSC } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, Sparkles, Clock, Plane, ArrowRight } from "lucide-react";
-import { createClientServerRSC } from "@/lib/supabase/server";
+
 
 /* --- Data Configuration --- */
 
@@ -131,7 +131,7 @@ const DESTINATIONS: Destination[] = [
 
 export default async function DestinationsPage() {
     const sb = await createClientServerRSC();
-    const { data: { user } } = await sb.auth.getUser();
+    const { data: { user: _user } } = await sb.auth.getUser();
 
     const activeDestinations = DESTINATIONS.filter((d) => d.status === "active");
     const comingSoonDestinations = DESTINATIONS.filter((d) => d.status === "coming_soon");

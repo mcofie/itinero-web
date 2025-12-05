@@ -80,16 +80,14 @@ export default function TripActionsClient({
     tripId,
     tripTitle,
     days,
-    startDate,
-    endDate,
 }: Props) {
     const sb = getSupabaseBrowser();
     const router = useRouter();
 
     // Local state for title editing
     const [newTitle, setNewTitle] = useState(tripTitle || "");
-    const [editing, setEditing] = useState(false);
     const [busy, setBusy] = useState(false);
+    const [editing, setEditing] = useState(false);
 
     // Local state for adding items
     const [addingForDate, setAddingForDate] = useState<string | null>(null);

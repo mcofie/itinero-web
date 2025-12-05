@@ -34,17 +34,17 @@ export default function TripEditorClient({
 
     const router = useRouter();
 
-    async function updateItem(_id: string, _patch: Partial<Item>) {
+    const updateItem = async (_id: string, _patch: Partial<Item>) => {
         // ... supabase update ...
         router.refresh(); // ✅
     }
 
-    async function deleteAnItem(_id: string) {
+    const deleteAnItem = async (_id: string) => {
         // ... supabase delete ...
         router.refresh(); // ✅
     }
 
-    async function addItem(_dayKey: string, _payload: Partial<Item>) {
+    const addItem = async (_dayKey: string, _payload: Partial<Item>) => {
         // ... supabase insert ...
         router.refresh(); // ✅
     }

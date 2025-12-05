@@ -174,9 +174,6 @@ export default function TripViewerClient({
 
     const primaryDestination = tripConfig?.destinations?.[0] ?? null;
 
-    // Helper for Search Links
-    const locationName = primaryDestination?.name ?? destinationMeta?.city ?? "Destination";
-
     const activeDay: Day | null = data.days[activeDayIdx] ?? null;
 
     const itemsForControls: ItemRowLite[] = (activeDay?.blocks ?? []).map(
@@ -460,24 +457,20 @@ export default function TripViewerClient({
 
 
                                         <SidebarFact
-                                            label={t("Sidebar.plugs")}
                                             value={joinArr(destinationMeta?.plugs)}
                                             icon={Plug}
                                         />
                                         <SidebarFact
-                                            label={t("Sidebar.languages")}
                                             value={joinArr(destinationMeta?.languages)}
                                             icon={LanguagesIcon}
                                         />
                                         <SidebarFact
-                                            label={t("Sidebar.transport")}
                                             value={joinArr(destinationMeta?.transport)}
                                             icon={TrainFront}
                                         />
 
                                         {/* eSIM: Links to Airalo */}
                                         <SidebarFact
-                                            label={t("Sidebar.esim")}
                                             value={destinationMeta?.esim_provider || t("Sidebar.findEsim")}
                                             icon={SmartphoneNfc}
                                             href="https://www.airalo.com/"
@@ -823,13 +816,11 @@ function MetricTile({
 
 /* ---------- Updated Sidebar Fact ---------- */
 function SidebarFact({
-    label,
     value,
     sub,
     icon: Icon,
     href,
 }: {
-    label: string;
     value?: React.ReactNode;
     sub?: React.ReactNode;
     icon: React.ElementType;
@@ -852,7 +843,7 @@ function SidebarFact({
             <div className="min-w-0 py-0.5 flex-1">
                 <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-0.5">
-                        {label}
+                        {/* Removed label usage here */}
                     </span>
                     {href && (
                         <ExternalLink

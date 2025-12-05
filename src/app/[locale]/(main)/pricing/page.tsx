@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
     Calendar,
     Check,
@@ -21,7 +21,6 @@ import { cn } from "@/lib/utils";
 type Pack = { id: string; points: number; ghs: number; best?: boolean; note?: string };
 
 const GHS_PER_POINT = 0.4;
-const POINTS_PER_ITINERARY = 100;
 
 const FX_GHS_PER_UNIT: Record<string, number> = {
     GHS: 1,

@@ -1,5 +1,4 @@
 import { createClientServerRSC } from "@/lib/supabase/server"; // <-- server-side supabase helper
-import AppShell from "@/components/layout/AppShell";
 import PreviewClient from "./PreviewClient";
 import { redirect } from "next/navigation"; // client-only child
 

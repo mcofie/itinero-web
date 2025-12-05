@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createClientServerRSC } from "@/lib/supabase/server";
 
@@ -580,7 +581,7 @@ export default async function TripPrintPage({
             {/* --- Page 1: Cover & Context --- */}
             <div className="container page-break">
                 <div className="cover-hero">
-                    <img src={hero} className="cover-img" alt="Cover" />
+                    <Image src={hero} className="cover-img" alt="Cover" width={800} height={600} unoptimized />
                     <div className="cover-overlay">
                         <div className="cover-meta">
                             <span className="cover-badge">Itinerary</span>
@@ -648,7 +649,7 @@ export default async function TripPrintPage({
                         {/* QR Code Section */}
                         {qrUrl && (
                             <div className="qr-section">
-                                <img src={qrUrl} alt="QR" style={{ width: '60px', height: '60px', borderRadius: '4px' }} />
+                                <Image src={qrUrl} alt="QR" width={60} height={60} style={{ borderRadius: '4px' }} unoptimized />
                                 <div>
                                     <div className="qr-title">Live Map & Details</div>
                                     <div className="qr-text">Scan to view interactive map and updates.</div>

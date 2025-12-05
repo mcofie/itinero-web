@@ -21,7 +21,6 @@ import {
 import TripViewerClient from "./TripViewerClient";
 import TripActionsClient, { TripConfig } from "@/app/[locale]/(main)/trips/TripActionsClient";
 import Image from "next/image";
-import { formatDateRange } from "@/lib/trip-dates";
 import { ParallaxHero } from "@/components/trips/ParallaxHero";
 import { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
@@ -617,11 +616,6 @@ export default async function TripIdPage({
             cost_currency: p.cost_currency ?? null,
         })),
     };
-
-    const dateRange = formatDateRange(
-        trip.start_date ?? undefined,
-        trip.end_date ?? undefined
-    );
 
     // For action bar props
     const clientPlaces = places.map((p) => ({

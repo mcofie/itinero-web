@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { setTripPublic } from "@/app/actions/trips";
-import { Link as LinkIcon, Globe, Lock, Loader2 } from "lucide-react";
+import { Globe, Lock, Loader2 } from "lucide-react";
 
 type SetTripPublicResult = {
     public_id: string | null;
@@ -15,11 +15,9 @@ type SetTripPublicResult = {
 export default function PublicToggle({
     tripId,
     publicId,
-    className,
 }: {
     tripId: string;
     publicId?: string | null;
-    className?: string;
 }) {
     // Keep a local copy so UI can react immediately
     const [currentPublicId, setCurrentPublicId] = useState<string | null>(
@@ -28,12 +26,6 @@ export default function PublicToggle({
     const [busy, setBusy] = useState(false);
 
     const isPublic = !!currentPublicId;
-
-    const shareUrl = useMemo(() => {
-        if (!isPublic || !currentPublicId) return "";
-        if (typeof window === "undefined") return `/t/${currentPublicId}`;
-        return `${window.location.origin}/t/${currentPublicId}`;
-    }, [isPublic, currentPublicId]);
 
     async function handleToggle() {
         if (!tripId || busy) return;

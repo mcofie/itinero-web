@@ -3,7 +3,7 @@
 import * as React from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { format } from "date-fns";
-import { MapPin, Clock3, CalendarDays, ArrowRight, Quote } from "lucide-react";
+import { MapPin, Clock3, ArrowRight, Quote } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Day, Place } from "./page";
 import { FxSnapshot } from "@/lib/fx/types";
@@ -126,7 +126,6 @@ function StoryBlock({
         offset: ["start end", "end start"],
     });
 
-    const y = useTransform(scrollYProgress, [0, 1], [50, -50]);
     const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
 
     return (

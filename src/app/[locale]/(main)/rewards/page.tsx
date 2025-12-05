@@ -8,11 +8,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import {
-    Plane, Award, ShieldCheck, MapPin, Camera, Edit3, Trash2, Users, Info, Check
+    Award, ShieldCheck, MapPin, Camera, Edit3, Trash2, Users, Info, Check
 } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 /* ================= Types & Data ================= */
 
@@ -295,8 +293,8 @@ export default function RewardsPage() {
                                             key={t.key}
                                             variant="secondary"
                                             className={`rounded-full px-3 py-1 border ${t.key === tier.key
-                                                    ? "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
-                                                    : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700"
+                                                ? "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
+                                                : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700"
                                                 }`}
                                         >
                                             {t.name} {t.key === tier.key && "• Current"}

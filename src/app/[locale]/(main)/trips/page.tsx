@@ -15,7 +15,6 @@ import {
     Clock,
     AlertCircle,
     ArrowRight,
-    RefreshCw,
 } from "lucide-react";
 import { convertUsingSnapshot } from "@/lib/fx/fx";
 import type { FxSnapshot } from "@/lib/fx/types";

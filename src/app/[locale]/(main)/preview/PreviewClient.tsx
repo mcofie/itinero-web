@@ -3,12 +3,12 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import {useRouter} from "next/navigation";
-import {useTheme} from "next-themes";
-import {getSupabaseBrowser} from "@/lib/supabase/browser-singleton";
-import {motion, useScroll, useTransform, AnimatePresence} from "framer-motion";
+import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
     Loader2,
     CalendarDays,
@@ -19,14 +19,12 @@ import {
     Bike,
     Train,
     Clock3,
-    Check,
     Sparkles,
     Map as MapIcon,
     Download,
     PencilLine,
     Globe,
     Plug,
-    Phone,
     CloudSun,
     Wallet,
     X,
@@ -42,7 +40,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog";
-import {cn} from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 /* =========================
    Types
@@ -144,10 +142,10 @@ const HERO_FALLBACK =
 function modeToIcon(mode?: string) {
     if (!mode) return null;
     const cl = "mr-1 h-3.5 w-3.5";
-    if (mode === "walk") return <Footprints className={cl}/>;
-    if (mode === "bike") return <Bike className={cl}/>;
-    if (mode === "car") return <Car className={cl}/>;
-    if (mode === "transit") return <Train className={cl}/>;
+    if (mode === "walk") return <Footprints className={cl} />;
+    if (mode === "bike") return <Bike className={cl} />;
+    if (mode === "car") return <Car className={cl} />;
+    if (mode === "transit") return <Train className={cl} />;
     return null;
 }
 
@@ -246,15 +244,15 @@ const MapSection = dynamic(() => import("@/app/[locale]/trips/share/[publicId]/M
    Main Component
 ========================= */
 export default function PreviewClient({
-                                          requiredPoints,
-                                          initialPoints,
-                                      }: {
+    requiredPoints,
+    initialPoints,
+}: {
     requiredPoints: number;
     initialPoints: number | null;
 }) {
     const sb = getSupabaseBrowser();
     const router = useRouter();
-    const {resolvedTheme} = useTheme();
+    const { resolvedTheme } = useTheme();
     const isDark = (resolvedTheme ?? "dark") === "dark";
 
     // Client state
@@ -276,7 +274,7 @@ export default function PreviewClient({
         React.useState<DestinationMetaLike | null>(null);
 
     // Scroll for parallax
-    const {scrollY} = useScroll();
+    const { scrollY } = useScroll();
     const y1 = useTransform(scrollY, [0, 300], [0, 100]);
     const opacity = useTransform(scrollY, [0, 300], [1, 0]);
 
@@ -314,7 +312,7 @@ export default function PreviewClient({
         (async () => {
             setPointsBusy(true);
             try {
-                const {data: rpcBalance, error} = await sb.rpc("get_points_balance");
+                const { data: rpcBalance, error } = await sb.rpc("get_points_balance");
                 if (error) console.error("[PreviewClient] get_points_balance error:", error);
                 if (typeof rpcBalance === "number") setPoints(rpcBalance);
             } catch (e) {
@@ -366,16 +364,16 @@ export default function PreviewClient({
     }, [preview?.days?.length, activeDayIdx]);
 
     // Fetch destination_history meta
+    const destId = inputs?.destinations?.[0]?.id;
     React.useEffect(() => {
         (async () => {
-            const destId = inputs?.destinations?.[0]?.id;
             if (!destId) {
                 setDestMetaFromDb(null);
                 return;
             }
 
             try {
-                const {data, error} = await sb
+                const { data, error } = await sb
                     .schema("itinero")
                     .from("destination_history")
                     .select(
@@ -415,7 +413,7 @@ export default function PreviewClient({
                 setDestMetaFromDb(null);
             }
         })();
-    }, [sb, inputs?.destinations?.[0]?.id]);
+    }, [sb, destId]);
 
     // Actions
     const handleBuy = () => {
@@ -439,7 +437,7 @@ export default function PreviewClient({
         return (
             <div className="mx-auto grid min-h-[40vh] max-w-4xl place-items-center">
                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                    <Loader2 className="h-5 w-5 animate-spin text-blue-600"/> Loading preview…
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-600" /> Loading preview…
                 </div>
             </div>
         );
@@ -452,7 +450,7 @@ export default function PreviewClient({
                     className="relative w-full overflow-hidden rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 p-10 text-center dark:bg-slate-900 dark:border-slate-800">
                     <div
                         className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm ring-8 ring-white/50 dark:bg-slate-800 dark:ring-slate-800/50">
-                        <Sparkles className="h-8 w-8 text-blue-600 dark:text-blue-400"/>
+                        <Sparkles className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                     </div>
 
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -469,7 +467,7 @@ export default function PreviewClient({
                             className="w-full rounded-xl bg-blue-600 text-white hover:bg-blue-700 sm:w-auto"
                             onClick={() => router.push("/trip-maker")}
                         >
-                            <CalendarDays className="mr-2 h-4 w-4"/>
+                            <CalendarDays className="mr-2 h-4 w-4" />
                             Start Planning
                         </Button>
 
@@ -500,7 +498,7 @@ export default function PreviewClient({
             {/* HERO */}
             <section className="relative h-[50vh] min-h-[400px] w-full overflow-hidden">
                 <motion.div
-                    style={{y: y1}}
+                    style={{ y: y1 }}
                     className="absolute inset-0 h-[120%] w-full"
                 >
                     <Image
@@ -511,21 +509,21 @@ export default function PreviewClient({
                         className="object-cover"
                         sizes="100vw"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent"/>
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
                 </motion.div>
 
                 <div className="absolute inset-0 flex items-end pb-12 md:pb-16">
                     <div className="mx-auto w-full max-w-5xl px-4 md:max-w-6xl">
                         <motion.div
-                            style={{opacity}}
-                            initial={{opacity: 0, y: 20}}
-                            animate={{opacity: 1, y: 0}}
-                            transition={{duration: 0.8, ease: "easeOut"}}
+                            style={{ opacity }}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
                             className="max-w-3xl space-y-4"
                         >
                             <div
                                 className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white backdrop-blur-md ring-1 ring-white/20">
-                                <Sparkles className="h-3.5 w-3.5 text-blue-400"/>
+                                <Sparkles className="h-3.5 w-3.5 text-blue-400" />
                                 Preview Mode
                             </div>
 
@@ -536,14 +534,14 @@ export default function PreviewClient({
                             <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-200">
                                 <span
                                     className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 backdrop-blur-md ring-1 ring-white/10">
-                                    <CalendarDays className="h-4 w-4 text-slate-300"/>
+                                    <CalendarDays className="h-4 w-4 text-slate-300" />
                                     {formatDateRange(preview.trip_summary)}
                                 </span>
 
                                 {typeof estTotal === "number" && (
                                     <span
                                         className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 backdrop-blur-md ring-1 ring-white/10">
-                                        <DollarSign className="h-4 w-4 text-emerald-400"/>
+                                        <DollarSign className="h-4 w-4 text-emerald-400" />
                                         Est. {currency} {estTotal}
                                     </span>
                                 )}
@@ -559,7 +557,7 @@ export default function PreviewClient({
 
                             {!!inputs?.interests?.length && (
                                 <div className="pt-2">
-                                    <InterestChips interests={inputs!.interests!} dark/>
+                                    <InterestChips interests={inputs!.interests!} dark />
                                 </div>
                             )}
                         </motion.div>
@@ -576,7 +574,7 @@ export default function PreviewClient({
                         <div
                             className="rounded-2xl border border-blue-100 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800">
                             <div className="flex gap-3">
-                                <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0"/>
+                                <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
                                 <p className="text-sm text-blue-800 dark:text-blue-200">
                                     Costs are shown in the destination&apos;s currency (<strong>{currency}</strong>).
                                     When you save this trip, we&apos;ll automatically convert these estimates to your
@@ -645,7 +643,7 @@ export default function PreviewClient({
                                 <div
                                     className="p-4 border-b border-slate-100 flex items-center justify-between dark:border-slate-800">
                                     <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2 dark:text-white">
-                                        <MapIcon className="h-4 w-4 text-blue-600 dark:text-blue-400"/> Map View
+                                        <MapIcon className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Map View
                                     </h3>
                                 </div>
                                 <div className="h-64 w-full bg-slate-100 dark:bg-slate-800 relative group">
@@ -659,7 +657,7 @@ export default function PreviewClient({
                                     />
                                     {/* Overlay to indicate interactivity */}
                                     <div
-                                        className="absolute inset-0 bg-slate-900/0 pointer-events-none group-hover:bg-slate-900/5 transition-colors"/>
+                                        className="absolute inset-0 bg-slate-900/0 pointer-events-none group-hover:bg-slate-900/5 transition-colors" />
                                 </div>
                             </div>
                         )}
@@ -669,7 +667,7 @@ export default function PreviewClient({
                                 className="rounded-3xl border border-slate-200 bg-white shadow-sm p-6 space-y-6 dark:bg-slate-900 dark:border-slate-800">
                                 <div
                                     className="flex items-center gap-2 pb-4 border-b border-slate-100 dark:border-slate-800">
-                                    <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400"/>
+                                    <Globe className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                                     <h3 className="font-bold text-slate-900 text-sm dark:text-white">Local Guide</h3>
                                 </div>
 
@@ -679,9 +677,9 @@ export default function PreviewClient({
                                     </div>
                                 )}
                                 <div className="space-y-3">
-                                    <IconFact label="City" value={destinationMeta?.city} icon={MapPin}/>
+                                    <IconFact label="City" value={destinationMeta?.city} icon={MapPin} />
                                     <IconFact label="Currency" value={destinationMeta?.currency_code}
-                                              icon={DollarSign}/>
+                                        icon={DollarSign} />
 
                                     {/* Interactive Weather */}
                                     <IconFact
@@ -691,9 +689,9 @@ export default function PreviewClient({
                                         href={`https://www.google.com/search?q=weather+${encodeURIComponent(locationName)}`}
                                     />
 
-                                    <IconFact label="Plugs" value={joinArr(destinationMeta?.plugs)} icon={Plug}/>
+                                    <IconFact label="Plugs" value={joinArr(destinationMeta?.plugs)} icon={Plug} />
                                     <IconFact label="Transport" value={joinArr(destinationMeta?.transport)}
-                                              icon={Train}/>
+                                        icon={Train} />
 
                                     {/* Interactive eSIM */}
                                     <IconFact
@@ -758,7 +756,7 @@ export default function PreviewClient({
                     <DialogHeader>
                         <div
                             className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-900/20">
-                            <Wallet className="h-6 w-6 text-amber-600 dark:text-amber-400"/>
+                            <Wallet className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                         </div>
                         <DialogTitle className="text-lg font-bold text-slate-900 dark:text-white">
                             Not enough points
@@ -768,7 +766,7 @@ export default function PreviewClient({
                     <div className="space-y-3 text-center text-sm text-slate-600 dark:text-slate-400">
                         <p>
                             You need <strong
-                            className="text-slate-900 dark:text-white">{requiredPoints} points</strong> to save this
+                                className="text-slate-900 dark:text-white">{requiredPoints} points</strong> to save this
                             full itinerary.
                         </p>
                         <div
@@ -803,11 +801,11 @@ export default function PreviewClient({
 ========================= */
 
 function ItineraryDay({
-                          dayIdx,
-                          day,
-                          placesById,
-                          currency,
-                      }: {
+    dayIdx,
+    day,
+    placesById,
+    currency,
+}: {
     dayIdx: number;
     day: Day;
     placesById: Map<string, Place>;
@@ -819,10 +817,10 @@ function ItineraryDay({
     return (
         <motion.div
             key={dayIdx}
-            initial={{opacity: 0, x: 20}}
-            animate={{opacity: 1, x: 0}}
-            exit={{opacity: 0, x: -20}}
-            transition={{duration: 0.3}}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
             className="space-y-8"
         >
             <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
@@ -839,9 +837,9 @@ function ItineraryDay({
                     return (
                         <motion.div
                             key={i}
-                            initial={{opacity: 0, y: 20}}
-                            animate={{opacity: 1, y: 0}}
-                            transition={{delay: i * 0.1}}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.1 }}
                             className="relative group"
                         >
                             {/* Timeline Dot */}
@@ -870,7 +868,7 @@ function ItineraryDay({
                                     </div>
                                     <div className="text-right text-xs font-medium text-slate-500 dark:text-slate-400">
                                         <div className="flex items-center gap-1 justify-end">
-                                            <Clock3 className="h-3 w-3"/>
+                                            <Clock3 className="h-3 w-3" />
                                             {b.duration_min} min
                                         </div>
                                         {b.est_cost > 0 && (
@@ -892,7 +890,7 @@ function ItineraryDay({
                                         className="flex items-center gap-3 text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 group/place hover:bg-blue-50 hover:border-blue-100 transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-blue-900/20 dark:hover:border-blue-800">
                                         <div
                                             className="h-8 w-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm dark:bg-slate-900 dark:border-slate-700">
-                                            <MapPin className="h-4 w-4 text-blue-500"/>
+                                            <MapPin className="h-4 w-4 text-blue-500" />
                                         </div>
                                         <div className="flex-1">
                                             <div
@@ -907,7 +905,7 @@ function ItineraryDay({
                                             )}
                                         </div>
                                         <ArrowRight
-                                            className="h-4 w-4 text-slate-300 group-hover/place:text-blue-400 transition-colors"/>
+                                            className="h-4 w-4 text-slate-300 group-hover/place:text-blue-400 transition-colors" />
                                     </div>
                                 )}
                             </div>
@@ -920,11 +918,11 @@ function ItineraryDay({
 }
 
 function IconFact({
-                      label,
-                      value,
-                      icon: Icon,
-                      href,
-                  }: {
+    label,
+    value,
+    icon: Icon,
+    href,
+}: {
     label: string;
     value?: string | null;
     icon: React.ElementType;
@@ -938,7 +936,7 @@ function IconFact({
                 href ? "bg-blue-50 border-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400"
                     : "bg-slate-50 border-slate-100 text-slate-500 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400"
             )}>
-                <Icon className="w-4 h-4"/>
+                <Icon className="w-4 h-4" />
             </div>
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
@@ -946,7 +944,7 @@ function IconFact({
                         {label}
                     </div>
                     {href && <ExternalLink
-                        className="h-3 w-3 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"/>}
+                        className="h-3 w-3 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />}
                 </div>
                 <div className="text-xs font-medium text-slate-700 dark:text-slate-300">{value}</div>
             </div>
@@ -956,7 +954,7 @@ function IconFact({
     if (href) {
         return (
             <a href={href} target="_blank" rel="noopener noreferrer"
-               className="block hover:bg-slate-50/50 dark:hover:bg-slate-800/30 -mx-2 px-2 py-1 rounded-xl transition-colors">
+                className="block hover:bg-slate-50/50 dark:hover:bg-slate-800/30 -mx-2 px-2 py-1 rounded-xl transition-colors">
                 {Content}
             </a>
         )
@@ -964,7 +962,7 @@ function IconFact({
     return Content;
 }
 
-function InterestChips({interests, dark}: { interests: string[]; dark?: boolean }) {
+function InterestChips({ interests, dark }: { interests: string[]; dark?: boolean }) {
     return (
         <div className="flex flex-wrap gap-2">
             {interests.map((raw) => (
@@ -987,14 +985,14 @@ function InterestChips({interests, dark}: { interests: string[]; dark?: boolean 
 
 /* Full Screen Paywall Component */
 function FullScreenPaywallOverlay({
-                                      onBuy,
-                                      onSave,
-                                      onClose,
-                                      points,
-                                      required,
-                                      saving,
-                                      forceTheme,
-                                  }: {
+    onBuy,
+    onSave,
+    onClose,
+    points,
+    required,
+    saving,
+    forceTheme,
+}: {
     onBuy: () => void;
     onSave: () => void;
     onClose: () => void;
@@ -1017,17 +1015,17 @@ function FullScreenPaywallOverlay({
     return (
         <AnimatePresence>
             <motion.div
-                initial={{opacity: 0}}
-                animate={{opacity: 1}}
-                exit={{opacity: 0}}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 data-theme={forceTheme}
                 className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4"
             >
                 <motion.div
-                    initial={{scale: 0.9, opacity: 0, y: 20}}
-                    animate={{scale: 1, opacity: 1, y: 0}}
-                    exit={{scale: 0.9, opacity: 0, y: 20}}
-                    transition={{type: "spring", damping: 25, stiffness: 300}}
+                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] bg-white shadow-2xl ring-1 ring-white/10 dark:bg-slate-950 dark:ring-slate-800"
                 >
                     {/* Close Button */}
@@ -1035,24 +1033,24 @@ function FullScreenPaywallOverlay({
                         onClick={onClose}
                         className="absolute right-5 top-5 z-20 rounded-full bg-black/10 p-2 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/20 hover:text-white dark:bg-white/10 dark:hover:bg-white/20"
                     >
-                        <X className="h-5 w-5"/>
+                        <X className="h-5 w-5" />
                     </button>
 
                     {/* Premium Header */}
                     <div
                         className="relative flex h-64 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-violet-600 via-blue-600 to-indigo-600 text-center text-white">
-                        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20 mix-blend-overlay"/>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"/>
+                        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20 mix-blend-overlay" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
 
                         <motion.div
-                            initial={{y: 20, opacity: 0}}
-                            animate={{y: 0, opacity: 1}}
-                            transition={{delay: 0.2}}
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
                             className="relative z-10 flex flex-col items-center gap-4 p-6"
                         >
                             <div
                                 className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 shadow-inner backdrop-blur-md ring-1 ring-white/30">
-                                <Sparkles className="h-8 w-8 text-white"/>
+                                <Sparkles className="h-8 w-8 text-white" />
                             </div>
                             <div className="space-y-1">
                                 <h2 className="text-3xl font-black tracking-tight md:text-4xl">
@@ -1100,7 +1098,7 @@ function FullScreenPaywallOverlay({
                                     <span className="text-slate-400">Cost:</span>
                                     <span className="font-bold text-slate-900 dark:text-white">{required} pts</span>
                                 </span>
-                                <span className="h-4 w-px bg-slate-300 dark:bg-slate-700"/>
+                                <span className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
                                 <span className="flex items-center gap-1.5">
                                     <span className="text-slate-400">Balance:</span>
                                     <span
@@ -1131,12 +1129,12 @@ function FullScreenPaywallOverlay({
                                 >
                                     {saving ? (
                                         <>
-                                            <Loader2 className="mr-2 h-5 w-5 animate-spin"/>
+                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                                             Processing...
                                         </>
                                     ) : hasEnough ? (
                                         <span className="flex items-center gap-2">
-                                            Unlock Itinerary <Sparkles className="h-4 w-4"/>
+                                            Unlock Itinerary <Sparkles className="h-4 w-4" />
                                         </span>
                                     ) : (
                                         "Top Up Points"
@@ -1162,10 +1160,10 @@ function FullScreenPaywallOverlay({
 }
 
 function PerkItem({
-                      icon: Icon,
-                      title,
-                      desc,
-                  }: {
+    icon: Icon,
+    title,
+    desc,
+}: {
     icon: React.ElementType;
     title: string;
     desc: string;
@@ -1174,7 +1172,7 @@ function PerkItem({
         <div className="flex gap-4">
             <div
                 className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-                <Icon className="h-6 w-6"/>
+                <Icon className="h-6 w-6" />
             </div>
             <div>
                 <h4 className="font-bold text-slate-900 dark:text-white">{title}</h4>
@@ -1215,7 +1213,7 @@ async function saveDraftAsTrip(
     let pointsSpent = false;
 
     try {
-        const {data: auth, error: userErr} = await sbClient.auth.getUser();
+        const { data: auth, error: userErr } = await sbClient.auth.getUser();
         if (userErr) {
             console.error("[saveDraftAsTrip] auth.getUser error:", userErr);
         }
@@ -1224,7 +1222,7 @@ async function saveDraftAsTrip(
 
         // 1) Spend points via RPC, fallback to manual ledger insert
         try {
-            const {data: ok, error: rpcErr} = await sbClient
+            const { data: ok, error: rpcErr } = await sbClient
                 .schema('itinero')
                 .rpc("spend_points", {
                     p_cost: COST,
@@ -1238,14 +1236,14 @@ async function saveDraftAsTrip(
             pointsSpent = true;
         } catch (e) {
             console.error("[saveDraftAsTrip] spend_points RPC failed, fallback:", e);
-            const {error: debitErr} = await sbClient
+            const { error: debitErr } = await sbClient
                 .schema("itinero")
                 .from("points_ledger")
                 .insert({
                     user_id: currentUserId,
                     delta: -COST,
                     reason: "save_trip",
-                    meta: {source: "web", at: new Date().toISOString()},
+                    meta: { source: "web", at: new Date().toISOString() },
                 });
             if (debitErr) {
                 console.error("[saveDraftAsTrip] manual debit failed:", debitErr);
@@ -1268,7 +1266,7 @@ async function saveDraftAsTrip(
         let coverUrlFromDest: string | null = null;
         if (destinationId) {
             try {
-                const {data: destRow, error: destErr} = await sbClient
+                const { data: destRow, error: destErr } = await sbClient
                     .schema("itinero")
                     .from("destinations")
                     .select("cover_url")
@@ -1308,7 +1306,7 @@ async function saveDraftAsTrip(
             cover_url: coverUrlFromDest ?? ins?.destinations?.[0]?.cover_url ?? null,
         };
 
-        const {data: tripInsert, error: tripErr} = await sbClient
+        const { data: tripInsert, error: tripErr } = await sbClient
             .schema("itinero")
             .from("trips")
             .insert(tripRow)
@@ -1357,7 +1355,7 @@ async function saveDraftAsTrip(
         });
 
         if (items.length) {
-            const {error: itemsErr} = await sbClient
+            const { error: itemsErr } = await sbClient
                 .schema("itinero")
                 .from("itinerary_items")
                 .insert(items);
@@ -1366,7 +1364,7 @@ async function saveDraftAsTrip(
 
         // 4) Refresh points balance
         try {
-            const {data: newBal} = await sbClient.rpc("get_points_balance");
+            const { data: newBal } = await sbClient.rpc("get_points_balance");
             if (typeof newBal === "number") setPoints(newBal);
         } catch (e) {
             console.error("[saveDraftAsTrip] refresh balance failed:", e);
@@ -1387,13 +1385,13 @@ async function saveDraftAsTrip(
         // Refund points if we successfully spent them but failed later
         if (pointsSpent) {
             try {
-                const {data: auth2} = await sbClient.auth.getUser();
+                const { data: auth2 } = await sbClient.auth.getUser();
                 const uid = auth2?.user?.id ?? null;
                 await sbClient.schema("itinero").from("points_ledger").insert({
                     user_id: uid,
                     delta: COST,
                     reason: "refund_save_trip_failed",
-                    meta: {source: "web", at: new Date().toISOString()},
+                    meta: { source: "web", at: new Date().toISOString() },
                 });
             } catch {
                 // swallow
