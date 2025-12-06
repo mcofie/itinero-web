@@ -187,7 +187,7 @@ export default function TripWizard() {
 
 
     const isValid = useMemo(() => {
-        if (step === 0) return state.destinations[0]?.name.trim().length > 1;
+        if (step === 0) return !!state.destinations[0]?.id;
         if (step === 1) return !!state.start_date && !!state.end_date;
         if (step === 2)
             return state.budget_daily === "" || Number(state.budget_daily) >= 0;
@@ -921,7 +921,7 @@ function DestinationField({
             />
             {open && rows.length > 0 && (
                 <div
-                    className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl dark:bg-slate-900 dark:border-slate-800">
+                    className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl dark:bg-slate-900 dark:border-slate-800 max-h-60 overflow-y-auto">
                     {rows.map((r) => {
                         const flag = r.country_code ? getFlagEmoji(r.country_code) : "🌍";
                         const countryName = r.country_code ? getCountryName(r.country_code) : "";
