@@ -805,6 +805,46 @@ function getCountryName(countryCode: string) {
     }
 }
 
+// --- ISO CODES FOR LOOKUP ---
+const ISO_CODES = [
+    "AF", "AX", "AL", "DZ", "AS", "AD", "AO", "AI", "AQ", "AG", "AR", "AM", "AW", "AU", "AT", "AZ",
+    "BS", "BH", "BD", "BB", "BY", "BE", "BZ", "BJ", "BM", "BT", "BO", "BQ", "BA", "BW", "BV", "BR",
+    "IO", "BN", "BG", "BF", "BI", "CV", "KH", "CM", "CA", "KY", "CF", "TD", "CL", "CN", "CX", "CC",
+    "CO", "KM", "CG", "CD", "CK", "CR", "CI", "HR", "CU", "CW", "CY", "CZ", "DK", "DJ", "DM", "DO",
+    "EC", "EG", "SV", "GQ", "ER", "EE", "SZ", "ET", "FK", "FO", "FJ", "FI", "FR", "GF", "PF", "TF",
+    "GA", "GM", "GE", "DE", "GH", "GI", "GR", "GL", "GD", "GP", "GU", "GT", "GG", "GN", "GW", "GY",
+    "HT", "HM", "VA", "HN", "HK", "HU", "IS", "IN", "ID", "IR", "IQ", "IE", "IM", "IL", "IT", "JM",
+    "JP", "JE", "JO", "KZ", "KE", "KI", "KP", "KR", "KW", "KG", "LA", "LV", "LB", "LS", "LR", "LY",
+    "LI", "LT", "LU", "MO", "MK", "MG", "MW", "MY", "MV", "ML", "MT", "MH", "MQ", "MR", "MU", "YT",
+    "MX", "FM", "MD", "MC", "MN", "ME", "MS", "MA", "MZ", "MM", "NA", "NR", "NP", "NL", "NC", "NZ",
+    "NI", "NE", "NG", "NU", "NF", "MP", "NO", "OM", "PK", "PW", "PS", "PA", "PG", "PY", "PE", "PH",
+    "PN", "PL", "PT", "PR", "QA", "RE", "RO", "RU", "RW", "BL", "SH", "KN", "LC", "MF", "PM", "VC",
+    "WS", "SM", "ST", "SA", "SN", "RS", "SC", "SL", "SG", "SX", "SK", "SI", "SB", "SO", "ZA", "GS",
+    "SS", "ES", "LK", "SD", "SR", "SJ", "SE", "CH", "SY", "TW", "TJ", "TZ", "TH", "TL", "TG", "TK",
+    "TO", "TT", "TN", "TR", "TM", "TC", "TV", "UG", "UA", "AE", "GB", "US", "UM", "UY", "UZ", "VU",
+    "VE", "VN", "VG", "VI", "WF", "EH", "YE", "ZM", "ZW"
+];
+
+function getCountryCodeByName(name: string): string | undefined {
+    const normalized = name.trim().toLowerCase();
+    // Use Intl.DisplayNames to find a match
+    // This is a bit expensive to do every time, but for a search input it's fine
+    // We could optimize by caching or using a pre-built map if needed
+    const displayNames = new Intl.DisplayNames(["en"], { type: "region" });
+
+    for (const code of ISO_CODES) {
+        try {
+            const countryName = displayNames.of(code)?.toLowerCase();
+            if (countryName === normalized || countryName?.includes(normalized)) {
+                return code;
+            }
+        } catch {
+            continue;
+        }
+    }
+    return undefined;
+}
+
 // --- DESTINATION FIELD ---
 function DestinationField({
     value,
@@ -819,20 +859,36 @@ function DestinationField({
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        const term = q.trim();
+        let term = q.trim();
         if (!term) {
             setRows([]);
             return;
         }
 
+        // If user types "City, Country", just search for "City"
+        if (term.includes(",")) {
+            term = term.split(",")[0].trim();
+        }
+
         const t = setTimeout(async () => {
             try {
-                const { data, error } = await sb
+                // Try to find a country code for the search term
+                const countryCode = getCountryCodeByName(term);
+
+                let query = sb
                     .schema("itinero")
                     .from("destinations")
-                    .select("id,name,lat,lng,country_code")
-                    .ilike("name", `%${term}%`)
-                    .limit(5);
+                    .select("id,name,lat,lng,country_code");
+
+                if (countryCode) {
+                    // If we found a country code, search for name match OR country code match
+                    query = query.or(`name.ilike.%${term}%,country_code.eq.${countryCode}`);
+                } else {
+                    // Otherwise just search by name
+                    query = query.ilike("name", `%${term}%`);
+                }
+
+                const { data, error } = await query.limit(5);
 
                 if (error) {
                     console.error("[DestinationField] destinations query error:", error);
@@ -875,8 +931,9 @@ function DestinationField({
                                 key={r.id}
                                 type="button"
                                 onClick={() => {
-                                    setQ(r.name);
-                                    onChange(r);
+                                    const fullName = countryName ? `${r.name}, ${countryName}` : r.name;
+                                    setQ(fullName);
+                                    onChange({ ...r, name: fullName });
                                     setOpen(false);
                                 }}
                                 className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"

@@ -1,10 +1,4 @@
 {
-  "/[locale]/(main)/preview/page": "app/[locale]/(main)/preview/page.js",
-  "/[locale]/(main)/profile/page": "app/[locale]/(main)/profile/page.js",
-  "/[locale]/(main)/rewards/page": "app/[locale]/(main)/rewards/page.js",
-  "/[locale]/(main)/trips/[id]/page": "app/[locale]/(main)/trips/[id]/page.js",
-  "/[locale]/(main)/trips/page": "app/[locale]/(main)/trips/page.js",
-  "/[locale]/admin/itinero/page": "app/[locale]/admin/itinero/page.js",
   "/[locale]/page": "app/[locale]/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js"
 }

@@ -62,6 +62,7 @@ import {
     LayoutDashboard,
     ArrowLeft,
     ChevronRight,
+    ChevronLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from '@/i18n/routing';
@@ -173,6 +174,8 @@ export default function ItineroDashboardClient({
     const [destSaving, setDestSaving] = React.useState(false);
     const [editingDestId, setEditingDestId] = React.useState<string | null>(null);
     const [destSearch, setDestSearch] = React.useState("");
+    const [currentPage, setCurrentPage] = React.useState(1);
+    const pageSize = 10;
 
     /* ------------ Destination history form state ------------ */
     const [histDestinationId, setHistDestinationId] =
@@ -292,6 +295,11 @@ export default function ItineroDashboardClient({
 
 
     /* --- Effects --- */
+
+    // Reset pagination when search changes
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [destSearch]);
 
     // Load history entries when History tab destination changes
     React.useEffect(() => {
@@ -854,6 +862,14 @@ export default function ItineroDashboardClient({
         );
     }, [destinations, destSearch]);
 
+    const paginatedDestinations = React.useMemo(() => {
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+        return filteredDestinations.slice(start, end);
+    }, [filteredDestinations, currentPage]);
+
+    const totalPages = Math.ceil(filteredDestinations.length / pageSize);
+
     const filteredPlaces = React.useMemo(() => {
         let result = places;
 
@@ -889,19 +905,23 @@ export default function ItineroDashboardClient({
         <div className="flex h-screen w-full bg-slate-50 dark:bg-slate-950">
             {/* Sidebar */}
             <aside
-                className="w-64 flex-shrink-0 border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-                <div className="flex h-16 items-center px-6 border-b border-slate-100 dark:border-slate-800">
+                className="w-64 flex-shrink-0 border-r border-slate-200 bg-white/50 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/50">
+                <div className="flex h-16 items-center px-6 border-b border-slate-200/50 dark:border-slate-800/50">
                     <div className="flex items-center gap-2 font-bold text-lg text-slate-900 dark:text-white">
-                        <LayoutDashboard className="h-5 w-5 text-blue-600" />
-                        Itinero Admin
+                        <div className="p-1.5 bg-blue-600 rounded-lg">
+                            <LayoutDashboard className="h-4 w-4 text-white" />
+                        </div>
+                        Itinero
                     </div>
                 </div>
                 <nav className="p-4 space-y-1">
                     <Button
                         variant={activeTab === "destinations" ? "secondary" : "ghost"}
                         className={cn(
-                            "w-full justify-start gap-3",
-                            activeTab === "destinations" && "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                            "w-full justify-start gap-3 font-medium",
+                            activeTab === "destinations"
+                                ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 shadow-sm ring-1 ring-blue-200 dark:ring-blue-800"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                         )}
                         onClick={() => setActiveTab("destinations")}
                     >
@@ -911,8 +931,10 @@ export default function ItineroDashboardClient({
                     <Button
                         variant={activeTab === "places" ? "secondary" : "ghost"}
                         className={cn(
-                            "w-full justify-start gap-3",
-                            activeTab === "places" && "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                            "w-full justify-start gap-3 font-medium",
+                            activeTab === "places"
+                                ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 shadow-sm ring-1 ring-blue-200 dark:ring-blue-800"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                         )}
                         onClick={() => setActiveTab("places")}
                     >
@@ -922,8 +944,10 @@ export default function ItineroDashboardClient({
                     <Button
                         variant={activeTab === "history" ? "secondary" : "ghost"}
                         className={cn(
-                            "w-full justify-start gap-3",
-                            activeTab === "history" && "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                            "w-full justify-start gap-3 font-medium",
+                            activeTab === "history"
+                                ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 shadow-sm ring-1 ring-blue-200 dark:ring-blue-800"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                         )}
                         onClick={() => setActiveTab("history")}
                     >
@@ -931,8 +955,8 @@ export default function ItineroDashboardClient({
                         History & KBYG
                     </Button>
                 </nav>
-                <div className="p-4 mt-auto border-t border-slate-100 dark:border-slate-800">
-                    <Button variant="outline" className="w-full gap-2 justify-start text-slate-600 dark:text-slate-400"
+                <div className="p-4 mt-auto border-t border-slate-200/50 dark:border-slate-800/50">
+                    <Button variant="outline" className="w-full gap-2 justify-start text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900"
                         asChild>
                         <Link href="/admin">
                             <ArrowLeft className="h-4 w-4" />
@@ -1088,7 +1112,7 @@ export default function ItineroDashboardClient({
                                 </Sheet>
                             </div>
 
-                            <Card className="border-0 shadow-none">
+                            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-slate-950">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -1108,13 +1132,15 @@ export default function ItineroDashboardClient({
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            filteredDestinations.map((d) => (
-                                                <TableRow key={d.id}>
+                                            paginatedDestinations.map((d) => (
+                                                <TableRow key={d.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors">
                                                     <TableCell className="font-medium">
                                                         <div className="flex items-center gap-3">
-                                                            <TableImage url={d.cover_url} alt={d.name ?? "Destination"}
-                                                                icon={Globe} />
-                                                            {d.name}
+                                                            <div className="h-8 w-8 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                                                                <TableImage url={d.cover_url} alt={d.name ?? "Destination"}
+                                                                    icon={Globe} />
+                                                            </div>
+                                                            <span className="text-slate-900 dark:text-slate-100">{d.name}</span>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>{d.country_code}</TableCell>
@@ -1158,6 +1184,40 @@ export default function ItineroDashboardClient({
                                     </TableBody>
                                 </Table>
                             </Card>
+
+                            {/* Pagination Controls */}
+                            {filteredDestinations.length > pageSize && (
+                                <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 px-4 py-4 bg-white dark:bg-slate-950 rounded-b-lg">
+                                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                                        Showing <span className="font-medium text-slate-900 dark:text-slate-200">{(currentPage - 1) * pageSize + 1}</span> to <span className="font-medium text-slate-900 dark:text-slate-200">{Math.min(currentPage * pageSize, filteredDestinations.length)}</span> of <span className="font-medium text-slate-900 dark:text-slate-200">{filteredDestinations.length}</span> entries
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            className="h-8 w-8 p-0"
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                            <span className="sr-only">Previous</span>
+                                        </Button>
+                                        <div className="text-sm font-medium text-slate-900 dark:text-slate-200 min-w-[3rem] text-center">
+                                            {currentPage} / {totalPages}
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="h-8 w-8 p-0"
+                                        >
+                                            <ChevronRight className="h-4 w-4" />
+                                            <span className="sr-only">Next</span>
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -1424,7 +1484,7 @@ export default function ItineroDashboardClient({
                                 </Sheet>
                             </div>
 
-                            <Card className="border-0 shadow-none">
+                            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-slate-950">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -1445,16 +1505,18 @@ export default function ItineroDashboardClient({
                                             </TableRow>
                                         ) : (
                                             filteredPlaces.map((p) => (
-                                                <TableRow key={p.id}
-                                                    className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                                                <TableRow key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors">
                                                     <TableCell className="font-medium">
                                                         <div className="flex items-center gap-3">
-                                                            <TableImage url={null} alt={p.name} icon={MapPin} />
+                                                            <div className="h-8 w-8 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                                                                <TableImage url={destinations.find(d => d.id === p.destination_id)?.cover_url} alt={p.name}
+                                                                    icon={MapPin} />
+                                                            </div>
                                                             <div className="flex flex-col">
                                                                 <div className="flex items-center gap-2">
                                                                     {p.is_partner && <Badge variant="secondary"
                                                                         className="text-[10px] h-5 px-1 bg-amber-100 text-amber-700">PRO</Badge>}
-                                                                    <span>{p.name}</span>
+                                                                    <span className="text-slate-900 dark:text-slate-100">{p.name}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1669,7 +1731,7 @@ export default function ItineroDashboardClient({
                                 </Sheet>
                             </div>
 
-                            <Card className="border-0 shadow-none">
+                            <Card className="border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-slate-950">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -1690,18 +1752,20 @@ export default function ItineroDashboardClient({
                                         ) : (
                                             filteredHistory.map((h) => (
                                                 <TableRow key={h.id}
-                                                    className="hover:bg-slate-50 dark:hover:bg-slate-900/50">
+                                                    className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors">
                                                     <TableCell className="font-medium">
                                                         <div className="flex items-center gap-3">
-                                                            <TableImage url={h.backdrop_image_url} alt="Backdrop"
-                                                                icon={HistoryIcon} />
+                                                            <div className="h-8 w-8 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                                                                <TableImage url={h.backdrop_image_url} alt="Backdrop"
+                                                                    icon={HistoryIcon} />
+                                                            </div>
                                                             <div className="flex flex-col">
                                                                 <div className="flex items-center gap-2">
                                                                     {destinations.find(d => d.id === h.destination_id)?.current_history_id === h.id && (
                                                                         <Badge variant="secondary"
                                                                             className="text-[10px] h-5 px-1 bg-green-100 text-green-700">Current</Badge>
                                                                     )}
-                                                                    <span>{destinations.find(d => d.id === h.destination_id)?.name || "Unknown"}</span>
+                                                                    <span className="text-slate-900 dark:text-slate-100">{destinations.find(d => d.id === h.destination_id)?.name || "Unknown"}</span>
                                                                 </div>
                                                             </div>
                                                         </div>
