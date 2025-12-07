@@ -30,10 +30,24 @@ export function convertUsingSnapshot(
     if (!snapshot || amount == null) return null;
 
     const rates = snapshot.rates;
-    const fromRate = rates[from.toUpperCase()];
-    const toRate = rates[to.toUpperCase()];
+    const base = snapshot.base_currency;
 
-    if (!fromRate || !toRate) return null;
+    // Helper to safely get rate: if same as base, it's 1.0. 
+    // Otherwise look it up in rates.
+    const getRate = (code: string) => {
+        const c = code.toUpperCase();
+        if (base && c === base.toUpperCase()) return 1.0;
+        return rates[c];
+    };
+
+    const fromRate = getRate(from);
+    const toRate = getRate(to);
+
+    console.log("XXX " + fromRate + " " + toRate + " " + amount);
+
+
+    // Explicitly check for undefined because rate could be 0 (unlikely but possible)
+    if (fromRate === undefined || toRate === undefined) return null;
 
     // same formula as the SQL fx_convert
     return amount * (toRate / fromRate);

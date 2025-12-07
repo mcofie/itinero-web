@@ -9,6 +9,11 @@ export function AppProgressBar() {
             color="#0ea5e9"
             options={{ showSpinner: false }}
             shallowRouting
+            style={`
+                #nprogress .bar {
+                    z-index: 9999 !important;
+                }
+            `}
         />
     );
 }

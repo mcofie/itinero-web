@@ -39,14 +39,14 @@ export const revalidate = 0;
 export const fetchCache = "default-no-store";
 
 type Props = {
-    params: { id: string };
-    searchParams: { [key: string]: string | string[] | undefined };
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export async function generateMetadata(
     { params }: Props,
 ): Promise<Metadata> {
-    const { id } = params;
+    const { id } = await params;
     const sb = await createClientServerRSC();
 
     // Fetch just the title for metadata
@@ -305,10 +305,7 @@ function buildDestinationMetaFromHistoryRow(
     const payload = coercePayload(hist.payload);
     const k = payload.kbyg ?? {};
 
-    const weatherObj =
-        k.weather && isUnknownRecord(k.weather)
-            ? (k.weather as UnknownRecord)
-            : undefined;
+    const weatherRaw = k.weather;
 
     const meta: DestinationMetaLike = {
         description: payload.about ?? undefined,
@@ -325,14 +322,14 @@ function buildDestinationMetaFromHistoryRow(
                 ? k.languages
                 : undefined,
         weather_desc:
-            isString(weatherObj)
-                ? weatherObj
-                : weatherObj && isString(weatherObj["summary"])
-                    ? (weatherObj["summary"] as string)
+            isString(weatherRaw)
+                ? weatherRaw
+                : isUnknownRecord(weatherRaw) && isString(weatherRaw["summary"])
+                    ? (weatherRaw["summary"] as string)
                     : undefined,
         weather_temp_c:
-            weatherObj && typeof weatherObj["temperature"] === "number"
-                ? (weatherObj["temperature"] as number)
+            isUnknownRecord(weatherRaw) && typeof weatherRaw["temperature"] === "number"
+                ? (weatherRaw["temperature"] as number)
                 : undefined,
         transport: isString(k.getting_around)
             ? k

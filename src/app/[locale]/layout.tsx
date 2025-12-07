@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -78,7 +79,9 @@ export default async function RootLayout({
                     themes={["light", "dark"]}
                 >
                     <NextIntlClientProvider messages={messages}>
-                        <AppProgressBar />
+                        <Suspense fallback={null}>
+                            <AppProgressBar />
+                        </Suspense>
                         {children}
                     </NextIntlClientProvider>
                 </ThemeProvider>

@@ -86,34 +86,53 @@ export default function AppShell({ children, userEmail }: Props) {
         []
     );
 
-    // -------- Helper: reset broken Supabase auth + localStorage --------
-    const resetAuthAndStorage = React.useCallback(async () => {
+    // -------- Helper: Unified Logout with Hard Redirect --------
+    // This is the "cleanup" phase, safe to call from anywhere (button or event)
+    const finalizeLogout = React.useCallback(() => {
         if (typeof window !== "undefined") {
+            // 1. Clear storage
             try {
-                for (const key of Object.keys(window.localStorage)) {
-                    if (
-                        key.startsWith("sb-") ||
-                        key.startsWith("supabase.") ||
-                        key.startsWith("itinero:")
-                    ) {
-                        window.localStorage.removeItem(key);
-                    }
-                }
+                window.localStorage.clear();
             } catch (e) {
-                console.error("[resetAuthAndStorage] error clearing storage:", e);
+                console.error("[finalizeLogout] error clearing storage:", e);
+            }
+
+            // 2. Hard Redirect ONLY if not already on login
+            const isLoginPage = window.location.pathname.includes("/login");
+            if (!isLoginPage) {
+                console.log("[finalizeLogout] Forcing hard redirect to /login");
+                window.location.href = "/login";
             }
         }
+    }, []);
 
-        try {
-            await sb.auth.signOut();
-        } catch (e) {
-            console.error("[resetAuthAndStorage] signOut error:", e);
-        }
+    // This is the "user action" phase
+    const handleLogout = React.useCallback(() => {
+        // 1. Sign out (this triggers the SIGNED_OUT event)
+        sb.auth.signOut().catch((err) => {
+            console.error("[handleLogout] signOut error:", err);
+            // If network fails, we still want to clean up locally
+            finalizeLogout();
+        });
 
-        setUid(null);
-        router.refresh(); // <--- FIX: Forces Server Components to recognize logout
-        router.replace("/login"); // <--- Redirects specifically to login
-    }, [router, sb]);
+        // 2. We don't strictly *need* to call finalizeLogout here if the event fires,
+        // but it's safer to call it explicitly just in case the event listener is slow 
+        // or if we want immediate feedback. However, to avoid double-redirects, 
+        // we can rely on the event OR just call it.
+        // Let's rely on the event listener for the "official" handling, 
+        // but we can force it if we want immediate reaction. 
+        // Since the user reported "unresponsive", breaking the loop is key.
+        // The safe approach: Call it here, and ensure the event listener works too.
+        // BUT, we must ensure finalizeLogout is idempotent enough or that it doesn't hurt to run twice.
+        // Redirecting twice might be annoying but not infinite loop.
+        // The previous bug was: handleLogout handles signOut -> Event fires -> Calls handleLogout -> calls signOut ... loop.
+
+        // Correct pattern:
+        // handleLogout -> signOut. 
+        // Event listener (SIGNED_OUT) -> finalizeLogout.
+
+        // Just strictly call signOut here.
+    }, [sb]);
 
     // -------- Points refresh (RPC) --------
     const refreshPoints = React.useCallback(
@@ -215,7 +234,7 @@ export default function AppShell({ children, userEmail }: Props) {
 
                 if (error) {
                     console.error("[auth.getSession] error:", error);
-                    await resetAuthAndStorage();
+                    finalizeLogout(); // Use finalizeLogout instead of handleLogout
                     return;
                 }
 
@@ -229,7 +248,7 @@ export default function AppShell({ children, userEmail }: Props) {
             } catch (e) {
                 console.error("[auth.getSession] threw:", e);
                 if (mounted) {
-                    await resetAuthAndStorage();
+                    finalizeLogout(); // Use finalizeLogout instead of handleLogout
                 }
             }
         })();
@@ -242,7 +261,9 @@ export default function AppShell({ children, userEmail }: Props) {
                 setUid(userId);
 
                 if (event === "SIGNED_OUT") {
-                    await resetAuthAndStorage();
+                    // CRITICAL: Call finalizeLogout, NOT handleLogout
+                    // This breaks the loop (SIGNED_OUT -> handleLogout -> signOut -> SIGNED_OUT...)
+                    finalizeLogout();
                     return;
                 }
 
@@ -267,7 +288,7 @@ export default function AppShell({ children, userEmail }: Props) {
             mounted = false;
             sub?.subscription?.unsubscribe();
         };
-    }, [sb, refreshPoints, refreshPreferredCurrency, resetAuthAndStorage]);
+    }, [sb, refreshPoints, refreshPreferredCurrency, finalizeLogout]);
 
     // -------- Preview indicator --------
     React.useEffect(() => {
@@ -335,22 +356,16 @@ export default function AppShell({ children, userEmail }: Props) {
     }, [uid, sb, refreshPoints, refreshPreferredCurrency]);
 
     // -------- Logout --------
-    const logout = React.useCallback(async () => {
-        try {
-            await sb.auth.signOut();
-        } catch (e) {
-            console.error("[logout] signOut error:", e);
-        } finally {
-            await resetAuthAndStorage();
-        }
-    }, [resetAuthAndStorage, sb]);
+    const logout = React.useCallback(() => {
+        handleLogout();
+    }, [handleLogout]);
 
     // -------- Top-up --------
     const startTopup = React.useCallback(async () => {
         const pts = Number(pointsInput);
 
         if (!uid) {
-            await resetAuthAndStorage();
+            handleLogout();
             return;
         }
 
@@ -393,7 +408,7 @@ export default function AppShell({ children, userEmail }: Props) {
         } finally {
             setTopupBusy(false);
         }
-    }, [pointsInput, uid, topupBusy, userEmail, resetAuthAndStorage]);
+    }, [pointsInput, uid, topupBusy, userEmail, handleLogout]);
 
     const onPointsKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {

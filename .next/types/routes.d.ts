@@ -4,7 +4,7 @@
 type AppRoutes = "/[locale]" | "/[locale]/admin/itinero" | "/[locale]/auth/callback" | "/[locale]/checkout" | "/[locale]/destinations" | "/[locale]/login" | "/[locale]/preview" | "/[locale]/pricing" | "/[locale]/profile" | "/[locale]/rewards" | "/[locale]/rewards/verify" | "/[locale]/trip-maker" | "/[locale]/trips" | "/[locale]/trips/[id]" | "/[locale]/trips/[id]/print" | "/[locale]/trips/share/[publicId]"
 type AppRouteHandlerRoutes = "/api/paystack/init" | "/api/paystack/webhook" | "/api/points/quote" | "/api/rewards/verify" | "/api/trips/[id]/pdf"
 type PageRoutes = never
-type LayoutRoutes = "/[locale]" | "/[locale]/login"
+type LayoutRoutes = "/[locale]" | "/[locale]/admin" | "/[locale]/login"
 type RedirectRoutes = never
 type RewriteRoutes = "/ingest/[[...path]]" | "/ingest/static/[[...path]]"
 type Routes = AppRoutes | PageRoutes | LayoutRoutes | RedirectRoutes | RewriteRoutes | AppRouteHandlerRoutes
@@ -12,6 +12,7 @@ type Routes = AppRoutes | PageRoutes | LayoutRoutes | RedirectRoutes | RewriteRo
 
 interface ParamMap {
   "/[locale]": { "locale": string; }
+  "/[locale]/admin": { "locale": string; }
   "/[locale]/admin/itinero": { "locale": string; }
   "/[locale]/auth/callback": { "locale": string; }
   "/[locale]/checkout": { "locale": string; }
@@ -41,6 +42,7 @@ export type ParamsOf<Route extends Routes> = ParamMap[Route]
 
 interface LayoutSlotMap {
   "/[locale]": never
+  "/[locale]/admin": never
   "/[locale]/login": never
 }
 

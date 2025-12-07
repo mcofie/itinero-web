@@ -36,6 +36,12 @@ import {
     LodgingMapDialog,
     LodgingValue,
 } from "@/components/landing/LodgingMapDialog";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+    PopoverAnchor,
+} from "@/components/ui/popover";
 
 /* ---------------- date-only helpers ---------------- */
 type DateRangeValue = { from?: Date; to?: Date } | undefined;
@@ -908,52 +914,63 @@ function DestinationField({
 
     return (
         <div className="relative w-full">
-            <Input
-                value={q}
-                onChange={(e) => {
-                    setQ(e.target.value);
-                    setOpen(true);
-                    onChange({ ...value, name: e.target.value, id: undefined });
-                }}
-                onFocus={() => setOpen(true)}
-                className="h-14 w-full rounded-2xl border-slate-200 bg-slate-50 pl-4 text-lg shadow-sm focus-visible:ring-blue-600 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
-                placeholder="e.g. Tokyo, Paris..."
-            />
-            {open && rows.length > 0 && (
-                <div
-                    className="absolute top-full z-50 mt-2 w-full overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl dark:bg-slate-900 dark:border-slate-800 max-h-60 overflow-y-auto">
-                    {rows.map((r) => {
-                        const flag = r.country_code ? getFlagEmoji(r.country_code) : "🌍";
-                        const countryName = r.country_code ? getCountryName(r.country_code) : "";
+            <Popover open={open && rows.length > 0} onOpenChange={setOpen}>
+                <PopoverAnchor asChild>
+                    <Input
+                        value={q}
+                        onChange={(e) => {
+                            setQ(e.target.value);
+                            setOpen(true);
+                            onChange({ ...value, name: e.target.value, id: undefined });
+                        }}
+                        onFocus={() => setOpen(true)}
+                        // onBlur is tricky with Popover; usually we let the Popover's outside click handle closing
+                        // but if we click the Input itself, we want to keep it open.
+                        // Ideally we check if we have results.
+                        className="h-14 w-full rounded-2xl border-slate-200 bg-slate-50 pl-4 text-lg shadow-sm focus-visible:ring-blue-600 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
+                        placeholder="e.g. Tokyo, Paris..."
+                    />
+                </PopoverAnchor>
+                <PopoverContent
+                    className="p-0 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl dark:bg-slate-900 dark:border-slate-800"
+                    align="start"
+                    sideOffset={8}
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                >
+                    <div className="max-h-60 overflow-y-auto">
+                        {rows.map((r) => {
+                            const flag = r.country_code ? getFlagEmoji(r.country_code) : "🌍";
+                            const countryName = r.country_code ? getCountryName(r.country_code) : "";
 
-                        return (
-                            <button
-                                key={r.id}
-                                type="button"
-                                onClick={() => {
-                                    const fullName = countryName ? `${r.name}, ${countryName}` : r.name;
-                                    setQ(fullName);
-                                    onChange({ ...r, name: fullName });
-                                    setOpen(false);
-                                }}
-                                className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
-                            >
-                                <span className="text-2xl">{flag}</span>
-                                <div>
-                                    <div className="font-medium text-slate-900 dark:text-white">
-                                        {r.name}
-                                    </div>
-                                    {countryName && (
-                                        <div className="text-xs text-slate-500 dark:text-slate-400">
-                                            {countryName}
+                            return (
+                                <button
+                                    key={r.id}
+                                    type="button"
+                                    onClick={() => {
+                                        const fullName = countryName ? `${r.name}, ${countryName}` : r.name;
+                                        setQ(fullName);
+                                        onChange({ ...r, name: fullName });
+                                        setOpen(false);
+                                    }}
+                                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+                                >
+                                    <span className="text-2xl">{flag}</span>
+                                    <div>
+                                        <div className="font-medium text-slate-900 dark:text-white">
+                                            {r.name}
                                         </div>
-                                    )}
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
-            )}
+                                        {countryName && (
+                                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                                                {countryName}
+                                            </div>
+                                        )}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </PopoverContent>
+            </Popover>
         </div>
     );
 }
