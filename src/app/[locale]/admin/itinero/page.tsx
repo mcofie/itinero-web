@@ -19,6 +19,11 @@ export default async function ItineroAdminPage() {
         redirect("/login");
     }
 
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail && user.email !== adminEmail) {
+        redirect("/");
+    }
+
     // Fetch minimal lists for selects
     const { data: destRows } = await sb
         .schema("itinero")

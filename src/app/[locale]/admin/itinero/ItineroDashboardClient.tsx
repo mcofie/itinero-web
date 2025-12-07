@@ -177,6 +177,10 @@ export default function ItineroDashboardClient({
     const [currentPage, setCurrentPage] = React.useState(1);
     const pageSize = 10;
 
+    // Places Pagination
+    const [placesPage, setPlacesPage] = React.useState(1);
+    const [placesPageSize, setPlacesPageSize] = React.useState(10);
+
     /* ------------ Destination history form state ------------ */
     const [histDestinationId, setHistDestinationId] =
         React.useState<string>("");
@@ -300,6 +304,11 @@ export default function ItineroDashboardClient({
     React.useEffect(() => {
         setCurrentPage(1);
     }, [destSearch]);
+
+    // Reset places pagination when search or filter changes
+    React.useEffect(() => {
+        setPlacesPage(1);
+    }, [placeSearch, placeFilterDestId]);
 
     // Load history entries when History tab destination changes
     React.useEffect(() => {
@@ -508,6 +517,7 @@ export default function ItineroDashboardClient({
 
             if (editingHistId) {
                 const { data, error } = await sb
+                    .schema('itinero')
                     .from("destination_history")
                     .update({
                         content: histContent.trim(),
@@ -534,6 +544,7 @@ export default function ItineroDashboardClient({
                 toast.success("History entry updated successfully");
             } else {
                 const { data, error } = await sb
+                    .schema('itinero')
                     .from("destination_history")
                     .insert({
                         destination_id: histDestinationId,
@@ -598,6 +609,7 @@ export default function ItineroDashboardClient({
         if (!confirm("Delete this history entry?")) return;
         try {
             const { error } = await sb
+                .schema("itinero")
                 .from("destination_history")
                 .delete()
                 .eq("id", id);
@@ -733,6 +745,7 @@ export default function ItineroDashboardClient({
 
             if (editingPlaceId) {
                 const { data, error } = await sb
+                    .schema('itinero')
                     .from("places")
                     .update(payload)
                     .eq("id", editingPlaceId)
@@ -750,6 +763,7 @@ export default function ItineroDashboardClient({
 
                 // Update hours
                 await sb
+                    .schema("itinero")
                     .from("place_hours")
                     .delete()
                     .eq("place_id", editingPlaceId);
@@ -762,6 +776,7 @@ export default function ItineroDashboardClient({
                         close_time: h.close_time || null,
                     }));
                     const { error: hoursError } = await sb
+                        .schema("itinero")
                         .from("place_hours")
                         .insert(hoursPayload);
 
@@ -773,6 +788,7 @@ export default function ItineroDashboardClient({
             } else {
                 // Create
                 const { data, error } = await sb
+                    .schema('itinero')
                     .from("places")
                     .insert(payload)
                     .select()
@@ -833,7 +849,9 @@ export default function ItineroDashboardClient({
     async function handleDeletePlace(id: string) {
         if (!confirm("Delete this place?")) return;
         try {
-            const { error } = await sb.from("places").delete().eq("id", id);
+            const { error } = await sb
+                .schema('itinero')
+                .from("places").delete().eq("id", id);
             if (error) {
                 console.error(error);
                 toast.error("Failed to delete place", { description: error.message });
@@ -888,6 +906,13 @@ export default function ItineroDashboardClient({
 
         return result;
     }, [places, placeSearch, placeFilterDestId]);
+    const paginatedPlaces = React.useMemo(() => {
+        const start = (placesPage - 1) * placesPageSize;
+        const end = start + placesPageSize;
+        return filteredPlaces.slice(start, end);
+    }, [filteredPlaces, placesPage, placesPageSize]);
+
+    const totalPlacesPages = Math.ceil(filteredPlaces.length / placesPageSize);
 
     const filteredHistory = React.useMemo(() => {
         if (!histSearch.trim()) return historyList;
@@ -1453,17 +1478,17 @@ export default function ItineroDashboardClient({
                                                                     {isOpen && (
                                                                         <div className="flex items-center gap-2 flex-1">
                                                                             <Input
-                                                                                value={hour.open_time ?? ""}
+                                                                                type="time"
+                                                                                value={hour.open_time?.slice(0, 5) ?? ""}
                                                                                 onChange={(e) => updateHour(idx, "open", e.target.value)}
-                                                                                placeholder="09:00"
-                                                                                className="h-7 w-20 text-xs"
+                                                                                className="h-7 w-24 text-xs"
                                                                             />
                                                                             <span className="text-slate-400">-</span>
                                                                             <Input
-                                                                                value={hour.close_time ?? ""}
+                                                                                type="time"
+                                                                                value={hour.close_time?.slice(0, 5) ?? ""}
                                                                                 onChange={(e) => updateHour(idx, "close", e.target.value)}
-                                                                                placeholder="17:00"
-                                                                                className="h-7 w-20 text-xs"
+                                                                                className="h-7 w-24 text-xs"
                                                                             />
                                                                         </div>
                                                                     )}
@@ -1504,7 +1529,7 @@ export default function ItineroDashboardClient({
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            filteredPlaces.map((p) => (
+                                            paginatedPlaces.map((p) => (
                                                 <TableRow key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors">
                                                     <TableCell className="font-medium">
                                                         <div className="flex items-center gap-3">
@@ -1563,6 +1588,40 @@ export default function ItineroDashboardClient({
                                     </TableBody>
                                 </Table>
                             </Card>
+
+                            {/* Pagination Controls for Places */}
+                            {filteredPlaces.length > placesPageSize && (
+                                <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 px-4 py-4 bg-white dark:bg-slate-950 rounded-b-lg">
+                                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                                        Showing <span className="font-medium text-slate-900 dark:text-slate-200">{(placesPage - 1) * placesPageSize + 1}</span> to <span className="font-medium text-slate-900 dark:text-slate-200">{Math.min(placesPage * placesPageSize, filteredPlaces.length)}</span> of <span className="font-medium text-slate-900 dark:text-slate-200">{filteredPlaces.length}</span> entries
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPlacesPage((p) => Math.max(1, p - 1))}
+                                            disabled={placesPage === 1}
+                                            className="h-8 w-8 p-0"
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                            <span className="sr-only">Previous</span>
+                                        </Button>
+                                        <div className="text-sm font-medium text-slate-900 dark:text-slate-200 min-w-[3rem] text-center">
+                                            {placesPage} / {totalPlacesPages}
+                                        </div>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setPlacesPage((p) => Math.min(totalPlacesPages, p + 1))}
+                                            disabled={placesPage === totalPlacesPages}
+                                            className="h-8 w-8 p-0"
+                                        >
+                                            <ChevronRight className="h-4 w-4" />
+                                            <span className="sr-only">Next</span>
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                     {activeTab === "history" && (
