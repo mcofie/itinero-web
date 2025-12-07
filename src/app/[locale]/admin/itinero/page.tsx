@@ -1,6 +1,6 @@
 // app/admin/itinero/page.tsx
 import * as React from "react";
-import { redirect } from "next/navigation";
+// import { redirect } from "next/navigation";
 import { createClientServerRSC } from "@/lib/supabase/server";
 import ItineroDashboardClient, {
     DestinationOption,
@@ -11,18 +11,6 @@ export const dynamic = "force-dynamic";
 
 export default async function ItineroAdminPage() {
     const sb = await createClientServerRSC();
-    const {
-        data: { user },
-    } = await sb.auth.getUser();
-
-    if (!user) {
-        redirect("/login");
-    }
-
-    const adminEmail = process.env.ADMIN_EMAIL;
-    if (adminEmail && user.email !== adminEmail) {
-        redirect("/");
-    }
 
     // Fetch minimal lists for selects
     const { data: destRows } = await sb

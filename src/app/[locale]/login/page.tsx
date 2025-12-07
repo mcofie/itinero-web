@@ -87,8 +87,9 @@ export default function LoginPage() {
         <div className="min-h-screen w-full flex bg-background font-sans text-foreground overflow-hidden">
             {/* Left Side - Visual/Brand */}
             <div className="hidden lg:flex lg:w-1/2 relative bg-primary overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-overlay" />
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary/70" />
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop')] bg-cover bg-center" />
+                <div className="absolute inset-0 bg-primary/90 mix-blend-hard-light" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
 
                 <div className="relative z-10 flex flex-col justify-between w-full p-12 text-primary-foreground">
                     <div>
