@@ -65,6 +65,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/[locale]/(main)/features/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/[locale]/features">> = Specific
+  const handler = {} as typeof import("../../src/app/[locale]/(main)/features/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/[locale]/(main)/guided-tours/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/[locale]/guided-tours">> = Specific
+  const handler = {} as typeof import("../../src/app/[locale]/(main)/guided-tours/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/[locale]/(main)/preview/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/[locale]/preview">> = Specific

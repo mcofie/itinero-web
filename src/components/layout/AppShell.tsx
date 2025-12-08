@@ -461,7 +461,7 @@ export default function AppShell({ children, userEmail }: Props) {
                                 >
                                     <div className="p-6 border-b border-slate-100 dark:border-slate-800">
                                         <Link
-                                            href="/"
+                                            href={userEmail ? "/trips" : "/"}
                                             className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400"
                                         >
                                             <span
@@ -514,7 +514,7 @@ export default function AppShell({ children, userEmail }: Props) {
                             </Sheet>
 
                             <Link
-                                href="/trips"
+                                href={userEmail ? "/trips" : "/"}
                                 className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400"
                             >
                                 <span

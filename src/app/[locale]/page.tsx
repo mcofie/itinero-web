@@ -301,8 +301,8 @@ export default function LandingPage() {
                                 <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
                                     <li><Link href="/features" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Features</Link></li>
                                     <li><Link href="/pricing" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">{tNav("pricing")}</Link></li>
-                                    <li><Link href="/trip-maker" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Trip Wizard</Link></li>
                                     <li><Link href="/destinations" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Destinations</Link></li>
+                                    <li><Link href="/guided-tours" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Guided Tours</Link></li>
                                 </ul>
                             </div>
 
