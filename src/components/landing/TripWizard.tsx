@@ -271,7 +271,11 @@ export default function TripWizard() {
                 }
             }
 
-            const { data, error } = await sb.functions.invoke("build_preview_itinerary", {
+            // const { data, error } = await sb.functions.invoke("build_preview_itinerary", {
+            //     body: payload,
+            // });
+
+            const { data, error } = await sb.functions.invoke("build_preview_itinerary_v2", {
                 body: payload,
             });
 
