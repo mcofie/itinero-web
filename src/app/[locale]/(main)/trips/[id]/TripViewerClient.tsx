@@ -52,8 +52,18 @@ import { DestinationMeta, TripConfig } from "@/app/[locale]/(main)/trips/TripAct
 import { formatDateRange } from "@/lib/trip-dates";
 import { WeatherWidget } from "@/components/trips/WeatherWidget";
 import { ExchangeRateCard } from "@/components/trips/ExchangeRateCard";
-import { StoryView } from "./StoryView";
-import { ImmersiveMap } from "./ImmersiveMap";
+
+// Dynamic import for StoryView - only loads when Story tab is active
+const StoryView = dynamic(
+    () => import("./StoryView").then(mod => ({ default: mod.StoryView })),
+    { ssr: false, loading: () => <div className="flex h-96 items-center justify-center"><div className="text-sm text-slate-500">Loading story...</div></div> }
+);
+
+// Dynamic import for ImmersiveMap - only loads when Map tab is active
+const ImmersiveMap = dynamic(
+    () => import("./ImmersiveMap").then(mod => ({ default: mod.ImmersiveMap })),
+    { ssr: false, loading: () => <div className="flex h-96 items-center justify-center"><div className="text-sm text-slate-500">Loading map...</div></div> }
+);
 import { getLatestFxSnapshot, convertUsingSnapshot } from "@/lib/fx/fx";
 import type { FxSnapshot } from "@/lib/fx/types";
 

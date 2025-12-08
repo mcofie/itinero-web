@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMap } from "react-leaflet";
 import L, { LatLngExpression, LatLngTuple } from "leaflet";
 import React from "react";
+import { Locate, Maximize, Minimize, Navigation, ExternalLink } from "lucide-react";
 
 // With Turbopack/Next these resolve to URLs (string) or to an object { src: string } depending on config.
 import marker2x from "leaflet/dist/images/marker-icon-2x.png";
@@ -45,7 +46,14 @@ type Day = {
     map_polyline?: string;
     lodging?: { name: string; lat: number; lng: number } | null;
 };
-type Place = { id: string; name: string; lat?: number; lng?: number; category?: string | null };
+type Place = {
+    id: string;
+    name: string;
+    lat?: number;
+    lng?: number;
+    category?: string | null;
+    tags?: string[] | null;
+};
 
 // Choose any providers you like. These two are free, simple, and theme-friendly.
 const LIGHT_TILES = {
@@ -106,7 +114,12 @@ export default function LeafletMap({
 
     const markers = React.useMemo(() => {
         if (!day) return [];
-        const out: Array<{ pos: LatLngTuple; label: string; itemId: string }> = [];
+        const out: Array<{
+            pos: LatLngTuple;
+            label: string;
+            itemId: string;
+            place?: Place
+        }> = [];
         const blocks = Array.isArray(day.blocks) ? day.blocks : [];
         for (const b of blocks) {
             if (!b?.place_id) continue;
@@ -116,6 +129,7 @@ export default function LeafletMap({
                     pos: [p.lat, p.lng],
                     label: `${capitalize(b.when)} • ${p.name}`,
                     itemId: b.id || "",
+                    place: p,
                 });
             }
         }
@@ -161,6 +175,62 @@ export default function LeafletMap({
         return null;
     }
 
+    function CustomControls() {
+        const map = useMap();
+        const [isLocating, setIsLocating] = React.useState(false);
+
+        const handleLocate = () => {
+            setIsLocating(true);
+            map.locate({ setView: true, maxZoom: 14 });
+            map.once("locationfound", () => setIsLocating(false));
+            map.once("locationerror", () => {
+                setIsLocating(false);
+                alert("Could not access your location");
+            });
+        };
+
+        const toggleFullscreen = () => {
+            const container = map.getContainer();
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch((err) => {
+                    console.error("Error attempting to enable fullscreen:", err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        };
+
+        return (
+            <div className="leaflet-bottom leaflet-right">
+                <div className="leaflet-control leaflet-bar !mb-8 !mr-3 flex flex-col gap-2 !border-none">
+                    <button
+                        onClick={handleLocate}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-700 shadow-md transition-colors hover:bg-slate-50 hover:text-blue-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        title="Locate me"
+                    >
+                        <Locate className={`h-5 w-5 ${isLocating ? "animate-pulse text-blue-600" : ""}`} />
+                    </button>
+                    <button
+                        onClick={toggleFullscreen}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-700 shadow-md transition-colors hover:bg-slate-50 hover:text-blue-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        title="Toggle Fullscreen"
+                    >
+                        <Maximize className="h-5 w-5" />
+                    </button>
+                    <button
+                        onClick={() => {
+                            if (bounds) map.fitBounds(bounds, { padding: [24, 24] })
+                        }}
+                        className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-700 shadow-md transition-colors hover:bg-slate-50 hover:text-blue-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                        title="Fit Bounds"
+                    >
+                        <Minimize className="h-5 w-5" />
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     // Empty state when no `day` provided at all
     if (!day) {
         return (
@@ -177,19 +247,25 @@ export default function LeafletMap({
                     key={day.date}
                     bounds={bounds}
                     boundsOptions={{ padding: [24, 24] }}
-                    className="h-full w-full"
+                    className="h-full w-full outline-none"
                     scrollWheelZoom={false}
                 >
                     <TileLayer url={tiles.url} attribution={tiles.attribution} />
 
                     <InvalidateOnThemeChange deps={[theme]} />
                     <MapController selectedItemId={selectedItemId} markers={markers} />
+                    <CustomControls />
 
                     {!!poly.length && <Polyline positions={poly as LatLngExpression[]} />}
 
                     {lodgingPos && (
                         <Marker position={lodgingPos as LatLngExpression}>
-                            <Popup>{`Lodging • ${day.lodging?.name ?? ""}`}</Popup>
+                            <Popup>
+                                <div className="p-1">
+                                    <div className="text-xs font-bold uppercase text-slate-500">Lodging</div>
+                                    <div className="text-sm font-semibold text-slate-900">{day.lodging?.name}</div>
+                                </div>
+                            </Popup>
                         </Marker>
                     )}
 
@@ -199,6 +275,10 @@ export default function LeafletMap({
 
                     {markers.map((m, idx) => {
                         const isSelected = m.itemId === selectedItemId;
+                        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                            m.place?.name ?? ""
+                        )}&query_place_id=${m.place?.id ?? ""}`; // We use name mostly as IDs might be internal
+
                         return (
                             <Marker
                                 key={`${idx}-${isSelected}`} // Force re-render to open popup if needed
@@ -207,12 +287,37 @@ export default function LeafletMap({
                                     click: () => onMarkerClick?.(m.itemId),
                                 }}
                                 ref={(ref) => {
-                                    if (ref && isSelected) {
-                                        ref.openPopup();
+                                    if (ref) {
+                                        if (isSelected) ref.openPopup();
                                     }
                                 }}
                             >
-                                <Popup>{m.label}</Popup>
+                                <Popup>
+                                    <div className="min-w-[180px] p-1 space-y-2">
+                                        <div>
+                                            <div className="text-[10px] font-bold uppercase text-amber-600 mb-0.5">
+                                                {capitalize(m.label.split(" • ")[0])}
+                                            </div>
+                                            <div className="font-bold text-slate-900 text-sm">
+                                                {m.place?.name}
+                                            </div>
+                                            {m.place?.category && (
+                                                <div className="text-xs text-slate-500 capitalize">
+                                                    {m.place.category}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <a
+                                            href={mapsUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="flex items-center justify-center gap-1.5 w-full rounded-md bg-blue-50 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100 transition-colors"
+                                        >
+                                            <Navigation className="h-3 w-3" /> Get Directions
+                                        </a>
+                                    </div>
+                                </Popup>
                             </Marker>
                         );
                     })}

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
-import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { getSupabaseBrowser, resetSupabaseClient } from "@/lib/supabase/browser-singleton";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
@@ -145,7 +145,9 @@ export default function AppShell({ children, userEmail }: Props) {
 
             setLoadingPoints(true);
             try {
-                const { data: sumValue, error } = await sb.rpc("sum_points_for_user", {
+                // Always get fresh client to avoid using stale/corrupted instance
+                const client = getSupabaseBrowser();
+                const { data: sumValue, error } = await client.rpc("sum_points_for_user", {
                     uid: userId,
                 });
 
@@ -164,7 +166,7 @@ export default function AppShell({ children, userEmail }: Props) {
                 setLoadingPoints(false);
             }
         },
-        [sb]
+        [] // No dependencies - always use fresh client
     );
 
     // -------- preferred_currency from profile --------
@@ -173,7 +175,9 @@ export default function AppShell({ children, userEmail }: Props) {
             if (!userId) return;
 
             try {
-                const { data, error } = await sb
+                // Always get fresh client to avoid using stale/corrupted instance
+                const client = getSupabaseBrowser();
+                const { data, error } = await client
                     .schema("itinero")
                     .from("profiles")
                     .select("preferred_currency")
@@ -195,7 +199,7 @@ export default function AppShell({ children, userEmail }: Props) {
                 console.error("[refreshPreferredCurrency] threw:", e);
             }
         },
-        [sb]
+        [] // No dependencies - always use fresh client
     );
 
     // -------- FX snapshot --------
@@ -354,6 +358,49 @@ export default function AppShell({ children, userEmail }: Props) {
             }
         };
     }, [uid, sb, refreshPoints, refreshPreferredCurrency]);
+
+    // -------- Handle tab visibility changes (client recreation fix) --------
+    const handleVisibilityChange = React.useCallback(async () => {
+        if (document.visibilityState === 'visible' && uid) {
+            try {
+                console.log('[AppShell] Tab visible - recreating Supabase client');
+
+                // Reset the singleton to force client recreation
+                // This fixes the "corrupted state" issue where the client stops responding
+                resetSupabaseClient();
+
+                // Get a fresh client instance
+                const freshClient = getSupabaseBrowser();
+
+                // Verify session with new client
+                const { data } = await freshClient.auth.getSession();
+                const userId = data?.session?.user?.id ?? null;
+
+                if (userId !== uid) {
+                    console.log('[AppShell] User ID changed after client recreation');
+                    setUid(userId);
+                }
+
+                // Re-fetch data with the new client
+                await Promise.all([
+                    refreshPoints(uid),
+                    refreshPreferredCurrency(uid),
+                ]);
+
+                console.log('[AppShell] Successfully recovered from tab switch');
+            } catch (error) {
+                console.error('[AppShell] Error recovering from tab switch:', error);
+            }
+        }
+    }, [uid, refreshPoints, refreshPreferredCurrency]);
+
+    React.useEffect(() => {
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [handleVisibilityChange]);
 
     // -------- Logout --------
     const logout = React.useCallback(() => {
