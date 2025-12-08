@@ -35,7 +35,7 @@ export async function updateTripNote(tripId: string, note: string) {
         .eq("id", tripId)
         .single();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const currentInputs = (trip?.inputs as Record<string, any>) || {};
 
     const { error } = await supabase
@@ -64,7 +64,7 @@ export async function updateDayNote(tripId: string, dateKey: string, note: strin
         .eq("id", tripId)
         .single();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const currentInputs = (trip?.inputs as Record<string, any>) || {};
     const currentDayNotes = currentInputs.day_notes || {};
 

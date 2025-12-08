@@ -132,7 +132,7 @@ export default function AppShell({ children, userEmail }: Props) {
         // Event listener (SIGNED_OUT) -> finalizeLogout.
 
         // Just strictly call signOut here.
-    }, [sb]);
+    }, [sb, finalizeLogout]);
 
     // -------- Points refresh (RPC) --------
     const refreshPoints = React.useCallback(

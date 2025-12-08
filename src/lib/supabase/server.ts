@@ -15,9 +15,9 @@ export async function createClientServerRSC() {
             get(name: string) {
                 return cookieStore.get(name)?.value;
             },
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+             
             set(_name: string, _value: string, _options: CookieOptions) { },
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+             
             remove(_name: string, _options: CookieOptions) { },
         },
     });

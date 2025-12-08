@@ -71,7 +71,7 @@ const fadeUp = {
     initial: { opacity: 0, y: 20 },
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true, margin: "-100px" },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     transition: { duration: 0.5, ease: "easeOut" } as any
 };
 
@@ -505,9 +505,9 @@ function ParallaxDestinations() {
 }
 
 function Column({ destinations, y, className }: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     destinations: any[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     y: any,
     className?: string
 }) {

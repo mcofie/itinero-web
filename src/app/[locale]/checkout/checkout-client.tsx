@@ -109,6 +109,7 @@ export default function CheckoutClient({ userEmail }: { userEmail: string }) {
                 body: JSON.stringify({
                     quoteId: quote.quoteId,
                     email: userEmail,
+                    preview: searchParams.get("preview") === "true",
                 }),
             });
 

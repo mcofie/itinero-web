@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {useSearchParams, useRouter} from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
     CheckCircle2,
     Clock,
@@ -11,10 +11,10 @@ import {
     Loader2,
 } from "lucide-react";
 
-import AppShell from "@/components/layout/AppShell";
-import {Button} from "@/components/ui/button";
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
-import {cn} from "@/lib/utils";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type VerifyState = "checking" | "success" | "timeout" | "error";
 
@@ -30,6 +30,7 @@ export default function VerifyTopupPage() {
     const router = useRouter();
     const reference = sp.get("reference") || sp.get("ref") || "";
 
+    const isPreview = sp.get("preview") === "true";
     const [state, setState] = React.useState<VerifyState>("checking");
     const [message, setMessage] = React.useState<string>(
         "Hang tight, we’re verifying your payment…"
@@ -51,7 +52,7 @@ export default function VerifyTopupPage() {
                 `/api/rewards/verify?reference=${encodeURIComponent(reference)}`,
                 {
                     method: "GET",
-                    headers: {"Content-Type": "application/json"},
+                    headers: { "Content-Type": "application/json" },
                     cache: "no-store",
                 }
             );
@@ -106,7 +107,7 @@ export default function VerifyTopupPage() {
 
     async function refreshBalance() {
         try {
-            const r = await fetch("/api/points/balance", {cache: "no-store"});
+            const r = await fetch("/api/points/balance", { cache: "no-store" });
             const data = (await r.json()) as {
                 ok: boolean;
                 balance?: number;
@@ -165,142 +166,140 @@ export default function VerifyTopupPage() {
     const currentStyle = iconStyles[state] || iconStyles.checking;
 
     return (
-        <AppShell userEmail={null}>
+        <div
+            className="min-h-screen bg-slate-50/50 dark:bg-slate-950 flex items-center justify-center px-4 py-12 transition-colors duration-300">
+
+            {/* Decorative Background Glow */}
             <div
-                className="min-h-screen bg-slate-50/50 dark:bg-slate-950 flex items-center justify-center px-4 py-12 transition-colors duration-300">
+                className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent dark:from-blue-950/20 dark:to-transparent -z-10 pointer-events-none" />
 
-                {/* Decorative Background Glow */}
-                <div
-                    className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-50 to-transparent dark:from-blue-950/20 dark:to-transparent -z-10 pointer-events-none"/>
+            <div className="relative z-10 w-full max-w-md">
+                <Card
+                    className="overflow-hidden border-slate-200 bg-white shadow-xl shadow-slate-200/40 rounded-3xl dark:bg-slate-900 dark:border-slate-800 dark:shadow-none animate-in fade-in zoom-in-95 duration-500">
+                    <CardHeader
+                        className="border-b border-slate-100 bg-white/50 px-6 py-6 dark:bg-slate-900/50 dark:border-slate-800">
+                        <button
+                            type="button"
+                            onClick={() => router.push(isPreview ? "/preview" : "/trips")}
+                            className="mb-4 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+                        >
+                            <ArrowLeft className="h-3.5 w-3.5" />
+                            {isPreview ? "Back to Preview" : "Back to Trips"}
+                        </button>
 
-                <div className="relative z-10 w-full max-w-md">
-                    <Card
-                        className="overflow-hidden border-slate-200 bg-white shadow-xl shadow-slate-200/40 rounded-3xl dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
-                        <CardHeader
-                            className="border-b border-slate-100 bg-white/50 px-6 py-6 dark:bg-slate-900/50 dark:border-slate-800">
-                            <button
-                                type="button"
-                                onClick={() => router.push("/trips")}
-                                className="mb-4 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+                        <div className="flex items-start gap-4">
+                            <div
+                                className={cn(
+                                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-full ring-4 transition-all duration-300",
+                                    currentStyle
+                                )}
                             >
-                                <ArrowLeft className="h-3.5 w-3.5"/>
-                                Back to trips
-                            </button>
+                                <Icon className={cn("h-6 w-6", state === "checking" && "animate-spin")} />
+                            </div>
+                            <div>
+                                <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">
+                                    {title}
+                                </CardTitle>
+                                <p className="mt-1.5 text-sm text-slate-500 leading-relaxed dark:text-slate-400">
+                                    {subtitle}
+                                </p>
+                            </div>
+                        </div>
+                    </CardHeader>
 
-                            <div className="flex items-start gap-4">
+                    <CardContent className="space-y-6 px-6 py-6">
+                        {/* Status message */}
+                        <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            {message}
+                        </div>
+
+                        {/* Reference + balance block */}
+                        <div
+                            className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2 dark:bg-slate-950/50 dark:border-slate-800">
+                            <div className="space-y-1.5">
                                 <div
-                                    className={cn(
-                                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-full ring-4",
-                                        currentStyle
-                                    )}
-                                >
-                                    <Icon className={cn("h-6 w-6", state === "checking" && "animate-spin")}/>
+                                    className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                    Payment Ref
                                 </div>
-                                <div>
-                                    <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">
-                                        {title}
-                                    </CardTitle>
-                                    <p className="mt-1.5 text-sm text-slate-500 leading-relaxed dark:text-slate-400">
-                                        {subtitle}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardHeader>
-
-                        <CardContent className="space-y-6 px-6 py-6">
-                            {/* Status message */}
-                            <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                {message}
-                            </div>
-
-                            {/* Reference + balance block */}
-                            <div
-                                className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm sm:grid-cols-2 dark:bg-slate-950/50 dark:border-slate-800">
-                                <div className="space-y-1.5">
-                                    <div
-                                        className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                        Payment Ref
-                                    </div>
-                                    <div
-                                        className="inline-flex max-w-full items-center rounded-md bg-white px-2 py-1 text-xs font-mono text-slate-600 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300">
-                    <span className="truncate">
-                      {reference || "Not available"}
-                    </span>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <div
-                                        className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                                        New Balance
-                                    </div>
-                                    <div className="inline-flex items-baseline gap-1">
-                    <span className="text-lg font-bold text-slate-900 dark:text-white">
-                      {balance ?? "—"}
-                    </span>
-                                        <span
-                                            className="text-xs font-medium text-slate-500 dark:text-slate-400">pts</span>
-                                    </div>
+                                <div
+                                    className="inline-flex max-w-full items-center rounded-md bg-white px-2 py-1 text-xs font-mono text-slate-600 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300">
+                                    <span className="truncate">
+                                        {reference || "Not available"}
+                                    </span>
                                 </div>
                             </div>
 
-                            {/* Helper text */}
-                            <div
-                                className="rounded-xl bg-blue-50 px-4 py-3 text-xs text-blue-700 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-900/30">
-                                {state === "success" ? (
-                                    <>You can now use your new points to unlock full itineraries.</>
-                                ) : state === "timeout" ? (
-                                    <>
-                                        If your bank eventually completes the payment, your points
-                                        will still be credited. You can refresh your balance at any
-                                        time.
-                                    </>
-                                ) : state === "error" ? (
-                                    <>
-                                        If you were debited but we can’t find the payment, please
-                                        contact support with your reference above.
-                                    </>
-                                ) : (
-                                    <>We’re checking with the payment provider and your bank.</>
-                                )}
+                            <div className="space-y-1.5">
+                                <div
+                                    className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                                    New Balance
+                                </div>
+                                <div className="inline-flex items-baseline gap-1">
+                                    <span className="text-lg font-bold text-slate-900 dark:text-white">
+                                        {balance ?? "—"}
+                                    </span>
+                                    <span
+                                        className="text-xs font-medium text-slate-500 dark:text-slate-400">pts</span>
+                                </div>
                             </div>
+                        </div>
 
-                            {/* Actions */}
-                            <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                        {/* Helper text */}
+                        <div
+                            className="rounded-xl bg-blue-50 px-4 py-3 text-xs text-blue-700 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-900/30">
+                            {state === "success" ? (
+                                <>You can now use your new points to unlock full itineraries. Proceed to check out your trip details.</>
+                            ) : state === "timeout" ? (
+                                <>
+                                    If your bank eventually completes the payment, your points
+                                    will still be credited. You can refresh your balance at any
+                                    time.
+                                </>
+                            ) : state === "error" ? (
+                                <>
+                                    If you were debited but we can’t find the payment, please
+                                    contact support with your reference above.
+                                </>
+                            ) : (
+                                <>We’re checking with the payment provider and your bank.</>
+                            )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                            <Button
+                                variant="default"
+                                onClick={() => router.push(isPreview ? "/preview" : "/trips")}
+                                className="flex-1 rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 shadow-md hover:shadow-lg transition-all"
+                            >
+                                {isPreview ? "Go to Preview" : "Go to Trips"}
+                            </Button>
+
+                            <Button
+                                onClick={refreshBalance}
+                                variant="outline"
+                                className="flex-1 rounded-xl border-slate-200 dark:border-slate-700 dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800"
+                            >
+                                <RefreshCw className="mr-2 h-4 w-4" />
+                                Refresh
+                            </Button>
+
+                            {state !== "success" && state !== "checking" && (
                                 <Button
-                                    variant="default"
-                                    onClick={() => router.push("/trips")}
-                                    className="flex-1 rounded-xl bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+                                    variant="ghost"
+                                    onClick={() => {
+                                        setTries(0);
+                                        void poll();
+                                    }}
+                                    className="flex-1 rounded-xl hover:bg-slate-100 text-slate-600 dark:text-slate-400 dark:hover:bg-slate-800"
                                 >
-                                    Go to Trips
+                                    Try again
                                 </Button>
-
-                                <Button
-                                    onClick={refreshBalance}
-                                    variant="outline"
-                                    className="flex-1 rounded-xl border-slate-200 dark:border-slate-700 dark:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800"
-                                >
-                                    <RefreshCw className="mr-2 h-4 w-4"/>
-                                    Refresh
-                                </Button>
-
-                                {state !== "success" && state !== "checking" && (
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() => {
-                                            setTries(0);
-                                            void poll();
-                                        }}
-                                        className="flex-1 rounded-xl hover:bg-slate-100 text-slate-600 dark:text-slate-400 dark:hover:bg-slate-800"
-                                    >
-                                        Try again
-                                    </Button>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-        </AppShell>
+        </div>
     );
 }

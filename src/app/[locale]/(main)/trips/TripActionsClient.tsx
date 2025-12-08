@@ -45,7 +45,7 @@ export type Day = { date: string; blocks: DayBlock[] };
 export type Place = { id: string; name: string; lat?: number; lng?: number };
 
 export type TripConfig = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     [key: string]: any;
 };
 
