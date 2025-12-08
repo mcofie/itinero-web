@@ -1,5 +1,7 @@
 {
   "/[locale]/(main)/about-us/page": "app/[locale]/(main)/about-us/page.js",
+  "/[locale]/(main)/blog/[slug]/page": "app/[locale]/(main)/blog/[slug]/page.js",
+  "/[locale]/(main)/blog/page": "app/[locale]/(main)/blog/page.js",
   "/[locale]/(main)/destinations/page": "app/[locale]/(main)/destinations/page.js",
   "/[locale]/(main)/features/page": "app/[locale]/(main)/features/page.js",
   "/[locale]/(main)/guided-tours/page": "app/[locale]/(main)/guided-tours/page.js",
