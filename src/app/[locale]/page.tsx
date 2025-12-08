@@ -189,29 +189,7 @@ export default function LandingPage() {
                                     </div>
                                 </motion.div>
 
-                                {/* Social Proof */}
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.6, duration: 0.5 }}
-                                    className="mt-10 flex items-center gap-4"
-                                >
-                                    <div className="flex -space-x-3">
-                                        {[1, 2, 3, 4].map((i) => (
-                                            <div key={i} className="h-10 w-10 rounded-full border-2 border-white dark:border-slate-900 overflow-hidden bg-slate-200">
-                                                <Image
-                                                    src={`https://i.pravatar.cc/100?img=${i + 15}`}
-                                                    alt="User"
-                                                    width={40}
-                                                    height={40}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                        {tLanding("Hero.trustedBy")} <span className="text-slate-900 font-bold dark:text-white">10,000+</span> {tLanding("Hero.travelers")}
-                                    </div>
-                                </motion.div>
+
                             </div>
 
                             {/* Right: The Portal Visual */}
@@ -331,10 +309,8 @@ export default function LandingPage() {
                             <div>
                                 <h3 className="font-bold text-slate-900 mb-4 dark:text-white">{tLanding("Footer.company")}</h3>
                                 <ul className="space-y-3 text-sm text-slate-600 dark:text-slate-400">
-                                    <li><Link href="/about" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">About Us</Link></li>
-                                    <li><Link href="/careers" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Careers</Link></li>
+                                    <li><Link href="/about-us" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">About Us</Link></li>
                                     <li><Link href="/blog" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Blog</Link></li>
-                                    <li><Link href="/contact" className="hover:text-blue-600 transition-colors dark:hover:text-blue-400">Contact</Link></li>
                                 </ul>
                             </div>
 

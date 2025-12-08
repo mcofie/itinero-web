@@ -24,84 +24,84 @@ const DESTINATIONS: Destination[] = [
     {
         id: "france",
         name: "France",
-        image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
         status: "active",
         description: "From the romance of Paris to the lavender fields of Provence."
     },
     {
         id: "italy",
         name: "Italy",
-        image: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9",
         status: "active",
         description: "Ancient history, exquisite cuisine, and the rolling hills of Tuscany."
     },
     {
         id: "turkey",
         name: "Turkey",
-        image: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b",
         status: "active",
         description: "Where East meets West, featuring bazaars, mosques, and fairy chimneys."
     },
     {
         id: "ghana",
         name: "Ghana",
-        image: "https://images.unsplash.com/photo-1532302989211-173c1d2d5445?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1532302989211-173c1d2d5445",
         status: "active",
         description: "Experience the vibrant culture, history, and coastlines of West Africa."
     },
     {
         id: "kenya",
         name: "Kenya",
-        image: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e",
         status: "active",
         description: "Home to the classic safari, vast savannahs, and the Maasai Mara."
     },
     {
         id: "south-africa",
         name: "South Africa",
-        image: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99",
         status: "active",
         description: "From Cape Town's table mountain to wineries and wildlife."
     },
     {
         id: "tanzania",
         name: "Tanzania",
-        image: "https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1516426122078-c23e76319801",
         status: "active",
         description: "Witness the Serengeti migration and the heights of Kilimanjaro."
     },
     {
         id: "morocco",
         name: "Morocco",
-        image: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70",
         status: "active",
         description: "Get lost in the colorful medinas, deserts, and Atlas mountains."
     },
     {
         id: "rwanda",
         name: "Rwanda",
-        image: "https://images.unsplash.com/photo-1565372954320-44076d647781?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1565372954320-44076d647781",
         status: "active",
         description: "The land of a thousand hills and majestic mountain gorillas."
     },
     {
         id: "thailand",
         name: "Thailand",
-        image: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a",
         status: "active",
         description: "Tropical beaches, opulent royal palaces, and ancient ruins."
     },
     {
         id: "dubai",
         name: "Dubai",
-        image: "https://images.unsplash.com/photo-1512453979798-5ea904f18431?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1512453979798-5ea904f18431",
         status: "active",
         description: "Ultramodern architecture, luxury shopping, and lively nightlife."
     },
     {
         id: "singapore",
         name: "Singapore",
-        image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd",
         status: "active",
         description: "A melting pot of culture, futuristic gardens, and world-class food."
     },
@@ -109,21 +109,21 @@ const DESTINATIONS: Destination[] = [
     {
         id: "japan",
         name: "Japan",
-        image: "https://images.unsplash.com/photo-1528164344705-47542687000d?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1528164344705-47542687000d",
         status: "coming_soon",
         description: "Cherry blossoms, ancient temples, and neon-lit cities."
     },
     {
         id: "uganda",
         name: "Uganda",
-        image: "https://images.unsplash.com/photo-1573122350758-f622c465342b?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1573122350758-f622c465342b",
         status: "coming_soon",
         description: "The pearl of Africa, featuring the source of the Nile."
     },
     {
         id: "malaysia",
         name: "Malaysia",
-        image: "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=800&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1596422846543-75c6fc197f07",
         status: "coming_soon",
         description: "Rainforests, beaches, and the iconic Petronas Twin Towers."
     },
@@ -259,7 +259,6 @@ function DestinationCard({ destination }: { destination: Destination }) {
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    unoptimized
                 />
 
                 {/* Gradient Overlay */}

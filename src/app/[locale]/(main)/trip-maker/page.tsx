@@ -1,11 +1,9 @@
 // src/app/trip-maker/page.tsx
 import * as React from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClientServerRSC } from "@/lib/supabase/server";
 import TripWizard from "@/components/landing/TripWizard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -18,6 +16,10 @@ export default async function TripMakerPage() {
     const {
         data: { user },
     } = await sb.auth.getUser();
+
+    if (!user) {
+        redirect("/login?redirect=/trip-maker");
+    }
 
     return (
         <div className="relative isolate min-h-[100svh] bg-background">
@@ -40,39 +42,9 @@ export default async function TripMakerPage() {
             {/* Main — lifted slightly higher */}
             <main className="mx-auto grid min-h-[65svh] w-full max-w-4xl place-items-start px-4 pt-6 sm:pt-10">
                 <div className="w-full flex flex-col items-center justify-start">
-                    {user ? (
-                        <div className="w-full max-w-3xl rounded-2xl border border-border/60 bg-card/60 p-4 shadow-sm backdrop-blur-sm sm:p-6 md:p-8">
-                            <TripWizard />
-                        </div>
-                    ) : (
-                        <div className="w-full max-w-lg">
-                            <Card className="rounded-2xl border-border/60 shadow-sm">
-                                <CardHeader className="text-center">
-                                    <CardTitle className="text-xl">
-                                        Sign in to create a trip
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <p className="text-center text-sm text-muted-foreground">
-                                        You’ll be able to generate and save itineraries, then view
-                                        them on your Trips page.
-                                    </p>
-                                    <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
-                                        <Button asChild className="w-full sm:w-auto">
-                                            <Link href="/login?redirect=/trip-maker">Sign in</Link>
-                                        </Button>
-                                        <Button
-                                            asChild
-                                            variant="secondary"
-                                            className="w-full sm:w-auto"
-                                        >
-                                            <Link href="/">Back to Home</Link>
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    )}
+                    <div className="w-full max-w-3xl rounded-2xl border border-border/60 bg-card/60 p-4 shadow-sm backdrop-blur-sm sm:p-6 md:p-8">
+                        <TripWizard />
+                    </div>
                 </div>
             </main>
 
