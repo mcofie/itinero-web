@@ -30,6 +30,7 @@ export type CreatorDetails = {
     id: string;
     fullName: string | null;
     username: string | null;
+    email?: string | null;
     avatarUrl: string | null;
     bio: string | null;
     joinedAt: string | null;

@@ -173,6 +173,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/[locale]/admin/itinero/creators/[userId]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/[locale]/admin/itinero/creators/[userId]">> = Specific
+  const handler = {} as typeof import("../../src/app/[locale]/admin/itinero/creators/[userId]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/[locale]/admin/itinero/creators/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/[locale]/admin/itinero/creators">> = Specific
+  const handler = {} as typeof import("../../src/app/[locale]/admin/itinero/creators/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/[locale]/admin/itinero/destinations/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/[locale]/admin/itinero/destinations">> = Specific
@@ -204,6 +222,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends AppPageConfig<"/[locale]/admin/itinero/places">> = Specific
   const handler = {} as typeof import("../../src/app/[locale]/admin/itinero/places/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/[locale]/admin/itinero/transactions/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/[locale]/admin/itinero/transactions">> = Specific
+  const handler = {} as typeof import("../../src/app/[locale]/admin/itinero/transactions/page.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
