@@ -1,25 +1,25 @@
-// app/admin/itinero/page.tsx
+
 import * as React from "react";
-// import { redirect } from "next/navigation";
 import { createClientServerRSC } from "@/lib/supabase/server";
-import ItineroDashboardClient from "./ItineroDashboardClient";
-import { DestinationOption, PlaceOption } from "./types";
+import PlacesClient from "./PlacesClient";
+import { DestinationOption, PlaceOption } from "../types";
 
 export const dynamic = "force-dynamic";
 
-export default async function ItineroAdminPage() {
+export default async function PlacesPage() {
     const sb = await createClientServerRSC();
 
-    // Fetch minimal lists for selects
+    // Fetch destinations for dropdowns
     const { data: destRows } = await sb
         .schema("itinero")
         .from("destinations")
         .select(
-            "id,name,country_code,lat,lng,cover_url,image_attribution,current_history_id,timezone,category,popularity"
+            "id,name,country_code"
         )
         .order("name", { ascending: true })
         .returns<DestinationOption[]>();
 
+    // Fetch places
     const { data: placeRows } = await sb
         .schema("itinero")
         .from("places")
@@ -29,16 +29,10 @@ export default async function ItineroAdminPage() {
         .order("name", { ascending: true })
         .returns<PlaceOption[]>();
 
-    const { data: { user } } = await sb.auth.getUser();
-
     return (
-        <ItineroDashboardClient
+        <PlacesClient
             initialDestinations={destRows ?? []}
             initialPlaces={placeRows ?? []}
-            adminDetails={{
-                email: user?.email || "",
-                name: user?.user_metadata?.full_name || "Admin"
-            }}
         />
     );
 }

@@ -43,9 +43,8 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
-import { TopupDialogFxAware } from "@/components/layout/TopupDialogFxAware";
-import { FxSnapshot } from "@/lib/fx/types";
-import { convertUsingSnapshot, getLatestFxSnapshot } from "@/lib/fx/fx";
+
+
 import { useEffect } from "react";
 
 type Props = {
@@ -53,7 +52,7 @@ type Props = {
     userEmail?: string | null;
 };
 
-const POINT_UNIT_PRICE_GHS = 0.4; // 40 pesewas per point
+
 
 export default function AppShell({ children, userEmail }: Props) {
     const pathname = usePathname();
@@ -64,27 +63,10 @@ export default function AppShell({ children, userEmail }: Props) {
     const sb = React.useMemo(() => getSupabaseBrowser(), []);
 
     const [uid, setUid] = React.useState<string | null>(null);
-    const [points, setPoints] = React.useState<number>(0);
-    const [loadingPoints, setLoadingPoints] = React.useState<boolean>(true);
 
-    const [topupOpen, setTopupOpen] = React.useState(false);
-    const [pointsInput, setPointsInput] = React.useState<string>("");
-    const [topupBusy, setTopupBusy] = React.useState(false);
 
-    // user’s preferred planning currency (overwritten by profile)
-    const [userCurrency, setUserCurrency] = React.useState("GHS");
-
-    // FX snapshot & preview indicator
-    const [fxSnapshot, setFxSnapshot] = React.useState<FxSnapshot | null>(null);
     const [hasPreview, setHasPreview] = React.useState(false);
 
-    const fmtInt = React.useCallback(
-        (n: number) =>
-            new Intl.NumberFormat(undefined, {
-                maximumFractionDigits: 0,
-            }).format(n),
-        []
-    );
 
     // -------- Helper: Unified Logout with Hard Redirect --------
     // This is the "cleanup" phase, safe to call from anywhere (button or event)
@@ -134,98 +116,11 @@ export default function AppShell({ children, userEmail }: Props) {
         // Just strictly call signOut here.
     }, [sb, finalizeLogout]);
 
-    // -------- Points refresh (RPC) --------
-    const refreshPoints = React.useCallback(
-        async (userId: string | null) => {
-            if (!userId) {
-                setPoints(0);
-                setLoadingPoints(false);
-                return;
-            }
 
-            setLoadingPoints(true);
-            try {
-                // Always get fresh client to avoid using stale/corrupted instance
-                const client = getSupabaseBrowser();
-                const { data: sumValue, error } = await client.rpc("sum_points_for_user", {
-                    uid: userId,
-                });
 
-                if (error) {
-                    console.error("[refreshPoints] RPC error:", error);
-                    return;
-                }
 
-                const rpcPoints = Number(sumValue ?? 0);
-                if (Number.isFinite(rpcPoints)) {
-                    setPoints(rpcPoints);
-                }
-            } catch (e) {
-                console.error("[refreshPoints] RPC threw:", e);
-            } finally {
-                setLoadingPoints(false);
-            }
-        },
-        [] // No dependencies - always use fresh client
-    );
 
-    // -------- preferred_currency from profile --------
-    const refreshPreferredCurrency = React.useCallback(
-        async (userId: string | null) => {
-            if (!userId) return;
 
-            try {
-                // Always get fresh client to avoid using stale/corrupted instance
-                const client = getSupabaseBrowser();
-                const { data, error } = await client
-                    .schema("itinero")
-                    .from("profiles")
-                    .select("preferred_currency")
-                    .eq("id", userId)
-                    .maybeSingle<{ preferred_currency: string | null }>();
-
-                if (error) {
-                    console.error("[refreshPreferredCurrency] error:", error);
-                    return;
-                }
-
-                if (data?.preferred_currency) {
-                    const code = data.preferred_currency.toUpperCase();
-                    setUserCurrency(code);
-                } else {
-                    setUserCurrency("USD");
-                }
-            } catch (e) {
-                console.error("[refreshPreferredCurrency] threw:", e);
-            }
-        },
-        [] // No dependencies - always use fresh client
-    );
-
-    // -------- FX snapshot --------
-    useEffect(() => {
-        const cancelled = { current: false };
-
-        (async () => {
-            try {
-                const snap = await getLatestFxSnapshot("USD");
-                if (!cancelled.current) {
-                    setFxSnapshot(snap);
-                }
-            } catch (e) {
-                console.error("[FX] getLatestFxSnapshot threw:", e);
-            }
-        })();
-
-        return () => {
-            cancelled.current = true;
-        };
-    }, []);
-
-    const ghsToUserRate = React.useMemo(() => {
-        if (!fxSnapshot) return null;
-        return convertUsingSnapshot(fxSnapshot, 1, "GHS", userCurrency);
-    }, [fxSnapshot, userCurrency]);
 
     // -------- Session init + auth listener --------
     React.useEffect(() => {
@@ -245,10 +140,6 @@ export default function AppShell({ children, userEmail }: Props) {
                 const userId = data?.session?.user?.id ?? null;
                 setUid(userId);
 
-                await Promise.all([
-                    refreshPoints(userId),
-                    refreshPreferredCurrency(userId),
-                ]);
             } catch (e) {
                 console.error("[auth.getSession] threw:", e);
                 if (mounted) {
@@ -272,19 +163,11 @@ export default function AppShell({ children, userEmail }: Props) {
                 }
 
                 if (event === "TOKEN_REFRESHED") {
-                    await Promise.all([
-                        refreshPoints(userId),
-                        refreshPreferredCurrency(userId),
-                    ]);
                     return;
                 }
             } else {
                 const userId = session.user?.id ?? null;
                 setUid(userId);
-                await Promise.all([
-                    refreshPoints(userId),
-                    refreshPreferredCurrency(userId),
-                ]);
             }
         });
 
@@ -292,7 +175,7 @@ export default function AppShell({ children, userEmail }: Props) {
             mounted = false;
             sub?.subscription?.unsubscribe();
         };
-    }, [sb, refreshPoints, refreshPreferredCurrency, finalizeLogout]);
+    }, [sb, finalizeLogout]);
 
     // -------- Preview indicator --------
     React.useEffect(() => {
@@ -307,57 +190,7 @@ export default function AppShell({ children, userEmail }: Props) {
         }
     }, [pathname]);
 
-    // -------- Live updates --------
-    React.useEffect(() => {
-        if (!uid) return;
 
-        // Use unique channel names to avoid collisions in Strict Mode or fast remounts
-        const ledgerChannelName = `points-ledger-live-${uid}`;
-        const profilesChannelName = `profiles-live-${uid}`;
-
-        const chLedger = sb
-            .channel(ledgerChannelName)
-            .on(
-                "postgres_changes",
-                {
-                    event: "*",
-                    schema: "itinero",
-                    table: "points_ledger",
-                    filter: `user_id=eq.${uid}`,
-                },
-                () => {
-                    void refreshPoints(uid);
-                }
-            )
-            .subscribe();
-
-        const chProfiles = sb
-            .channel(profilesChannelName)
-            .on(
-                "postgres_changes",
-                {
-                    event: "*",
-                    schema: "itinero",
-                    table: "profiles",
-                    filter: `id=eq.${uid}`,
-                },
-                () => {
-                    void refreshPoints(uid);
-                    void refreshPreferredCurrency(uid);
-                }
-            )
-            .subscribe();
-
-        return () => {
-            // Cleanup channels safely
-            try {
-                void sb.removeChannel(chLedger);
-                void sb.removeChannel(chProfiles);
-            } catch (e) {
-                console.error("[AppShell] removeChannel error:", e);
-            }
-        };
-    }, [uid, sb, refreshPoints, refreshPreferredCurrency]);
 
     // -------- Handle tab visibility changes (client recreation fix) --------
     const handleVisibilityChange = React.useCallback(async () => {
@@ -381,18 +214,12 @@ export default function AppShell({ children, userEmail }: Props) {
                     setUid(userId);
                 }
 
-                // Re-fetch data with the new client
-                await Promise.all([
-                    refreshPoints(uid),
-                    refreshPreferredCurrency(uid),
-                ]);
-
                 console.log('[AppShell] Successfully recovered from tab switch');
             } catch (error) {
                 console.error('[AppShell] Error recovering from tab switch:', error);
             }
         }
-    }, [uid, refreshPoints, refreshPreferredCurrency]);
+    }, [uid]);
 
     React.useEffect(() => {
         document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -407,70 +234,12 @@ export default function AppShell({ children, userEmail }: Props) {
         handleLogout();
     }, [handleLogout]);
 
-    // -------- Top-up --------
-    const startTopup = React.useCallback(async () => {
-        const pts = Number(pointsInput);
 
-        if (!uid) {
-            handleLogout();
-            return;
-        }
 
-        if (!Number.isFinite(pts) || pts <= 0 || topupBusy) return;
-
-        setTopupBusy(true);
-        try {
-            const qRes = await fetch("/api/points/quote", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ points: pts }),
-            });
-
-            if (!qRes.ok) {
-                const err = await qRes.json().catch(() => ({}));
-                console.error("Quote failed", err);
-                return;
-            }
-            const q = await qRes.json();
-
-            const initRes = await fetch("/api/paystack/init", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    quoteId: q.quoteId,
-                    email: userEmail ?? "user@example.com",
-                }),
-            });
-
-            if (!initRes.ok) {
-                const err = await initRes.json().catch(() => ({}));
-                console.error("Paystack init failed", err);
-                return;
-            }
-
-            const init = await initRes.json();
-            window.location.href = init.authorization_url;
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setTopupBusy(false);
-        }
-    }, [pointsInput, uid, topupBusy, userEmail, handleLogout]);
-
-    const onPointsKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            void startTopup();
-        }
-    };
 
     const initials = (email?: string | null) =>
         (email?.[0] ?? "U").toUpperCase() +
         (email?.split("@")?.[0]?.[1]?.toUpperCase() ?? "");
-
-    const pointsToBuy = Number(pointsInput) || 0;
-    const ghsPreview =
-        Math.round(pointsToBuy * POINT_UNIT_PRICE_GHS * 100) / 100;
 
     const year = new Date().getFullYear();
 
@@ -605,36 +374,7 @@ export default function AppShell({ children, userEmail }: Props) {
 
                             <div className="hidden h-5 w-px bg-slate-200 sm:block dark:bg-slate-800" />
 
-                            {/* 2. TOP UP / BALANCE BUTTON */}
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-9 rounded-full gap-0 px-3 border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 transition-all dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
-                                        onClick={() => setTopupOpen(true)}
-                                    >
-                                        {/* Balance */}
-                                        <div className="flex items-center gap-1.5 mr-2">
-                                            <span className="text-sm font-bold tabular-nums">
-                                                {loadingPoints ? "..." : fmtInt(points)}
-                                            </span>
-                                            <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
-                                        </div>
 
-                                        {/* Divider */}
-                                        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mr-2" />
-
-                                        {/* Action */}
-                                        <div className="flex items-center gap-1">
-                                            <Plus className="h-3.5 w-3.5" strokeWidth={3} />
-                                            <span
-                                                className="hidden lg:inline text-xs font-bold uppercase tracking-wide">{tActions("topUp")}</span>
-                                        </div>
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>{tActions("topUp")}</TooltipContent>
-                            </Tooltip>
 
                             {/* 3. NOTIFICATIONS */}
                             <DropdownMenu>
@@ -760,19 +500,7 @@ export default function AppShell({ children, userEmail }: Props) {
                     </div>
                 </footer>
 
-                {/* Top up dialog */}
-                <TopupDialogFxAware
-                    topupOpen={topupOpen}
-                    setTopupOpen={setTopupOpen}
-                    topupBusy={topupBusy}
-                    pointsInput={pointsInput}
-                    setPointsInput={setPointsInput}
-                    onPointsKeyDown={onPointsKeyDown}
-                    startTopup={startTopup}
-                    ghsPreview={ghsPreview}
-                    userCurrency={userCurrency}
-                    ghsToUserRate={ghsToUserRate}
-                />
+
             </div>
         </TooltipProvider>
     );

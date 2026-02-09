@@ -12,6 +12,14 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Plane, ArrowRight, CheckCircle2, Globe2, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Script from "next/script";
+import { handleGoogleAuthAction } from "@/app/actions/google-auth";
+
+declare global {
+    interface Window {
+        google: any;
+    }
+}
 
 export default function LoginPage() {
     const sb = getSupabaseBrowser();
@@ -28,19 +36,64 @@ export default function LoginPage() {
         (async () => {
             const { data } = await sb.auth.getSession();
             if (data.session) {
-                router.replace("/preview");
+                router.replace("/trips");
                 router.refresh();
             }
         })();
 
         const { data: sub } = sb.auth.onAuthStateChange((evt) => {
             if (evt === "SIGNED_IN") {
-                router.replace("/preview");
+                router.replace("/trips");
                 router.refresh();
             }
         });
         return () => sub.subscription.unsubscribe();
     }, [sb, router]);
+
+    async function handleCredentialResponse(response: any) {
+        setBusy(true);
+        try {
+            await handleGoogleAuthAction(response.credential);
+            toast.success(tAuth("successSignIn"));
+            // Immediate router refresh to help the browser pick up the new server-set cookie
+            router.refresh();
+            router.replace("/trips");
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            toast.error(tAuth("errorGoogle"), { description: msg });
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    const initGoogle = () => {
+        if (typeof window !== "undefined" && window.google) {
+            const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+            if (!clientId) {
+                console.warn("Google Client ID is missing. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID.");
+            }
+            window.google.accounts.id.initialize({
+                client_id: clientId || "YOUR_GOOGLE_CLIENT_ID",
+                callback: handleCredentialResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true,
+            });
+            const btn = document.getElementById("google-button-container");
+            if (btn) {
+                window.google.accounts.id.renderButton(btn, {
+                    theme: "outline",
+                    size: "large",
+                    width: "420",
+                    shape: "rectangular",
+                    text: mode === "login" ? "signin_with" : "signup_with",
+                });
+            }
+        }
+    };
+
+    useEffect(() => {
+        initGoogle();
+    }, [mode]);
 
     async function handleEmail() {
         setBusy(true);
@@ -64,22 +117,10 @@ export default function LoginPage() {
     }
 
     async function handleGoogle() {
-        setBusy(true);
-        try {
-            const { error } = await sb.auth.signInWithOAuth({
-                provider: "google",
-                options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
-                    queryParams: { prompt: "consent", access_type: "offline" }
-                },
-
-            });
-            if (error) throw error;
-            // Redirect handled by OAuth; no-op here.
-        } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : String(e);
-            toast.error(tAuth("errorGoogle"), { description: msg });
-            setBusy(false);
+        if (window.google) {
+            window.google.accounts.id.prompt();
+        } else {
+            toast.error("Google Sign-In is still loading. Please try again in a moment.");
         }
     }
 
@@ -237,15 +278,7 @@ export default function LoginPage() {
                                 </div>
                             </div>
 
-                            <Button
-                                variant="outline"
-                                onClick={handleGoogle}
-                                disabled={busy}
-                                className="h-12 rounded-xl border-border bg-background hover:bg-muted/50 text-foreground font-medium transition-all hover:-translate-y-0.5"
-                            >
-                                <svg className="mr-2 h-5 w-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path></svg>
-                                {tAuth("google")}
-                            </Button>
+                            <div id="google-button-container" className="w-full h-[40px] flex justify-center overflow-hidden rounded-xl" />
                         </div>
                     </div>
 
@@ -267,6 +300,10 @@ export default function LoginPage() {
                     </p>
                 </div>
             </div>
+            <Script
+                src="https://accounts.google.com/gsi/client"
+                onLoad={initGoogle}
+            />
         </div>
     );
 }
