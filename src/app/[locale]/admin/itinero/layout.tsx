@@ -10,9 +10,8 @@ export default async function AdminLayout({
     children: ReactNode;
 }) {
     const sb = await createClientServerRSC();
-    const {
-        data: { user },
-    } = await sb.auth.getUser();
+    const { data } = await sb.auth.getUser();
+    const user = data?.user;
 
     if (!user) {
         redirect("/admin/login");

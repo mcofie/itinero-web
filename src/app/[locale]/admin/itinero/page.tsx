@@ -29,7 +29,8 @@ export default async function ItineroAdminPage() {
         .order("name", { ascending: true })
         .returns<PlaceOption[]>();
 
-    const { data: { user } } = await sb.auth.getUser();
+    const { data: userData } = await sb.auth.getUser();
+    const user = userData?.user;
 
     return (
         <ItineroDashboardClient

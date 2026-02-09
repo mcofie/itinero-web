@@ -24,18 +24,18 @@ export default async function CreatorDetailsPage({ params }: { params: Promise<{
 
     // 2. Fetch Auth User (Email & Created At)
     // We use admin client because standard client cannot access auth.users
-    let email = null;
-    let createdAt = null;
+    let email: string | null = null;
+    let createdAt: string | null = null;
 
     if (adminSb) {
         try {
-            const { data: { user: authUser }, error: authError } = await adminSb.auth.admin.getUserById(userId);
-            if (!authError && authUser) {
-                email = authUser.email || null;
-                createdAt = authUser.created_at || null;
+            const resp = await adminSb.auth.admin.getUserById(userId);
+            if (resp && resp.data && resp.data.user) {
+                email = resp.data.user.email || null;
+                createdAt = resp.data.user.created_at || null;
             }
         } catch (err) {
-            console.error("Error fetching auth user:", err);
+            console.error("Error fetching auth user via admin client:", err);
         }
     }
 
