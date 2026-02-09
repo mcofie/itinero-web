@@ -23,7 +23,16 @@ import {
     Settings,
     User2,
     Wallet,
+    Zap,
+    Unlock,
+    RotateCcw,
+    CreditCard,
+    PlusCircle,
+    Info,
+    ShieldCheck
 } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -73,20 +82,82 @@ function DeltaPill({ value }: { value: number }) {
     const positive = value >= 0;
     return (
         <span
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold tracking-wide border ${positive
-                ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                : "bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                }`}
+            className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold tracking-tight border shadow-sm",
+                positive
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                    : "bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
+            )}
         >
             {positive ? (
-                <ArrowUpRight className="h-3 w-3" />
+                <PlusCircle className="h-3 w-3" />
             ) : (
                 <ArrowDownLeft className="h-3 w-3" />
             )}
             {positive ? "+" : ""}
-            {new Intl.NumberFormat().format(value)}
+            {new Intl.NumberFormat().format(Math.abs(value))}
         </span>
     );
+}
+
+function getTransactionMeta(reason: string | null) {
+    const r = reason?.toLowerCase() || "";
+
+    if (r.includes("paystack_topup")) {
+        return {
+            label: "Wallet Top-up",
+            subLabel: "via Paystack",
+            icon: CreditCard,
+            color: "text-blue-600 dark:text-blue-400",
+            bg: "bg-blue-50 dark:bg-blue-900/20"
+        };
+    }
+    if (r.includes("manual_topup")) {
+        return {
+            label: "Points Added",
+            subLabel: "Admin manual credit",
+            icon: Zap,
+            color: "text-amber-600 dark:text-amber-400",
+            bg: "bg-amber-50 dark:bg-amber-900/20"
+        };
+    }
+    if (r.includes("save_trip")) {
+        return {
+            label: "Itinerary Unlock",
+            subLabel: "Points spent",
+            icon: Unlock,
+            color: "text-indigo-600 dark:text-indigo-400",
+            bg: "bg-indigo-50 dark:bg-indigo-900/20"
+        };
+    }
+    if (r.includes("refund")) {
+        return {
+            label: "Refund Issued",
+            subLabel: "Failed operation",
+            icon: RotateCcw,
+            color: "text-rose-600 dark:text-rose-400",
+            bg: "bg-rose-50 dark:bg-rose-900/20"
+        };
+    }
+    if (r.includes("bonus") || r.includes("registration")) {
+        return {
+            label: "Welcome Bonus",
+            subLabel: "Registration reward",
+            icon: ShieldCheck,
+            color: "text-emerald-600 dark:text-emerald-400",
+            bg: "bg-emerald-50 dark:bg-emerald-900/20"
+        };
+    }
+
+    // Fallback
+    const formatted = r.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    return {
+        label: formatted || "Transaction",
+        subLabel: "System balance adjust",
+        icon: Info,
+        color: "text-slate-600 dark:text-slate-400",
+        bg: "bg-slate-50 dark:bg-slate-800"
+    };
 }
 
 function StatTile({
@@ -386,10 +457,25 @@ export default async function ProfilePage() {
                                                             {formatDateTime(row.created_at)}
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <div
-                                                                className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors dark:text-slate-200 dark:group-hover:text-blue-400">
-                                                                {row.reason || "Transaction"}
-                                                            </div>
+                                                            {(() => {
+                                                                const meta = getTransactionMeta(row.reason);
+                                                                const Icon = meta.icon;
+                                                                return (
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className={cn("p-2 rounded-xl border border-slate-100 transition-transform group-hover:scale-110 dark:border-slate-800", meta.bg)}>
+                                                                            <Icon className={cn("h-4 w-4", meta.color)} />
+                                                                        </div>
+                                                                        <div>
+                                                                            <div className="font-bold text-slate-900 dark:text-white leading-tight">
+                                                                                {meta.label}
+                                                                            </div>
+                                                                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                                                                                {meta.subLabel}
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })()}
                                                         </td>
                                                         <td className="px-6 py-4 text-xs hidden sm:table-cell">
                                                             <span

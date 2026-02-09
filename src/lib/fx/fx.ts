@@ -43,8 +43,6 @@ export function convertUsingSnapshot(
     const fromRate = getRate(from);
     const toRate = getRate(to);
 
-    console.log("XXX " + fromRate + " " + toRate + " " + amount);
-
 
     // Explicitly check for undefined because rate could be 0 (unlikely but possible)
     if (fromRate === undefined || toRate === undefined) return null;

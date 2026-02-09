@@ -965,6 +965,7 @@ function EditableDay({
                     destinationLng={tripConfig?.destinations?.[0]?.lng as number | undefined}
                     preferenceTags={tripConfig?.interests as string[] | undefined}
                     nextOrderIndex={nextOrderIndex}
+                    tripCurrency={tripCurrency}
                 />
             </div>
         );
@@ -1032,6 +1033,7 @@ function EditableDay({
                     destinationLng={tripConfig?.destinations?.[0]?.lng}
                     preferenceTags={tripConfig?.interests}
                     nextOrderIndex={items.length > 0 ? items[0].order_index - 1 : nextOrderIndex}
+                    tripCurrency={tripCurrency}
                 />
             </div>
 
@@ -1064,9 +1066,12 @@ function EditableDay({
                                     {
                                         kind: "cost",
                                         label: "Est.",
-                                        value: `${tripCurrency} ${b.est_cost ?? 0}${fxSnapshot && userPreferredCurrency && tripCurrency !== userPreferredCurrency && b.est_cost
-                                            ? ` (~ ${userPreferredCurrency} ${Math.round(convertUsingSnapshot(fxSnapshot, b.est_cost, tripCurrency, userPreferredCurrency) || 0)})`
-                                            : ""
+                                        value: `${tripCurrency} ${Number(b.est_cost ?? 0).toFixed(2)}${fxSnapshot && userPreferredCurrency && tripCurrency !== userPreferredCurrency && b.est_cost
+                                                ? ` (~ ${userPreferredCurrency} ${(convertUsingSnapshot(fxSnapshot, b.est_cost, tripCurrency, userPreferredCurrency) || 0).toFixed(2)})`
+                                                : ""
+                                            }${place?.cost_typical && place.cost_currency && place.cost_currency !== tripCurrency
+                                                ? ` (${place.cost_currency} ${Number(place.cost_typical).toFixed(2)})`
+                                                : ""
                                             }`,
                                     },
                                     {
@@ -1107,6 +1112,7 @@ function EditableDay({
                     destinationLng={tripConfig?.destinations?.[0]?.lng}
                     preferenceTags={tripConfig?.interests}
                     nextOrderIndex={nextOrderIndex}
+                    tripCurrency={tripCurrency}
                 />
             </div>
         </div>
@@ -1410,14 +1416,22 @@ function CalendarView({
 
                                                         <div className="flex items-center justify-between gap-2 border-t border-slate-50 pt-2 dark:border-slate-700/50">
                                                             {b.est_cost > 0 ? (
-                                                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded">
-                                                                    {tripCurrency} {b.est_cost}
-                                                                    {fxSnapshot && userPreferredCurrency && tripCurrency && tripCurrency !== userPreferredCurrency && (
-                                                                        <span className="opacity-70 font-normal ml-1">
-                                                                            (~ {userPreferredCurrency} {Math.round(convertUsingSnapshot(fxSnapshot, b.est_cost, tripCurrency, userPreferredCurrency) || 0)})
+                                                                <div className="flex flex-col items-end gap-0.5">
+                                                                    {place?.cost_typical && place.cost_currency && place.cost_currency !== tripCurrency && (
+                                                                        <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                                                                            {place.cost_currency} {Number(place.cost_typical).toFixed(2)}
                                                                         </span>
                                                                     )}
-                                                                </span>
+                                                                    <span
+                                                                        className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded leading-none">
+                                                                        {tripCurrency} {Number(b.est_cost).toFixed(2)}
+                                                                        {fxSnapshot && userPreferredCurrency && tripCurrency && tripCurrency !== userPreferredCurrency && (
+                                                                            <span className="opacity-70 font-normal ml-1">
+                                                                                (~ {userPreferredCurrency} {(convertUsingSnapshot(fxSnapshot, b.est_cost, tripCurrency, userPreferredCurrency) || 0).toFixed(2)})
+                                                                            </span>
+                                                                        )}
+                                                                    </span>
+                                                                </div>
                                                             ) : (
                                                                 <span className="text-[10px] text-slate-400">Free</span>
                                                             )}

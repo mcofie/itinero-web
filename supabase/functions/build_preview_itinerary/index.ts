@@ -1,8 +1,8 @@
 // supabase/functions/build_preview_itinerary/index.ts
 // @ts-nocheck
-import {serve} from "https://deno.land/std@0.224.0/http/server.ts";
-import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
-import {normalizeModeClient} from "./normalizeModeClient.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { normalizeModeClient } from "./normalizeModeClient.ts";
 
 /** ---------------- Types ---------------- */
 type Lodging = { name: string; lat: number; lng: number; address?: string };
@@ -43,11 +43,11 @@ type Block = {
 type Day =
     & { date: string; blocks: Block[]; map_polyline?: string }
     & {
-    lodging?: { name: string; lat: number; lng: number } | null;
-    return_to_lodging_min?: number | null;
-    est_day_cost?: number;
-    budget_daily?: number;
-};
+        lodging?: { name: string; lat: number; lng: number } | null;
+        return_to_lodging_min?: number | null;
+        est_day_cost?: number;
+        budget_daily?: number;
+    };
 
 /** ---------------- Server ---------------- */
 serve(async (req) => {
@@ -58,13 +58,13 @@ serve(async (req) => {
         const auth = req.headers.get("Authorization") ?? "";
 
         const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            db: {schema: "itinero"},
-            global: {headers: {Authorization: auth}},
+            db: { schema: "itinero" },
+            global: { headers: { Authorization: auth } },
         });
 
         const input = (await req.json()) as Input;
-        if (!input?.destinations?.length) return j({error: "destinations[] is required"}, 400);
-        if (!input.start_date || !input.end_date) return j({error: "start_date and end_date are required"}, 400);
+        if (!input?.destinations?.length) return j({ error: "destinations[] is required" }, 400);
+        if (!input.start_date || !input.end_date) return j({ error: "start_date and end_date are required" }, 400);
 
         const interests = (input.interests ?? []).map((s) => s.trim().toLowerCase()).filter(Boolean);
         const pace = input.pace ?? "balanced";
@@ -75,7 +75,7 @@ serve(async (req) => {
         const hasDestCoords = typeof destAnchor.lat === "number" && typeof destAnchor.lng === "number";
 
         // ⚡ transport speed once
-        const {data: speedRow} = await client
+        const { data: speedRow } = await client
             .from("transport_speeds")
             .select("km_per_hour")
             .eq("mode", mode)
@@ -84,13 +84,13 @@ serve(async (req) => {
 
         // budget + distance prefs once
         const dailyBudget = Number.isFinite(input.budget_daily) ? input.budget_daily : 100;
-        const slotBudgetShare = {morning: 0.35, afternoon: 0.35, evening: 0.30} as const;
+        const slotBudgetShare = { morning: 0.35, afternoon: 0.35, evening: 0.30 } as const;
         const softAnchorKm = input.soft_distance?.anchor_km ?? 12;
         const hopPrefKm = input.soft_distance?.hop_km ?? (pace === "chill" ? 12 : pace === "packed" ? 18 : 15);
 
         // ⚡ day list once
         const dayDates = buildDays(input.start_date, input.end_date);
-        const days: Day[] = dayDates.map((date) => ({date, blocks: []}));
+        const days: Day[] = dayDates.map((date) => ({ date, blocks: [] }));
         const rotatedInterests = days.map((_, i) => (interests.length ? interests[i % interests.length] : null));
 
         // Lodging accessor (no allocations in loop)
@@ -123,15 +123,15 @@ serve(async (req) => {
         }
 
         // ⚡ smaller pool
-        const {data: places, error: pErr} = await q.order("popularity", {ascending: false}).limit(120);
+        const { data: places, error: pErr } = await q.order("popularity", { ascending: false }).limit(120);
         if (pErr) throw pErr;
         const pool = places ?? [];
 
         // ⚡ Opening hours map once
         const ids = pool.map((p) => p.id);
-        const {data: hours} = ids.length
+        const { data: hours } = ids.length
             ? await client.from("place_hours").select("place_id,dow,open_min,close_min").in("place_id", ids)
-            : {data: [] as any[]};
+            : { data: [] as any[] };
 
         const hoursByPlace: Record<string, { [dow: number]: { open: number; close: number } }> = {};
         for (const r of (hours ?? [])) {
@@ -144,6 +144,50 @@ serve(async (req) => {
         // ⚡ global chosen set prevents repeats
         const chosen = new Set<string>();
 
+        // ⚡ FX Snapshot for currency normalization
+        // ⚡ FX Rates (Snapshot or Fallback)
+        const { data: fxData } = await client.from("fx_snapshots").select("rates").order("created_at", { ascending: false }).limit(1).maybeSingle();
+        const rates = fxData?.rates as Record<string, number> | undefined;
+
+        const FALLBACK_RATES: Record<string, number> = {
+            "USD": 1.0,
+            "EUR": 0.93,
+            "GBP": 0.79,
+            "CAD": 1.36,
+            "AUD": 1.53,
+            "JPY": 151.0,
+            "GHS": 14.5, // Ghana Cedi
+            "NGN": 1500.0, // Nigerian Naira
+            "KES": 132.0, // Kenyan Shilling
+            "ZAR": 18.8, // South African Rand
+            "INR": 83.5,
+            "CNY": 7.2,
+        };
+
+        const getRate = (code: string) => {
+            const c = code.toUpperCase();
+            if (rates && typeof rates[c] === 'number') return rates[c];
+            if (FALLBACK_RATES[c]) return FALLBACK_RATES[c];
+            return 1.0;
+        };
+
+        const convert = (amt: number, from: string, to: string) => {
+            const f = from.toUpperCase();
+            const t = to.toUpperCase();
+            if (f === t) return amt;
+
+            // Convert to USD first
+            const rateFrom = getRate(f); // e.g. GHS->USD is /14.5
+            const inUsd = amt / rateFrom;
+
+            // Convert USD to Target
+            const rateTo = getRate(t);
+            return inUsd * rateTo;
+        };
+
+        const userCurrency = input.currency || "USD";
+
+        // 1. Generate the basic days + picks first (The "Plan")
         for (let di = 0; di < days.length; di++) {
             const date = days[di].date;
             const dow = new Date(date + "T00:00:00").getDay();
@@ -154,18 +198,18 @@ serve(async (req) => {
             const anchorLat = hasLodge ? L!.lat : (hasDestCoords ? destAnchor.lat! : null);
             const anchorLng = hasLodge ? L!.lng : (hasDestCoords ? destAnchor.lng! : null);
 
-            const targetBySlot = {
-                morning: dailyBudget * slotBudgetShare.morning,
-                afternoon: dailyBudget * slotBudgetShare.afternoon,
-                evening: dailyBudget * slotBudgetShare.evening,
-            } as const;
+            let remainingDayBudget = dailyBudget;
+            const slotBudgetShares = { morning: 0.35, afternoon: 0.35, evening: 0.30 };
 
-            // ⚡ One pass base score (no string allocations inside tight spots)
+            // ⚡ One pass base score
             const baseScored = pool.map((p) => {
                 const tags: string[] = Array.isArray(p.tags) ? p.tags.map((t: any) => String(t).toLowerCase()) : [];
                 const cat = (p.category ?? "").toLowerCase();
                 const pop = isNum(p.popularity) ? Number(p.popularity) : 50;
-                const cost = isNum(p.cost_typical) ? Number(p.cost_typical) : 10;
+
+                // Normalise cost to user's currency
+                const rawCost = isNum(p.cost_typical) ? Number(p.cost_typical) : 10;
+                const costInUserCurrency = convert(rawCost, p.cost_currency || "USD", userCurrency);
 
                 let interestScore = 0;
                 if (interestOfDay) {
@@ -180,21 +224,24 @@ serve(async (req) => {
                 const prox = Math.max(0, 1 - Math.min(distKm, 25) / 25);
                 const openBonus = isOpenForSlot(hoursByPlace[p.id], dow, "morning") ? 0.4 : 0;
                 const farPenalty = Math.max(0, (distKm - softAnchorKm) / 20);
-                const base = interestScore + prox * 0.9 + (pop / 100) * 0.5 + openBonus - 0.3 * farPenalty;
 
-                return {...p, _base: base, _cost: cost};
+                // Add small deterministic jitter so "Paris" isn't 100% same for everyone
+                const jitter = (Math.sin(p.id.charCodeAt(0) + di) + 1) * 0.15;
+
+                const base = interestScore + prox * 0.9 + (pop / 100) * 0.5 + openBonus - 0.3 * farPenalty + jitter;
+                return { ...p, _base: base, _cost: costInUserCurrency };
             });
 
             const picks: any[] = [];
-            let last: any = hasLodge ? {lat: L!.lat, lng: L!.lng, id: null, name: L!.name} : null;
+            let last: any = hasLodge ? { lat: L!.lat, lng: L!.lng, id: null, name: L!.name } : null;
             const ALT_K = 4;
             const perSlotAlts: Alternative[][] = [];
 
-            // ⚡ per-slot: just walk the pre-scored list once, keep top via small buffer
             for (const slot of ["morning", "afternoon", "evening"] as const) {
-                const target = targetBySlot[slot];
+                // Carry over budget: Take the share of the REMAINING budget, not the original
+                const totalSharesLeft = (slot === "morning" ? 1 : slot === "afternoon" ? 0.65 : 0.30);
+                const target = (remainingDayBudget * (slotBudgetShares[slot] / totalSharesLeft));
 
-                // small top buffer, no full sort
                 let best: any | null = null;
                 const altBuf: any[] = [];
 
@@ -206,23 +253,24 @@ serve(async (req) => {
                     const pricePenalty = Math.min(1, priceDelta / Math.max(10, target || 10));
                     const hopPenalty = Math.max(0, (hopKmFromLast - hopPrefKm) / (2 * hopPrefKm));
 
-                    // no jitter → deterministic
                     const score = p._base - 0.6 * pricePenalty - 0.3 * hopPenalty;
+                    const cand = { ...p, _slotScore: score, _hopKm: hopKmFromLast };
 
-                    const cand = {...p, _slotScore: score, _hopKm: hopKmFromLast};
                     if (!best || cand._slotScore > best._slotScore) {
                         if (best) altBuf.push(best);
                         best = cand;
                     } else if (altBuf.length < ALT_K - 1) {
                         altBuf.push(cand);
                     }
-                    if (best && altBuf.length >= ALT_K - 1) {
-                        // good enough; bail early to avoid scanning everything every time
-                        // (you can tune this; keeping it simple)
-                    }
                 }
 
                 const pick = best ?? null;
+                if (pick) {
+                    chosen.add(pick.id);
+                    last = pick;
+                    remainingDayBudget -= pick._cost;
+                }
+
                 const alts: Alternative[] = (altBuf.sort((a, b) => b._slotScore - a._slotScore).slice(0, ALT_K - 1)).map((c) => ({
                     id: c.id ?? null,
                     name: c.name ?? "Alternative",
@@ -239,29 +287,34 @@ serve(async (req) => {
 
                 perSlotAlts.push(alts);
                 picks.push(pick);
-                if (pick) {
-                    chosen.add(pick.id);
-                    last = pick;
-                }
             }
 
-            // === Routing (optional, time-boxed) ===
+            days[di].picks = picks;
+            days[di].perSlotAlts = perSlotAlts;
+        }
+
+        // 2. Parallel Route Optimization (The "Optimization")
+        // We trigger all Mapbox calls at once
+        const routePromises = days.map(async (day, di) => {
+            const picks = day.picks;
+            const date = day.date;
+            const L = lodgingFor(date);
+            const anchorLat = L?.lat ?? (hasDestCoords ? destAnchor.lat! : null);
+            const anchorLng = L?.lng ?? (hasDestCoords ? destAnchor.lng! : null);
+
             const waypoints = picks.filter(Boolean).map((p: any) => ({
                 id: p.id ?? null,
                 name: p.name,
                 lat: p.lat,
                 lng: p.lng
             }));
-            let orderedPicks = [...picks];
-            let legsDurMin: number[] | null = null;
-            let polyline: string | undefined;
 
-            if (waypoints.length >= 2 && (anchorLat != null && anchorLng != null || (L && L.lat && L.lng))) {
+            if (waypoints.length >= 2 && (anchorLat != null && anchorLng != null)) {
                 const routingPayload = {
-                    mode: mode === "walk" ? "walk" : mode === "bike" ? "bike" : "car" as "walk" | "bike" | "car",
+                    mode: mode === "walk" ? "walk" : mode === "bike" ? "bike" : "car",
                     start: L
-                        ? {id: null, name: L.name, lat: L.lat, lng: L.lng}
-                        : {id: null, name: "Anchor", lat: anchorLat!, lng: anchorLng!},
+                        ? { id: null, name: L.name, lat: L.lat, lng: L.lng }
+                        : { id: null, name: "Anchor", lat: anchorLat!, lng: anchorLng! },
                     waypoints,
                     roundtrip: true,
                 };
@@ -274,35 +327,54 @@ serve(async (req) => {
                         "apikey": SUPABASE_ANON_KEY,
                     },
                     body: JSON.stringify(routingPayload),
-                }), 1800); // ⚡ 1.8s budget
+                }), 2500); // Increased parallel budget
 
                 if (res?.ok) {
-                    const legsResp = await res.json();
-                    const orderIds = (legsResp?.ordered_points ?? [])
-                        .filter((pt: any) => pt.type === "waypoint")
-                        .map((pt: any) => pt.id ?? null);
-
-                    const pickById = new Map<string, any>();
-                    for (const p of picks) if (p?.id) pickById.set(p.id, p);
-
-                    const newOrder: any[] = [];
-                    for (const id of orderIds) {
-                        const found = id ? pickById.get(id) : null;
-                        if (found) newOrder.push(found);
-                    }
-                    if (newOrder.length === waypoints.length) {
-                        while (newOrder.length < 3) newOrder.push(null);
-                        orderedPicks = newOrder;
-                    }
-
-                    if (Array.isArray(legsResp?.legs)) {
-                        legsDurMin = legsResp.legs.map((l: any) => Math.max(1, Math.round((l?.duration_s ?? 0) / 60)));
-                    }
-                    polyline = legsResp?.polyline6 ?? legsResp?.polyline;
+                    return await res.json();
                 }
             }
+            return null;
+        });
 
-            // ---- Build blocks (dedupe alts within day) ----
+        const routingResults = await Promise.all(routePromises);
+
+        // 3. Assemble Final Content
+        for (let di = 0; di < days.length; di++) {
+            const dayResult = routingResults[di];
+            const picks = days[di].picks;
+            const perSlotAlts = days[di].perSlotAlts;
+            const L = lodgingFor(days[di].date);
+            const hasLodge = !!L;
+
+            let orderedPicks = [...picks];
+            let legsDurMin: number[] | null = null;
+            let polyline: string | undefined;
+
+            if (dayResult) {
+                const orderIds = (dayResult.ordered_points ?? [])
+                    .filter((pt: any) => pt.type === "waypoint")
+                    .map((pt: any) => pt.id ?? null);
+
+                const pickById = new Map<string, any>();
+                for (const p of picks) if (p?.id) pickById.set(p.id, p);
+
+                const newOrder: any[] = [];
+                for (const id of orderIds) {
+                    const found = id ? pickById.get(id) : null;
+                    if (found) newOrder.push(found);
+                }
+                if (newOrder.length === picks.filter(Boolean).length) {
+                    // Fill back to 3 slots
+                    orderedPicks = newOrder;
+                    while (orderedPicks.length < 3) orderedPicks.push(null);
+                }
+
+                if (Array.isArray(dayResult.legs)) {
+                    legsDurMin = dayResult.legs.map((l: any) => Math.max(1, Math.round((l?.duration_s ?? 0) / 60)));
+                }
+                polyline = dayResult.polyline6 ?? dayResult.polyline;
+            }
+
             const usedPrimaryIds = new Set<string>(orderedPicks.filter((p: any) => p?.id).map((p: any) => p.id));
             const dayAltUsed = new Set<string>();
             const blocks: Block[] = [];
@@ -318,8 +390,6 @@ serve(async (req) => {
                 } else if (hasLodge) {
                     if (bi === 0 && p) travelMin = Math.round((hopKm(L!, p) / kmph) * 60);
                     else if (bi > 0 && p && orderedPicks[bi - 1]) travelMin = Math.round((hopKm(orderedPicks[bi - 1], p) / kmph) * 60);
-                } else if (bi > 0 && p && orderedPicks[bi - 1]) {
-                    travelMin = Math.round((hopKm(orderedPicks[bi - 1], p) / kmph) * 60);
                 }
 
                 const estCost = isNum(p?._cost) ? Number(p._cost) : 10;
@@ -327,12 +397,7 @@ serve(async (req) => {
 
                 const rawAlts = perSlotAlts[bi] ?? [];
                 const alts = rawAlts
-                    .filter(a =>
-                        a?.id &&
-                        !usedPrimaryIds.has(a.id) &&
-                        !chosen.has(a.id) &&
-                        !dayAltUsed.has(a.id)
-                    )
+                    .filter(a => a?.id && !usedPrimaryIds.has(a.id) && !dayAltUsed.has(a.id))
                     .slice(0, 3);
 
                 for (const a of alts) dayAltUsed.add(a.id!);
@@ -356,11 +421,15 @@ serve(async (req) => {
             }
 
             days[di].blocks = blocks;
-            days[di].lodging = hasLodge ? {name: L!.name, lat: L!.lat, lng: L!.lng} : null;
+            days[di].lodging = hasLodge ? { name: L!.name, lat: L!.lat, lng: L!.lng } : null;
             days[di].return_to_lodging_min = returnMin;
             days[di].est_day_cost = Math.round(dayCost);
             days[di].budget_daily = dailyBudget;
             if (polyline) days[di].map_polyline = polyline;
+
+            // Cleanup temp fields used for processing
+            delete days[di].picks;
+            delete days[di].perSlotAlts;
         }
 
         const estTripCost = days.reduce((acc, d: any) => acc + (d.est_day_cost ?? dailyBudget), 0);
@@ -387,27 +456,28 @@ serve(async (req) => {
                     lodging: input.lodging ?? null,
                     lodging_by_date: input.lodging_by_date ?? null,
                     soft_distance: input.soft_distance ?? null,
+                    budget_daily: input.budget_daily ?? null,
                 },
             },
             days,
             // Keep if your UI uses it; otherwise you can drop for smaller payloads
             places: (pool ?? []).map(({
-                                          id,
-                                          name,
-                                          lat,
-                                          lng,
-                                          category,
-                                          tags,
-                                          popularity,
-                                          cost_typical,
-                                          cost_currency, description
-                                      }) => ({
+                id,
+                name,
+                lat,
+                lng,
+                category,
+                tags,
+                popularity,
+                cost_typical,
+                cost_currency, description
+            }) => ({
                 id, name, lat, lng, category, tags, popularity, cost_typical, cost_currency, description
             })),
         });
     } catch (e) {
         console.error(e);
-        return j({error: String(e?.message ?? e)}, 500);
+        return j({ error: String(e?.message ?? e) }, 500);
     }
 });
 
@@ -425,7 +495,7 @@ function cors() {
 function j(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), {
         status,
-        headers: {"content-type": "application/json", "Access-Control-Allow-Origin": "*"},
+        headers: { "content-type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
 }
 

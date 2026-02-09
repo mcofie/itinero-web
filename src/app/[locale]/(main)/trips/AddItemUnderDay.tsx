@@ -37,6 +37,7 @@ type NewItineraryItem = {
     place_id: string | null;
     title: string;
     est_cost: number | null;
+    cost_currency: string;
     duration_min: number | null;
     travel_min_from_prev: number | null;
     notes: string | null;
@@ -53,6 +54,7 @@ export function AddItemUnderDay({
     tripStartDate,
     preferenceTags, // e.g. ["food","culture"]
     dayIndex, // include if your table requires NOT NULL day_index
+    tripCurrency = "USD", // Currency for cost tracking
 }: {
     tripId: UUID;
     date: string | null;
@@ -64,6 +66,7 @@ export function AddItemUnderDay({
     radiusKm?: number;
     preferenceTags?: string[];
     dayIndex: number;
+    tripCurrency?: string;
 }) {
     const router = useRouter();
     const sb = getSupabaseBrowser();
@@ -208,6 +211,7 @@ export function AddItemUnderDay({
                 place_id: selectedPlace ? selectedPlace.id : null,
                 title: (title || selectedPlace?.name || "New item").trim(),
                 est_cost: estCost === "" ? null : Number(estCost),
+                cost_currency: tripCurrency,
                 duration_min: durationMin === "" ? null : Number(durationMin),
                 travel_min_from_prev: null,
                 notes: notes.trim() || null,
@@ -343,7 +347,7 @@ export function AddItemUnderDay({
                             <Label>Estimated cost</Label>
                             <div className="relative">
                                 <span className="absolute left-3 top-2.5 text-muted-foreground text-sm font-medium">
-                                    GHS
+                                    {tripCurrency}
                                 </span>
                                 <Input
                                     className="pl-12" // Make room for currency

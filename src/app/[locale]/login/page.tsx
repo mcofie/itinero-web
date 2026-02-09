@@ -14,6 +14,7 @@ import { Loader2, Plane, ArrowRight, CheckCircle2, Globe2, ShieldCheck } from "l
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
 import { handleGoogleAuthAction } from "@/app/actions/google-auth";
+import { sendMagicLink } from "@/app/actions/auth-magic";
 
 declare global {
     interface Window {
@@ -26,12 +27,11 @@ export default function LoginPage() {
     const router = useRouter();
     const tAuth = useTranslations("Auth");
 
-    const [mode, setMode] = useState<"login" | "signup">("login");
     const [email, setEmail] = useState("");
-    const [pwd, setPwd] = useState("");
+    const [isSent, setIsSent] = useState(false);
     const [busy, setBusy] = useState(false);
 
-    // If already signed-in, bounce to /preview
+    // If already signed-in, bounce to /trips
     useEffect(() => {
         (async () => {
             const { data } = await sb.auth.getSession();
@@ -55,7 +55,6 @@ export default function LoginPage() {
         try {
             await handleGoogleAuthAction(response.credential);
             toast.success(tAuth("successSignIn"));
-            // Immediate router refresh to help the browser pick up the new server-set cookie
             router.refresh();
             router.replace("/trips");
         } catch (e: unknown) {
@@ -83,9 +82,9 @@ export default function LoginPage() {
                 window.google.accounts.id.renderButton(btn, {
                     theme: "outline",
                     size: "large",
-                    width: "420",
+                    width: "420", // Matches max-w-[420px] container
                     shape: "rectangular",
-                    text: mode === "login" ? "signin_with" : "signup_with",
+                    text: "continue_with",
                 });
             }
         }
@@ -93,21 +92,22 @@ export default function LoginPage() {
 
     useEffect(() => {
         initGoogle();
-    }, [mode]);
+    }, [isSent]); // Re-init google button if we switch back from sent state
 
     async function handleEmail() {
+        if (!email) return;
         setBusy(true);
         try {
-            const result =
-                mode === "login"
-                    ? await sb.auth.signInWithPassword({ email, password: pwd })
-                    : await sb.auth.signUp({ email, password: pwd });
+            // Updated to use custom server action for multi-tenancy support
+            const { error } = await sendMagicLink({
+                email,
+                redirectTo: `${window.location.origin}/auth/callback`,
+            });
 
-            if (result.error) throw result.error;
+            if (error) throw new Error(String(error));
 
-            toast.success(mode === "login" ? tAuth("successSignIn") : tAuth("successSignUp"));
-            router.replace("/trips");
-            router.refresh();
+            setIsSent(true);
+            toast.success("Magic link sent!");
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
             toast.error(tAuth("errorAuth"), { description: msg });
@@ -116,12 +116,55 @@ export default function LoginPage() {
         }
     }
 
-    async function handleGoogle() {
-        if (window.google) {
-            window.google.accounts.id.prompt();
-        } else {
-            toast.error("Google Sign-In is still loading. Please try again in a moment.");
-        }
+    if (isSent) {
+        return (
+            <div className="min-h-screen w-full flex bg-background font-sans text-foreground overflow-hidden">
+                {/* Left Side (Same as before) - could extract to component but keeping inline for simplicity */}
+                <div className="hidden lg:flex lg:w-1/2 relative bg-primary overflow-hidden">
+                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop')] bg-cover bg-center" />
+                    <div className="absolute inset-0 bg-primary/90 mix-blend-hard-light" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
+
+                    <div className="relative z-10 flex flex-col justify-between w-full p-12 text-primary-foreground">
+                        <div>
+                            <Link href="/" className="inline-flex items-center gap-3 font-bold text-3xl tracking-tight text-white">
+                                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm border border-white/10 shadow-xl">
+                                    <Plane className="h-6 w-6 text-white" />
+                                </span>
+                                Itinero
+                            </Link>
+                        </div>
+                        <div className="max-w-lg space-y-4">
+                            <h1 className="text-4xl font-bold">Check your inbox</h1>
+                            <p className="text-lg opacity-90">We've sent a magic link to your email.</p>
+                        </div>
+                        <div className="text-sm opacity-60">© 2025 Itinero Inc.</div>
+                    </div>
+                </div>
+
+                {/* Right Side - Success State */}
+                <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative bg-slate-50 dark:bg-slate-900">
+                    <div className="w-full max-w-[420px] text-center space-y-6">
+                        <div className="mx-auto h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-6">
+                            <CheckCircle2 className="h-10 w-10" />
+                        </div>
+                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Check your email</h2>
+                        <p className="text-slate-600 dark:text-slate-400 text-lg">
+                            We've sent a magic link to <span className="font-bold text-slate-900 dark:text-white">{email}</span>. Click the link to sign in.
+                        </p>
+                        <div className="pt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsSent(false)}
+                                className="h-12 w-full rounded-xl border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                            >
+                                Back to login
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -160,25 +203,26 @@ export default function LoginPage() {
                             Join thousands of travelers planning their next adventure with Itinero. Experience seamless trip organization like never before.
                         </motion.p>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 }}
-                            className="space-y-4 pt-4"
-                        >
+                        <div className="grid grid-cols-1 gap-4 pt-4">
                             {[
                                 { icon: Globe2, text: "Explore destinations worldwide" },
                                 { icon: CheckCircle2, text: "Smart itinerary planning" },
                                 { icon: ShieldCheck, text: "Secure and reliable" }
                             ].map((item, idx) => (
-                                <div key={idx} className="flex items-center gap-3">
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.4 + (idx * 0.1) }}
+                                    className="flex items-center gap-3"
+                                >
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">
                                         <item.icon className="h-4 w-4" />
                                     </div>
                                     <span className="font-medium">{item.text}</span>
-                                </div>
+                                </motion.div>
                             ))}
-                        </motion.div>
+                        </div>
                     </div>
 
                     <div className="text-sm text-primary-foreground/60">
@@ -202,97 +246,54 @@ export default function LoginPage() {
                 <div className="w-full max-w-[420px] space-y-8">
                     <div className="text-center lg:text-left">
                         <h2 className="text-3xl font-bold tracking-tight">
-                            {mode === "login" ? tAuth("welcome") : tAuth("createAccount")}
+                            Get started
                         </h2>
                         <p className="mt-2 text-muted-foreground">
-                            {mode === "login" ? tAuth("signInDesc") : tAuth("signUpDesc")}
+                            Enter your email to sign in or create an account.
                         </p>
                     </div>
 
                     <div className="space-y-6">
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={mode}
-                                initial={{ opacity: 0, x: mode === "login" ? -20 : 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: mode === "login" ? 20 : -20 }}
-                                transition={{ duration: 0.2 }}
-                                className="space-y-4"
-                            >
-                                <div className="space-y-2">
-                                    <Label htmlFor="email">Email address</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        autoComplete="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="h-12 rounded-xl bg-muted/30 border-input focus-visible:ring-primary/30 transition-all"
-                                        placeholder="name@example.com"
-                                    />
-                                </div>
+                        <div id="google-button-container" className="w-full h-[40px] flex justify-center overflow-hidden rounded-xl" />
 
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <Label htmlFor="pwd">{tAuth("password")}</Label>
-                                        {mode === "login" && (
-                                            <Link href="/forgot-password" className="text-xs font-medium text-primary hover:underline">
-                                                Forgot password?
-                                            </Link>
-                                        )}
-                                    </div>
-                                    <Input
-                                        id="pwd"
-                                        type="password"
-                                        autoComplete={mode === "login" ? "current-password" : "new-password"}
-                                        value={pwd}
-                                        onChange={(e) => setPwd(e.target.value)}
-                                        className="h-12 rounded-xl bg-muted/30 border-input focus-visible:ring-primary/30 transition-all"
-                                        placeholder="••••••••"
-                                    />
-                                </div>
-                            </motion.div>
-                        </AnimatePresence>
+                        <div className="relative my-2">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-border" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground font-medium">{tAuth("continueWith")}</span>
+                            </div>
+                        </div>
 
-                        <div className="flex flex-col gap-4">
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email address</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    autoComplete="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="h-12 rounded-xl bg-muted/30 border-input focus-visible:ring-primary/30 transition-all font-medium"
+                                    placeholder="name@example.com"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleEmail();
+                                    }}
+                                />
+                            </div>
+
                             <Button
                                 onClick={handleEmail}
-                                disabled={busy}
-                                className="h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
+                                disabled={busy || !email}
+                                className="h-12 w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
                             >
                                 {busy ? (
                                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> {tAuth("wait")}</>
-                                ) : mode === "login" ? (
-                                    <>{tAuth("signIn")} <ArrowRight className="ml-2 h-5 w-5" /></>
                                 ) : (
-                                    tAuth("createAccount")
+                                    <>Continue with Email <ArrowRight className="ml-2 h-5 w-5" /></>
                                 )}
                             </Button>
-
-                            <div className="relative my-2">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-border" />
-                                </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-background px-2 text-muted-foreground font-medium">{tAuth("continueWith")}</span>
-                                </div>
-                            </div>
-
-                            <div id="google-button-container" className="w-full h-[40px] flex justify-center overflow-hidden rounded-xl" />
                         </div>
-                    </div>
-
-                    <div className="text-center text-sm">
-                        <span className="text-muted-foreground">
-                            {mode === "login" ? tAuth("noAccount") : tAuth("hasAccount")}{" "}
-                        </span>
-                        <button
-                            type="button"
-                            className="font-semibold text-primary hover:underline transition-all"
-                            onClick={() => setMode((m) => (m === "login" ? "signup" : "login"))}
-                        >
-                            {mode === "login" ? "Sign up" : "Sign in"}
-                        </button>
                     </div>
 
                     <p className="text-center text-xs text-muted-foreground px-8">

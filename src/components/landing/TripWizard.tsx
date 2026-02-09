@@ -165,17 +165,56 @@ export default function TripWizard() {
         );
     };
 
-    // load preferred currency from localStorage (safe)
+    // Load preferred currency: Profile > localStorage > USD
     React.useEffect(() => {
-        if (typeof window === "undefined") return;
-        try {
-            const stored = window.localStorage.getItem("itinero:currency");
-            const code = (stored || "USD").toUpperCase();
-            setState((s) => ({ ...s, currency: s.currency ?? code }));
-        } catch (e) {
-            console.error("[TripWizard] reading itinero:currency failed:", e);
-        }
-    }, []);
+        const initCurrency = async () => {
+            if (typeof window === "undefined") return;
+
+            let preferredCurrency = "USD";
+
+            // 1. Try to fetch from user profile (most authoritative source)
+            try {
+                const { data: { user } } = await sb.auth.getUser();
+                if (user) {
+                    const { data: profile } = await sb
+                        .schema("itinero")
+                        .from("profiles")
+                        .select("preferred_currency")
+                        .eq("id", user.id)
+                        .maybeSingle<{ preferred_currency: string | null }>();
+
+                    if (profile?.preferred_currency) {
+                        preferredCurrency = profile.preferred_currency.toUpperCase();
+                        // Sync to localStorage for consistency
+                        try {
+                            window.localStorage.setItem("itinero:currency", preferredCurrency);
+                        } catch {
+                            // Ignore localStorage errors
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("[TripWizard] Could not fetch profile currency:", e);
+            }
+
+            // 2. Fall back to localStorage if no profile currency
+            if (preferredCurrency === "USD") {
+                try {
+                    const stored = window.localStorage.getItem("itinero:currency");
+                    if (stored) {
+                        preferredCurrency = stored.toUpperCase();
+                    }
+                } catch (e) {
+                    console.error("[TripWizard] reading itinero:currency failed:", e);
+                }
+            }
+
+            // 3. Update state with the resolved currency
+            setState((s) => ({ ...s, currency: preferredCurrency }));
+        };
+
+        initCurrency();
+    }, [sb]);
 
     // Auth listener (wizard-specific)
     useEffect(() => {
@@ -216,60 +255,6 @@ export default function TripWizard() {
         setBusy(true);
         try {
             const payload = toPayload(state);
-
-            // --- Currency Conversion Logic ---
-            const destId = payload.destinations[0]?.id;
-            if (destId) {
-                try {
-                    // 1. Get destination currency from a place in that destination
-                    // We'll just grab one place that has a currency defined
-                    const { data: placeData } = await sb
-                        .schema("itinero")
-                        .from("places")
-                        .select("cost_currency")
-                        .eq("destination_id", destId)
-                        .not("cost_currency", "is", null)
-                        .limit(1)
-                        .maybeSingle();
-
-                    const destCurrency = placeData?.cost_currency;
-
-                    if (destCurrency && destCurrency !== state.currency) {
-                        // 2. Get FX rates
-                        const fx = await getLatestFxSnapshot("USD");
-
-                        // 3. Convert budget
-                        if (fx && payload.budget_daily > 0) {
-                            const converted = convertUsingSnapshot(
-                                fx,
-                                payload.budget_daily,
-                                state.currency,
-                                destCurrency
-                            );
-                            if (converted) {
-                                payload.budget_daily = Math.round(converted);
-                                payload.currency = destCurrency;
-                            } else {
-                                toast.warning(`Could not convert budget to ${destCurrency}. Using ${state.currency}.`);
-                                // If no budget or conversion failed, still switch currency context
-                                // payload.currency = destCurrency; // <-- This was the bug? No, if I uncomment this, I force JPY.
-                                // But if I force JPY with GHS budget, it's wrong.
-                                // So I keep it commented or remove it.
-                                // Actually, I should probably NOT switch currency if conversion fails.
-                            }
-                        } else {
-                            // If no budget (0), we can safely switch to destination currency
-                            payload.currency = destCurrency;
-                        }
-                    } else if (!destCurrency) {
-                        // Optional: warn if we couldn't find destination currency
-                        // toast.info("Could not determine destination currency.");
-                    }
-                } catch (e) {
-                    console.error("[TripWizard] Currency conversion failed:", e);
-                    // Fallback: proceed with original currency/budget
-                }
-            }
 
             const { data, error } = await sb.functions.invoke("build_preview_itinerary", {
                 body: payload,
@@ -473,7 +458,7 @@ export default function TripWizard() {
                             {/* STEP 2: BUDGET */}
                             {step === 2 && (
                                 <Slide key="budget">
-                                    <FieldBlock label="What's your daily budget?" icon={Wallet}>
+                                    <FieldBlock label="What's your total budget?" icon={Wallet}>
                                         <div className="flex flex-col sm:flex-row gap-4">
                                             <div className="relative flex-1">
                                                 <div
@@ -509,7 +494,7 @@ export default function TripWizard() {
                                         </div>
 
                                         <div className="mt-6 flex flex-wrap gap-3">
-                                            {[50, 150, 300, 500].map((amt) => (
+                                            {[500, 1000, 2500, 5000].map((amt) => (
                                                 <button
                                                     key={amt}
                                                     type="button"
@@ -1015,7 +1000,7 @@ function ReviewCard({
                     label="Budget"
                     value={
                         data.budget_daily
-                            ? `${data.currency} ${data.budget_daily}/day`
+                            ? `${data.currency} ${data.budget_daily} Total`
                             : "Not specified"
                     }
                     onEdit={() => onEdit(2)}

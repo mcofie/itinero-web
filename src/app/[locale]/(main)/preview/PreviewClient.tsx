@@ -31,6 +31,8 @@ import {
     ExternalLink, SmartphoneNfc,
     ArrowRight,
     Info,
+    TrendingDown,
+    Trophy,
 } from "lucide-react";
 
 import {
@@ -543,7 +545,7 @@ export default function PreviewClient({
                                     <span
                                         className="flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 backdrop-blur-md ring-1 ring-white/10">
                                         <DollarSign className="h-4 w-4 text-emerald-400" />
-                                        Est. {currency} {estTotal}
+                                        Est. {currency} {estTotal.toFixed(2)}
                                     </span>
                                 )}
 
@@ -571,18 +573,8 @@ export default function PreviewClient({
                 <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
                     {/* LEFT: Itinerary */}
                     <div className="space-y-8">
-                        {/* Currency Explanation */}
-                        <div
-                            className="rounded-2xl border border-blue-100 bg-blue-50 p-4 dark:bg-blue-900/20 dark:border-blue-800">
-                            <div className="flex gap-3">
-                                <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
-                                <p className="text-sm text-blue-800 dark:text-blue-200">
-                                    Costs are shown in the destination&apos;s currency (<strong>{currency}</strong>).
-                                    When you save this trip, we&apos;ll automatically convert these estimates to your
-                                    preferred currency.
-                                </p>
-                            </div>
-                        </div>
+                        {/* Trip Analysis & Insights */}
+                        <TripAnalysis preview={preview} currency={currency} />
 
                         <section
                             className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
@@ -873,8 +865,15 @@ function ItineraryDay({
                                             {b.duration_min} min
                                         </div>
                                         {b.est_cost > 0 && (
-                                            <div className="text-emerald-600 font-bold mt-1 dark:text-emerald-400">
-                                                {currency} {b.est_cost}
+                                            <div className="flex flex-col items-end mt-1 gap-0.5">
+                                                {place?.cost_typical && place.cost_currency && place.cost_currency !== currency && (
+                                                    <div className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
+                                                        {place.cost_currency} {Number(place.cost_typical).toFixed(2)}
+                                                    </div>
+                                                )}
+                                                <div className="text-emerald-600 font-bold dark:text-emerald-400 whitespace-nowrap leading-none">
+                                                    {currency} {b.est_cost.toFixed(2)}
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -1317,7 +1316,9 @@ async function saveDraftAsTrip(
         if (tripErr) throw tripErr;
         const tripId = tripInsert.id;
 
-        // 3) Insert itinerary items
+        // 3) Insert itinerary items with currency tracking
+        const tripCurrency = currentPreview.trip_summary.currency ?? "USD";
+
         type ItemInsert = {
             trip_id: string;
             day_index: number;
@@ -1327,6 +1328,7 @@ async function saveDraftAsTrip(
             place_id: string | null;
             title: string;
             est_cost: number | null;
+            cost_currency: string;
             duration_min: number | null;
             travel_min_from_prev: number | null;
             notes: string | null;
@@ -1344,6 +1346,7 @@ async function saveDraftAsTrip(
                     place_id: b.place_id ?? null,
                     title: b.title,
                     est_cost: Number.isFinite(b.est_cost) ? b.est_cost : null,
+                    cost_currency: tripCurrency,
                     duration_min: Number.isFinite(b.duration_min)
                         ? b.duration_min
                         : null,
@@ -1405,4 +1408,108 @@ async function saveDraftAsTrip(
     } finally {
         setSavingState(false);
     }
+}
+
+function TripAnalysis({ preview, currency }: { preview: PreviewResponse; currency: string }) {
+    const summary = preview.trip_summary;
+    const days = preview.days ?? [];
+    const duration = summary.total_days || 1;
+    const estCost = summary.est_total_cost || 0;
+
+    // Safety check for inputs
+    const inputs = summary.inputs as { budget_daily?: number } | undefined;
+    const totalBudget = (typeof inputs?.budget_daily === 'number' && inputs.budget_daily > 0)
+        ? inputs.budget_daily
+        : (estCost * 1.1); // fallback if no budget set
+    const diff = totalBudget - estCost;
+
+    // Analyze Budget (5% buffer)
+    const ratio = totalBudget > 0 ? estCost / totalBudget : 1;
+    let budgetStatus: "under" | "over" | "on-track" = "on-track";
+    if (ratio > 1.05) budgetStatus = "over";
+    else if (ratio < 0.85) budgetStatus = "under";
+
+    // Analyze Pace (avg hours of activity per day)
+    const totalDurationMin = days.reduce((acc, d) => acc + (d.blocks?.reduce((a, b) => a + (b.duration_min || 0), 0) || 0), 0);
+    const avgHoursPerDay = (totalDurationMin / 60) / duration;
+
+    let paceLabel = "Balanced";
+    if (avgHoursPerDay > 6) paceLabel = "Packed";
+    if (avgHoursPerDay < 3) paceLabel = "Relaxed";
+
+    // Hidden Gems (popularity < 40)
+    const hiddenGems = (preview.places ?? []).filter(p => (p.popularity ?? 50) < 40).length;
+
+    return (
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:bg-slate-900 dark:border-slate-800 space-y-6">
+            <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                <TrendingDown className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                Trip Analysis
+            </h3>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+                {/* Budget Stat */}
+                <div className={cn("p-4 rounded-2xl border transition-colors",
+                    budgetStatus === "over" ? "bg-rose-50 border-rose-100 dark:bg-rose-900/20 dark:border-rose-900" :
+                        budgetStatus === "under" ? "bg-emerald-50 border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-900" :
+                            "bg-slate-50 border-slate-100 dark:bg-slate-800 dark:border-slate-700"
+                )}>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Wallet className={cn("h-4 w-4",
+                            budgetStatus === "over" ? "text-rose-600" :
+                                budgetStatus === "under" ? "text-emerald-600" : "text-slate-500"
+                        )} />
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Budget</span>
+                    </div>
+                    <div className="text-xl font-black text-slate-900 dark:text-white capitalize">
+                        {budgetStatus.replace("-", " ")}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-2 space-y-1 dark:text-slate-400">
+                        <div className="flex justify-between">
+                            <span>Est. Cost:</span>
+                            <span>{currency} {estCost.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span>Budget:</span>
+                            <span>{currency} {totalBudget.toFixed(2)}</span>
+                        </div>
+                        <div className={cn("flex justify-between font-bold border-t pt-1 mt-1",
+                            diff >= 0 ? "text-emerald-600 border-emerald-100 dark:border-emerald-900" : "text-rose-600 border-rose-100 dark:border-rose-900"
+                        )}>
+                            <span>{diff >= 0 ? "Remaining" : "Over"}:</span>
+                            <span>{currency} {Math.abs(diff).toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Pace Stat */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Clock3 className="h-4 w-4 text-blue-500" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Pace</span>
+                    </div>
+                    <div className="text-xl font-black text-slate-900 dark:text-white">
+                        {paceLabel}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1 dark:text-slate-400">
+                        ~{Math.round(avgHoursPerDay)}h activity / day
+                    </div>
+                </div>
+
+                {/* Gems Stat */}
+                <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 dark:bg-amber-900/20 dark:border-amber-900">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Trophy className="h-4 w-4 text-amber-600" />
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Discovery</span>
+                    </div>
+                    <div className="text-xl font-black text-slate-900 dark:text-white">
+                        {hiddenGems} Gems
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1 dark:text-slate-400">
+                        Unique local spots
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }

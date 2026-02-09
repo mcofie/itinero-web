@@ -153,12 +153,19 @@ function StoryBlock({
                                 {block.duration_min}m
                             </span>
                             {block.est_cost > 0 && (
-                                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                                    <span className="text-[10px] font-bold uppercase">{currency}</span>
-                                    {block.est_cost}
-                                    {fxSnapshot && userPreferredCurrency && currency !== userPreferredCurrency && (
-                                        <span className="ml-1 opacity-70 font-normal text-[10px]">
-                                            (~ {userPreferredCurrency} {Math.round(convertUsingSnapshot(fxSnapshot, block.est_cost, currency, userPreferredCurrency) || 0)})
+                                <span className="flex flex-col items-end text-emerald-600 dark:text-emerald-400 gap-0.5 leading-none">
+                                    <span className="flex items-center gap-1">
+                                        <span className="text-[10px] font-bold uppercase">{currency}</span>
+                                        {Number(block.est_cost).toFixed(2)}
+                                        {fxSnapshot && userPreferredCurrency && currency !== userPreferredCurrency && (
+                                            <span className="ml-1 opacity-70 font-normal text-[10px]">
+                                                (~ {userPreferredCurrency} {(convertUsingSnapshot(fxSnapshot, block.est_cost, currency, userPreferredCurrency) || 0).toFixed(2)})
+                                            </span>
+                                        )}
+                                    </span>
+                                    {place?.cost_typical && place.cost_currency && place.cost_currency !== currency && (
+                                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
+                                            ({place.cost_currency} {Number(place.cost_typical).toFixed(2)})
                                         </span>
                                     )}
                                 </span>

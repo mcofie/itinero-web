@@ -552,7 +552,8 @@ function formatMoney(n: number, currency: string) {
         return new Intl.NumberFormat(undefined, {
             style: "currency",
             currency,
-            maximumFractionDigits: 0,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
         }).format(n);
     } catch {
         return `${currency} ${Math.round(n).toLocaleString()}`;

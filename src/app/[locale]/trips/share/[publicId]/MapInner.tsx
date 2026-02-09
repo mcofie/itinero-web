@@ -5,18 +5,20 @@ import * as React from "react";
 import type * as Leaflet from "leaflet";
 
 export default function MapInner({
-                                     places,
-                                 }: {
+    places,
+}: {
     places: Array<{ id: string; name: string; lat?: number | null; lng?: number | null }>;
 }) {
     const ref = React.useRef<HTMLDivElement | null>(null);
+    const mapRef = React.useRef<Leaflet.Map | null>(null);
 
     React.useEffect(() => {
-        let map: Leaflet.Map | null = null;
+        let isStale = false;
         let L: typeof Leaflet;
 
         (async () => {
             L = (await import("leaflet")).default;
+            if (isStale) return;
 
             // Ensure default marker icons resolve from CDN (avoid bundler URL issues)
             const defaultProto = L.Icon.Default.prototype as unknown as {
@@ -33,7 +35,16 @@ export default function MapInner({
 
             if (!ref.current) return;
 
-            map = L.map(ref.current);
+            // If map already exists (e.g. from a previous effect that didn't clean up yet)
+            // though mapRef.current.remove() should handle it, we safeguard.
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
+
+            const map = L.map(ref.current);
+            mapRef.current = map;
+
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
                 attribution:
@@ -48,7 +59,7 @@ export default function MapInner({
             if (valid.length) {
                 const bounds = L.latLngBounds([]);
                 valid.forEach((p) => {
-                    L.marker([p.lat, p.lng]).addTo(map!).bindPopup(p.name);
+                    L.marker([p.lat, p.lng]).addTo(map).bindPopup(p.name);
                     bounds.extend([p.lat, p.lng]);
                 });
                 map.fitBounds(bounds.pad(0.2));
@@ -58,10 +69,10 @@ export default function MapInner({
         })();
 
         return () => {
-            // Properly dispose map instance if it was created
-            if (map) {
-                map.remove();
-                map = null;
+            isStale = true;
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
             }
         };
     }, [places]);
