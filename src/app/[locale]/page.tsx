@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import TripWizard from "@/components/landing/TripWizard";
 import {
-    Users2, FileText, Wallet, CalendarPlus, Plane,
-    Ticket, Mail, ArrowRight, Twitter, Instagram, Github, Menu
+    ShieldCheck, FileCheck, Coins, BookOpen, Users2, FileText, Wallet, CalendarPlus, Plane,
+    Ticket, Mail, ArrowRight, Twitter, Instagram, Github, Menu, Shirt, PhoneCall, Lightbulb
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -48,7 +48,7 @@ const SUPPORTED = [
     },
     {
         name: "Rwanda",
-        image: "https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=1000&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1517705008128-361805f42e86?q=80&w=1000&auto=format&fit=crop",
         itineraries: "40+"
     },
     {
@@ -163,7 +163,7 @@ export default function LandingPage() {
                                 <motion.h1
                                     {...fadeUp}
                                     transition={{ delay: 0.1, duration: 0.5 }}
-                                    className="text-6xl md:text-8xl font-bold tracking-tighter text-slate-900 mb-8 leading-[0.95] dark:text-white"
+                                    className="text-5xl md:text-7xl font-bold tracking-tighter text-slate-900 mb-8 leading-[0.95] dark:text-white"
                                 >
                                     {tLanding("Hero.title1")} <br />
                                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">{tLanding("Hero.title2")}</span>
@@ -172,7 +172,7 @@ export default function LandingPage() {
                                 <motion.p
                                     {...fadeUp}
                                     transition={{ delay: 0.2, duration: 0.5 }}
-                                    className="text-xl md:text-2xl text-slate-600 mb-10 leading-relaxed max-w-lg dark:text-slate-400"
+                                    className="text-lg md:text-xl text-slate-600 mb-10 leading-relaxed max-w-lg dark:text-slate-400"
                                 >
                                     {tLanding("Hero.subtitle")}
                                 </motion.p>
@@ -405,35 +405,35 @@ function BentoFeatures() {
     const tLanding = useTranslations("Landing");
     const WHY = [
         {
-            id: "community",
-            icon: Users2,
-            title: tLanding("Features.communityTitle"),
-            desc: tLanding("Features.communityDesc"),
-            image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2670&auto=format&fit=crop",
+            id: "intelligence",
+            icon: ShieldCheck,
+            title: tLanding("Features.intelligenceTitle"),
+            desc: tLanding("Features.intelligenceDesc"),
+            image: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=2535&auto=format&fit=crop",
             color: "blue"
         },
         {
             id: "export",
-            icon: FileText,
+            icon: FileCheck,
             title: tLanding("Features.exportTitle"),
             desc: tLanding("Features.exportDesc"),
-            image: "https://images.unsplash.com/photo-1503220317375-aaad61436b1b?q=80&w=2670&auto=format&fit=crop",
+            image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=2670&auto=format&fit=crop",
             color: "emerald"
         },
         {
             id: "budget",
-            icon: Wallet,
+            icon: Coins,
             title: tLanding("Features.budgetTitle"),
             desc: tLanding("Features.budgetDesc"),
-            image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2670&auto=format&fit=crop",
+            image: "https://images.unsplash.com/photo-1580519542036-c47de6196ba5?q=80&w=2671&auto=format&fit=crop",
             color: "amber"
         },
         {
-            id: "sync",
-            icon: CalendarPlus,
-            title: tLanding("Features.syncTitle"),
-            desc: tLanding("Features.syncDesc"),
-            image: "https://images.unsplash.com/photo-1488085061387-422e29b40080?q=80&w=2662&auto=format&fit=crop",
+            id: "knowledge",
+            icon: BookOpen,
+            title: tLanding("Features.knowledgeTitle"),
+            desc: tLanding("Features.knowledgeDesc"),
+            image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2671&auto=format&fit=crop",
             color: "purple"
         },
     ];
@@ -475,7 +475,10 @@ function BentoFeatures() {
                                     />
                                     <div className={cn(
                                         "absolute inset-0 mix-blend-multiply opacity-60 transition-opacity duration-500 group-hover:opacity-70",
-                                        `bg-${item.color}-900`
+                                        item.color === "blue" && "bg-blue-900",
+                                        item.color === "emerald" && "bg-emerald-900",
+                                        item.color === "amber" && "bg-amber-900",
+                                        item.color === "purple" && "bg-purple-900"
                                     )} />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 </div>
@@ -484,7 +487,10 @@ function BentoFeatures() {
                                 <div className="absolute inset-0 p-8 flex flex-col justify-between text-white">
                                     <div className={cn(
                                         "h-14 w-14 rounded-2xl flex items-center justify-center backdrop-blur-md bg-white/20 border border-white/30 shadow-lg",
-                                        `text-${item.color}-100`
+                                        item.color === "blue" && "text-blue-100",
+                                        item.color === "emerald" && "text-emerald-100",
+                                        item.color === "amber" && "text-amber-100",
+                                        item.color === "purple" && "text-purple-100"
                                     )}>
                                         <item.icon className="h-7 w-7" />
                                     </div>

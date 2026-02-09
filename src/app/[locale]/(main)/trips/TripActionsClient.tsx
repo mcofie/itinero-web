@@ -45,7 +45,7 @@ export type Day = { date: string; blocks: DayBlock[] };
 export type Place = { id: string; name: string; lat?: number; lng?: number };
 
 export type TripConfig = {
-     
+
     [key: string]: any;
 };
 
@@ -59,9 +59,25 @@ export type DestinationMeta = {
     transport?: string[];
     esim_provider?: string;
     city?: string;
+    country_code?: string;
     fx_rate?: number;
     fx_base?: string;
     weather_temp_c?: number;
+    tipping?: string;
+    payment?: string;
+    photography?: string;
+    gestures?: string;
+    dress_code?: string;
+    cost_coffee?: string;
+    cost_meal?: string;
+    cost_beer?: string;
+    etiquette_dos?: string;
+    etiquette_donts?: string;
+    packing_tips?: string;
+    emergency_police?: string;
+    emergency_medical?: string;
+    hidden_gem_title?: string;
+    hidden_gem_desc?: string;
 };
 
 type Props = {

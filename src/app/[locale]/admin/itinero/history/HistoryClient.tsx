@@ -49,7 +49,13 @@ import {
     ChevronRight,
     BookOpen,
     Info,
-    Globe
+    Globe,
+    Coins,
+    HeartHandshake,
+    AlertCircle,
+    PhoneCall,
+    Lightbulb,
+    ShieldAlert
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -85,6 +91,21 @@ export default function HistoryClient({
     const [kbygGettingAround, setKbygGettingAround] = React.useState("");
     const [kbygEsim, setKbygEsim] = React.useState("");
     const [kbygPrimaryCity, setKbygPrimaryCity] = React.useState("");
+    const [kbygTipping, setKbygTipping] = React.useState("");
+    const [kbygPayment, setKbygPayment] = React.useState("");
+    const [kbygCostCoffee, setKbygCostCoffee] = React.useState("");
+    const [kbygCostMeal, setKbygCostMeal] = React.useState("");
+    const [kbygCostBeer, setKbygCostBeer] = React.useState("");
+    const [kbygEtiquetteDos, setKbygEtiquetteDos] = React.useState("");
+    const [kbygEtiquetteDonts, setKbygEtiquetteDonts] = React.useState("");
+    const [kbygPackingTips, setKbygPackingTips] = React.useState("");
+    const [kbygEmergencyPolice, setKbygEmergencyPolice] = React.useState("");
+    const [kbygEmergencyMedical, setKbygEmergencyMedical] = React.useState("");
+    const [kbygHiddenGemTitle, setKbygHiddenGemTitle] = React.useState("");
+    const [kbygHiddenGemDesc, setKbygHiddenGemDesc] = React.useState("");
+    const [kbygPhotography, setKbygPhotography] = React.useState("");
+    const [kbygGestures, setKbygGestures] = React.useState("");
+    const [kbygDressCode, setKbygDressCode] = React.useState("");
 
     const [editingHistoryId, setEditingHistoryId] = React.useState<string | null>(null);
     const [histSaving, setHistSaving] = React.useState(false);
@@ -140,6 +161,21 @@ export default function HistoryClient({
         setKbygGettingAround("");
         setKbygEsim("");
         setKbygPrimaryCity("");
+        setKbygTipping("");
+        setKbygPayment("");
+        setKbygCostCoffee("");
+        setKbygCostMeal("");
+        setKbygCostBeer("");
+        setKbygEtiquetteDos("");
+        setKbygEtiquetteDonts("");
+        setKbygPackingTips("");
+        setKbygEmergencyPolice("");
+        setKbygEmergencyMedical("");
+        setKbygHiddenGemTitle("");
+        setKbygHiddenGemDesc("");
+        setKbygPhotography("");
+        setKbygGestures("");
+        setKbygDressCode("");
         setEditingHistoryId(null);
         setIsHistoryDialogOpen(false);
     }
@@ -161,7 +197,22 @@ export default function HistoryClient({
                 languages: kbygLanguages,
                 getting_around: kbygGettingAround,
                 esim: kbygEsim,
-                primary_city: kbygPrimaryCity
+                primary_city: kbygPrimaryCity,
+                tipping: kbygTipping,
+                payment: kbygPayment,
+                cost_coffee: kbygCostCoffee,
+                cost_meal: kbygCostMeal,
+                cost_beer: kbygCostBeer,
+                etiquette_dos: kbygEtiquetteDos,
+                etiquette_donts: kbygEtiquetteDonts,
+                packing_tips: kbygPackingTips,
+                emergency_police: kbygEmergencyPolice,
+                emergency_medical: kbygEmergencyMedical,
+                hidden_gem_title: kbygHiddenGemTitle,
+                hidden_gem_desc: kbygHiddenGemDesc,
+                photography: kbygPhotography,
+                gestures: kbygGestures,
+                dress_code: kbygDressCode
             };
 
             const payloadData: DestinationHistoryPayload = {
@@ -223,6 +274,21 @@ export default function HistoryClient({
         setKbygGettingAround(k.getting_around || "");
         setKbygEsim(k.esim || "");
         setKbygPrimaryCity(k.primary_city || "");
+        setKbygTipping(k.tipping || "");
+        setKbygPayment(k.payment || "");
+        setKbygCostCoffee(k.cost_coffee || "");
+        setKbygCostMeal(k.cost_meal || "");
+        setKbygCostBeer(k.cost_beer || "");
+        setKbygEtiquetteDos(k.etiquette_dos || "");
+        setKbygEtiquetteDonts(k.etiquette_donts || "");
+        setKbygPackingTips(k.packing_tips || "");
+        setKbygEmergencyPolice(k.emergency_police || "");
+        setKbygEmergencyMedical(k.emergency_medical || "");
+        setKbygHiddenGemTitle(k.hidden_gem_title || "");
+        setKbygHiddenGemDesc(k.hidden_gem_desc || "");
+        setKbygPhotography(k.photography || "");
+        setKbygGestures(k.gestures || "");
+        setKbygDressCode(k.dress_code || "");
 
         setIsHistoryDialogOpen(true);
     }
@@ -401,6 +467,74 @@ export default function HistoryClient({
                                                     onChange={setKbygPrimaryCity}
                                                     placeholder="e.g. Paris"
                                                 />
+                                            </div>
+
+                                            {/* Intelligence Suite Section */}
+                                            <div className="grid gap-4 mt-4">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
+                                                    <Coins className="h-4 w-4 text-emerald-500" />
+                                                    Budget Insights (Cost of Living)
+                                                </div>
+                                                <div className="grid sm:grid-cols-3 gap-4">
+                                                    <FormInput label="Coffee Cost" value={kbygCostCoffee} onChange={setKbygCostCoffee} placeholder="e.g. $4.50" />
+                                                    <FormInput label="Meal Cost" value={kbygCostMeal} onChange={setKbygCostMeal} placeholder="e.g. $18.00" />
+                                                    <FormInput label="Beer Cost" value={kbygCostBeer} onChange={setKbygCostBeer} placeholder="e.g. $7.00" />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid gap-4 mt-4">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
+                                                    <HeartHandshake className="h-4 w-4 text-blue-500" />
+                                                    Social Etiquette & Tipping
+                                                </div>
+                                                <div className="grid sm:grid-cols-2 gap-4">
+                                                    <FormTextarea label="Tipping Culture" value={kbygTipping} onChange={setKbygTipping} placeholder="e.g. 10% is standard..." rows={2} />
+                                                    <FormTextarea label="Payment Methods" value={kbygPayment} onChange={setKbygPayment} placeholder="e.g. Cash is king, cards in supermarkets..." rows={2} />
+                                                </div>
+                                                <div className="grid sm:grid-cols-2 gap-4">
+                                                    <FormInput label="Etiquette Do's" value={kbygEtiquetteDos} onChange={setKbygEtiquetteDos} placeholder="comma separated" />
+                                                    <FormInput label="Etiquette Don'ts" value={kbygEtiquetteDonts} onChange={setKbygEtiquetteDonts} placeholder="comma separated" />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid gap-4 mt-4">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
+                                                    <AlertCircle className="h-4 w-4 text-orange-500" />
+                                                    Smart Packing
+                                                </div>
+                                                <FormTextarea label="Packing Tips" value={kbygPackingTips} onChange={setKbygPackingTips} placeholder="e.g. Bring a light jacket for evenings..." rows={2} />
+                                            </div>
+
+                                            <div className="grid gap-4 mt-4">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
+                                                    <ShieldAlert className="h-4 w-4 text-rose-500" />
+                                                    Emergency Directory
+                                                </div>
+                                                <div className="grid sm:grid-cols-2 gap-4">
+                                                    <FormInput label="Local Police" value={kbygEmergencyPolice} onChange={setKbygEmergencyPolice} placeholder="e.g. 911" />
+                                                    <FormInput label="Medical Emergency" value={kbygEmergencyMedical} onChange={setKbygEmergencyMedical} placeholder="e.g. 999" />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid gap-4 mt-4">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
+                                                    <Lightbulb className="h-4 w-4 text-amber-500" />
+                                                    Hidden Gem
+                                                </div>
+                                                <FormInput label="Gem Title" value={kbygHiddenGemTitle} onChange={setKbygHiddenGemTitle} placeholder="e.g. Evening Market Tour" />
+                                                <FormTextarea label="Gem Description" value={kbygHiddenGemDesc} onChange={setKbygHiddenGemDesc} placeholder="Helpful description for the traveler..." rows={3} />
+                                            </div>
+
+                                            <div className="grid gap-4 mt-4">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
+                                                    <HistoryIcon className="h-4 w-4 text-slate-500" />
+                                                    Optional Metadata
+                                                </div>
+                                                <div className="grid sm:grid-cols-3 gap-4">
+                                                    <FormInput label="Photography" value={kbygPhotography} onChange={setKbygPhotography} placeholder="e.g. Ask before photos" />
+                                                    <FormInput label="Gestures" value={kbygGestures} onChange={setKbygGestures} placeholder="e.g. Handshake is common" />
+                                                    <FormInput label="Dress Code" value={kbygDressCode} onChange={setKbygDressCode} placeholder="e.g. Casual" />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

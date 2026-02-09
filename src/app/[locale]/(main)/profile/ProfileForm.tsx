@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { saveProfileAction } from "@/app/[locale]/(main)/profile/server-actions";
 import { PreferredCurrencyField } from "@/app/[locale]/(main)/profile/PreferredCurrencyField";
-import { User, AtSign, Loader2, Wallet } from "lucide-react";
+import { PassportCountryField } from "@/app/[locale]/(main)/profile/PassportCountryField";
+import { User, AtSign, Loader2, Wallet, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -17,6 +18,7 @@ type Props = {
     fullName: string | null;
     username: string | null;
     preferredCurrency: string | null;
+    passportCountry: string | null;
 };
 
 export function ProfileForm({
@@ -24,6 +26,7 @@ export function ProfileForm({
     fullName,
     username,
     preferredCurrency,
+    passportCountry,
 }: Props) {
     const [pending, startTransition] = useTransition();
 
@@ -121,6 +124,8 @@ export function ProfileForm({
                         We will use this currency to estimate costs across your trips.
                     </p>
                 </div>
+
+                <PassportCountryField initialValue={passportCountry} />
             </div>
 
             {/* --- Action --- */}

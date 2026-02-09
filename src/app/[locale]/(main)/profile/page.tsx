@@ -56,6 +56,7 @@ type ProfileRow = {
     avatar_url: string | null;
     points_balance?: number | null;
     preferred_currency?: string | null;
+    passport_country?: string | null;
 };
 
 /* ---------------- Helpers ---------------- */
@@ -247,7 +248,7 @@ export default async function ProfilePage() {
         .schema("itinero")
         .from("profiles")
         .select(
-            "id, full_name, username, avatar_url, points_balance, preferred_currency"
+            "id, full_name, username, avatar_url, points_balance, preferred_currency, passport_country"
         )
         .eq("id", userId)
         .maybeSingle<ProfileRow>();
@@ -261,6 +262,7 @@ export default async function ProfilePage() {
         avatar_url: fetchedProfile?.avatar_url ?? user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
         points_balance: fetchedProfile?.points_balance ?? 0,
         preferred_currency: fetchedProfile?.preferred_currency ?? null,
+        passport_country: fetchedProfile?.passport_country ?? null,
     };
 
     const { data: sumValue } = await sb.rpc("sum_points_for_user", {
@@ -374,6 +376,7 @@ export default async function ProfilePage() {
                                         fullName={profileRow?.full_name ?? null}
                                         username={profileRow?.username ?? null}
                                         preferredCurrency={profileRow?.preferred_currency ?? null}
+                                        passportCountry={profileRow?.passport_country ?? null}
                                     />
                                 </div>
                             </div>

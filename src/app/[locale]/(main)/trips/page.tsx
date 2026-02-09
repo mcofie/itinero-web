@@ -69,8 +69,12 @@ export default async function TripsPage() {
     // Fetch FX Snapshot (USD base)
     const { data: fxSnapshot } = await sb
         .schema("itinero")
-        .rpc("fx_latest_snapshot", { p_base: "USD" })
-        .single<FxSnapshot | null>();
+        .from("fx_snapshots")
+        .select("*")
+        .eq("base_currency", "USD")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle<FxSnapshot | null>();
 
     const tripsSafe: TripRow[] = (trips ?? []) as TripRow[];
     const hasTrips = tripsSafe.length > 0;

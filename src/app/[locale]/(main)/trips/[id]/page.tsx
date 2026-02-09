@@ -97,6 +97,7 @@ type DestinationRow = {
     lat: number | null;
     lng: number | null;
     current_history_id: UUID | null;
+    country_code: string | null;
 };
 
 type ItemRow = {
@@ -193,6 +194,21 @@ type ItineroKBYG = {
     getting_around?: string;
     esim?: string;
     primary_city?: string;
+    tipping?: string;
+    payment?: string;
+    photography?: string;
+    gestures?: string;
+    dress_code?: string;
+    cost_coffee?: string;
+    cost_meal?: string;
+    cost_beer?: string;
+    etiquette_dos?: string;
+    etiquette_donts?: string;
+    packing_tips?: string;
+    emergency_police?: string;
+    emergency_medical?: string;
+    hidden_gem_title?: string;
+    hidden_gem_desc?: string;
 };
 
 type DestinationHistoryPayload = {
@@ -217,6 +233,7 @@ type DestinationMetaLike = {
     fx_rate?: number;
     money_tools?: string[];
     city?: string;
+    country_code?: string;
     timezone?: string;
     plugs?: string[];
     languages?: string[];
@@ -226,6 +243,21 @@ type DestinationMetaLike = {
     esim_provider?: string;
     description?: string;
     history?: string;
+    tipping?: string;
+    payment?: string;
+    photography?: string;
+    gestures?: string;
+    dress_code?: string;
+    cost_coffee?: string;
+    cost_meal?: string;
+    cost_beer?: string;
+    etiquette_dos?: string;
+    etiquette_donts?: string;
+    packing_tips?: string;
+    emergency_police?: string;
+    emergency_medical?: string;
+    hidden_gem_title?: string;
+    hidden_gem_desc?: string;
 };
 
 /* ---------- strict guards & accessors (no `any`) ---------- */
@@ -280,6 +312,51 @@ function coercePayload(p: unknown): DestinationHistoryPayload {
         const primaryCity = kbygRaw["primary_city"];
         if (isString(primaryCity)) kb.primary_city = primaryCity;
 
+        const tipping = kbygRaw["tipping"];
+        if (isString(tipping)) kb.tipping = tipping;
+
+        const payment = kbygRaw["payment"];
+        if (isString(payment)) kb.payment = payment;
+
+        const photography = kbygRaw["photography"];
+        if (isString(photography)) kb.photography = photography;
+
+        const gestures = kbygRaw["gestures"];
+        if (isString(gestures)) kb.gestures = gestures;
+
+        const dressCode = kbygRaw["dress_code"];
+        if (isString(dressCode)) kb.dress_code = dressCode;
+
+        const costCoffee = kbygRaw["cost_coffee"];
+        if (isString(costCoffee)) kb.cost_coffee = costCoffee;
+
+        const costMeal = kbygRaw["cost_meal"];
+        if (isString(costMeal)) kb.cost_meal = costMeal;
+
+        const costBeer = kbygRaw["cost_beer"];
+        if (isString(costBeer)) kb.cost_beer = costBeer;
+
+        const etiquetteDos = kbygRaw["etiquette_dos"];
+        if (isString(etiquetteDos)) kb.etiquette_dos = etiquetteDos;
+
+        const etiquetteDonts = kbygRaw["etiquette_donts"];
+        if (isString(etiquetteDonts)) kb.etiquette_donts = etiquetteDonts;
+
+        const packingTips = kbygRaw["packing_tips"];
+        if (isString(packingTips)) kb.packing_tips = packingTips;
+
+        const emergencyPolice = kbygRaw["emergency_police"];
+        if (isString(emergencyPolice)) kb.emergency_police = emergencyPolice;
+
+        const emergencyMedical = kbygRaw["emergency_medical"];
+        if (isString(emergencyMedical)) kb.emergency_medical = emergencyMedical;
+
+        const hiddenGemTitle = kbygRaw["hidden_gem_title"];
+        if (isString(hiddenGemTitle)) kb.hidden_gem_title = hiddenGemTitle;
+
+        const hiddenGemDesc = kbygRaw["hidden_gem_desc"];
+        if (isString(hiddenGemDesc)) kb.hidden_gem_desc = hiddenGemDesc;
+
         out.kbyg = kb;
     }
     return out;
@@ -296,12 +373,13 @@ export function extractDestName(inputs: unknown): string {
 
 /** Build a client-friendly meta object from a destination_history payload */
 function buildDestinationMetaFromHistoryRow(
-    hist: DestinationHistoryRow | null | undefined
+    hist: DestinationHistoryRow | null | undefined,
+    countryCode?: string | null
 ): {
     meta?: DestinationMetaLike;
     heroUrl?: string;
 } {
-    if (!hist) return {};
+    if (!hist) return countryCode ? { meta: { country_code: countryCode } } : {};
     const payload = coercePayload(hist.payload);
     const k = payload.kbyg ?? {};
 
@@ -311,6 +389,7 @@ function buildDestinationMetaFromHistoryRow(
         description: payload.about ?? undefined,
         history: payload.history ?? undefined,
         currency_code: isString(k.currency) ? k.currency : undefined,
+        country_code: countryCode || undefined,
         plugs: isString(k.plugs)
             ? k
                 .plugs!.split(",")
@@ -339,6 +418,21 @@ function buildDestinationMetaFromHistoryRow(
             : undefined,
         esim_provider: isString(k.esim) ? k.esim : undefined,
         city: isString(k.primary_city) ? k.primary_city : undefined,
+        tipping: k.tipping,
+        payment: k.payment,
+        photography: k.photography,
+        gestures: k.gestures,
+        dress_code: k.dress_code,
+        cost_coffee: k.cost_coffee,
+        cost_meal: k.cost_meal,
+        cost_beer: k.cost_beer,
+        etiquette_dos: k.etiquette_dos,
+        etiquette_donts: k.etiquette_donts,
+        packing_tips: k.packing_tips,
+        emergency_police: k.emergency_police,
+        emergency_medical: k.emergency_medical,
+        hidden_gem_title: k.hidden_gem_title,
+        hidden_gem_desc: k.hidden_gem_desc,
     };
 
     return { meta, heroUrl: hist.backdrop_image_url };
@@ -386,15 +480,16 @@ export default async function TripIdPage({
     } = await sb.auth.getUser();
     if (!user) redirect("/login");
 
-    // Fetch User Profile for Preferred Currency
+    // Fetch User Profile for Preferred Currency & Passport
     const { data: profile } = await sb
         .schema("itinero")
         .from("profiles")
-        .select("preferred_currency")
+        .select("preferred_currency, passport_country")
         .eq("id", user.id)
         .single();
 
     const userPreferredCurrency = profile?.preferred_currency ?? "USD";
+    const userPassportCountry = profile?.passport_country;
 
     // ---- Trip ----
     const { data: trip, error: tripErr } = await sb
@@ -521,7 +616,7 @@ export default async function TripIdPage({
         const { data: dRow } = await sb
             .schema("itinero")
             .from("destinations")
-            .select("id,name,lat,lng,current_history_id")
+            .select("id,name,lat,lng,current_history_id,country_code")
             .eq("id", trip.destination_id)
             .maybeSingle<DestinationRow>();
         destination = dRow ?? null;
@@ -540,7 +635,7 @@ export default async function TripIdPage({
     }
 
     const { meta: destMeta, heroUrl } =
-        buildDestinationMetaFromHistoryRow(history);
+        buildDestinationMetaFromHistoryRow(history, destination?.country_code);
 
     // ---- Inputs enrichment ----
     const rawInputs = (trip.inputs ?? null) as TripRow["inputs"] | null;
@@ -678,6 +773,7 @@ export default async function TripIdPage({
                         data={previewLike}
                         startDate={previewLike.trip_summary.start_date}
                         userPreferredCurrency={userPreferredCurrency}
+                        userPassportCountry={userPassportCountry}
                     />
                 </div>
 

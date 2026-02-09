@@ -55,50 +55,50 @@
     },
     "Landing": {
         "Hero": {
-            "title1": "The world",
-            "title2": "awaits you.",
-            "subtitle": "Build complete itineraries with activities, routes, and budgets in one place.",
+            "title1": "Travel with Soul.",
+            "title2": "Plan with Peace.",
+            "subtitle": "Discover curated secrets through local eyes. We’re relentlessly committed to your budget, your discovery, and your support—from the first spark to the final mile.",
             "trustedBy": "Trusted by",
             "travelers": "travelers"
         },
         "Features": {
-            "title1": "Why travellers choose",
-            "title2": "Itinero",
-            "subtitle": "Everything you need to go from idea to departure in one seamless flow.",
-            "communityTitle": "Community Powered",
-            "communityDesc": "Local tips and hidden gems contributed by real travellers. Verify info to earn points.",
-            "exportTitle": "Visa-Ready Exports",
-            "exportDesc": "Generate professional PDF itineraries instantly. Perfect for visa applications and offline use.",
-            "budgetTitle": "Budget Control",
-            "budgetDesc": "Real-world price estimates for every activity. Plan confidently without breaking the bank.",
-            "syncTitle": "Smart Sync",
-            "syncDesc": "Push your entire trip to Google Calendar or Outlook with one click. Never miss a beat."
+            "title1": "Curation with",
+            "title2": "Conscience",
+            "subtitle": "Planning that respects your budget and your time. We focus on delivering professional-grade support for every step of your journey.",
+            "intelligenceTitle": "Budget-First Logic",
+            "intelligenceDesc": "Live within your means without missing out. We provide the precision benchmarks needed to plan every day with confidence.",
+            "exportTitle": "Professional Logistics",
+            "exportDesc": "From visa-ready PDFs to offline itineraries. Professional documentation that keeps your journey organized and stress-free.",
+            "budgetTitle": "Expert Curation",
+            "budgetDesc": "Unlock vetted activities and local secrets curated to deliver a more meaningful and organized travel experience.",
+            "knowledgeTitle": "Reliable Support",
+            "knowledgeDesc": "Get the right info and help exactly when you need it—before you depart and throughout your entire trip."
         },
         "GlobalScale": {
-            "title1": "Global reach,",
-            "title2": "local expertise.",
-            "desc": "Whether you're planning a safari in Kenya, a culinary tour in Tokyo, or a business trip to New York, Itinero connects you with the best local insights.",
+            "title1": "Expertly Handled,",
+            "title2": "Globally Reliable.",
+            "desc": "Itinero is built on a foundation of reliability and human insight, ensuring every traveler is well-informed and fully supported.",
             "countries": "Countries",
             "itineraries": "Itineraries",
             "travelers": "Travelers",
             "rating": "App Rating"
         },
         "Destinations": {
-            "title": "Popular Destinations",
-            "desc": "Deep local data, pricing, and optimized routing available for these regions.",
+            "title": "Verified Destinations",
+            "desc": "Expertly curated activities and professional routing for these regions.",
             "viewAll": "View all destinations",
             "itinerariesSuffix": "Itineraries",
             "featured": "Featured Destination"
         },
         "CTA": {
-            "title1": "Start your next",
-            "title2": "adventure today.",
-            "desc": "Join thousands of travellers who have stopped stressing over spreadsheets and started enjoying the journey.",
+            "title1": "Your journey,",
+            "title2": "expertly planned.",
+            "desc": "Plan with confidence and enjoy the peace of mind that comes with curated expertise and total budget control.",
             "startFree": "Start Free Itinerary",
             "viewPricing": "View Pricing"
         },
         "Footer": {
-            "desc": "The all-in-one workspace for modern travellers. Plan, budget, and explore the world with confidence.",
+            "desc": "Thoughtful travel planning designed to help you live within budget and explore the world with expert-curated reliability.",
             "product": "Product",
             "company": "Company",
             "stayUpdated": "Stay Updated",

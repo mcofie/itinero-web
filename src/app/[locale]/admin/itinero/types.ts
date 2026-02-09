@@ -46,6 +46,21 @@ export type KbygPayload = {
     getting_around?: string;
     esim?: string;
     primary_city?: string;
+    tipping?: string;
+    payment?: string;
+    cost_coffee?: string;
+    cost_meal?: string;
+    cost_beer?: string;
+    etiquette_dos?: string;
+    etiquette_donts?: string;
+    packing_tips?: string;
+    emergency_police?: string;
+    emergency_medical?: string;
+    hidden_gem_title?: string;
+    hidden_gem_desc?: string;
+    photography?: string;
+    gestures?: string;
+    dress_code?: string;
 };
 
 export type DestinationHistoryPayload = {

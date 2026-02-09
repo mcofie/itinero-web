@@ -12,6 +12,7 @@ export async function saveProfileAction(formData: FormData) {
     const id = String(formData.get("id") || "");
     const full_name = String(formData.get("full_name") || "");
     const username = String(formData.get("username") || "");
+    const passport_country = String(formData.get("passport_country") || "");
 
     const preferredRaw = formData.get("preferred_currency");
     const preferred_currency =
@@ -32,6 +33,7 @@ export async function saveProfileAction(formData: FormData) {
         full_name,
         username,
         preferred_currency,
+        passport_country,
     });
 
     // Verify row exists first (to distinguish between RLS violation and missing row)
@@ -53,6 +55,7 @@ export async function saveProfileAction(formData: FormData) {
             full_name,
             username,
             preferred_currency,
+            passport_country,
         })
         .eq("id", id);
 

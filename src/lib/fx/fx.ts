@@ -10,15 +10,24 @@ export async function getLatestFxSnapshot(
 
     const { data, error } = await sb
         .schema("itinero")
-        .rpc("fx_latest_snapshot", { p_base: base })
-        .single<FxSnapshot | null>();
+        .from("fx_snapshots")
+        .select("*")
+        .eq("base_currency", base.toUpperCase())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
     if (error) {
-        console.error("getLatestFxSnapshot error", error);
+        console.error("getLatestFxSnapshot error", {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+        });
         return null;
     }
 
-    return data ?? null;
+    return (data as FxSnapshot) ?? null;
 }
 
 export function convertUsingSnapshot(
