@@ -182,13 +182,14 @@ export default async function ProfilePage() {
         .maybeSingle<ProfileRow>();
 
     // Merge with user metadata fallback
+    // We check for undefined instead of falsy to allow empty strings if desired
     const profileRow: ProfileRow = {
         id: userId,
-        full_name: fetchedProfile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || null,
-        username: fetchedProfile?.username || user.user_metadata?.user_name || null,
-        avatar_url: fetchedProfile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-        points_balance: fetchedProfile?.points_balance,
-        preferred_currency: fetchedProfile?.preferred_currency,
+        full_name: fetchedProfile?.full_name ?? user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
+        username: fetchedProfile?.username ?? user.user_metadata?.user_name ?? null,
+        avatar_url: fetchedProfile?.avatar_url ?? user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
+        points_balance: fetchedProfile?.points_balance ?? 0,
+        preferred_currency: fetchedProfile?.preferred_currency ?? null,
     };
 
     const { data: sumValue } = await sb.rpc("sum_points_for_user", {

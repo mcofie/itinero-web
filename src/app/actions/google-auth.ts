@@ -90,35 +90,28 @@ export async function handleGoogleAuthAction(credential: string) {
         throw new Error(`Session setup failed: ${sessionError.message}`);
     }
 
-    // 4. Sync user data to Itinero Postgres profiles table using REST API (Direct Database interaction)
-    // We use the itinero schema as seen in other server actions.
+    // 4. Sync user data to Itinero Postgres profiles table using SDK
     const fullName = googlePayload.name || user.user_metadata?.full_name || user.user_metadata?.name || "Explore User";
     const avatarUrl = googlePayload.picture || user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+    const username = (googlePayload.email || user.email || "user").split("@")[0] + "_" + Math.floor(Math.random() * 1000);
 
     console.log("Syncing profile for user:", user.id, { fullName, avatarUrl });
 
-    const syncRes = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "apikey": supabaseAnonKey,
-            "Authorization": `Bearer ${access_token}`,
-            "Content-Profile": "itinero",
-            "Prefer": "resolution=merge-duplicates"
-        },
-        body: JSON.stringify({
+    const { error: syncError } = await supabaseAction
+        .schema("itinero")
+        .from("profiles")
+        .upsert({
             id: user.id,
             full_name: fullName,
             avatar_url: avatarUrl,
-            username: (googlePayload.email || user.email || "user").split("@")[0] + "_" + Math.floor(Math.random() * 1000),
-        }),
-    });
+            username,
+        }, { onConflict: 'id' });
 
-    if (!syncRes.ok) {
-        const syncError = await syncRes.text();
-        console.warn("Profile sync warning:", syncError);
+    if (syncError) {
+        console.warn("Profile sync warning (SDK):", syncError.message);
+        // If RLS is blocking upsert, we might need the user to run SQL or check policies
     } else {
-        console.log("Profile synchronized successfully");
+        console.log("Profile synchronized successfully via SDK");
     }
 
     // 5. Notify Discord

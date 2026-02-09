@@ -28,6 +28,24 @@ export async function saveProfileAction(formData: FormData) {
     } = await sb.auth.getUser();
     if (!user || user.id !== id) throw new Error("Not allowed");
 
+    console.log("[saveProfileAction] Updating profile for:", id, {
+        full_name,
+        username,
+        preferred_currency,
+    });
+
+    // Verify row exists first (to distinguish between RLS violation and missing row)
+    const { data: existing } = await sb
+        .schema("itinero")
+        .from("profiles")
+        .select("id")
+        .eq("id", id)
+        .maybeSingle();
+
+    if (!existing) {
+        throw new Error("Profile record not found in database. Please contact support or try logging out and back in.");
+    }
+
     const { error } = await sb
         .schema("itinero")
         .from("profiles")
@@ -38,10 +56,16 @@ export async function saveProfileAction(formData: FormData) {
         })
         .eq("id", id);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+        console.error("[saveProfileAction] Error:", error);
+        throw new Error(error.message);
+    }
 
-    // Make sure the /profile RSC is fresh
+    console.log("[saveProfileAction] Success");
+
+    // Revalidate multiple paths just to be safe
     revalidatePath("/profile");
+    revalidatePath("/(main)/profile", "layout");
 
     // ✅ allow the client to know it succeeded
     return { success: true };

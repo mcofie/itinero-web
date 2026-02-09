@@ -10,6 +10,7 @@ import { saveProfileAction } from "@/app/[locale]/(main)/profile/server-actions"
 import { PreferredCurrencyField } from "@/app/[locale]/(main)/profile/PreferredCurrencyField";
 import { User, AtSign, Loader2, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type Props = {
     userId: string;
@@ -30,9 +31,16 @@ export function ProfileForm({
         <form
             action={(formData) =>
                 startTransition(async () => {
-                    const res = await saveProfileAction(formData);
-                    if (res?.success) {
-                        window.location.reload();
+                    try {
+                        const res = await saveProfileAction(formData);
+                        if (res?.success) {
+                            toast.success("Profile updated successfully");
+                            // Small delay before reload so they see the toast
+                            setTimeout(() => window.location.reload(), 1000);
+                        }
+                    } catch (e: any) {
+                        console.error(e);
+                        toast.error(e.message || "Failed to update profile");
                     }
                 })
             }

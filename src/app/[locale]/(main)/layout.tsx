@@ -14,10 +14,6 @@ export default async function MainLayout({
     let fullName: string | null = null;
 
     if (user) {
-        // Fallback to user_metadata in case sync is delayed or failed
-        avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
-        fullName = user.user_metadata?.full_name || user.user_metadata?.name || null;
-
         const { data: profile } = await sb
             .schema("itinero")
             .from("profiles")
@@ -25,9 +21,14 @@ export default async function MainLayout({
             .eq("id", user.id)
             .maybeSingle();
 
+        // 1) Set defaults from metadata
+        avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+        fullName = user.user_metadata?.full_name || user.user_metadata?.name || null;
+
+        // 2) Override with DB if row exists
         if (profile) {
-            if (profile.avatar_url) avatarUrl = profile.avatar_url;
-            if (profile.full_name) fullName = profile.full_name;
+            avatarUrl = profile.avatar_url ?? avatarUrl;
+            fullName = profile.full_name ?? fullName;
         }
     }
 

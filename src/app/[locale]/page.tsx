@@ -17,6 +17,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import Globe from "@/components/landing/Globe";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
+import { getLandingStatsAction } from "@/app/actions/stats";
 
 /* ---------- Data ---------- */
 const SUPPORTED = [
@@ -71,7 +72,7 @@ const fadeUp = {
     initial: { opacity: 0, y: 20 },
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true, margin: "-100px" },
-     
+
     transition: { duration: 0.5, ease: "easeOut" } as any
 };
 
@@ -208,44 +209,7 @@ export default function LandingPage() {
                 <BentoFeatures />
 
                 {/* Global Scale Section */}
-                <section className="py-24 bg-slate-900 text-white relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-900 to-slate-900 pointer-events-none" />
-                    <div className="mx-auto max-w-7xl px-6 relative z-10">
-                        <div className="grid lg:grid-cols-2 gap-12 items-center">
-                            <div>
-                                <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
-                                    {tLanding("GlobalScale.title1")} <br />
-                                    <span className="text-blue-400">{tLanding("GlobalScale.title2")}</span>
-                                </h2>
-                                <p className="text-xl text-slate-400 mb-8 leading-relaxed">
-                                    {tLanding("GlobalScale.desc")}
-                                </p>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div>
-                                        <div className="text-3xl font-bold text-white mb-1">120+</div>
-                                        <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.countries")}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-3xl font-bold text-white mb-1">50k+</div>
-                                        <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.itineraries")}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-3xl font-bold text-white mb-1">1M+</div>
-                                        <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.travelers")}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-3xl font-bold text-white mb-1">4.9/5</div>
-                                        <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.rating")}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="h-[500px] w-full flex items-center justify-center relative">
-                                <div className="absolute inset-0 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
-                                <Globe />
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                <StatsSection />
 
                 {/* Destinations Grid (Parallax) */}
                 <ParallaxDestinations />
@@ -347,6 +311,92 @@ export default function LandingPage() {
 
             </main>
         </div>
+    );
+}
+
+/* ---------- STATS SECTION ---------- */
+function StatsSection() {
+    const tLanding = useTranslations("Landing");
+    const [stats, setStats] = useState({
+        countries: 120,
+        itineraries: 50000,
+        travelers: 1000000,
+        rating: 4.9,
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getLandingStatsAction().then((data) => {
+            setStats(data);
+            setLoading(false);
+        }).catch(err => {
+            console.error("Failed to fetch stats:", err);
+            setLoading(false);
+        });
+    }, []);
+
+    const formatNum = (num: number, placeholder: string) => {
+        if (loading) return placeholder;
+        if (num === 0) return "0";
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + "M+";
+        if (num >= 1000) return (num / 1000).toFixed(0) + "k+";
+        return num + "+";
+    };
+
+    return (
+        <section className="py-24 bg-slate-900 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-900 to-slate-900 pointer-events-none" />
+            <div className="mx-auto max-w-7xl px-6 relative z-10">
+                <div className="grid lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <motion.h2
+                            {...fadeUp}
+                            className="text-3xl md:text-5xl font-bold tracking-tight mb-6"
+                        >
+                            {tLanding("GlobalScale.title1")} <br />
+                            <span className="text-blue-400">{tLanding("GlobalScale.title2")}</span>
+                        </motion.h2>
+                        <motion.p
+                            {...fadeUp}
+                            transition={{ delay: 0.1 }}
+                            className="text-xl text-slate-400 mb-8 leading-relaxed"
+                        >
+                            {tLanding("GlobalScale.desc")}
+                        </motion.p>
+                        <div className="grid grid-cols-2 gap-6">
+                            <motion.div {...fadeUp} transition={{ delay: 0.2 }}>
+                                <div className="text-3xl font-bold text-white mb-1">
+                                    {formatNum(stats.countries, "120+")}
+                                </div>
+                                <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.countries")}</div>
+                            </motion.div>
+                            <motion.div {...fadeUp} transition={{ delay: 0.3 }}>
+                                <div className="text-3xl font-bold text-white mb-1">
+                                    {formatNum(stats.itineraries, "50k+")}
+                                </div>
+                                <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.itineraries")}</div>
+                            </motion.div>
+                            <motion.div {...fadeUp} transition={{ delay: 0.4 }}>
+                                <div className="text-3xl font-bold text-white mb-1">
+                                    {formatNum(stats.travelers, "1M+")}
+                                </div>
+                                <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.travelers")}</div>
+                            </motion.div>
+                            <motion.div {...fadeUp} transition={{ delay: 0.5 }}>
+                                <div className="text-3xl font-bold text-white mb-1">
+                                    {loading ? "4.9/5" : stats.rating.toFixed(1) + "/5"}
+                                </div>
+                                <div className="text-sm text-slate-500 uppercase tracking-wider">{tLanding("GlobalScale.rating")}</div>
+                            </motion.div>
+                        </div>
+                    </div>
+                    <div className="h-[500px] w-full flex items-center justify-center relative">
+                        <div className="absolute inset-0 bg-blue-500/10 blur-[100px] rounded-full pointer-events-none" />
+                        <Globe />
+                    </div>
+                </div>
+            </div>
+        </section>
     );
 }
 
@@ -505,9 +555,9 @@ function ParallaxDestinations() {
 }
 
 function Column({ destinations, y, className }: {
-     
+
     destinations: any[],
-     
+
     y: any,
     className?: string
 }) {
