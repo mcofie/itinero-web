@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { sendDiscordNotification, formatDiscordEmbed } from "@/lib/discord";
 
 /**
  * Custom Google Sign-In handler that avoids using the Supabase Client SDK for the auth flow.
@@ -26,11 +27,21 @@ export async function handleGoogleAuthAction(credential: string) {
 
     console.log("Verifying Google ID token with Supabase. Length:", idToken.length);
 
-    // 1. Verify token with Google (optional but good for metadata)
-    const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+    // 1. Decode ID Token manually for metadata (Faster than a network call)
     let googlePayload: any = {};
-    if (googleRes.ok) {
-        googlePayload = await googleRes.json();
+    try {
+        const base64Url = idToken.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+            Buffer.from(base64, 'base64')
+                .toString()
+                .split('')
+                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+        );
+        googlePayload = JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Failed to decode Google ID token:", e);
     }
 
     // 2. Exchange ID Token for a Supabase session using the /token endpoint
@@ -81,27 +92,46 @@ export async function handleGoogleAuthAction(credential: string) {
 
     // 4. Sync user data to Itinero Postgres profiles table using REST API (Direct Database interaction)
     // We use the itinero schema as seen in other server actions.
+    const fullName = googlePayload.name || user.user_metadata?.full_name || user.user_metadata?.name || "Explore User";
+    const avatarUrl = googlePayload.picture || user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+
+    console.log("Syncing profile for user:", user.id, { fullName, avatarUrl });
+
     const syncRes = await fetch(`${supabaseUrl}/rest/v1/profiles`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "apikey": supabaseAnonKey,
             "Authorization": `Bearer ${access_token}`,
-            "Content-Profile": "itinero", // Specify the schema if possible, or use the default
+            "Content-Profile": "itinero",
             "Prefer": "resolution=merge-duplicates"
         },
         body: JSON.stringify({
             id: user.id,
-            full_name: googlePayload.name || "Explore User",
-            avatar_url: googlePayload.picture || null,
-            username: (googlePayload.email || "user").split("@")[0] + "_" + Math.floor(Math.random() * 1000),
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            username: (googlePayload.email || user.email || "user").split("@")[0] + "_" + Math.floor(Math.random() * 1000),
         }),
     });
 
     if (!syncRes.ok) {
-        console.warn("Profile sync warning:", await syncRes.text());
-        // We don't throw here to avoid failing the whole login if just the profile sync has an issue
+        const syncError = await syncRes.text();
+        console.warn("Profile sync warning:", syncError);
+    } else {
+        console.log("Profile synchronized successfully");
     }
+
+    // 5. Notify Discord
+    const userEmail = googlePayload.email || user.email;
+    console.log("Attempting to notify Discord for user:", userEmail);
+    await sendDiscordNotification(
+        `👤 User Activity`,
+        formatDiscordEmbed(
+            "User Session Started",
+            `**Name:** ${fullName}\n**Email:** ${userEmail}\n**Method:** Google OAuth`,
+            0x22c55e // green-500
+        )
+    );
 
     return { success: true };
 }

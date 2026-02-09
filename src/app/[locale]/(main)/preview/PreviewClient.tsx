@@ -41,6 +41,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { notifyTripCreatedAction } from "@/app/actions/trips";
 
 /* =========================
    Types
@@ -1379,7 +1380,10 @@ async function saveDraftAsTrip(
             // non-fatal
         }
 
-        // 6) Redirect to trip
+        // 6) Notify Discord (Optional/Background)
+        void notifyTripCreatedAction(tripId);
+
+        // 7) Redirect to trip
         router.push(`/trips/${tripId}`);
     } catch (err) {
         // Refund points if we successfully spent them but failed later

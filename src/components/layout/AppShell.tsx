@@ -50,11 +50,13 @@ import { useEffect } from "react";
 type Props = {
     children: React.ReactNode;
     userEmail?: string | null;
+    avatarUrl?: string | null;
+    fullName?: string | null;
 };
 
 
 
-export default function AppShell({ children, userEmail }: Props) {
+export default function AppShell({ children, userEmail, avatarUrl, fullName }: Props) {
     const pathname = usePathname();
     const router = useRouter();
     const tNav = useTranslations("Navigation");
@@ -237,9 +239,17 @@ export default function AppShell({ children, userEmail }: Props) {
 
 
 
-    const initials = (email?: string | null) =>
-        (email?.[0] ?? "U").toUpperCase() +
-        (email?.split("@")?.[0]?.[1]?.toUpperCase() ?? "");
+    const initials = (email?: string | null, name?: string | null) => {
+        if (name) {
+            const parts = name.split(" ");
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+            }
+            return parts[0][0].toUpperCase();
+        }
+        return (email?.[0] ?? "U").toUpperCase() +
+            (email?.split("@")?.[0]?.[1]?.toUpperCase() ?? "");
+    };
 
     const year = new Date().getFullYear();
 
@@ -409,11 +419,11 @@ export default function AppShell({ children, userEmail }: Props) {
                                         size="icon"
                                         className="h-9 w-9 rounded-full p-0 ml-1 ring-2 ring-transparent hover:ring-slate-100 dark:hover:ring-slate-800"
                                     >
-                                        <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700">
-                                            <AvatarImage src="" />
+                                        <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700 shadow-sm">
+                                            <AvatarImage src={avatarUrl ?? ""} alt={fullName || "User avatar"} />
                                             <AvatarFallback
                                                 className="bg-slate-100 text-slate-600 font-bold text-xs dark:bg-slate-800 dark:text-slate-300">
-                                                {initials(userEmail)}
+                                                {initials(userEmail, fullName)}
                                             </AvatarFallback>
                                         </Avatar>
                                     </Button>
@@ -424,7 +434,7 @@ export default function AppShell({ children, userEmail }: Props) {
                                 >
                                     <div className="px-2 py-2 mb-1">
                                         <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                                            {userEmail}
+                                            {fullName || userEmail}
                                         </p>
                                         <p className="text-xs text-slate-500 dark:text-slate-400">
                                             Free Plan

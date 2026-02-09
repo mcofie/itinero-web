@@ -26,10 +26,40 @@ export default async function AdminLayout({
         redirect("/");
     }
 
+    let avatarUrl: string | null = null;
+    let fullName: string | null = null;
+
+    if (user) {
+        // Fallback to user_metadata
+        avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
+        fullName = user.user_metadata?.full_name || user.user_metadata?.name || null;
+
+        const { data: profile } = await sb
+            .schema("itinero")
+            .from("profiles")
+            .select("full_name, avatar_url")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        if (profile) {
+            if (profile.avatar_url) avatarUrl = profile.avatar_url;
+            if (profile.full_name) fullName = profile.full_name;
+        }
+    }
+
     return (
         <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 dark:bg-slate-950 font-sans selection:bg-blue-100 dark:selection:bg-blue-900 overflow-hidden">
-            <AdminMobileNav userEmail={user?.email} />
-            <AdminSidebar userEmail={user?.email} className="hidden md:flex" />
+            <AdminMobileNav
+                userEmail={user?.email}
+                avatarUrl={avatarUrl}
+                fullName={fullName}
+            />
+            <AdminSidebar
+                userEmail={user?.email}
+                avatarUrl={avatarUrl}
+                fullName={fullName}
+                className="hidden md:flex"
+            />
             <div className="flex-1 flex flex-col h-full relative overflow-hidden">
                 {children}
             </div>

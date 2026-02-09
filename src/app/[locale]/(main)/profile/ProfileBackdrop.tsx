@@ -25,7 +25,7 @@ type Shape = {
     borderRadius: string;
 };
 
-export function ProfileBackdrop() {
+export function ProfileBackdrop({ avatarUrl }: { avatarUrl?: string | null }) {
     const [shapes, setShapes] = useState<Shape[]>([]);
 
     useEffect(() => {
@@ -58,6 +58,18 @@ export function ProfileBackdrop() {
             {/* Base gradient overlay for depth */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-transparent to-transparent dark:from-black/40 dark:via-transparent dark:to-transparent z-10" />
 
+            {/* Subtle blurred avatar background */}
+            {avatarUrl && (
+                <div
+                    className="absolute inset-0 opacity-20 dark:opacity-10 scale-125 transition-opacity duration-1000"
+                    style={{
+                        backgroundImage: `url(${avatarUrl})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                        filter: "blur(40px) saturate(1.5)",
+                    }}
+                />
+            )}
             {shapes.map((shape) => (
                 <motion.div
                     key={shape.id}

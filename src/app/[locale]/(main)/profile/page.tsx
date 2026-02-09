@@ -15,6 +15,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { ProfileForm } from "./ProfileForm";
 import { ProfileBackdrop } from "./ProfileBackdrop";
+import { AddPointsButton } from "./AddPointsButton";
 import {
     ArrowUpRight,
     ArrowDownLeft,
@@ -171,7 +172,7 @@ export default async function ProfilePage() {
     const userId = user.id;
     const email = user.email ?? null;
 
-    const { data: profileRow } = await sb
+    const { data: fetchedProfile } = await sb
         .schema("itinero")
         .from("profiles")
         .select(
@@ -179,6 +180,16 @@ export default async function ProfilePage() {
         )
         .eq("id", userId)
         .maybeSingle<ProfileRow>();
+
+    // Merge with user metadata fallback
+    const profileRow: ProfileRow = {
+        id: userId,
+        full_name: fetchedProfile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || null,
+        username: fetchedProfile?.username || user.user_metadata?.user_name || null,
+        avatar_url: fetchedProfile?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        points_balance: fetchedProfile?.points_balance,
+        preferred_currency: fetchedProfile?.preferred_currency,
+    };
 
     const { data: sumValue } = await sb.rpc("sum_points_for_user", {
         uid: userId,
@@ -232,12 +243,10 @@ export default async function ProfilePage() {
                         >
                             <Settings className="mr-2 h-4 w-4" /> Settings
                         </Button>
-                        <Button
-                            className="w-full sm:w-auto rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md dark:bg-blue-600 dark:hover:bg-blue-500"
-                            asChild
-                        >
-                            <Link href="/pricing">Add Points</Link>
-                        </Button>
+                        <AddPointsButton
+                            userEmail={email}
+                            userCurrency={profileRow?.preferred_currency}
+                        />
                     </div>
                 </div>
 
@@ -246,10 +255,10 @@ export default async function ProfilePage() {
                     {/* LEFT COLUMN: Profile Card */}
                     <div className="lg:col-span-1">
                         <Card
-                            className="h-full border-slate-200 bg-white shadow-sm rounded-3xl overflow-hidden flex flex-col dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
+                            className="h-full border-slate-200 bg-white shadow-sm rounded-3xl overflow-hidden flex flex-col p-0 gap-0 dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
                             <div
                                 className="h-32 relative border-b border-slate-200 dark:border-slate-800 overflow-hidden">
-                                <ProfileBackdrop />
+                                <ProfileBackdrop avatarUrl={profileRow?.avatar_url} />
                             </div>
 
                             <div className="px-6 pb-6 -mt-16 relative z-10 flex-1 flex flex-col">

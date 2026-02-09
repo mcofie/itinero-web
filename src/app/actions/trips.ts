@@ -3,6 +3,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClientServerRSC } from "@/lib/supabase/server";
+import { sendDiscordNotification, formatDiscordEmbed } from "@/lib/discord";
 
 /** Narrowest shape we rely on from Supabase/PostgREST errors */
 type PostgrestLikeError = {
@@ -147,4 +148,33 @@ export async function setTripPublic(tripId: string, makePublic: boolean) {
         public_id: finalPublicId,
         public_url: finalPublicId ? `/t/${finalPublicId}` : null,
     };
+}
+
+export async function notifyTripCreatedAction(tripId: string) {
+    const sb = await createClientServerRSC();
+
+    // 1) AUTH
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+
+    // 2) FETCH TRIP DETAILS
+    const { data: trip } = await sb
+        .schema("itinero")
+        .from("trips")
+        .select("title, start_date, end_date")
+        .eq("id", tripId)
+        .single();
+
+    if (!trip) return;
+
+    // 3) Notify Discord
+    console.log("Attempting to notify Discord for trip:", tripId);
+    await sendDiscordNotification(
+        `✈️ New Trip Created`,
+        formatDiscordEmbed(
+            "Itinerary Saved",
+            `**User:** ${user.user_metadata?.full_name || user.email}\n**Destination:** ${trip.title}\n**Dates:** ${trip.start_date} to ${trip.end_date}`,
+            0x3b82f6 // blue-500
+        )
+    );
 }

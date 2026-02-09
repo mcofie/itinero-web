@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClientServerRSC } from "@/lib/supabase/server";
+import { sendDiscordNotification, formatDiscordEmbed } from "@/lib/discord";
 
 const WH_SECRET = process.env.PAYSTACK_WEBHOOK_SECRET || process.env.PAYSTACK_SECRET_KEY!;
 
@@ -65,6 +66,17 @@ export async function POST(req: NextRequest) {
             });
             return NextResponse.json({ ok: false }, { status: 500 });
         }
+
+        // 3) Notify Discord
+        console.log("Attempting to notify Discord for top-up:", tx.reference);
+        await sendDiscordNotification(
+            `💰 Points Top-up`,
+            formatDiscordEmbed(
+                "Payment Successful",
+                `**User:** ${tx.customer.email}\n**Points:** ${quote.points}\n**Amount:** ${tx.currency} ${tx.amount / 100}`,
+                0xeab308 // yellow-500
+            )
+        );
     }
 
     return NextResponse.json({ ok: true });

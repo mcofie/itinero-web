@@ -13,11 +13,30 @@ import {
     ArrowLeft,
     LogOut
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export function AdminSidebar({ userEmail, className }: { userEmail?: string, className?: string }) {
+export function AdminSidebar({
+    userEmail,
+    avatarUrl,
+    fullName,
+    className
+}: {
+    userEmail?: string,
+    avatarUrl?: string | null,
+    fullName?: string | null,
+    className?: string
+}) {
     const pathname = usePathname();
-    const router = useRouter(); // Use 'next/navigation' router for non-locale redirects if needed, but here we might want to redirect to /admin/login
+    const router = useRouter();
 
+    const initials = (email?: string | null, name?: string | null) => {
+        if (name) {
+            const parts = name.split(" ");
+            if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+            return parts[0][0].toUpperCase();
+        }
+        return (email?.[0] ?? "A").toUpperCase();
+    };
     const handleLogout = async () => {
         const sb = getSupabaseBrowser();
         await sb.auth.signOut();
@@ -113,15 +132,18 @@ export function AdminSidebar({ userEmail, className }: { userEmail?: string, cla
 
             <div className="p-4 border-t border-slate-800 bg-[#0b1120] shrink-0 space-y-4">
                 {userEmail && (
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-800">
-                        <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-blue-900/20">
-                            {userEmail.charAt(0).toUpperCase()}
-                        </div>
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-800 overflow-hidden">
+                        <Avatar className="h-8 w-8 rounded-lg shadow-lg ring-1 ring-white/10">
+                            <AvatarImage src={avatarUrl ?? ""} />
+                            <AvatarFallback className="bg-blue-600 text-white text-[10px] font-bold">
+                                {initials(userEmail, fullName)}
+                            </AvatarFallback>
+                        </Avatar>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-200 truncate">
-                                Admin
+                            <p className="text-sm font-semibold text-slate-200 truncate">
+                                {fullName || "Admin"}
                             </p>
-                            <p className="text-xs text-slate-500 truncate" title={userEmail}>
+                            <p className="text-[10px] text-slate-500 truncate" title={userEmail}>
                                 {userEmail}
                             </p>
                         </div>

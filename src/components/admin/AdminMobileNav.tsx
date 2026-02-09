@@ -12,7 +12,15 @@ import { Menu, LayoutDashboard, LogOut } from "lucide-react";
 import { AdminSidebar } from "./AdminSidebar";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 
-export function AdminMobileNav({ userEmail }: { userEmail?: string }) {
+export function AdminMobileNav({
+    userEmail,
+    avatarUrl,
+    fullName
+}: {
+    userEmail?: string,
+    avatarUrl?: string | null,
+    fullName?: string | null
+}) {
     const [open, setOpen] = React.useState(false);
 
     const handleLogout = async () => {
@@ -40,7 +48,11 @@ export function AdminMobileNav({ userEmail }: { userEmail?: string }) {
                     </SheetTrigger>
                     <SheetContent side="left" className="p-0 w-[280px] bg-[#0F172A] border-none">
                         <div className="h-full" onClick={() => setOpen(false)}>
-                            <AdminSidebar userEmail={userEmail} />
+                            <AdminSidebar
+                                userEmail={userEmail}
+                                avatarUrl={avatarUrl}
+                                fullName={fullName}
+                            />
                         </div>
                     </SheetContent>
                 </Sheet>
