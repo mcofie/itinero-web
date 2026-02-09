@@ -11,7 +11,9 @@ import {
     MapPin,
     History as HistoryIcon,
     ArrowLeft,
-    LogOut
+    LogOut,
+    Users,
+    CreditCard
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -126,6 +128,40 @@ export function AdminSidebar({
                     <Link href="/admin/itinero/history">
                         <HistoryIcon className="h-[18px] w-[18px]" />
                         History & Content
+                    </Link>
+                </Button>
+
+                <div className="px-3 mb-2 text-xs font-bold text-slate-500 uppercase tracking-widest mt-6">
+                    Operations
+                </div>
+                <Button
+                    asChild
+                    variant="ghost"
+                    className={cn(
+                        "w-full justify-start gap-3 font-medium h-11 px-3 rounded-lg transition-all duration-200",
+                        isActive("/admin/itinero/creators")
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-900/20"
+                            : "text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                    )}
+                >
+                    <Link href="/admin/itinero/creators">
+                        <Users className="h-[18px] w-[18px]" />
+                        Creators & Guides
+                    </Link>
+                </Button>
+                <Button
+                    asChild
+                    variant="ghost"
+                    className={cn(
+                        "w-full justify-start gap-3 font-medium h-11 px-3 rounded-lg transition-all duration-200",
+                        isActive("/admin/itinero/transactions")
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-900/20"
+                            : "text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                    )}
+                >
+                    <Link href="/admin/itinero/transactions">
+                        <CreditCard className="h-[18px] w-[18px]" />
+                        Transactions
                     </Link>
                 </Button>
             </nav>

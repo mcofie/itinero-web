@@ -48,7 +48,7 @@ export default async function AdminLayout({
     }
 
     return (
-        <div className="flex flex-col md:flex-row h-screen w-full bg-slate-50 dark:bg-slate-950 font-sans selection:bg-blue-100 dark:selection:bg-blue-900 overflow-hidden">
+        <div className="flex flex-col md:flex-row min-h-screen w-full bg-slate-50 dark:bg-slate-950 font-sans selection:bg-blue-100 dark:selection:bg-blue-900">
             <AdminMobileNav
                 userEmail={user?.email}
                 avatarUrl={avatarUrl}
@@ -58,11 +58,11 @@ export default async function AdminLayout({
                 userEmail={user?.email}
                 avatarUrl={avatarUrl}
                 fullName={fullName}
-                className="hidden md:flex"
+                className="hidden md:flex sticky top-0 h-screen"
             />
-            <div className="flex-1 flex flex-col h-full relative overflow-hidden">
+            <main className="flex-1 w-full min-w-0">
                 {children}
-            </div>
+            </main>
         </div>
     );
 }
