@@ -3,14 +3,35 @@ import { routing } from './routing';
 
 export default getRequestConfig(async ({ requestLocale }) => {
     // This typically corresponds to the `[locale]` segment
-    let locale = await requestLocale;
+    const locale = await requestLocale;
 
     // Ensure that a valid locale is used
-    if (!locale || !(routing.locales as readonly string[]).includes(locale)) {
-        locale = routing.defaultLocale;
+    const validatedLocale = (!locale || !(routing.locales as readonly string[]).includes(locale))
+        ? routing.defaultLocale
+        : locale;
+
+    try {
+        const messages = (await import(`../../messages/${validatedLocale}.json`)).default;
+        return {
+            locale: validatedLocale,
+            messages
+        };
+    } catch (error) {
+        console.error(`Failed to load messages for locale "${validatedLocale}":`, error);
+
+        // Fallback to default locale if import fails
+        try {
+            const fallbackMessages = (await import(`../../messages/${routing.defaultLocale}.json`)).default;
+            return {
+                locale: routing.defaultLocale,
+                messages: fallbackMessages
+            };
+        } catch (fallbackError) {
+            console.error("Critical: Failed to load fallback messages:", fallbackError);
+            return {
+                locale: routing.defaultLocale,
+                messages: {}
+            };
+        }
     }
-    return {
-        locale,
-        messages: (await import(`../../messages/${locale}.json`)).default
-    };
 });

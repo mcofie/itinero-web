@@ -9,15 +9,19 @@ const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 /** For RSC / Server Components — cookie mutations are no-ops */
 export async function createClientServerRSC() {
+    if (!SUPABASE_URL || !SUPABASE_ANON) {
+        console.error("Missing Supabase environment variables");
+        // Return a mock or handle appropriately. For RSC we can't easily return null if it's expected to be a client
+    }
     const cookieStore = await cookies();
-    return createServerClient(SUPABASE_URL, SUPABASE_ANON, {
+    return createServerClient(SUPABASE_URL || "", SUPABASE_ANON || "", {
         cookies: {
             get(name: string) {
                 return cookieStore.get(name)?.value;
             },
-             
+
             set(_name: string, _value: string, _options: CookieOptions) { },
-             
+
             remove(_name: string, _options: CookieOptions) { },
         },
     });
@@ -25,8 +29,11 @@ export async function createClientServerRSC() {
 
 /** For Route Handlers (/app/api/**) — cookie mutations allowed */
 export async function createClientServerRoute() {
+    if (!SUPABASE_URL || !SUPABASE_ANON) {
+        console.error("Missing Supabase environment variables");
+    }
     const cookieStore = await cookies();
-    return createServerClient(SUPABASE_URL, SUPABASE_ANON, {
+    return createServerClient(SUPABASE_URL || "", SUPABASE_ANON || "", {
         cookies: {
             get(name: string) {
                 return cookieStore.get(name)?.value;
@@ -41,5 +48,9 @@ export async function createClientServerRoute() {
     });
 }
 
-export const createClientServer = (cookieStore = cookies()) =>
-    createServerComponentClient({ cookies: () => cookieStore });
+export const createClientServer = (cookieStore = cookies()) => {
+    if (!SUPABASE_URL || !SUPABASE_ANON) {
+        console.error("Missing Supabase environment variables");
+    }
+    return createServerComponentClient({ cookies: () => cookieStore });
+}
