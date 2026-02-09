@@ -1,6 +1,6 @@
 {
   "node": {
-    "40bd8211128ab1e13e8227a9030a93f76bc72bd053": {
+    "405a3e42f663fced670eec87cff6aee1c284f00521": {
       "workers": {
         "app/[locale]/(main)/profile/page": {
           "moduleId": 52502,
@@ -15,7 +15,7 @@
       "filename": "src/app/[locale]/(main)/profile/server-actions.ts",
       "exportedName": "saveProfileAction"
     },
-    "605b7c7ff95b1d295002779f2f70c713352c7c8cb7": {
+    "60acf46ee76e46b13336656258335c9bf233ad288e": {
       "workers": {
         "app/[locale]/(main)/trips/[id]/page": {
           "moduleId": 62641,
@@ -30,7 +30,7 @@
       "filename": "src/app/[locale]/(main)/trips/[id]/actions.ts",
       "exportedName": "updateTripNote"
     },
-    "70327cc44f0f511c3206d9ee7fcbf6e9d01e230653": {
+    "701f2e0548bf382212231d0361792fafb65c8ccf52": {
       "workers": {
         "app/[locale]/(main)/trips/[id]/page": {
           "moduleId": 62641,
@@ -45,7 +45,7 @@
       "filename": "src/app/[locale]/(main)/trips/[id]/actions.ts",
       "exportedName": "updateDayNote"
     },
-    "609b51623c0340389289d458b80a59cfeba6c819a4": {
+    "606f9378b845ea58806f68a0c1b39fc84bda717722": {
       "workers": {
         "app/[locale]/(main)/trips/[id]/page": {
           "moduleId": 62641,
@@ -60,7 +60,7 @@
       "filename": "src/app/[locale]/(main)/trips/[id]/actions.ts",
       "exportedName": "updateItemNote"
     },
-    "6048613a86a8e852c78511930a38055ebc15437adb": {
+    "60bc7001b62c59031147a489bd15cf6f1591d087e7": {
       "workers": {
         "app/[locale]/(main)/trips/[id]/page": {
           "moduleId": 62641,
@@ -74,8 +74,23 @@
       },
       "filename": "src/app/actions/trips.ts",
       "exportedName": "setTripPublic"
+    },
+    "4016cb128eae6bae1281c8551e04f2b481a8f1cc19": {
+      "workers": {
+        "app/[locale]/login/page": {
+          "moduleId": 41821,
+          "async": false,
+          "exportedName": "handleGoogleAuthAction",
+          "filename": "src/app/actions/google-auth.ts"
+        }
+      },
+      "layer": {
+        "app/[locale]/login/page": "action-browser"
+      },
+      "filename": "src/app/actions/google-auth.ts",
+      "exportedName": "handleGoogleAuthAction"
     }
   },
   "edge": {},
-  "encryptionKey": "2q2DebqYI+QOsnxxtfw+/1MRIlT2VBCQNMg/P26CRJo="
+  "encryptionKey": "3XIlHJftXeeHCB4yxsgcSrTkffSH7wgsvkb+zHDeTNE="
 }

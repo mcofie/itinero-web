@@ -1,0 +1,27 @@
+
+> itinero@0.1.0 build
+> next build --turbopack
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   ▲ Next.js 16.0.7 (Turbopack)
+   - Environments: .env.local
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully in 5.9s
+   Running TypeScript ...
+Failed to compile.
+
+./src/app/[locale]/admin/itinero/places/PlacesClient.tsx:750:70
+Type error: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+
+[0m [90m 748 |[39m                                                 [33m<[39m[33mdiv[39m className[33m=[39m[32m"flex items-center gap-3"[39m[33m>[39m
+ [90m 749 |[39m                                                     [33m<[39m[33mdiv[39m className[33m=[39m[32m"h-8 w-8 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 text-slate-500"[39m[33m>[39m
+[31m[1m>[22m[39m[90m 750 |[39m                                                         {getKindIcon(p[33m.[39mkind)}
+ [90m     |[39m                                                                      [31m[1m^[22m[39m
+ [90m 751 |[39m                                                     [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+ [90m 752 |[39m                                                     [33m<[39m[33mdiv[39m className[33m=[39m[32m"flex flex-col"[39m[33m>[39m
+ [90m 753 |[39m                                                         [33m<[39m[33mspan[39m className[33m=[39m[32m"text-slate-900 dark:text-slate-100"[39m[33m>[39m{p[33m.[39mname}[33m<[39m[33m/[39m[33mspan[39m[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null

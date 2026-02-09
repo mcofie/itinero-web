@@ -405,7 +405,7 @@ export default function PlacesClient({
     const totalPlacesPages = Math.ceil(filteredPlaces.length / placesPageSize);
 
     // Helpers
-    const getKindIcon = (kind: string) => {
+    const getKindIcon = (kind?: string) => {
         switch (kind) {
             case "restaurant": return <Utensils className="h-4 w-4" />;
             case "hotel": return <BedDouble className="h-4 w-4" />;
