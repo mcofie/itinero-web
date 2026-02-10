@@ -7,6 +7,8 @@ import {
     Sheet,
     SheetContent,
     SheetTrigger,
+    SheetTitle,
+    SheetDescription,
 } from "@/components/ui/sheet";
 import { Menu, LayoutDashboard, LogOut } from "lucide-react";
 import { AdminSidebar } from "./AdminSidebar";
@@ -47,6 +49,8 @@ export function AdminMobileNav({
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="p-0 w-[280px] bg-[#0F172A] border-none">
+                        <SheetTitle className="sr-only">Menu</SheetTitle>
+                        <SheetDescription className="sr-only">Main menu functionality</SheetDescription>
                         <div className="h-full" onClick={() => setOpen(false)}>
                             <AdminSidebar
                                 userEmail={userEmail}

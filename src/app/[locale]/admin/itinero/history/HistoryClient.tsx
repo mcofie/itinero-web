@@ -39,6 +39,12 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs";
+import {
     Loader2,
     Plus,
     MoreHorizontal,
@@ -55,7 +61,9 @@ import {
     AlertCircle,
     PhoneCall,
     Lightbulb,
-    ShieldAlert
+    ShieldAlert,
+    Sparkles,
+    Wand2
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -109,6 +117,77 @@ export default function HistoryClient({
 
     const [editingHistoryId, setEditingHistoryId] = React.useState<string | null>(null);
     const [histSaving, setHistSaving] = React.useState(false);
+    const [isMagicLoading, setIsMagicLoading] = React.useState(false);
+
+    /* --- Magic Fill Logic --- */
+    const handleMagicFill = async () => {
+        const destName = destinations.find(d => d.id === selectedDestId)?.name;
+        if (!destName) return;
+
+        setIsMagicLoading(true);
+        // Simulate "Thinking"
+        await new Promise(r => setTimeout(r, 1200));
+
+        // Intelligent Defaults Dictionary
+        const DEST_KNOWLEDGE: Record<string, any> = {
+            "Nairobi": {
+                currency: "Kenyan Shilling (KES)",
+                plugs: "Type G",
+                languages: "Swahili, English",
+                getting_around: "Matatus, Uber, and Bolt are popular. For a unique experience, try a Boda Boda for short distances.",
+                primary_city: "Nairobi",
+                costs: { coffee: "KES 350", meal: "KES 1,200", beer: "KES 400" },
+                etiquette: { dos: "Greet people politely, use your right hand", donts: "Avoid photography of govt buildings" },
+                tipping: "10% in restaurants is appreciated but not mandatory.",
+                packing: "Light layers for the day, warm jacket for cool evenings.",
+                hidden_gem: { title: "The Alchemist Bar", desc: "A creative hub in Westlands with food trucks and live music." }
+            },
+            "Paris": {
+                currency: "Euro (EUR)",
+                plugs: "Type C / E",
+                languages: "French, English",
+                getting_around: "The Metro is the most efficient. Walking is highly recommended in central arrondissements.",
+                primary_city: "Paris",
+                costs: { coffee: "€4.50", meal: "€25.00", beer: "€7.00" },
+                etiquette: { dos: "Say 'Bonjour' when entering shops", donts: "Don't speak loudly in public transport" },
+                tipping: "Service is included (service compris), but a small extra is common.",
+                packing: "Comfortable walking shoes and a stylish scarf.",
+                hidden_gem: { title: "Promenade Plantée", desc: "An elevated park built on an old railway viaduct." }
+            }
+        };
+
+        const k = DEST_KNOWLEDGE[destName] || {
+            currency: "Local Currency",
+            plugs: "Type C",
+            languages: "Local Language, English",
+            getting_around: "Walking and local ride-sharing are usually best.",
+            primary_city: destName,
+            costs: { coffee: "$4.00", meal: "$15.00", beer: "$6.00" },
+            etiquette: { dos: "Be respectful of local traditions", donts: "Avoid sensitive political topics" },
+            tipping: "Check local customs, 10% is often standard.",
+            packing: "Check local weather forecasts before traveling.",
+            hidden_gem: { title: "Local Market", desc: "Always explore the central market for authentic food." }
+        };
+
+        // Fill State
+        setKbygCurrency(k.currency);
+        setKbygPlugs(k.plugs);
+        setKbygLanguages(k.languages);
+        setKbygGettingAround(k.getting_around);
+        setKbygPrimaryCity(k.primary_city);
+        setKbygCostCoffee(k.costs.coffee);
+        setKbygCostMeal(k.costs.meal);
+        setKbygCostBeer(k.costs.beer);
+        setKbygTipping(k.tipping);
+        setKbygPackingTips(k.packing);
+        setKbygEtiquetteDos(k.etiquette.dos);
+        setKbygEtiquetteDonts(k.etiquette.donts);
+        setKbygHiddenGemTitle(k.hidden_gem.title);
+        setKbygHiddenGemDesc(k.hidden_gem.desc);
+
+        setIsMagicLoading(false);
+        toast.success(`Magic Fill complete for ${destName}!`);
+    };
 
     /* --- Effects --- */
     React.useEffect(() => {
@@ -223,7 +302,7 @@ export default function HistoryClient({
 
             const payloadValues = {
                 destination_id: selectedDestId,
-                section: "main",
+                section: "mixed",
                 content: "v1", // Legacy field, keeping simplified
                 payload: payloadData,
             };
@@ -385,160 +464,213 @@ export default function HistoryClient({
                                     {editingHistoryId ? <Pencil className="h-4 w-4 text-blue-500" /> : <Plus className="h-4 w-4 text-blue-500" />}
                                     {editingHistoryId ? "Edit History Entry" : "New History Entry"}
                                 </DialogTitle>
-                                <DialogDescription className="text-slate-500">
-                                    Create or update rich content for {destinations.find(d => d.id === selectedDestId)?.name || "destination"}.
+
+                                <DialogDescription className="text-slate-500 flex items-center justify-between">
+                                    <span>Create or update rich content for {destinations.find(d => d.id === selectedDestId)?.name || "destination"}.</span>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleMagicFill}
+                                        disabled={isMagicLoading}
+                                        className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800 h-8 gap-1.5"
+                                    >
+                                        <Wand2 className={cn("h-3.5 w-3.5", isMagicLoading && "animate-pulse")} />
+                                        {isMagicLoading ? "Drafting..." : "Magic Fill"}
+                                    </Button>
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <form id="history-form" onSubmit={handleSaveHistory} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-                                <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
-                                    <div className="grid gap-8">
-                                        {/* Rich Content Section */}
-                                        <div className="grid gap-4">
-                                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
-                                                <BookOpen className="h-4 w-4 text-blue-500" />
-                                                Rich Content
-                                            </div>
-                                            <FormTextarea
-                                                label="About (Introduction)"
-                                                value={histAbout}
-                                                onChange={setHistAbout}
-                                                placeholder="Brief introduction about the destination..."
-                                                rows={4}
-                                            />
-                                            <FormTextarea
-                                                label="History (Deep Dive)"
-                                                value={histHistory}
-                                                onChange={setHistHistory}
-                                                placeholder="Detailed historical background..."
-                                                rows={8}
-                                            />
-                                        </div>
-
-                                        {/* KBYG Section */}
-                                        <div className="grid gap-4">
-                                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
-                                                <Info className="h-4 w-4 text-emerald-500" />
-                                                Know Before You Go (KBYG)
-                                                <Badge variant="outline" className="ml-auto text-[10px] h-5 px-1.5 font-normal">JSON Auto-gen</Badge>
-                                            </div>
-
-                                            <div className="grid sm:grid-cols-2 gap-4">
-                                                <FormInput
-                                                    label="Currency"
-                                                    value={kbygCurrency}
-                                                    onChange={setKbygCurrency}
-                                                    placeholder="e.g. Euro (EUR)"
-                                                />
-                                                <FormInput
-                                                    label="Electric Plugs"
-                                                    value={kbygPlugs}
-                                                    onChange={setKbygPlugs}
-                                                    placeholder="e.g. Type C / E"
-                                                />
-                                            </div>
-
-                                            <div className="grid sm:grid-cols-2 gap-4">
-                                                <div className="sm:col-span-2">
-                                                    <FormInput
-                                                        label="Languages (comma separated)"
-                                                        value={kbygLanguages}
-                                                        onChange={setKbygLanguages}
-                                                        placeholder="e.g. French, English"
-                                                    />
-                                                </div>
-                                                <div className="sm:col-span-2">
-                                                    <FormInput
-                                                        label="Getting Around"
-                                                        value={kbygGettingAround}
-                                                        onChange={setKbygGettingAround}
-                                                        placeholder="e.g. The metro is the best way to travel..."
-                                                    />
-                                                </div>
-                                                <FormInput
-                                                    label="eSIM Recommendation"
-                                                    value={kbygEsim}
-                                                    onChange={setKbygEsim}
-                                                    placeholder="e.g. Airalo"
-                                                />
-                                                <FormInput
-                                                    label="Primary City"
-                                                    value={kbygPrimaryCity}
-                                                    onChange={setKbygPrimaryCity}
-                                                    placeholder="e.g. Paris"
-                                                />
-                                            </div>
-
-                                            {/* Intelligence Suite Section */}
-                                            <div className="grid gap-4 mt-4">
-                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
-                                                    <Coins className="h-4 w-4 text-emerald-500" />
-                                                    Budget Insights (Cost of Living)
-                                                </div>
-                                                <div className="grid sm:grid-cols-3 gap-4">
-                                                    <FormInput label="Coffee Cost" value={kbygCostCoffee} onChange={setKbygCostCoffee} placeholder="e.g. $4.50" />
-                                                    <FormInput label="Meal Cost" value={kbygCostMeal} onChange={setKbygCostMeal} placeholder="e.g. $18.00" />
-                                                    <FormInput label="Beer Cost" value={kbygCostBeer} onChange={setKbygCostBeer} placeholder="e.g. $7.00" />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid gap-4 mt-4">
-                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
-                                                    <HeartHandshake className="h-4 w-4 text-blue-500" />
-                                                    Social Etiquette & Tipping
-                                                </div>
-                                                <div className="grid sm:grid-cols-2 gap-4">
-                                                    <FormTextarea label="Tipping Culture" value={kbygTipping} onChange={setKbygTipping} placeholder="e.g. 10% is standard..." rows={2} />
-                                                    <FormTextarea label="Payment Methods" value={kbygPayment} onChange={setKbygPayment} placeholder="e.g. Cash is king, cards in supermarkets..." rows={2} />
-                                                </div>
-                                                <div className="grid sm:grid-cols-2 gap-4">
-                                                    <FormInput label="Etiquette Do's" value={kbygEtiquetteDos} onChange={setKbygEtiquetteDos} placeholder="comma separated" />
-                                                    <FormInput label="Etiquette Don'ts" value={kbygEtiquetteDonts} onChange={setKbygEtiquetteDonts} placeholder="comma separated" />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid gap-4 mt-4">
-                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
-                                                    <AlertCircle className="h-4 w-4 text-orange-500" />
-                                                    Smart Packing
-                                                </div>
-                                                <FormTextarea label="Packing Tips" value={kbygPackingTips} onChange={setKbygPackingTips} placeholder="e.g. Bring a light jacket for evenings..." rows={2} />
-                                            </div>
-
-                                            <div className="grid gap-4 mt-4">
-                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
-                                                    <ShieldAlert className="h-4 w-4 text-rose-500" />
-                                                    Emergency Directory
-                                                </div>
-                                                <div className="grid sm:grid-cols-2 gap-4">
-                                                    <FormInput label="Local Police" value={kbygEmergencyPolice} onChange={setKbygEmergencyPolice} placeholder="e.g. 911" />
-                                                    <FormInput label="Medical Emergency" value={kbygEmergencyMedical} onChange={setKbygEmergencyMedical} placeholder="e.g. 999" />
-                                                </div>
-                                            </div>
-
-                                            <div className="grid gap-4 mt-4">
-                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
-                                                    <Lightbulb className="h-4 w-4 text-amber-500" />
-                                                    Hidden Gem
-                                                </div>
-                                                <FormInput label="Gem Title" value={kbygHiddenGemTitle} onChange={setKbygHiddenGemTitle} placeholder="e.g. Evening Market Tour" />
-                                                <FormTextarea label="Gem Description" value={kbygHiddenGemDesc} onChange={setKbygHiddenGemDesc} placeholder="Helpful description for the traveler..." rows={3} />
-                                            </div>
-
-                                            <div className="grid gap-4 mt-4">
-                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
-                                                    <HistoryIcon className="h-4 w-4 text-slate-500" />
-                                                    Optional Metadata
-                                                </div>
-                                                <div className="grid sm:grid-cols-3 gap-4">
-                                                    <FormInput label="Photography" value={kbygPhotography} onChange={setKbygPhotography} placeholder="e.g. Ask before photos" />
-                                                    <FormInput label="Gestures" value={kbygGestures} onChange={setKbygGestures} placeholder="e.g. Handshake is common" />
-                                                    <FormInput label="Dress Code" value={kbygDressCode} onChange={setKbygDressCode} placeholder="e.g. Casual" />
-                                                </div>
-                                            </div>
-                                        </div>
+                            <form id="history-form" onSubmit={handleSaveHistory} className="flex flex-col flex-1 min-h-0 overflow-hidden bg-slate-50/30 dark:bg-slate-900/10">
+                                <Tabs defaultValue="narrative" className="flex-1 flex flex-col h-full overflow-hidden">
+                                    <div className="px-6 py-2 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950">
+                                        <TabsList className="bg-slate-100/50 dark:bg-slate-900/50 p-1 h-auto flex-wrap">
+                                            <TabsTrigger value="narrative" className="rounded-lg px-4 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">
+                                                <BookOpen className="h-4 w-4 mr-2 text-blue-500" />
+                                                Narrative
+                                            </TabsTrigger>
+                                            <TabsTrigger value="lifestyle" className="rounded-lg px-4 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">
+                                                <Info className="h-4 w-4 mr-2 text-emerald-500" />
+                                                Lifestyle
+                                            </TabsTrigger>
+                                            <TabsTrigger value="finances" className="rounded-lg px-4 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">
+                                                <Coins className="h-4 w-4 mr-2 text-amber-500" />
+                                                Finances
+                                            </TabsTrigger>
+                                            <TabsTrigger value="social" className="rounded-lg px-4 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">
+                                                <HeartHandshake className="h-4 w-4 mr-2 text-pink-500" />
+                                                Social
+                                            </TabsTrigger>
+                                            <TabsTrigger value="safety" className="rounded-lg px-4 py-2 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">
+                                                <ShieldAlert className="h-4 w-4 mr-2 text-rose-500" />
+                                                Safety
+                                            </TabsTrigger>
+                                        </TabsList>
                                     </div>
-                                </div>
+
+                                    <div className="flex-1 overflow-y-auto px-6 py-8 custom-scrollbar">
+                                        <TabsContent value="narrative" className="m-0 focus-visible:outline-none">
+                                            <div className="space-y-6">
+                                                <div className="flex flex-col gap-1 mb-2">
+                                                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Deep Dive Content</h3>
+                                                    <p className="text-xs text-slate-500">The primary storytelling section for travelers.</p>
+                                                </div>
+                                                <FormTextarea
+                                                    label="About (Introduction)"
+                                                    value={histAbout}
+                                                    onChange={setHistAbout}
+                                                    placeholder="Brief introduction about the destination..."
+                                                    rows={4}
+                                                />
+                                                <FormTextarea
+                                                    label="History (Deep Dive)"
+                                                    value={histHistory}
+                                                    onChange={setHistHistory}
+                                                    placeholder="Detailed historical background..."
+                                                    rows={10}
+                                                />
+                                            </div>
+                                        </TabsContent>
+
+                                        <TabsContent value="lifestyle" className="m-0 focus-visible:outline-none">
+                                            <div className="space-y-8">
+                                                <div className="flex items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+                                                    <div className="flex flex-col gap-1">
+                                                        <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Survival Logistics</h3>
+                                                        <p className="text-xs text-slate-500">Essential day-to-day coordination info.</p>
+                                                    </div>
+                                                    <Badge variant="outline" className="bg-emerald-50/50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800">
+                                                        KBYG Essentials
+                                                    </Badge>
+                                                </div>
+
+                                                <div className="grid sm:grid-cols-2 gap-6">
+                                                    <div className="space-y-2">
+                                                        <FormInput label="Currency" value={kbygCurrency} onChange={setKbygCurrency} placeholder="e.g. Euro (EUR)" />
+                                                        <div className="flex gap-1.5 pt-1">
+                                                            {["USD", "EUR", "KES", "GBP"].map(curr => (
+                                                                <button
+                                                                    key={curr}
+                                                                    type="button"
+                                                                    onClick={() => setKbygCurrency(prev => prev.includes(curr) ? prev : curr)}
+                                                                    className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
+                                                                >
+                                                                    {curr}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <FormInput label="Electric Plugs" value={kbygPlugs} onChange={setKbygPlugs} placeholder="e.g. Type C / E" />
+                                                        <div className="flex gap-1.5 pt-1">
+                                                            {["Type C", "Type G", "Type A"].map(plug => (
+                                                                <button
+                                                                    key={plug}
+                                                                    type="button"
+                                                                    onClick={() => setKbygPlugs(plug)}
+                                                                    className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
+                                                                >
+                                                                    {plug}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-6">
+                                                    <FormInput label="Languages (comma separated)" value={kbygLanguages} onChange={setKbygLanguages} placeholder="e.g. French, English" />
+                                                    <FormTextarea label="Getting Around" value={kbygGettingAround} onChange={setKbygGettingAround} placeholder="e.g. The metro is the best way to travel..." rows={2} />
+                                                    <div className="grid sm:grid-cols-2 gap-6">
+                                                        <FormInput label="eSIM Recommendation" value={kbygEsim} onChange={setKbygEsim} placeholder="e.g. Airalo" />
+                                                        <FormInput label="Primary City" value={kbygPrimaryCity} onChange={setKbygPrimaryCity} placeholder="e.g. Paris" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </TabsContent>
+
+                                        <TabsContent value="finances" className="m-0 focus-visible:outline-none">
+                                            <div className="space-y-8">
+                                                <div className="flex flex-col gap-1 mb-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+                                                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Budget & Economy</h3>
+                                                    <p className="text-xs text-slate-500">Helping travelers estimate their daily spending.</p>
+                                                </div>
+
+                                                <div className="grid sm:grid-cols-3 gap-6">
+                                                    <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                                                        <FormInput label="Coffee Cost" value={kbygCostCoffee} onChange={setKbygCostCoffee} placeholder="$4.50" />
+                                                    </div>
+                                                    <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                                                        <FormInput label="Meal Cost" value={kbygCostMeal} onChange={setKbygCostMeal} placeholder="$18.00" />
+                                                    </div>
+                                                    <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                                                        <FormInput label="Beer Cost" value={kbygCostBeer} onChange={setKbygCostBeer} placeholder="$7.00" />
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid sm:grid-cols-2 gap-6 pt-4">
+                                                    <FormTextarea label="Tipping Culture" value={kbygTipping} onChange={setKbygTipping} placeholder="e.g. 10% is standard..." rows={3} />
+                                                    <FormTextarea label="Payment Methods" value={kbygPayment} onChange={setKbygPayment} placeholder="e.g. Cash is king..." rows={3} />
+                                                </div>
+                                            </div>
+                                        </TabsContent>
+
+                                        <TabsContent value="social" className="m-0 focus-visible:outline-none">
+                                            <div className="space-y-8">
+                                                <div className="flex flex-col gap-1 mb-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+                                                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Social Protocol</h3>
+                                                    <p className="text-xs text-slate-500">Cultural nuances and behavior guidelines.</p>
+                                                </div>
+
+                                                <div className="grid sm:grid-cols-2 gap-6">
+                                                    <FormInput label="Etiquette Do's" value={kbygEtiquetteDos} onChange={setKbygEtiquetteDos} placeholder="Handshakes, eye contact..." />
+                                                    <FormInput label="Etiquette Don'ts" value={kbygEtiquetteDonts} onChange={setKbygEtiquetteDonts} placeholder="Pointing, loud talking..." />
+                                                </div>
+
+                                                <div className="grid sm:grid-cols-3 gap-6">
+                                                    <FormInput label="Photography" value={kbygPhotography} onChange={setKbygPhotography} placeholder="Ask first" />
+                                                    <FormInput label="Gestures" value={kbygGestures} onChange={setKbygGestures} placeholder="Thumbs up" />
+                                                    <FormInput label="Dress Code" value={kbygDressCode} onChange={setKbygDressCode} placeholder="Modest" />
+                                                </div>
+
+                                                <div className="bg-blue-50/50 dark:bg-blue-900/10 p-6 rounded-[2rem] border border-blue-100 dark:border-blue-800/50 space-y-4">
+                                                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold">
+                                                        <Lightbulb className="h-5 w-5" />
+                                                        The Hidden Gem
+                                                    </div>
+                                                    <FormInput label="Title" value={kbygHiddenGemTitle} onChange={setKbygHiddenGemTitle} placeholder="Evening Market" />
+                                                    <FormTextarea label="Discovery Description" value={kbygHiddenGemDesc} onChange={setKbygHiddenGemDesc} placeholder="Helpful description..." rows={3} />
+                                                </div>
+                                            </div>
+                                        </TabsContent>
+
+                                        <TabsContent value="safety" className="m-0 focus-visible:outline-none">
+                                            <div className="space-y-8">
+                                                <div className="flex flex-col gap-1 mb-2 border-b border-slate-100 dark:border-slate-800 pb-4">
+                                                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Safety & Prep</h3>
+                                                    <p className="text-xs text-slate-500">Emergency contacts and preparedness.</p>
+                                                </div>
+
+                                                <div className="grid sm:grid-cols-2 gap-6">
+                                                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                                                        <div className="flex items-center gap-2 text-rose-600 font-bold text-sm">
+                                                            <ShieldAlert className="h-4 w-4" />
+                                                            Hotlines
+                                                        </div>
+                                                        <FormInput label="Local Police" value={kbygEmergencyPolice} onChange={setKbygEmergencyPolice} placeholder="e.g. 911" />
+                                                        <FormInput label="Medical Emergency" value={kbygEmergencyMedical} onChange={setKbygEmergencyMedical} placeholder="e.g. 999" />
+                                                    </div>
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center gap-2 text-orange-600 font-bold text-sm">
+                                                            <Flag className="h-4 w-4" />
+                                                            Preparedness
+                                                        </div>
+                                                        <FormTextarea label="Packing Tips" value={kbygPackingTips} onChange={setKbygPackingTips} placeholder="Bring a jacket..." rows={5} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </TabsContent>
+                                    </div>
+                                </Tabs>
                                 <DialogFooter className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                                     <Button type="button" variant="outline" onClick={() => setIsHistoryDialogOpen(false)} className="mr-2">
                                         Cancel

@@ -58,7 +58,8 @@ import {
     Tag,
     Clock,
     DollarSign,
-    Link as LinkIcon
+    Link as LinkIcon,
+    ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -108,6 +109,41 @@ export default function PlacesClient({
     // Places Pagination
     const [placesPage, setPlacesPage] = React.useState(1);
     const [placesPageSize] = React.useState(10);
+
+    const [isGeocoding, setIsGeocoding] = React.useState(false);
+
+    async function handleGeocode() {
+        if (!placeName.trim()) {
+            toast.error("Please enter a place name first");
+            return;
+        }
+
+        setIsGeocoding(true);
+        try {
+            const dest = destinations.find(d => d.id === placeDestinationId);
+            const context = dest ? `, ${dest.name}` : "";
+            const query = encodeURIComponent(`${placeName}${context}`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+            const data = await res.json();
+
+            if (data && data.length > 0) {
+                const { lat, lon } = data[0];
+                setPlaceLat(parseFloat(lat).toString());
+                setPlaceLng(parseFloat(lon).toString());
+
+                toast.success(`Found coordinates for: ${placeName}`, {
+                    description: `Lat: ${lat}, Lng: ${lon}`
+                });
+            } else {
+                toast.error("Could not find coordinates for this place");
+            }
+        } catch (e) {
+            console.error(e);
+            toast.error("Geocoding failed. Please try again or enter coordinates manually.");
+        } finally {
+            setIsGeocoding(false);
+        }
+    }
 
     /* --- Reset Helpers --- */
     function resetPlaceForm() {
@@ -580,9 +616,22 @@ export default function PlacesClient({
 
                                             {/* Right Column: Location & Cost */}
                                             <div className="grid gap-4 content-start">
-                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
-                                                    <MapPin className="h-4 w-4 text-emerald-500" />
-                                                    Location & Cost
+                                                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                                                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                                                        <MapPin className="h-4 w-4 text-emerald-500" />
+                                                        Location & Cost
+                                                    </div>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        disabled={isGeocoding}
+                                                        onClick={handleGeocode}
+                                                        className="h-8 text-xs gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                    >
+                                                        {isGeocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+                                                        Find Coordinates
+                                                    </Button>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <FormInput
@@ -598,6 +647,16 @@ export default function PlacesClient({
                                                         placeholder="2.2945"
                                                     />
                                                 </div>
+                                                {placeLat && placeLng && (
+                                                    <a
+                                                        href={`https://www.google.com/maps/search/?api=1&query=${placeLat},${placeLng}`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="text-[10px] text-blue-500 hover:underline flex items-center gap-1 w-fit mt-1"
+                                                    >
+                                                        <ExternalLink className="h-2.5 w-2.5" /> Verify on Google Maps
+                                                    </a>
+                                                )}
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <FormInput
                                                         label="Cost Typical"

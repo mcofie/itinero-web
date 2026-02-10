@@ -741,6 +741,33 @@ export default async function TripIdPage({
         return val as TripConfig;
     })();
 
+    // ---- Fetch Tour Guides ----
+    const targetCity = destMeta?.city || destination?.name || enrichedDestList?.[0]?.name;
+    let tourGuides: any[] = [];
+
+    if (targetCity) {
+        const { data: guides, error: guidesError } = await sb
+            .schema("itinero")
+            .from("tour_guide_requests")
+            .select("*")
+            .eq("status", "approved")
+            .ilike("city", `%${targetCity}%`);
+
+        if (guides && !guidesError && guides.length > 0) {
+            const userIds = guides.map((g) => g.user_id);
+            const { data: profiles } = await sb
+                .schema("itinero")
+                .from("profiles")
+                .select("id, full_name, avatar_url")
+                .in("id", userIds);
+
+            tourGuides = guides.map((g) => ({
+                ...g,
+                profiles: profiles?.find((p) => p.id === g.user_id) || null,
+            }));
+        }
+    }
+
     return (
         <div
             className="min-h-screen bg-slate-50/50 dark:bg-slate-950 font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900 transition-colors duration-300">
@@ -779,6 +806,7 @@ export default async function TripIdPage({
                         startDate={previewLike.trip_summary.start_date}
                         userPreferredCurrency={userPreferredCurrency}
                         userPassportCountry={userPassportCountry}
+                        tourGuides={tourGuides}
                     />
                 </div>
 

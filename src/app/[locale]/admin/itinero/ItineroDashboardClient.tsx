@@ -19,6 +19,8 @@ import {
     TrendingUp,
     Activity,
     Flag,
+    Users,
+    MessageSquare,
 } from "lucide-react";
 import { DestinationOption, PlaceOption } from "./types";
 import { TableImage } from "@/components/admin/AdminShared";
@@ -177,6 +179,30 @@ export default function ItineroDashboardClient({
                                 <div className="flex flex-col items-start">
                                     <span className="font-semibold text-slate-900 dark:text-white">Curate Places</span>
                                     <span className="text-xs text-slate-500 font-normal">Manage POIs, hotels, and activities</span>
+                                </div>
+                                <ArrowRight className="ml-auto h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="w-full justify-start h-12 text-left rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 border-slate-200 shadow-sm group">
+                            <Link href="/admin/itinero/users">
+                                <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-600 p-2 rounded-lg mr-3 group-hover:scale-105 transition-transform">
+                                    <Users className="h-4 w-4" />
+                                </span>
+                                <div className="flex flex-col items-start">
+                                    <span className="font-semibold text-slate-900 dark:text-white">Manage Users</span>
+                                    <span className="text-xs text-slate-500 font-normal">View users & award points</span>
+                                </div>
+                                <ArrowRight className="ml-auto h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        </Button>
+                        <Button asChild variant="outline" className="w-full justify-start h-12 text-left rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 border-slate-200 shadow-sm group">
+                            <Link href="/admin/itinero/requests">
+                                <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 p-2 rounded-lg mr-3 group-hover:scale-105 transition-transform">
+                                    <MessageSquare className="h-4 w-4" />
+                                </span>
+                                <div className="flex flex-col items-start">
+                                    <span className="font-semibold text-slate-900 dark:text-white">Guide Requests</span>
+                                    <span className="text-xs text-slate-500 font-normal">Review applications</span>
                                 </div>
                                 <ArrowRight className="ml-auto h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                             </Link>

@@ -5,7 +5,16 @@ import { notFound } from "next/navigation";
 import { createClientServerRSC } from "@/lib/supabase/server";
 import PublicItineraryClient from "./public-itinerary-client";
 import {
-    Compass
+    Compass,
+    Wallet,
+    DollarSign,
+    MapPin,
+    CloudSun,
+    Globe,
+    Plug,
+    Phone,
+    CalendarDays,
+    Plane
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

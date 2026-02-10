@@ -136,18 +136,36 @@ function hasInterests(v: unknown): v is { interests: string[] } {
     );
 }
 
+interface TourGuide {
+    id: string;
+    user_id: string;
+    country: string;
+    city: string;
+    available_times: string;
+    status: string;
+    profiles: {
+        full_name: string | null;
+        avatar_url: string | null;
+    } | {
+        full_name: string | null;
+        avatar_url: string | null;
+    }[];
+}
+
 export default function TripViewerClient({
     tripId,
     startDate,
     data,
     userPreferredCurrency,
     userPassportCountry,
+    tourGuides,
 }: {
     tripId: string;
     data: PreviewLike;
     startDate?: string;
     userPreferredCurrency?: string;
     userPassportCountry?: string | null;
+    tourGuides?: TourGuide[];
 }) {
     const { resolvedTheme } = useTheme();
     const theme: "light" | "dark" = resolvedTheme === "dark" ? "dark" : "light";
@@ -290,7 +308,7 @@ export default function TripViewerClient({
                             { value: "map", label: t("Tabs.map"), icon: MapPin },
                             { value: "calendar", label: t("Tabs.calendar"), icon: CalendarDays },
                             { value: "places", label: t("Tabs.places"), icon: Utensils },
-                            { value: "raw", label: t("Tabs.tours"), icon: Sparkles },
+                            { value: "tours", label: t("Tabs.tours"), icon: Sparkles },
                         ].map((tab) => (
                             <TabsTrigger
                                 key={tab.value}
@@ -530,7 +548,7 @@ export default function TripViewerClient({
                                             </p>
                                         </div>
                                         <div className="flex flex-wrap gap-2 relative z-10">
-                                            {(destinationMeta?.etiquette_dos ? destinationMeta.etiquette_dos.split(',') : ["Punctuality", "Modest Dress"]).map((doItem, idx) => (
+                                            {(destinationMeta?.etiquette_dos ? (destinationMeta.etiquette_dos as string).split(',') : ["Punctuality", "Modest Dress"]).map((doItem: string, idx: number) => (
                                                 <Badge key={idx} variant="outline" className="text-[9px] font-bold uppercase tracking-[0.1em] px-4 py-2 rounded-xl border-blue-100 dark:border-blue-900/30 text-blue-600 dark:text-blue-400 bg-blue-50/30 dark:bg-blue-900/10 transition-all hover:bg-blue-500 hover:text-white">
                                                     {doItem.trim()}
                                                 </Badge>
@@ -837,69 +855,160 @@ export default function TripViewerClient({
                 </TabsContent>
 
                 {/* ---------- TOURS TAB ---------- */}
-                {/* ---------- TOURS TAB ---------- */}
                 <TabsContent
-                    value="raw"
+                    value="tours"
                     className="mt-6 animate-in fade-in slide-in-from-bottom-6 duration-700"
                 >
-                    <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-12 lg:p-20 text-center shadow-xl">
-                        {/* Decorative Background Elements */}
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-                        <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-blue-500/5 blur-3xl" />
-                        <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-purple-500/5 blur-3xl" />
-
-                        <div className="relative z-10 mx-auto max-w-2xl">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                            >
-                                <div className="text-center">
-                                    <div
-                                        className="mb-8 inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">
-                                        <Compass className="h-3.5 w-3.5" />
-                                        Exclusive Access
-                                    </div>
-                                    <h2 className="mb-6 text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white tracking-tighter leading-tight">
-                                        Expert-Led <span className="text-blue-600">Journeys</span>
-                                    </h2>
-                                    <p className="mx-auto max-w-2xl text-lg font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
-                                        Unlock deeper connections with your destination through our network of local experts and curators.
-                                    </p>
-                                </div>
-                            </motion.div>
-                            <div className="grid gap-6 text-left sm:grid-cols-2">
-                                <div className="group rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50 p-8 shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900 hover:shadow-xl hover:border-blue-500/30">
-                                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500 text-white shadow-lg shadow-blue-500/20 transition-transform group-hover:scale-110 group-hover:rotate-6">
-                                        <Users2 className="h-7 w-7" />
-                                    </div>
-                                    <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">
-                                        {t("Tours.verifiedGuides")}
-                                    </h4>
-                                    <p className="text-sm font-medium leading-relaxed text-slate-500 dark:text-slate-400">
-                                        {t("Tours.verifiedGuidesDesc")}
-                                    </p>
-                                </div>
-
-                                <div className="group rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50 p-8 shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900 hover:shadow-xl hover:border-purple-500/30">
-                                    <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-500 text-white shadow-lg shadow-purple-500/20 transition-transform group-hover:scale-110 group-hover:-rotate-6">
-                                        <Compass className="h-7 w-7" />
-                                    </div>
-                                    <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">
-                                        {t("Tours.curatedTours")}
-                                    </h4>
-                                    <p className="text-sm font-medium leading-relaxed text-slate-500 dark:text-slate-400">
-                                        {t("Tours.curatedToursDesc")}
-                                    </p>
-                                </div>
+                    {(tourGuides && tourGuides.length > 0) ? (
+                        <div className="space-y-8">
+                            <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200/60 dark:border-slate-800/60 shadow-sm text-center">
+                                <Badge variant="outline" className="mb-4 bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-100 dark:border-blue-900 uppercase tracking-widest px-3 py-1">
+                                    Local Experts
+                                </Badge>
+                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">Meet Your Local Guides</h2>
+                                <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+                                    Verified experts in {destinationMeta?.city || "your destination"} ready to show you the hidden gems.
+                                </p>
                             </div>
 
-                            <div className="mt-12 flex justify-center">
-                                <Button className="h-14 px-8 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 font-bold uppercase tracking-widest text-xs transition-all hover:scale-105 active:scale-95 shadow-xl">
-                                    Get Notified
-                                </Button>
+                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                {tourGuides.map((guide) => {
+                                    const profile = Array.isArray(guide.profiles) ? guide.profiles[0] : guide.profiles;
+                                    const availability = guide.available_times ? (typeof guide.available_times === 'string' ? JSON.parse(guide.available_times) : guide.available_times) : {};
+
+                                    // Better availability summary
+                                    const allAvailableDays = Object.entries(availability)
+                                        .filter(([_, times]) => Array.isArray(times) && times.length > 0)
+                                        .map(([day, times]) => ({ day, times: times as string[] }));
+
+                                    const availableDaysStr = allAvailableDays.length > 0
+                                        ? allAvailableDays.length <= 2
+                                            ? allAvailableDays.map(d => `${d.day} (${d.times.join(", ")})`).join(", ")
+                                            : allAvailableDays.map(d => d.day).slice(0, 3).join(", ")
+                                        : "Check Calendar";
+
+                                    const hasMoreDays = allAvailableDays.length > 3;
+
+                                    return (
+                                        <div key={guide.id} className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                                            <div className="absolute top-0 right-0 p-4">
+                                                <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 hover:bg-emerald-100 border-emerald-100 flex gap-1 items-center">
+                                                    <ShieldCheck className="h-3 w-3" /> Verified
+                                                </Badge>
+                                            </div>
+
+                                            <div className="p-6 pb-0 flex flex-col items-center text-center">
+                                                <div className="relative mb-4">
+                                                    <div className="h-24 w-24 rounded-full overflow-hidden border-4 border-slate-50 dark:border-slate-800 shadow-sm group-hover:scale-105 transition-transform duration-500">
+                                                        {profile?.avatar_url ? (
+                                                            <Image
+                                                                src={profile.avatar_url}
+                                                                alt={profile.full_name || "Guide"}
+                                                                width={96}
+                                                                height={96}
+                                                                className="object-cover h-full w-full"
+                                                            />
+                                                        ) : (
+                                                            <div className="h-full w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                                                                <Users2 className="h-10 w-10" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="absolute bottom-0 right-0 h-8 w-8 bg-blue-500 rounded-full border-4 border-white dark:border-slate-900 flex items-center justify-center text-white shadow-sm">
+                                                        <Compass className="h-4 w-4" />
+                                                    </div>
+                                                </div>
+
+                                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{profile?.full_name || "Local Expert"}</h3>
+                                                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1">
+                                                    <MapPin className="h-3 w-3" /> {guide.city}, {guide.country}
+                                                </p>
+
+                                                <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-3 mb-6 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl italic leading-relaxed">
+                                                    {`Professional guide in ${guide.city} ready to show you the best hidden gems.`}
+                                                </p>
+                                            </div>
+
+                                            <div className="p-4 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4">
+                                                <div className="text-left">
+                                                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Availability</p>
+                                                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                                        {availableDaysStr}{hasMoreDays ? "..." : ""}
+                                                    </p>
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => toast.info(`Booking feature for ${profile?.full_name || "this guide"} coming soon!`)}
+                                                    className="rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-blue-600 dark:hover:bg-slate-200"
+                                                >
+                                                    Book Guide
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="relative overflow-hidden rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-12 lg:p-20 text-center shadow-xl">
+                            {/* Decorative Background Elements */}
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+                            <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-blue-500/5 blur-3xl" />
+                            <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-purple-500/5 blur-3xl" />
+
+                            <div className="relative z-10 mx-auto max-w-2xl">
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                >
+                                    <div className="text-center">
+                                        <div
+                                            className="mb-8 inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">
+                                            <Compass className="h-3.5 w-3.5" />
+                                            Exclusive Access
+                                        </div>
+                                        <h2 className="mb-6 text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white tracking-tighter leading-tight">
+                                            Expert-Led <span className="text-blue-600">Journeys</span>
+                                        </h2>
+                                        <p className="mx-auto max-w-2xl text-lg font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                                            Unlock deeper connections with your destination through our network of local experts and curators.
+                                        </p>
+                                    </div>
+                                </motion.div>
+                                <div className="grid gap-6 text-left sm:grid-cols-2">
+                                    <div className="group rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50 p-8 shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900 hover:shadow-xl hover:border-blue-500/30">
+                                        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-500 text-white shadow-lg shadow-blue-500/20 transition-transform group-hover:scale-110 group-hover:rotate-6">
+                                            <Users2 className="h-7 w-7" />
+                                        </div>
+                                        <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">
+                                            {t("Tours.verifiedGuides")}
+                                        </h4>
+                                        <p className="text-sm font-medium leading-relaxed text-slate-500 dark:text-slate-400">
+                                            {t("Tours.verifiedGuidesDesc")}
+                                        </p>
+                                    </div>
+
+                                    <div className="group rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50 p-8 shadow-sm transition-all hover:bg-white dark:hover:bg-slate-900 hover:shadow-xl hover:border-purple-500/30">
+                                        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-500 text-white shadow-lg shadow-purple-500/20 transition-transform group-hover:scale-110 group-hover:-rotate-6">
+                                            <Compass className="h-7 w-7" />
+                                        </div>
+                                        <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">
+                                            {t("Tours.curatedTours")}
+                                        </h4>
+                                        <p className="text-sm font-medium leading-relaxed text-slate-500 dark:text-slate-400">
+                                            {t("Tours.curatedToursDesc")}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-12 flex justify-center">
+                                    <Button className="h-14 px-8 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 font-bold uppercase tracking-widest text-xs transition-all hover:scale-105 active:scale-95 shadow-xl">
+                                        Get Notified
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </TabsContent>
             </Tabs>
         </div>
@@ -1793,8 +1902,7 @@ function EditableDay({
                                                 preferenceTags={tripConfig?.interests}
                                                 nextOrderIndex={nextOrderIndex}
                                                 tripCurrency={tripCurrency}
-                                                buttonLabel="Add Activity"
-                                                defaultTimeSlot={period}
+                                                defaultWhen={period}
                                             />
                                         </div>
                                     </div>
@@ -1932,11 +2040,8 @@ function BlockCard({
                                 {notes}
                             </p>
                         )}
-                        {!notes && place?.address && (
-                            <p className="text-xs text-slate-400 dark:text-slate-500 line-clamp-1 opacity-70">
-                                {place.address}
-                            </p>
-                        )}
+                        {/* Remove address as it does not exist on Place type */}
+
                     </div>
                 </div>
             </div>

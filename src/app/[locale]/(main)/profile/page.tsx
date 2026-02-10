@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ProfileForm } from "./ProfileForm";
 import { ProfileBackdrop } from "./ProfileBackdrop";
 import { AddPointsButton } from "./AddPointsButton";
+import { TourGuideRequestForm } from "./TourGuideRequestForm";
 import {
     ArrowUpRight,
     ArrowDownLeft,
@@ -282,6 +283,16 @@ export default async function ProfilePage() {
         ? (historyRows as LedgerRow[])
         : [];
 
+    // Fetch existing tour guide request status
+    const { data: requestRow } = await sb
+        .schema("itinero")
+        .from("tour_guide_requests")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
     return (
         <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300">
 
@@ -324,14 +335,14 @@ export default async function ProfilePage() {
                     </div>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+                <div className="grid gap-6 lg:grid-cols-3 lg:gap-8 items-start">
 
                     {/* LEFT COLUMN: Profile Card */}
-                    <div className="lg:col-span-1">
+                    <div className="lg:col-span-1 lg:sticky lg:top-8">
                         <Card
-                            className="h-full border-slate-200 bg-white shadow-sm rounded-3xl overflow-hidden flex flex-col p-0 gap-0 dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
+                            className="border-slate-200 bg-white shadow-sm rounded-3xl overflow-hidden flex flex-col p-0 gap-0 dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
                             <div
-                                className="h-32 relative border-b border-slate-200 dark:border-slate-800 overflow-hidden">
+                                className="h-32 relative border-b border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-800">
                                 <ProfileBackdrop avatarUrl={profileRow?.avatar_url} />
                             </div>
 
@@ -514,6 +525,15 @@ export default async function ProfilePage() {
                                 </ScrollArea>
                             </CardContent>
                         </Card>
+
+                        {/* Become a Tour Guide Form */}
+                        <div className="mt-8">
+                            <TourGuideRequestForm
+                                userId={userId}
+                                defaultCountry={profileRow?.passport_country}
+                                existingRequest={requestRow as any}
+                            />
+                        </div>
 
                         {/* Info Footer */}
                         <div

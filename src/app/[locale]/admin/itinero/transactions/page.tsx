@@ -1,13 +1,26 @@
+
 import { createClientServerRSC } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import PaymentHistoryClient, { Transaction } from "./PaymentHistoryClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function PaymentHistoryPage() {
-    const sb = await createClientServerRSC();
+export default async function PaymentHistoryPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ page?: string; size?: string }>;
+}) {
+    const { page: pageStr, size: sizeStr } = await searchParams;
+    const page = Math.max(1, parseInt(pageStr || "1"));
+    const pageSize = Math.min(100, Math.max(1, parseInt(sizeStr || "20")));
+    const offset = (page - 1) * pageSize;
 
-    // Fetch transactions
-    const { data: transactions, error } = await sb
+    const sb = await createClientServerRSC();
+    const adminSb = createAdminClient();
+    const fetchClient = adminSb || sb;
+
+    // Fetch transactions with pagination
+    const { data: transactions, count, error } = await fetchClient
         .schema("itinero")
         .from("points_ledger")
         .select(`
@@ -17,30 +30,26 @@ export default async function PaymentHistoryPage() {
             delta,
             meta,
             user_id
-        `)
+        `, { count: "exact" })
         .eq("ref_type", "paystack")
-        .order("created_at", { ascending: false }) as { data: any[], error: any };
+        .order("created_at", { ascending: false })
+        .range(offset, offset + pageSize - 1);
 
     if (error) {
         console.error("Error fetching transactions:", error);
     }
 
-    // Fetch user profiles to display names
-    // Note: Profiles table might not have email, so we just use full_name.
-    // If you need emails, you'd need the Service Role to query auth.users, 
-    // or rely on a view that joins them. Assuming profiles has full_name here.
     const userIds = Array.from(new Set(transactions?.map((t: any) => t.user_id) || [])) as string[];
     const usersMap: Record<string, { email: string | null; full_name: string | null; avatarUrl?: string | null }> = {};
 
     if (userIds.length > 0) {
-        const { data: profiles } = await sb
+        const { data: profiles } = await fetchClient
             .schema("itinero")
             .from("profiles")
-            .select("id, full_name, username, avatar_url") // Assuming no email in profiles
+            .select("id, full_name, username, avatar_url")
             .in("id", userIds);
 
         profiles?.forEach((p: any) => {
-            // Fallback: use username if full_name is missing
             usersMap[p.id] = {
                 email: p.username ? `@${p.username}` : "—",
                 full_name: p.full_name,
@@ -58,5 +67,12 @@ export default async function PaymentHistoryPage() {
         user: usersMap[t.user_id] || { email: "Unknown", full_name: "Unknown User", avatarUrl: null }
     })) || [];
 
-    return <PaymentHistoryClient transactions={rows} />;
+    return (
+        <PaymentHistoryClient
+            transactions={rows}
+            totalCount={count || 0}
+            currentPage={page}
+            pageSize={pageSize}
+        />
+    );
 }

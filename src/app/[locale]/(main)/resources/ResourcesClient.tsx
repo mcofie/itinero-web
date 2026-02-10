@@ -98,7 +98,7 @@ interface RegionData {
     scams: {
         title: string;
         desc: string;
-        severity: "Medium" | "High";
+        severity: "Low" | "Medium" | "High";
     }[];
 
     // Pocket Lingo (NEW)
@@ -645,7 +645,12 @@ export default function ResourcesClient() {
                                             <div key={i} className="relative pl-3 border-l-2 border-orange-300 dark:border-orange-700">
                                                 <div className="flex justify-between items-start mb-1">
                                                     <h4 className="text-sm font-bold text-slate-900 dark:text-white">{scam.title}</h4>
-                                                    <Badge className={cn("text-[10px] h-4 px-1", scam.severity === "High" ? "bg-red-500 hover:bg-red-500" : "bg-orange-400 hover:bg-orange-400")}>{scam.severity}</Badge>
+                                                    <Badge className={cn(
+                                                        "text-[10px] h-4 px-1",
+                                                        scam.severity === "High" ? "bg-red-500 hover:bg-red-500" :
+                                                            scam.severity === "Medium" ? "bg-orange-400 hover:bg-orange-400" :
+                                                                "bg-blue-400 hover:bg-blue-400"
+                                                    )}>{scam.severity}</Badge>
                                                 </div>
                                                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug">{scam.desc}</p>
                                             </div>

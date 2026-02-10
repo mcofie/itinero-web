@@ -1,3 +1,4 @@
+
 import { createClientServerRSC } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
@@ -5,8 +6,26 @@ import CreatorDetailsClient, { CreatorDetails } from "./CreatorDetailsClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function CreatorDetailsPage({ params }: { params: Promise<{ userId: string }> }) {
+export default async function CreatorDetailsPage({
+    params,
+    searchParams
+}: {
+    params: Promise<{ userId: string }>;
+    searchParams: Promise<{ tpage?: string; lpage?: string }>;
+}) {
     const { userId } = await params;
+    const { tpage: tpageStr, lpage: lpageStr } = await searchParams;
+
+    // Pagination for Trips
+    const tpage = Math.max(1, parseInt(tpageStr || "1"));
+    const tpageSize = 6;
+    const tOffset = (tpage - 1) * tpageSize;
+
+    // Pagination for Ledger
+    const lpage = Math.max(1, parseInt(lpageStr || "1"));
+    const lpageSize = 10;
+    const lOffset = (lpage - 1) * lpageSize;
+
     const sb = await createClientServerRSC();
     const adminSb = createAdminClient();
 
@@ -14,7 +33,7 @@ export default async function CreatorDetailsPage({ params }: { params: Promise<{
     const { data: profile } = await sb
         .schema("itinero")
         .from("profiles")
-        .select("id, full_name, username, avatar_url, bio")
+        .select("id, full_name, username, avatar_url, points_balance")
         .eq("id", userId)
         .single();
 
@@ -23,7 +42,6 @@ export default async function CreatorDetailsPage({ params }: { params: Promise<{
     }
 
     // 2. Fetch Auth User (Email & Created At)
-    // We use admin client because standard client cannot access auth.users
     let email: string | null = null;
     let createdAt: string | null = null;
 
@@ -39,8 +57,8 @@ export default async function CreatorDetailsPage({ params }: { params: Promise<{
         }
     }
 
-    // 3. Fetch Trips
-    const { data: trips } = await sb
+    // 3. Fetch Trips (Paginated)
+    const { data: trips, count: tripCount } = await sb
         .schema("itinero")
         .from("trips")
         .select(`
@@ -53,22 +71,19 @@ export default async function CreatorDetailsPage({ params }: { params: Promise<{
             currency, 
             public_id, 
             created_at
-        `)
+        `, { count: "exact" })
         .eq("user_id", userId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(tOffset, tOffset + tpageSize - 1);
 
-    // 4. Fetch Points Balance
-    let totalPoints = 0;
-    const { data: pointsAgg } = await sb
+    // 4. Fetch Ledger (Paginated)
+    const { data: ledger, count: ledgerCount } = await sb
         .schema("itinero")
         .from("points_ledger")
-        .select("sum:sum(delta)")
+        .select("id, delta, reason, ref_type, created_at, meta", { count: "exact" })
         .eq("user_id", userId)
-        .maybeSingle<{ sum: number | null }>();
-
-    if (pointsAgg?.sum) {
-        totalPoints = Number(pointsAgg.sum);
-    }
+        .order("created_at", { ascending: false })
+        .range(lOffset, lOffset + lpageSize - 1);
 
     const creatorData: CreatorDetails = {
         id: profile.id,
@@ -76,9 +91,9 @@ export default async function CreatorDetailsPage({ params }: { params: Promise<{
         username: profile.username,
         email,
         avatarUrl: profile.avatar_url,
-        bio: profile.bio || null,
+        bio: null,
         joinedAt: createdAt,
-        totalPoints,
+        totalPoints: profile.points_balance || 0,
         trips: (trips || []).map((t: any) => ({
             id: t.id,
             title: t.title,
@@ -91,7 +106,24 @@ export default async function CreatorDetailsPage({ params }: { params: Promise<{
             coverUrl: t.cover_url,
             createdAt: t.created_at,
         })),
+        ledger: (ledger || []).map((l: any) => ({
+            id: l.id,
+            delta: l.delta,
+            reason: l.reason,
+            ref_type: l.ref_type,
+            created_at: l.created_at,
+            meta: l.meta
+        })),
     };
 
-    return <CreatorDetailsClient creator={creatorData} />;
+    return (
+        <CreatorDetailsClient
+            creator={creatorData}
+            totalTripsCount={tripCount || 0}
+            tripsPage={tpage}
+            totalLedgerCount={ledgerCount || 0}
+            ledgerPage={lpage}
+        />
+    );
 }
+

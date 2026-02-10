@@ -125,15 +125,7 @@ type DestinationMetaLike = {
 
 type DestinationHistoryRow = {
     destination_id?: string;
-    description?: string | null;
-    history?: string | null;
-    city?: string | null;
-    currency_code?: string | null;
-    plugs?: string[] | string | null;
-    languages?: string[] | string | null;
-    transport?: string[] | string | null;
-    esim_provider?: string | null;
-    weather_desc?: string | null;
+    payload?: any;
 };
 
 /* =========================
@@ -379,9 +371,7 @@ export default function PreviewClient({
                 const { data, error } = await sb
                     .schema("itinero")
                     .from("destination_history")
-                    .select(
-                        "description, history, city, currency_code, plugs, languages, transport, esim_provider, weather_desc"
-                    )
+                    .select("payload")
                     .eq("destination_id", destId)
                     .limit(1)
                     .maybeSingle<DestinationHistoryRow>();
@@ -398,16 +388,19 @@ export default function PreviewClient({
                             ? v.split(",").map((s) => s.trim()).filter(Boolean)
                             : undefined;
 
+                const payload = data.payload || {};
+                const kbyg = payload.kbyg || {};
+
                 const normalized: DestinationMetaLike = {
-                    description: data.description ?? undefined,
-                    history: data.history ?? undefined,
-                    city: data.city ?? undefined,
-                    currency_code: data.currency_code ?? undefined,
-                    plugs: toArr(data.plugs),
-                    languages: toArr(data.languages),
-                    transport: toArr(data.transport),
-                    esim_provider: data.esim_provider ?? undefined,
-                    weather_desc: data.weather_desc ?? undefined,
+                    description: payload.about ?? undefined,
+                    history: payload.history ?? undefined,
+                    city: kbyg.primary_city ?? undefined,
+                    currency_code: kbyg.currency ?? undefined,
+                    plugs: toArr(kbyg.plugs),
+                    languages: toArr(kbyg.languages),
+                    transport: toArr(kbyg.getting_around),
+                    esim_provider: kbyg.esim ?? undefined,
+                    weather_desc: kbyg.weather_desc ?? undefined,
                 };
 
                 setDestMetaFromDb(normalized);

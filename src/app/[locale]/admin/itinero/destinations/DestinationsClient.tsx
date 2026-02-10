@@ -47,7 +47,8 @@ import {
     Map as MapIcon,
     ImageIcon,
     MapPin,
-    Info
+    Info,
+    ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 import { DestinationOption } from "../types";
@@ -83,6 +84,47 @@ export default function DestinationsClient({
     const [destSearch, setDestSearch] = React.useState("");
     const [currentPage, setCurrentPage] = React.useState(1);
     const pageSize = 10;
+
+    const [isGeocoding, setIsGeocoding] = React.useState(false);
+
+    async function handleGeocode() {
+        if (!destName.trim()) {
+            toast.error("Please enter a destination name first");
+            return;
+        }
+
+        setIsGeocoding(true);
+        try {
+            const query = encodeURIComponent(`${destName}${destCountry ? `, ${destCountry}` : ""}`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+            const data = await res.json();
+
+            if (data && data.length > 0) {
+                const { lat, lon, display_name } = data[0];
+                setDestLat(parseFloat(lat).toString());
+                setDestLng(parseFloat(lon).toString());
+
+                // If country is empty, try to extract it from display_name
+                if (!destCountry && display_name) {
+                    const parts = display_name.split(", ");
+                    const lastPart = parts[parts.length - 1];
+                    // Very simple country code guess or just use the name if it's short
+                    if (lastPart.length === 2) setDestCountry(lastPart.toUpperCase());
+                }
+
+                toast.success(`Found coordinates for: ${destName}`, {
+                    description: `Lat: ${lat}, Lng: ${lon}`
+                });
+            } else {
+                toast.error("Could not find coordinates for this destination");
+            }
+        } catch (e) {
+            console.error(e);
+            toast.error("Geocoding failed. Please try again or enter coordinates manually.");
+        } finally {
+            setIsGeocoding(false);
+        }
+    }
 
     /* --- Reset Helpers --- */
     function resetDestinationForm() {
@@ -317,9 +359,22 @@ export default function DestinationsClient({
 
                                         {/* Location Section */}
                                         <div className="grid gap-4">
-                                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white pb-2 border-b border-slate-100 dark:border-slate-800">
-                                                <MapPin className="h-4 w-4 text-emerald-500" />
-                                                Geographic Location
+                                            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-white">
+                                                    <MapPin className="h-4 w-4 text-emerald-500" />
+                                                    Geographic Location
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    disabled={isGeocoding}
+                                                    onClick={handleGeocode}
+                                                    className="h-8 text-xs gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                >
+                                                    {isGeocoding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+                                                    Find Coordinates
+                                                </Button>
                                             </div>
                                             <div className="grid sm:grid-cols-2 gap-4">
                                                 <FormInput
@@ -336,6 +391,18 @@ export default function DestinationsClient({
                                                     placeholder="135.7681"
                                                     type="number"
                                                 />
+                                                {destLat && destLng && (
+                                                    <div className="sm:col-span-2">
+                                                        <a
+                                                            href={`https://www.google.com/maps/search/?api=1&query=${destLat},${destLng}`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="text-[10px] text-blue-500 hover:underline flex items-center gap-1 w-fit"
+                                                        >
+                                                            <ExternalLink className="h-2.5 w-2.5" /> Verify on Google Maps
+                                                        </a>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 

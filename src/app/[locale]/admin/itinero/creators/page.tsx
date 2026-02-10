@@ -1,63 +1,118 @@
+
 import { createClientServerRSC } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import CreatorsClient, { CreatorStat } from "./CreatorsClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function CreatorsPage() {
+
+export default async function CreatorsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ page?: string; size?: string; filter?: string }>;
+}) {
+    const { page: pageStr, size: sizeStr, filter } = await searchParams;
+    const page = Math.max(1, parseInt(pageStr || "1"));
+    const pageSize = Math.min(100, Math.max(1, parseInt(sizeStr || "20")));
+    const offset = (page - 1) * pageSize;
+
     const sb = await createClientServerRSC();
+    const adminSb = createAdminClient(); // Added admin client
+    const fetchClient = adminSb || sb; // Use admin client if available, otherwise standard client
 
-    // 1. Fetch all trips (columns: user_id only needed for grouping, plus created_at for stats)
-    // We fetch minimal data to be efficient.
-    const { data: trips, error } = await sb
+    // To implement "inactive" (0 trips) or "active" (>0 trips) filtering server-side
+    // without a View, we can use a select with count and filter if possible,
+    // but its often easier to fetch slightly more and filter, or use an RPC.
+    // For now, let's try a clever select.
+
+    let query = fetchClient // Changed sb to fetchClient
         .schema("itinero")
-        .from("trips")
-        .select("user_id, created_at") as { data: { user_id: string; created_at: string }[] | null; error: any };
+        .from("profiles")
+        .select(`
+            id, 
+            full_name, 
+            username, 
+            avatar_url, 
+            points_balance,
+            trips:trips(count)
+        `, { count: "exact" });
 
-    if (error) {
-        console.error("Error fetching trips:", error);
+    // Note: Supabase doesn't support .gt("trips.count", 0) directly in JS filters.
+    // One workaround for "Active" is to query the trips table instead and join profiles.
+    // However, for "Inactive", we'll just sort and filter in code if count is low, 
+    // or ideally use a negative join if we had SQL.
+
+    // For "Active" filter, we perform a different query to ensure we only get creators
+    if (filter === "active") {
+        const { data: creatorIdsData } = await fetchClient
+            .schema("itinero")
+            .from("trips")
+            .select("user_id");
+
+        const creatorIds = Array.from(new Set(creatorIdsData?.map(t => t.user_id) || []));
+        if (creatorIds.length > 0) {
+            query = query.in("id", creatorIds);
+        } else {
+            // No creators exist at all
+            return <CreatorsClient creators={[]} totalCount={0} currentPage={page} pageSize={pageSize} />;
+        }
+    } else if (filter === "inactive") {
+        const { data: creatorIdsData } = await fetchClient
+            .schema("itinero")
+            .from("trips")
+            .select("user_id");
+
+        const creatorIds = Array.from(new Set(creatorIdsData?.map(t => t.user_id) || []));
+        if (creatorIds.length > 0) {
+            query = query.not("id", "in", `(${creatorIds.join(",")})`);
+        }
     }
 
-    // Group by user
-    const stats: Record<string, { count: number; lastDate: string }> = {};
-    trips?.forEach((t) => {
-        const uid = t.user_id;
-        if (!uid) return;
-        if (!stats[uid]) stats[uid] = { count: 0, lastDate: t.created_at };
-        stats[uid].count++;
-        // Track latest trip date
-        if (new Date(t.created_at) > new Date(stats[uid].lastDate)) {
-            stats[uid].lastDate = t.created_at;
-        }
-    });
+    const { data: rawUsers, count, error } = await query
+        .order("points_balance", { ascending: false })
+        .range(offset, offset + pageSize - 1);
 
-    // 2. Fetch profiles for these users
-    const userIds = Object.keys(stats);
-    let profilesMap: Record<string, any> = {};
+    if (error) {
+        console.error("Error fetching creators:", error);
+    }
+
+    const userIds = rawUsers?.map(u => u.id) || [];
+    let ledgerBalanceMap = new Map<string, number>();
 
     if (userIds.length > 0) {
-        const { data: profiles } = await sb
+        const { data: ledgerEntries } = await fetchClient
             .schema("itinero")
-            .from("profiles")
-            .select("id, full_name, username, avatar_url")
-            .in("id", userIds);
+            .from("points_ledger")
+            .select("user_id, delta")
+            .in("user_id", userIds);
 
-        profiles?.forEach((p: any) => {
-            profilesMap[p.id] = p;
+        ledgerEntries?.forEach(entry => {
+            const current = ledgerBalanceMap.get(entry.user_id) || 0;
+            ledgerBalanceMap.set(entry.user_id, current + (entry.delta || 0));
         });
     }
 
-    // 3. Assemble rows
-    const rows: CreatorStat[] = userIds.map(uid => {
-        const p = profilesMap[uid];
-        return {
-            userId: uid,
-            fullName: p?.full_name || null,
-            username: p?.username || null,
-            avatarUrl: p?.avatar_url || null,
-            tripCount: stats[uid].count,
-            lastTripDate: stats[uid].lastDate,
-        };
-    }).sort((a, b) => b.tripCount - a.tripCount); // Sort by most prolific
+    // 2. Assemble rows
+    const rows: CreatorStat[] = (rawUsers || []).map((u: any) => {
+        const tripCount = Array.isArray(u.trips) ? (u.trips[0]?.count || 0) : (u.trips?.count || 0);
 
-    return <CreatorsClient creators={rows} />;
+        return {
+            userId: u.id,
+            fullName: u.full_name,
+            username: u.username,
+            avatarUrl: u.avatar_url,
+            tripCount: tripCount,
+            points: ledgerBalanceMap.get(u.id) ?? u.points_balance ?? 0,
+        };
+    });
+
+    return (
+        <CreatorsClient
+            creators={rows}
+            totalCount={count || 0}
+            currentPage={page}
+            pageSize={pageSize}
+        />
+    );
 }
+
