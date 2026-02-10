@@ -5,21 +5,17 @@ import { notFound } from "next/navigation";
 import { createClientServerRSC } from "@/lib/supabase/server";
 import PublicItineraryClient from "./public-itinerary-client";
 import {
-    MapPin,
-    DollarSign,
-    Plug,
-    Globe,
-    Phone,
-    CloudSun,
-    User2,
-    CalendarDays,
-    Wallet,
-    Plane
+    Compass
 } from "lucide-react";
-import MapSection from "@/app/[locale]/trips/share/[publicId]/MapSection";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ParallaxHero } from "@/components/trips/ParallaxHero";
+import SharedPlacesList from "./SharedPlacesList";
+import { SharedTripIntelligence } from "./SharedTripIntelligence";
+import { ExchangeRateCard } from "@/components/trips/ExchangeRateCard";
+import { WeatherWidget } from "@/components/trips/WeatherWidget";
+import MapSection from "./MapSection";
 
 /* ---------------- Types (Preserved) ---------------- */
 
@@ -615,6 +611,7 @@ export default async function PublicTripPage({
         "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1600&auto=format&fit=crop";
 
     const tripSummary: TripSummary = (data.trip_summary as TripSummary) ?? null;
+    const tripInputs = data.inputs as any;
 
     const { data: itemsRows } = await sb
         .schema("itinero")
@@ -671,99 +668,22 @@ export default async function PublicTripPage({
         <div
             className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-sans selection:bg-blue-100 selection:text-blue-900 transition-colors duration-300">
             {/* 1. HERO SECTION (Immersive) */}
-            <header
-                className="relative h-[50vh] md:h-[60vh] w-full overflow-hidden border-b border-slate-200 dark:border-slate-800">
-                <Image
-                    src={cover}
-                    alt={title}
-                    fill
-                    priority
-                    className="object-cover"
-                    sizes="100vw"
-                />
-                <div
-                    className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-transparent opacity-90" />
+            {/* 1. HERO HEADER */}
+            <ParallaxHero
+                title={title}
+                heroUrl={cover}
+                startDate={data.start_date || undefined}
+                estCost={data.est_total_cost || undefined}
+                currency={tripCurrency}
+                interests={interests}
+            >
+                <Link href="/trip-maker" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-md transition-all hover:bg-white/20">
+                    Create Your Own
+                </Link>
+            </ParallaxHero>
 
-                {/* Top Nav */}
-                <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-30">
-                    <Link
-                        href="/public"
-                        className="flex items-center gap-2 font-bold text-xl tracking-tight text-white hover:text-blue-100 transition-colors"
-                    >
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg">
-                            <Plane className="h-5 w-5" />
-                        </div>
-                        <span className="drop-shadow-md">Itinero</span>
-                    </Link>
-                    <Button
-                        asChild
-                        variant="secondary"
-                        className="rounded-full bg-white/10 text-white hover:bg-white/20 backdrop-blur-md border border-white/10 font-semibold transition-all hover:scale-105"
-                    >
-                        <Link href="/trip-maker">Create Your Own</Link>
-                    </Button>
-                </div>
-
-                {/* Hero Content Layer */}
-                <div className="absolute inset-x-0 bottom-0 z-20 pb-12 md:pb-20">
-                    <div className="mx-auto max-w-6xl px-6 flex flex-col items-start gap-6">
-                        <div className="flex flex-wrap gap-3 items-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-                            <Badge
-                                variant="secondary"
-                                className="rounded-full bg-black/30 backdrop-blur-md text-white border border-white/20 px-4 py-1.5 hover:bg-black/40 transition-colors font-medium text-sm"
-                            >
-                                <CalendarDays className="w-4 h-4 mr-2 text-blue-300" />
-                                {dateRange}
-                            </Badge>
-                            {dest?.name && (
-                                <Badge
-                                    variant="secondary"
-                                    className="rounded-full bg-black/30 backdrop-blur-md text-white border border-white/20 px-4 py-1.5 hover:bg-black/40 transition-colors font-medium text-sm"
-                                >
-                                    <Globe className="w-4 h-4 mr-2 text-emerald-300" />
-                                    {dest.name}
-                                </Badge>
-                            )}
-                        </div>
-
-                        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white drop-shadow-lg max-w-5xl leading-[1.1] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
-                            {title}
-                        </h1>
-
-                        <div className="flex items-center gap-6 pt-2 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-                            {ownerName && (
-                                <div className="flex items-center gap-4 pr-6 border-r border-white/20">
-                                    <div
-                                        className="relative h-12 w-12 rounded-full overflow-hidden bg-white/10 ring-2 ring-white/30 shadow-lg">
-                                        {ownerAvatar ? (
-                                            <Image
-                                                src={ownerAvatar}
-                                                alt={ownerName}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                        ) : (
-                                            <User2 className="h-6 w-6 text-white absolute inset-0 m-auto" />
-                                        )}
-                                    </div>
-                                    <div>
-                                        <p className="text-white font-bold text-base drop-shadow-md">
-                                            {ownerName}
-                                        </p>
-                                        <p className="text-blue-200 text-xs font-medium uppercase tracking-wider">Trip Curator</p>
-                                    </div>
-                                </div>
-                            )}
-                            <div className="text-white/80 text-xs font-bold tracking-widest uppercase border border-white/20 rounded-lg px-3 py-1 bg-white/5 backdrop-blur-sm">
-                                Shared Itinerary
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            {/* 2. MAIN CONTENT WRAPPER (Floating Up) */}
-            <div className="relative z-10 -mt-8 mx-auto max-w-6xl px-4 sm:px-6 pb-20 space-y-8">
+            {/* 2. MAIN CONTENT WRAPPER */}
+            <div className="relative z-10 -mt-20 mx-auto max-w-6xl px-4 sm:px-6 pb-20 space-y-12">
                 {/* A. INTRO & STATS GRID (Bento Style) */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left: Overview / Description */}
@@ -771,14 +691,6 @@ export default async function PublicTripPage({
                         {(destMeta?.description || interests.length > 0) && (
                             <div
                                 className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
-                                {interests.length > 0 && (
-                                    <div className="mb-8">
-                                        <h3 className="text-xs font-bold uppercase text-slate-400 dark:text-slate-500 mb-3 tracking-wider">
-                                            Trip Vibe
-                                        </h3>
-                                        <InterestChips interests={interests} pillTone="default" />
-                                    </div>
-                                )}
                                 {destMeta?.description && (
                                     <div className="prose prose-slate dark:prose-invert max-w-none">
                                         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
@@ -791,66 +703,75 @@ export default async function PublicTripPage({
                                 )}
                             </div>
                         )}
+
+                        {/* Travel Toolkit & Intelligence */}
+                        <SharedTripIntelligence meta={destMeta ?? undefined} />
                     </div>
 
                     {/* Right: Know Before You Go (Stats) */}
-                    <div className="lg:col-span-1 flex flex-col gap-4">
-                        {/* Budget Card */}
+                    <div className="lg:col-span-1 flex flex-col gap-4 lg:sticky lg:top-24 self-start">
+                        {/* Exchange Rate Card */}
+                        <ExchangeRateCard
+                            meta={destMeta ?? null}
+                            baseCurrency={tripCurrency} // Using trip currency as base for public view or maybe needs user context but static for now
+                            className="shrink-0"
+                        />
+
+                        {/* Weather Widget */}
+                        <WeatherWidget
+                            meta={destMeta ?? null}
+                            lat={tripInputs?.destinations?.[0]?.lat}
+                            lng={tripInputs?.destinations?.[0]?.lng}
+                            startDate={data.start_date || undefined}
+                            endDate={data.end_date || undefined}
+                            className="shrink-0"
+                        />
+
+                        {/* Budget Card - Premium Gradient */}
                         {data.est_total_cost && (
                             <div
-                                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div
-                                        className="h-10 w-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                                        <Wallet className="w-5 h-5" />
-                                    </div>
-                                    <span
-                                        className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                                        Est. Budget
-                                    </span>
+                                className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 shadow-lg text-white">
+                                <div className="absolute top-0 right-0 p-6 opacity-10">
+                                    <Wallet className="w-24 h-24 rotate-[-15deg] translate-x-4 translate-y-[-10px]" />
                                 </div>
-                                <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                                    {tripCurrency} {data.est_total_cost.toLocaleString()}
-                                </p>
-                                <p className="text-xs text-slate-500 dark:text-slate-400">
-                                    Estimated total based on activities
-                                </p>
+
+                                <div className="relative z-10 flex flex-col h-full justify-between">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div
+                                            className="h-8 w-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/30">
+                                            <DollarSign className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-xs font-bold uppercase tracking-widest text-emerald-100">
+                                            Est. Budget
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p className="text-4xl font-black tracking-tight text-white mb-1">
+                                            {formatMoneyGeneric(data.est_total_cost, tripCurrency)}
+                                        </p>
+                                        <p className="text-xs font-medium text-emerald-100/80">
+                                            Estimated total based on itinerary activities
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         )}
 
                         {/* Quick Facts Grid */}
                         <div
-                            className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 space-y-4">
-                            <h3 className="font-bold text-slate-900 dark:text-white text-sm border-b border-slate-100 dark:border-slate-800 pb-3">
-                                Local Guide
+                            className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex flex-col h-full">
+                            <h3 className="font-bold text-slate-900 dark:text-white text-sm pb-4 flex items-center gap-2">
+                                <Compass className="w-4 h-4 text-blue-500" />
+                                Trip Details
                             </h3>
-                            <div className="space-y-3">
-                                <InfoItem icon={MapPin} label="City" value={destMeta?.city} />
-                                <InfoItem
-                                    icon={DollarSign}
-                                    label="Currency"
-                                    value={destMeta?.currency_code}
-                                />
-                                <InfoItem
-                                    icon={CloudSun}
-                                    label="Weather"
-                                    value={destMeta?.weather_desc}
-                                />
-                                <InfoItem
-                                    icon={Plug}
-                                    label="Plugs"
-                                    value={joinArr(destMeta?.plugs)}
-                                />
-                                <InfoItem
-                                    icon={Phone}
-                                    label="eSIM"
-                                    value={destMeta?.esim_provider}
-                                />
-                                <InfoItem
-                                    icon={Globe}
-                                    label="Language"
-                                    value={joinArr(destMeta?.languages)}
-                                />
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <InfoCard icon={MapPin} label="City" value={destMeta?.city} delay={1} />
+                                <InfoCard icon={DollarSign} label="Currency" value={destMeta?.currency_code} delay={2} />
+                                <InfoCard icon={CloudSun} label="Weather" value={destMeta?.weather_desc} delay={3} />
+                                <InfoCard icon={Globe} label="Language" value={joinArr(destMeta?.languages)} delay={4} />
+                                <InfoCard icon={Plug} label="Plugs" value={joinArr(destMeta?.plugs)} delay={5} />
+                                <InfoCard icon={Phone} label="eSIM" value={destMeta?.esim_provider} delay={6} />
                             </div>
                         </div>
                     </div>
@@ -881,26 +802,32 @@ export default async function PublicTripPage({
                     </div>
                 </div>
 
-                {/* C. EXPLORE MAP (Footer Area) */}
+                {/* C. PLACES & MAP */}
                 {placeDetails.length > 0 && (
-                    <div className="space-y-6 pt-8">
-                        <div className="flex items-center gap-3 px-2">
-                            <div
-                                className="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                                <MapPin className="w-5 h-5" />
+                    <div className="space-y-8 pt-8">
+                        <div className="flex items-center justify-between px-2">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                    <MapPin className="w-5 h-5" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                                    Curated Places
+                                </h2>
                             </div>
-                            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                                Explore the Area
-                            </h2>
+                            <span className="text-xs font-medium px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
+                                {placeDetails.length} Locations
+                            </span>
                         </div>
 
-                        <div
-                            className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm h-[450px] bg-slate-100 dark:bg-slate-800 relative">
+                        {/* Places Grid */}
+                        <SharedPlacesList places={placeDetails} />
+
+                        {/* Map View */}
+                        <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm h-[400px] bg-slate-100 dark:bg-slate-800 relative mt-8">
                             <MapSection places={placeDetails} />
-                            <div
-                                className="absolute bottom-6 left-6 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold shadow-md border border-slate-100 dark:border-slate-800 pointer-events-none z-[1000] text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                            <div className="absolute bottom-6 left-6 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold shadow-md border border-slate-100 dark:border-slate-800 pointer-events-none z-[1000] text-slate-700 dark:text-slate-200 flex items-center gap-2">
                                 <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-                                {placeDetails.length} Locations
+                                Interactive Map
                             </div>
                         </div>
                     </div>
@@ -939,33 +866,49 @@ export default async function PublicTripPage({
 
 /* ---------------- UI Components ---------------- */
 
-function InfoItem({
+function InfoCard({
     icon: Icon,
     label,
     value,
+    delay = 0,
 }: {
     icon: React.ElementType;
     label: string;
     value?: string | null;
+    delay?: number;
 }) {
     if (!value) return null;
     return (
         <div
-            className="flex items-start gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-            <div className="mt-0.5 text-slate-400 dark:text-slate-500">
-                <Icon className="w-4 h-4" />
-            </div>
-            <div>
-                <div
-                    className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">
+            className="flex flex-col p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800/50 hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 fill-mode-backwards"
+            style={{ animationDelay: `${delay * 100}ms` }}
+        >
+            <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 bg-white dark:bg-slate-800 rounded-lg shadow-sm text-blue-500 dark:text-blue-400">
+                    <Icon className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                     {label}
-                </div>
-                <div className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-snug">
-                    {value}
-                </div>
+                </span>
             </div>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 leading-tight">
+                {value}
+            </p>
         </div>
     );
+}
+
+function formatMoneyGeneric(n: number, currency: string) {
+    try {
+        return new Intl.NumberFormat(undefined, {
+            style: "currency",
+            currency,
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(n);
+    } catch {
+        return `${currency} ${Math.round(n).toLocaleString()}`;
+    }
 }
 
 function InterestChips({

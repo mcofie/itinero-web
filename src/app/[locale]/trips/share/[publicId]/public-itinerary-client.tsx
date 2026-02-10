@@ -218,41 +218,47 @@ function DayCard({
     const label = day.date ? friendlyDate(day.date) : "Unscheduled";
 
     return (
-        <article
-            className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
-            <header
-                className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-4 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-950/50">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    {label}
-                </h3>
-                <span
-                    className="text-xs font-medium text-slate-500 bg-white px-2.5 py-1 rounded-md border border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700">
-                    {day.blocks.length} Activities
+        <article className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+            {/* Header */}
+            <header className="flex items-center justify-between gap-3 border-b border-slate-100 px-6 py-5 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-950/50">
+                <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-blue-500 ring-4 ring-blue-500/20" />
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                        {label}
+                    </h3>
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 bg-white px-3 py-1.5 rounded-full border border-slate-200 dark:bg-slate-900 dark:text-slate-500 dark:border-slate-800">
+                    {day.blocks.length} Items
                 </span>
             </header>
 
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {day.blocks.length === 0 && (
-                    <div className="px-6 py-8 text-center text-sm text-slate-500 italic dark:text-slate-400">
-                        No items for this day.
+            {/* Timeline Body */}
+            <div className="p-6 md:p-8">
+                {day.blocks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/30">
+                        <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3 dark:bg-slate-800">
+                            <Clock className="w-6 h-6 opacity-50" />
+                        </div>
+                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                            No activities scheduled for this day.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="relative space-y-8 pl-4 sm:pl-0">
+                        {/* Timeline Line (Desktop) */}
+                        <div className="absolute left-[95px] top-4 bottom-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+
+                        {day.blocks.map((block, idx) => (
+                            <ItineraryItemRow
+                                key={`${block.title}-${idx}`}
+                                block={block}
+                                place={block.place_id ? nameIndex.get(block.place_id) ?? null : null}
+                                placeDetail={block.place_id ? detailIndex.get(block.place_id) ?? null : null}
+                                currency={currency}
+                            />
+                        ))}
                     </div>
                 )}
-
-                {day.blocks.map((block, idx) => (
-                    <ItineraryItemRow
-                        key={`${block.title}-${idx}`}
-                        block={block}
-                        place={
-                            block.place_id ? nameIndex.get(block.place_id) ?? null : null
-                        }
-                        placeDetail={
-                            block.place_id
-                                ? detailIndex.get(block.place_id) ?? null
-                                : null
-                        }
-                        currency={currency}
-                    />
-                ))}
             </div>
         </article>
     );
@@ -272,7 +278,7 @@ function ItineraryItemRow({
     const [open, setOpen] = React.useState(false);
     const anchorRef = React.useRef<HTMLButtonElement | null>(null);
 
-    // Close popover on outside click or Escape
+    // Close logic omitted for brevity, assumed shared ref hook or similar if needed...
     React.useEffect(() => {
         if (!open) return;
         const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -293,124 +299,119 @@ function ItineraryItemRow({
         };
     }, [open]);
 
-    const chips: Array<{ icon: React.ReactNode; label: string; color: string }> =
-        [];
+    const chips: Array<{ icon: React.ReactNode; label: string; color: string }> = [];
 
     if (isFiniteNum(block.est_cost) && block.est_cost! > 0)
         chips.push({
             icon: <DollarSign className="h-3 w-3" />,
             label: formatMoney(block.est_cost!, currency),
-            color:
-                "text-emerald-700 bg-emerald-50 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50",
+            color: "text-emerald-700 bg-emerald-50 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-900/50",
         });
 
     if (isFiniteNum(block.duration_min) && block.duration_min! > 0)
         chips.push({
             icon: <Clock className="h-3 w-3" />,
             label: formatMinutes(block.duration_min!),
-            color:
-                "text-slate-600 bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300",
+            color: "text-slate-600 bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300",
         });
 
-    if (
-        isFiniteNum(block.travel_min_from_prev) &&
-        block.travel_min_from_prev! > 0
-    )
+    if (isFiniteNum(block.travel_min_from_prev) && block.travel_min_from_prev! > 0)
         chips.push({
             icon: <CarFront className="h-3 w-3" />,
             label: `${block.travel_min_from_prev}m travel`,
-            color:
-                "text-slate-500 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400",
+            color: "text-slate-500 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-400",
         });
 
     const whenUi = getWhenUi(block.when as "morning" | "afternoon" | "evening");
 
     return (
-        <div className="px-6 py-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
-            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                {/* Left: Time + Title + Place */}
-                <div className="flex gap-4 min-w-0">
-                    {/* Time Indicator */}
-                    <div
-                        className={cn(
-                            "flex-shrink-0 w-12 flex flex-col items-center gap-1 pt-1"
-                        )}
-                    >
-                        <span
-                            className={cn(
-                                "h-8 w-8 rounded-full flex items-center justify-center text-sm bg-white border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700",
-                                whenUi.text
+        <div className="relative grid sm:grid-cols-[100px_1fr] gap-6 group">
+            {/* Left: Time visual */}
+            <div className="hidden sm:flex flex-col items-end pt-1 relative z-10">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
+                    {block.when}
+                </span>
+                <div className={cn(
+                    "h-8 w-8 rounded-full flex items-center justify-center text-sm shadow-sm ring-4 ring-white dark:ring-slate-900 bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-700",
+                    whenUi.text
+                )}>
+                    {whenUi.emoji}
+                </div>
+            </div>
+
+            {/* Right: Card */}
+            <div className="flex-1 min-w-0">
+                <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-slate-300 dark:bg-slate-900 dark:border-slate-800 dark:hover:border-slate-700">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div className="space-y-2 flex-1 min-w-0">
+                            {/* Mobile Time Header */}
+                            <div className="flex sm:hidden items-center gap-2 mb-2">
+                                <span className="text-lg">{whenUi.emoji}</span>
+                                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    {block.when}
+                                </span>
+                            </div>
+
+                            <h4 className="text-lg font-bold text-slate-900 leading-tight dark:text-white">
+                                {block.title || "Untitled Activity"}
+                            </h4>
+
+                            {block.notes && (
+                                <p className="text-sm text-slate-600 leading-relaxed max-w-xl dark:text-slate-400">
+                                    {block.notes}
+                                </p>
                             )}
-                        >
-                            {whenUi.emoji}
-                        </span>
-                        <span
-                            className="text-[10px] font-bold uppercase text-slate-400 tracking-wider dark:text-slate-500">
-                            {block.when}
-                        </span>
-                    </div>
 
-                    <div className="space-y-1.5 flex-1">
-                        <h4 className="text-base font-bold text-slate-900 leading-tight dark:text-white">
-                            {block.title || "Untitled Activity"}
-                        </h4>
+                            {place && (
+                                <div className="pt-1">
+                                    <button
+                                        ref={anchorRef}
+                                        id={buttonId(place.id)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 transition-colors border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-900/50"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpen((v) => !v);
+                                        }}
+                                        aria-expanded={open}
+                                        aria-controls={open ? popId(anchorRef.current!) : undefined}
+                                    >
+                                        <MapPin className="h-3.5 w-3.5" />
+                                        <span>{place.name}</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
 
-                        {block.notes && (
-                            <p className="text-sm text-slate-600 leading-relaxed max-w-xl dark:text-slate-400">
-                                {block.notes}
-                            </p>
-                        )}
-
-                        {/* Place Button */}
-                        {place && (
-                            <div className="pt-1">
-                                <button
-                                    ref={anchorRef}
-                                    id={buttonId(place.id)}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-900/50"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpen((v) => !v);
-                                    }}
-                                    aria-expanded={open}
-                                    aria-controls={open ? popId(anchorRef.current!) : undefined}
-                                >
-                                    <MapPin className="h-3.5 w-3.5" />
-                                    <span>{place.name}</span>
-                                </button>
+                        {/* Chips */}
+                        {chips.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-2 md:flex-col md:items-end md:gap-1.5 mt-2 md:mt-0">
+                                {chips.map((c, i) => (
+                                    <span
+                                        key={i}
+                                        className={cn(
+                                            "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] font-bold tabular-nums",
+                                            c.color
+                                        )}
+                                    >
+                                        {c.icon}
+                                        <span>{c.label}</span>
+                                    </span>
+                                ))}
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Right: Stats Chips */}
-                {chips.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 mt-2 md:mt-0 md:justify-end pl-16 md:pl-0">
-                        {chips.map((c, i) => (
-                            <span
-                                key={i}
-                                className={cn(
-                                    "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-medium",
-                                    c.color
-                                )}
-                            >
-                                {c.icon}
-                                <span>{c.label}</span>
-                            </span>
-                        ))}
-                    </div>
+                {/* Popover */}
+                {place && open && (
+                    <Popover
+                        anchorId={buttonId(place.id)}
+                        onClose={() => setOpen(false)}
+                        place={place}
+                        detail={placeDetail}
+                    />
                 )}
             </div>
-
-            {/* Popover */}
-            {place && open && (
-                <Popover
-                    anchorId={buttonId(place.id)}
-                    onClose={() => setOpen(false)}
-                    place={place}
-                    detail={placeDetail}
-                />
-            )}
         </div>
     );
 }
