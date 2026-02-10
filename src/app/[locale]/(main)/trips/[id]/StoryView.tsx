@@ -142,7 +142,7 @@ function StoryBlock({
 
             {/* Content Card */}
             <div className={cn("ml-16 flex-1 md:ml-0", isEven ? "md:pr-12" : "md:pl-12")}>
-                <div className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+                <div className="group relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm transition-all hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
                     <div className="mb-4 flex items-center justify-between">
                         <span className="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                             {block.when}

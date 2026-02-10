@@ -137,7 +137,7 @@ export default async function TripsPage() {
                         {/* Add Card - Minimalist Outline (First item for visibility) */}
                         <Link
                             href="/trip-maker"
-                            className="group relative flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed border-slate-200 bg-white/50 p-6 text-center transition-all hover:border-blue-500 hover:bg-blue-50/50 hover:shadow-md dark:bg-slate-900/50 dark:border-slate-800 dark:hover:border-blue-500/50 dark:hover:bg-slate-800/80"
+                            className="group relative flex min-h-[320px] flex-col items-center justify-center gap-4 rounded-[2rem] border-2 border-dashed border-slate-200 bg-white p-6 text-center transition-all hover:bg-slate-50 hover:shadow-sm dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-slate-800/80"
                         >
                             <div
                                 className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-600 transition-transform group-hover:scale-110 dark:bg-blue-900/20 dark:text-blue-400">
@@ -224,7 +224,7 @@ function TripCard({
     return (
         <Link
             href={`/trips/${trip.id}`}
-            className="group flex flex-col gap-3 rounded-3xl bg-white p-3 shadow-sm ring-1 ring-slate-900/5 transition-all hover:-translate-y-1 hover:shadow-xl dark:bg-slate-900 dark:ring-slate-800 dark:hover:ring-slate-700 dark:hover:bg-slate-800/80"
+            className="group flex flex-col gap-3 rounded-[2rem] bg-white p-3 shadow-sm ring-1 ring-slate-900/5 transition-all hover:shadow-sm hover:scale-[1.01] dark:bg-slate-900 dark:ring-slate-800 dark:hover:bg-slate-800/80"
         >
             {/* Image Section */}
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
@@ -282,7 +282,7 @@ function TripCard({
 function EmptyState() {
     return (
         <div
-            className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white py-24 text-center shadow-sm dark:bg-slate-900 dark:border-slate-800">
+            className="flex flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-200 bg-white py-24 text-center shadow-sm dark:bg-slate-900 dark:border-slate-800">
             <div
                 className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-blue-50 ring-8 ring-blue-50/50 dark:bg-slate-800 dark:ring-slate-800/50">
                 <Plane className="h-10 w-10 text-blue-600 dark:text-blue-400" />

@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import {cn} from "@/lib/utils";
-import {DestinationMeta} from "@/app/[locale]/(main)/trips/TripActionsClient";
-import {Coins, ArrowRightLeft, Loader2, RefreshCw} from "lucide-react";
-import {getLatestFxSnapshot, convertUsingSnapshot} from "@/lib/fx/fx";
-import {FxSnapshot} from "@/lib/fx/types";
-import {Input} from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { DestinationMeta } from "@/app/[locale]/(main)/trips/TripActionsClient";
+import { Coins, ArrowRightLeft, Loader2, RefreshCw } from "lucide-react";
+import { getLatestFxSnapshot, convertUsingSnapshot } from "@/lib/fx/fx";
+import { FxSnapshot } from "@/lib/fx/types";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 type Props = {
     meta: DestinationMeta | null;
@@ -14,8 +15,8 @@ type Props = {
     baseCurrency?: string;
 };
 
-export function ExchangeRateCard({meta, className, baseCurrency = "USD"}: Props) {
-    const {currency_code} = meta || {};
+export function ExchangeRateCard({ meta, className, baseCurrency = "USD" }: Props) {
+    const { currency_code } = meta || {};
     const [snapshot, setSnapshot] = React.useState<FxSnapshot | null>(null);
     const [loading, setLoading] = React.useState(true);
     const [amount, setAmount] = React.useState<string>("1");
@@ -25,8 +26,6 @@ export function ExchangeRateCard({meta, className, baseCurrency = "USD"}: Props)
 
         async function load() {
             try {
-                // Always fetch USD snapshot as it's the most reliable source
-                // convertUsingSnapshot handles cross-rates correctly
                 const snap = await getLatestFxSnapshot("USD");
                 if (mounted) setSnapshot(snap);
             } catch (e) {
@@ -40,18 +39,17 @@ export function ExchangeRateCard({meta, className, baseCurrency = "USD"}: Props)
         return () => {
             mounted = false;
         };
-    }, []); // Only load once on mount
+    }, []);
 
-    // Fallback if no currency data
     if (!currency_code) {
         return (
             <div
-                className={cn("relative overflow-hidden rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 shadow-sm", className)}>
+                className={cn("relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm", className)}>
                 <div className="flex items-center gap-4 opacity-50">
-                    <Coins className="h-10 w-10 text-slate-400"/>
+                    <Coins className="h-8 w-8 text-slate-400" />
                     <div className="flex flex-col">
                         <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Currency</span>
-                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Not available</span>
+                        <span className="text-sm font-bold text-slate-600 dark:text-slate-400">Unavailable</span>
                     </div>
                 </div>
             </div>
@@ -66,63 +64,47 @@ export function ExchangeRateCard({meta, className, baseCurrency = "USD"}: Props)
     return (
         <div
             className={cn(
-                "relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 p-6 shadow-sm transition-all hover:shadow-md",
+                "group relative overflow-hidden rounded-[2rem] border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-950 p-8 shadow-sm hover:shadow-2xl transition-all duration-500",
                 className
             )}
         >
-            {/* Background Pattern */}
-            <Coins className="absolute -right-4 -top-4 h-32 w-32 opacity-20 rotate-12 text-white"/>
+            <div className="absolute top-0 right-0 h-32 w-32 -mr-8 -mt-8 rounded-full bg-indigo-500/5 blur-3xl group-hover:bg-indigo-500/10 transition-colors" />
 
-            <div className="relative z-10 flex flex-col gap-6">
-                <div className="flex items-center justify-between text-emerald-50">
-                    <span className="text-xs font-bold uppercase tracking-wider opacity-80">
-                        Exchange Rate
-                    </span>
-                    {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin opacity-50"/>
-                    ) : (
-                        <div
-                            className="flex items-center gap-1 text-[10px] font-medium opacity-60 bg-black/10 px-2 py-0.5 rounded-full">
-                            <RefreshCw className="h-3 w-3"/>
-                            Live
-                        </div>
-                    )}
-                </div>
-
-                <div className="space-y-4">
-                    {/* Input Row */}
-                    <div className="flex items-center gap-3">
-                        <div className="relative flex-1">
-                            <Input
-                                type="number"
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                className="h-12 rounded-xl border-0 bg-white/20 text-xl font-bold text-white placeholder:text-white/50 focus-visible:ring-2 focus-visible:ring-white/30 px-4 tabular-nums shadow-inner"
-                                placeholder="0"
-                            />
-                            <span
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-100">
-                                {baseCurrency}
-                            </span>
-                        </div>
-                        <ArrowRightLeft className="h-5 w-5 text-emerald-200 shrink-0"/>
+            <div className="flex items-center justify-between mb-8 relative z-10">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+                        <ArrowRightLeft className="h-5 w-5" />
                     </div>
+                    <h4 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Exchange Rate</h4>
+                </div>
+                {loading && <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />}
+            </div>
 
-                    {/* Result Row */}
-                    <div className="flex flex-col items-end">
-                        <div className="text-4xl font-extrabold tracking-tighter text-white tabular-nums leading-none">
-                            {converted ? converted.toFixed(2) : "---"}
-                        </div>
-                        <div className="text-sm font-bold text-emerald-100 mt-1">
-                            {currency_code}
-                        </div>
+            <div className="space-y-6 relative z-10">
+                <div className="relative group/input">
+                    <Input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="h-16 pl-6 pr-16 text-xl font-bold bg-slate-50 border-transparent focus:bg-white focus:border-indigo-500/30 dark:bg-slate-900 dark:focus:bg-slate-900 rounded-2xl transition-all"
+                        placeholder="0"
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm text-xs font-bold text-slate-500 uppercase tracking-widest">
+                        {baseCurrency}
                     </div>
                 </div>
 
-                {/* Rate Info */}
+                <div className="relative py-8 px-4 rounded-[2rem] bg-indigo-50/30 dark:bg-indigo-900/10 border border-indigo-100/30 dark:border-indigo-900/20 text-center group-hover:bg-indigo-50/50 transition-colors">
+                    <div className="text-4xl font-bold text-slate-900 dark:text-white tabular-nums tracking-tighter line-clamp-1">
+                        {converted ? converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "---"}
+                    </div>
+                    <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-3 uppercase tracking-[0.2em]">
+                        {currency_code}
+                    </div>
+                </div>
+
                 {snapshot && converted !== null && (
-                    <div
-                        className="text-[10px] font-medium text-emerald-100/60 text-center border-t border-white/10 pt-3">
+                    <div className="text-[10px] text-center font-bold text-slate-400 uppercase tracking-[0.1em] opacity-80">
                         1 {baseCurrency} ≈ {(converted / (val || 1)).toFixed(2)} {currency_code}
                     </div>
                 )}

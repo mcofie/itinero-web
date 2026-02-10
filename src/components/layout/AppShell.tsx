@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
+import { Navbar } from "@/components/layout/Navbar";
 
 
 import { useEffect } from "react";
@@ -250,7 +251,6 @@ export default function AppShell({ children, userEmail, avatarUrl, fullName }: P
         return (email?.[0] ?? "U").toUpperCase() +
             (email?.split("@")?.[0]?.[1]?.toUpperCase() ?? "");
     };
-
     const year = new Date().getFullYear();
 
 
@@ -265,246 +265,55 @@ export default function AppShell({ children, userEmail, avatarUrl, fullName }: P
                 className="flex min-h-screen flex-col bg-slate-50 text-slate-900 font-sans antialiased selection:bg-blue-100 selection:text-blue-900 dark:bg-slate-950 dark:text-white dark:selection:bg-blue-900 dark:selection:text-white transition-colors duration-300">
 
                 {/* Header */}
-                <header
-                    className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/80 backdrop-blur-md dark:bg-slate-950/80 dark:border-slate-800">
-                    <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-
-                        {/* Left: Brand & Mobile Menu */}
-                        <div className="flex items-center gap-3">
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="md:hidden h-8 w-8 text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                                    >
-                                        <Menu className="h-4 w-4" />
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent
-                                    side="left"
-                                    className="w-72 p-0 border-r-slate-200 dark:border-slate-800 dark:bg-slate-950"
-                                >
-                                    <div className="p-6 border-b border-slate-100 dark:border-slate-800">
-                                        <Link
-                                            href={userEmail ? "/trips" : "/"}
-                                            className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400"
-                                        >
-                                            <span
-                                                className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
-                                                <Plane className="h-4 w-4" />
-                                            </span>
-                                            Itinero
-                                        </Link>
-                                    </div>
-                                    <div className="p-4 flex flex-col gap-1">
-                                        <MobileNavItem
-                                            href="/trips"
-                                            active={pathname?.startsWith("/trips")}
-                                        >
-                                            <Calendar className="mr-3 h-4 w-4" /> {tNav("trips")}
-                                        </MobileNavItem>
-                                        <MobileNavItem
-                                            href="/preview"
-                                            active={pathname === "/preview"}
-                                        >
-                                            <Sparkles className="mr-3 h-4 w-4" />
-                                            {tNav("preview")}
-                                            {hasPreview && (
-                                                <span
-                                                    className="ml-auto h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                                            )}
-                                        </MobileNavItem>
-                                        <MobileNavItem
-                                            href="/rewards"
-                                            active={pathname === "/rewards"}
-                                        >
-                                            <Star className="mr-3 h-4 w-4" /> {tNav("rewards")}
-                                        </MobileNavItem>
-                                        <MobileNavItem
-                                            href="/profile"
-                                            active={pathname === "/profile"}
-                                        >
-                                            <User className="mr-3 h-4 w-4" /> {tNav("profile")}
-                                        </MobileNavItem>
-                                    </div>
-                                    <div className="mt-auto p-4 border-t border-slate-100 dark:border-slate-800">
-                                        <Button
-                                            className="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600"
-                                            onClick={() => router.push("/trip-maker")}
-                                        >
-                                            <Plus className="mr-2 h-4 w-4" /> {tActions("newTrip")}
-                                        </Button>
-                                    </div>
-                                </SheetContent>
-                            </Sheet>
-
-                            <Link
-                                href={userEmail ? "/trips" : "/"}
-                                className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400"
-                            >
-                                <span
-                                    className="hidden md:flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
-                                    <Plane className="h-4 w-4" />
-                                </span>
-                                <span className="hidden sm:inline-block">Itinero</span>
-                            </Link>
-                        </div>
-
-                        {/* Center: Desktop Nav */}
-                        <nav className="hidden md:flex items-center gap-1">
-                            <NavItem href="/preview" active={pathname === "/preview"}>
-                                {tNav("preview")}
-                                {hasPreview && (
-                                    <span className="ml-1.5 h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
-                                )}
-                            </NavItem>
-                            <NavItem href="/trips" active={pathname?.startsWith("/trips")}>
-                                {tNav("trips")}
-                            </NavItem>
-                            <NavItem href="/rewards" active={pathname === "/rewards"}>
-                                {tNav("rewards")}
-                            </NavItem>
-                        </nav>
-
-                        {/* Right: Actions */}
-                        <div className="flex items-center gap-3">
-
-                            {/* 1. NEW TRIP BUTTON */}
-                            <div className="hidden sm:flex">
-                                <Button
-                                    size="sm"
-                                    onClick={() => router.push("/trip-maker")}
-                                    className="h-9 items-center gap-2 rounded-full bg-blue-600 px-4 text-xs font-bold uppercase tracking-wide text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md dark:bg-blue-500 dark:hover:bg-blue-400"
-                                >
-                                    <Plus className="h-3.5 w-3.5" strokeWidth={3} />
-                                    {tActions("newTrip")}
-                                </Button>
-                            </div>
-
-                            <div className="hidden h-5 w-px bg-slate-200 sm:block dark:bg-slate-800" />
-
-
-
-                            {/* 3. NOTIFICATIONS */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="relative h-9 w-9 rounded-full text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                                    >
-                                        <Bell className="h-5 w-5" />
-                                        <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-950" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-80 p-0 rounded-xl border-slate-100 shadow-xl dark:bg-slate-900 dark:border-slate-800">
-                                    <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                                        <h3 className="font-semibold text-slate-900 dark:text-white">Notifications</h3>
-                                    </div>
-                                    <div className="p-8 text-center text-slate-500 dark:text-slate-400">
-                                        <div className="mx-auto h-12 w-12 rounded-full bg-slate-50 flex items-center justify-center mb-3 dark:bg-slate-800">
-                                            <Bell className="h-6 w-6 text-slate-400" />
-                                        </div>
-                                        <p className="text-sm">No new notifications</p>
-                                    </div>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
-                            {/* 4. AVATAR MENU */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-9 w-9 rounded-full p-0 ml-1 ring-2 ring-transparent hover:ring-slate-100 dark:hover:ring-slate-800"
-                                    >
-                                        <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-700 shadow-sm">
-                                            <AvatarImage src={avatarUrl ?? ""} alt={fullName || "User avatar"} />
-                                            <AvatarFallback
-                                                className="bg-slate-100 text-slate-600 font-bold text-xs dark:bg-slate-800 dark:text-slate-300">
-                                                {initials(userEmail, fullName)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                    align="end"
-                                    className="w-56 rounded-xl p-1 border-slate-100 shadow-lg dark:bg-slate-900 dark:border-slate-800"
-                                >
-                                    <div className="px-2 py-2 mb-1">
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                                            {fullName || userEmail}
-                                        </p>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                                            Free Plan
-                                        </p>
-                                    </div>
-                                    <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
-                                    <DropdownMenuItem
-                                        onClick={() => router.push("/profile")}
-                                        className="rounded-lg cursor-pointer text-slate-600 focus:text-blue-600 focus:bg-blue-50 dark:text-slate-300 dark:focus:bg-slate-800 dark:focus:text-blue-400"
-                                    >
-                                        <User className="mr-2 h-4 w-4" /> {tNav("profile")}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() => router.push("/pricing")}
-                                        className="rounded-lg cursor-pointer text-slate-600 focus:text-blue-600 focus:bg-blue-50 dark:text-slate-300 dark:focus:bg-slate-800 dark:focus:text-blue-400"
-                                    >
-                                        <CreditCard className="mr-2 h-4 w-4" /> {tNav("billing")}
-                                    </DropdownMenuItem>
-                                    <div
-                                        className="flex items-center justify-between px-2 py-1.5 text-slate-600 dark:text-slate-300">
-                                        <span className="text-sm">{tNav("theme")}</span>
-                                        <ThemeToggle />
-                                    </div>
-                                    <DropdownMenuSeparator className="bg-slate-100 dark:bg-slate-800" />
-                                    <DropdownMenuItem
-                                        onClick={logout}
-                                        className="rounded-lg cursor-pointer text-rose-600 focus:text-rose-700 focus:bg-rose-50 dark:text-rose-400 dark:focus:bg-rose-900/20"
-                                    >
-                                        <LogOut className="mr-2 h-4 w-4" /> {tNav("logout")}
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                    </div>
-                </header>
+                <Navbar
+                    userEmail={userEmail}
+                    avatarUrl={avatarUrl}
+                    fullName={fullName}
+                    hasPreview={hasPreview}
+                    onLogout={logout}
+                />
 
                 {/* Main Content */}
                 <main className="flex-1 w-full">{children}</main>
 
-                {/* Footer */}
-                <footer className="border-t border-slate-200 bg-white py-12 dark:bg-slate-950 dark:border-slate-800">
-                    <div
-                        className="mx-auto max-w-6xl px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-                            <div
-                                className="flex h-6 w-6 items-center justify-center rounded bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-                                <Plane className="h-3 w-3" />
+                <footer className="border-t border-slate-200 bg-white py-16 dark:bg-slate-950 dark:border-slate-800">
+                    <div className="mx-auto max-w-7xl px-6">
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-10">
+                            <div className="flex flex-col items-center md:items-start gap-4">
+                                <Link href="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-slate-900 dark:text-white group">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
+                                        <Plane className="h-4 w-4" />
+                                    </div>
+                                    Itinero
+                                </Link>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs text-center md:text-left leading-relaxed">
+                                    Plan smarter trips with AI. Build complete itineraries in minutes.
+                                </p>
                             </div>
-                            Itinero
-                        </div>
-                        <div className="text-sm text-slate-500 dark:text-slate-400">
-                            © {year} Itinero Inc. {tFooter("rights")}
-                        </div>
-                        <div className="flex gap-6 text-sm font-medium text-slate-600 dark:text-slate-400 items-center">
-                            <LocaleSwitcher />
-                            <Link
-                                href="/terms"
-                                className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                            >
-                                {tFooter("terms")}
-                            </Link>
-                            <Link
-                                href="/privacy"
-                                className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                            >
-                                {tFooter("privacy")}
-                            </Link>
-                            <div className="flex items-center gap-1 text-slate-400 cursor-default">
-                                {tFooter("madeWith")}{" "}
-                                <Heart className="h-3 w-3 text-rose-500 fill-rose-500" />
+
+                            <div className="flex flex-col items-center md:items-end gap-6">
+                                <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-sm font-semibold text-slate-600 dark:text-slate-400">
+                                    <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-widest text-[10px]">
+                                        {tFooter("terms")}
+                                    </Link>
+                                    <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-widest text-[10px]">
+                                        {tFooter("privacy")}
+                                    </Link>
+                                    <Link href="/resources" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-widest text-[10px]">
+                                        Resources
+                                    </Link>
+                                    <div className="flex items-center gap-1.5 text-slate-400 cursor-default uppercase tracking-widest text-[10px]">
+                                        {tFooter("madeWith")}{" "}
+                                        <Heart className="h-3 w-3 text-rose-500 fill-rose-500 animate-pulse" />
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <LocaleSwitcher />
+                                    <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
+                                    <div className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                                        © {year} Itinero Inc.
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -513,61 +322,5 @@ export default function AppShell({ children, userEmail, avatarUrl, fullName }: P
 
             </div>
         </TooltipProvider>
-    );
-}
-
-/* ---------- Nav Items ---------- */
-function NavItem({
-    href,
-    active,
-    children,
-}: {
-    href: string;
-    active?: boolean;
-    children: React.ReactNode;
-}) {
-    return (
-        <Link
-            href={href}
-            className={cn(
-                "relative px-4 py-2 text-sm font-medium transition-colors rounded-full",
-                active
-                    ? "text-slate-900 dark:text-white"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800"
-            )}
-        >
-            {active && (
-                <motion.span
-                    layoutId="navbar-active"
-                    className="absolute inset-0 rounded-full bg-slate-100 dark:bg-slate-800"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                />
-            )}
-            <span className="relative z-10">{children}</span>
-        </Link>
-    );
-}
-
-function MobileNavItem({
-    href,
-    active,
-    children,
-}: {
-    href: string;
-    active?: boolean;
-    children: React.ReactNode;
-}) {
-    return (
-        <Link
-            href={href}
-            className={cn(
-                "flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors",
-                active
-                    ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-            )}
-        >
-            {children}
-        </Link>
     );
 }

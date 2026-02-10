@@ -10,14 +10,14 @@ import {
     DialogTrigger,
     DialogFooter,
 } from "@/components/ui/dialog";
-import {Button} from "@/components/ui/button";
-import {Printer, ExternalLink} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Printer, ExternalLink } from "lucide-react";
 
 type TripPrintDialogClientProps = {
     tripId: string;
 };
 
-export function TripPrintDialogClient({tripId}: TripPrintDialogClientProps) {
+export function TripPrintDialogClient({ tripId }: TripPrintDialogClientProps) {
     const iframeId = React.useId();
     const [loading, setLoading] = React.useState(true);
 
@@ -46,7 +46,7 @@ export function TripPrintDialogClient({tripId}: TripPrintDialogClientProps) {
         <Dialog>
             <DialogTrigger asChild>
                 <Button variant="secondary" size="sm" className="cursor-pointer">
-                    <Printer className="mr-2 h-4 w-4"/>
+                    <Printer className="mr-2 h-4 w-4" />
                     Print itinerary
                 </Button>
             </DialogTrigger>
@@ -60,7 +60,8 @@ export function TripPrintDialogClient({tripId}: TripPrintDialogClientProps) {
       flex flex-col gap-3
       bg-background
       border-border
-      rounded-xl
+      rounded-2xl
+      shadow-lg
     "
             >
                 <DialogHeader className="space-y-1">
@@ -72,8 +73,8 @@ export function TripPrintDialogClient({tripId}: TripPrintDialogClientProps) {
             text-xs font-medium text-muted-foreground bg-muted/40
           "
                         >
-          Draft view — final look may vary
-        </span>
+                            Draft view — final look may vary
+                        </span>
                     </DialogTitle>
 
                     <DialogDescription className="text-xs sm:text-sm">
@@ -93,7 +94,7 @@ export function TripPrintDialogClient({tripId}: TripPrintDialogClientProps) {
       "
                 >
                     <div
-                        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background/60"/>
+                        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background/60" />
 
                     {loading && (
                         <div
@@ -146,12 +147,12 @@ export function TripPrintDialogClient({tripId}: TripPrintDialogClientProps) {
                             size="sm"
                             onClick={handleOpenNewTab}
                         >
-                            <ExternalLink className="mr-2 h-4 w-4"/>
+                            <ExternalLink className="mr-2 h-4 w-4" />
                             Open in new tab
                         </Button>
 
                         <Button type="button" onClick={handlePrint}>
-                            <Printer className="mr-2 h-4 w-4"/>
+                            <Printer className="mr-2 h-4 w-4" />
                             Print
                         </Button>
                     </div>

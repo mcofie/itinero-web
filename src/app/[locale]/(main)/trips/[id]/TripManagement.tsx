@@ -125,7 +125,7 @@ export function ShareCard({
 
     return (
         <Card
-            className="flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+            className="flex flex-col overflow-hidden rounded-[2rem] border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 shadow-sm transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                     <div className="space-y-1">
@@ -152,7 +152,7 @@ export function ShareCard({
             <CardContent className="flex flex-1 flex-col justify-end space-y-4">
                 {/* Toggle Section */}
                 <div
-                    className="flex flex-col items-center justify-between rounded-xl bg-slate-50 dark:bg-slate-950/50 p-4 border border-slate-100 dark:border-slate-800">
+                    className="flex flex-col items-center justify-between rounded-2xl bg-slate-50 dark:bg-slate-950/50 p-6 border border-slate-100 dark:border-slate-800">
                     <PublicToggle tripId={tripId} publicId={publicId} />
                 </div>
 
@@ -214,7 +214,7 @@ export function ExportCard({
 }) {
     return (
         <Card
-            className="flex flex-col rounded-3xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+            className="flex flex-col rounded-[2rem] border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 shadow-sm transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
                     <Download className="h-5 w-5 text-emerald-600 dark:text-emerald-500" /> Export
@@ -226,34 +226,31 @@ export function ExportCard({
             <CardContent className="grid grid-cols-2 gap-3">
                 {/* PDF Export - FIXED CLICK AREA */}
                 <div
-                    className="group relative flex h-24 flex-col items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-slate-50/50 transition-all hover:border-blue-200 hover:bg-blue-50 dark:bg-slate-950/50 dark:border-slate-800 dark:hover:border-blue-800 dark:hover:bg-slate-900">
-                    {/* Invisible Trigger Overlay */}
+                    className="group relative flex h-28 flex-col items-center justify-center gap-2 rounded-2xl border border-slate-100 bg-white transition-all hover:border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/80">
                     <div className="absolute inset-0 z-10 opacity-0 [&_button]:h-full [&_button]:w-full">
                         <TripPrintDialogClient tripId={tripId} />
                     </div>
 
-                    {/* Visual Representation */}
                     <div
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-colors group-hover:text-blue-600 dark:bg-slate-800 dark:text-slate-500 dark:group-hover:text-blue-400">
-                        <FileText className="h-5 w-5" />
+                        className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-400 shadow-sm transition-colors group-hover:text-blue-600 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700 dark:group-hover:text-blue-400">
+                        <FileText className="h-6 w-6" />
                     </div>
                     <span
-                        className="text-xs font-bold text-slate-600 group-hover:text-blue-700 dark:text-slate-400 dark:group-hover:text-blue-400">
+                        className="text-sm font-bold text-slate-800 dark:text-slate-200">
                         PDF Guide
                     </span>
                 </div>
 
-                {/* Calendar Sync */}
                 <Button
                     variant="outline"
-                    className="group flex h-24 flex-col gap-3 rounded-2xl border-slate-200 bg-slate-50/50 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 dark:bg-slate-950/50 dark:border-slate-800 dark:hover:border-purple-900 dark:hover:bg-slate-900 dark:hover:text-purple-400"
+                    className="group flex h-28 flex-col gap-2 rounded-2xl border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800/80"
                     onClick={() => downloadICS(title, days)}
                 >
                     <div
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-colors group-hover:text-purple-600 dark:bg-slate-800 dark:text-slate-500 dark:group-hover:text-purple-400">
-                        <Calendar className="h-5 w-5" />
+                        className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-400 shadow-sm transition-colors group-hover:text-purple-600 dark:bg-slate-800 dark:text-slate-500 dark:border-slate-700 dark:group-hover:text-purple-400">
+                        <Calendar className="h-6 w-6" />
                     </div>
-                    <span className="text-xs font-bold dark:text-slate-400">Sync Calendar</span>
+                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Sync Calendar</span>
                 </Button>
             </CardContent>
         </Card>
@@ -264,7 +261,7 @@ export function ExportCard({
 export function CollaboratorsCard() {
     return (
         <Card
-            className="flex flex-col rounded-3xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 shadow-sm transition-all hover:shadow-md">
+            className="flex flex-col rounded-[2rem] border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 shadow-sm transition-all hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
                     <Users className="h-5 w-5 text-purple-600 dark:text-purple-500" /> Team
@@ -306,7 +303,7 @@ export function DangerZoneCard({
 }) {
     return (
         <Card
-            className="rounded-3xl border border-red-100 bg-red-50/30 dark:bg-red-900/10 dark:border-red-900/50 shadow-none">
+            className="rounded-[2rem] border border-red-100 bg-white dark:bg-slate-950 dark:border-red-900/30 shadow-sm">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-red-900 dark:text-red-400">
                     <Trash2 className="h-5 w-5" /> Danger Zone
@@ -317,7 +314,7 @@ export function DangerZoneCard({
             </CardHeader>
             <CardContent>
                 <div
-                    className="flex flex-col gap-4 rounded-xl border border-red-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:bg-slate-950/50 dark:border-red-900/30">
+                    className="flex flex-col gap-4 rounded-2xl border border-red-100 bg-red-50/30 p-6 sm:flex-row sm:items-center sm:justify-between dark:bg-red-900/10 dark:border-red-900/30">
                     <div>
                         <div className="text-sm font-bold text-slate-900 dark:text-white">
                             Delete this trip

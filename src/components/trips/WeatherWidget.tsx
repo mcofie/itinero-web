@@ -127,69 +127,69 @@ export function WeatherWidget({ meta, className, lat, lng, startDate, endDate }:
     }
 
     return (
-        <div className={cn("relative overflow-hidden rounded-[2.5rem] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm transition-all hover:shadow-md", className)}>
-            <div className="flex flex-col gap-6">
+        <div className={cn("relative overflow-hidden rounded-[2rem] border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700", className)}>
+            <div className="flex flex-col gap-8">
                 {/* Header: Current Weather */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between relative z-10">
                     <div className="flex items-center gap-4">
-                        <div className={cn("flex h-12 w-12 items-center justify-center rounded-2xl transition-all duration-500", gradient, accentColor)}>
-                            {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Icon className="h-6 w-6" />}
+                        <div className={cn("flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-500 shadow-sm", gradient, accentColor)}>
+                            {loading ? <Loader2 className="h-7 w-7 animate-spin" /> : <Icon className="h-7 w-7" />}
                         </div>
                         <div>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Current in {city || "Destination"}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 block mb-1">Current in {city || "Destination"}</span>
                             <div className="flex items-baseline gap-2">
-                                <h4 className="text-xl font-black text-slate-900 dark:text-white leading-none">
+                                <h4 className="text-3xl font-bold text-slate-900 dark:text-white leading-none tracking-tighter">
                                     {displayTemp != null ? `${Math.round(displayTemp)}°C` : loading ? "--" : "N/A"}
                                 </h4>
-                                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{displayDesc || (loading ? "Fetching..." : "Unknown")}</span>
+                                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{displayDesc || (loading ? "Fetching..." : "Unknown")}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Seasonal Outlook Section */}
-                <div className="rounded-2xl bg-slate-50 dark:bg-slate-800/40 p-4 border border-slate-100 dark:border-slate-800/50">
-                    <div className="flex items-center justify-between mb-3">
+                <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-6 border border-slate-100 dark:border-slate-800 relative z-10">
+                    <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Trip Outlook • {season}</span>
+                            <span className="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Trip Outlook • {season}</span>
                         </div>
                         {startDate && (
-                            <span className="text-[9px] font-bold text-slate-400">
-                                {new Date(startDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                            <span className="text-[10px] font-bold text-slate-400">
+                                {new Date(startDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }).toUpperCase()}
                             </span>
                         )}
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-900 dark:text-white">{seasonal.desc}</span>
-                            <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">{seasonal.range}</span>
+                            <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">{seasonal.desc}</span>
+                            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">{seasonal.range}</span>
                         </div>
-                        <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 font-medium italic">
+                        <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 font-bold italic">
                             "{seasonal.condition}"
                         </p>
                     </div>
                 </div>
 
                 {/* Quick Info Bar */}
-                <div className="flex items-center justify-between px-1">
-                    <div className="flex items-center gap-1.5">
-                        <Thermometer className="h-3 w-3 text-slate-400" />
-                        <span className="text-[10px] font-bold text-slate-400">High: {displayTemp ? Math.round(displayTemp + 2) : "--"}°</span>
+                <div className="flex items-center justify-between px-2 relative z-10">
+                    <div className="flex items-center gap-2">
+                        <Thermometer className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">High: {displayTemp ? Math.round(displayTemp + 2) : "--"}°</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <Droplets className="h-3 w-3 text-slate-400" />
-                        <span className="text-[10px] font-bold text-slate-400">Low: {displayTemp ? Math.round(displayTemp - 4) : "--"}°</span>
+                    <div className="flex items-center gap-2">
+                        <Droplets className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Low: {displayTemp ? Math.round(displayTemp - 4) : "--"}°</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        <Wind className="h-3 w-3 text-slate-400" />
-                        <span className="text-[10px] font-bold text-slate-400">Breeze</span>
+                    <div className="flex items-center gap-2">
+                        <Wind className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Breeze</span>
                     </div>
                 </div>
             </div>
             {/* Artistic background icon blur */}
-            <Icon className="absolute -right-6 -bottom-6 h-32 w-32 text-slate-200 dark:text-slate-800 opacity-20 -rotate-12 blur-sm pointer-events-none" />
+            <Icon className="absolute -right-8 -bottom-8 h-40 w-40 text-slate-200 dark:text-slate-800 opacity-[0.07] -rotate-12 blur-sm pointer-events-none" />
         </div>
     );
 }

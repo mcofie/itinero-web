@@ -78,6 +78,7 @@ export type DestinationMeta = {
     emergency_medical?: string;
     hidden_gem_title?: string;
     hidden_gem_desc?: string;
+    image?: string;
 };
 
 type Props = {
@@ -285,14 +286,14 @@ export default function TripActionsClient({
                 onOpenChange={(o) => !o && setAddingForDate(null)}
             >
                 <DialogContent
-                    className="sm:max-w-md rounded-3xl border-slate-100 bg-white p-0 shadow-2xl overflow-hidden gap-0 dark:bg-slate-900 dark:border-slate-800">
+                    className="sm:max-w-md rounded-2xl border-slate-100 bg-white p-0 shadow-lg overflow-hidden gap-0 dark:bg-slate-900 dark:border-slate-800">
                     <div
                         className="bg-slate-50 px-6 py-5 border-b border-slate-100 dark:bg-slate-950/50 dark:border-slate-800">
                         <DialogHeader>
                             <DialogTitle
                                 className="flex items-center gap-3 text-lg font-bold text-slate-900 dark:text-white">
                                 <div
-                                    className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-blue-400">
+                                    className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-sm border border-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-blue-400">
                                     <Plus className="h-5 w-5" />
                                 </div>
                                 New Activity
@@ -322,7 +323,7 @@ export default function TripActionsClient({
                                     onChange={(e) =>
                                         setNewBlock((b) => ({ ...b, title: e.target.value }))
                                     }
-                                    className="pl-10 h-12 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-xl text-base dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
+                                    className="pl-10 h-12 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-2xl text-base dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
                                     autoFocus
                                 />
                             </div>
@@ -335,7 +336,7 @@ export default function TripActionsClient({
                                 </span>
                                 <div className="relative">
                                     <select
-                                        className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-medium dark:bg-slate-950 dark:border-slate-800 dark:text-white"
+                                        className="h-11 w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 font-medium dark:bg-slate-950 dark:border-slate-800 dark:text-white"
                                         value={newBlock.when ?? "morning"}
                                         onChange={(e) =>
                                             setNewBlock((b) => ({
@@ -364,7 +365,7 @@ export default function TripActionsClient({
                                         type="number"
                                         min={0}
                                         placeholder="0"
-                                        className="pl-8 h-11 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-xl dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
+                                        className="pl-8 h-11 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-2xl dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
                                         value={String(newBlock.est_cost ?? "")}
                                         onChange={(e) =>
                                             setNewBlock((b) => ({
@@ -387,7 +388,7 @@ export default function TripActionsClient({
                                         type="number"
                                         min={0}
                                         placeholder="90"
-                                        className="pl-8 h-11 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-xl dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
+                                        className="pl-8 h-11 bg-slate-50 border-slate-200 focus-visible:ring-blue-600 rounded-2xl dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
                                         value={String(newBlock.duration_min ?? "")}
                                         onChange={(e) =>
                                             setNewBlock((b) => ({
@@ -413,7 +414,7 @@ export default function TripActionsClient({
                                         setNewBlock((b) => ({ ...b, notes: e.target.value }))
                                     }
                                     placeholder="Reservation numbers, directions, tips..."
-                                    className="pl-10 min-h-[100px] bg-slate-50 border-slate-200 focus-visible:ring-blue-600 resize-none rounded-xl dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
+                                    className="pl-10 min-h-[100px] bg-slate-50 border-slate-200 focus-visible:ring-blue-600 resize-none rounded-2xl dark:bg-slate-950 dark:border-slate-800 dark:text-white dark:placeholder:text-slate-600"
                                 />
                             </div>
                         </div>
@@ -425,14 +426,14 @@ export default function TripActionsClient({
                             variant="outline"
                             onClick={() => setAddingForDate(null)}
                             disabled={busy}
-                            className="h-11 flex-1 rounded-xl border-slate-200 text-slate-600 hover:bg-white hover:text-slate-900 font-medium dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                            className="h-11 flex-1 rounded-2xl border-slate-200 text-slate-600 hover:bg-white hover:text-slate-900 font-medium dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={confirmAddItem}
                             disabled={busy || !newBlock.title}
-                            className="h-11 flex-1 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-md font-bold dark:bg-blue-600 dark:hover:bg-blue-500"
+                            className="h-11 flex-1 rounded-2xl bg-blue-600 text-white hover:bg-blue-700 shadow-md font-bold dark:bg-blue-600 dark:hover:bg-blue-500"
                         >
                             {busy ? (
                                 <>

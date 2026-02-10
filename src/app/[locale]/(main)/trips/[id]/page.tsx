@@ -172,6 +172,7 @@ export type PreviewLike = {
         inputs?: TripRow["inputs"];
         start_date?: string;
         end_date?: string;
+        trip_title?: string;
     };
     days: Day[];
     places: Place[];
@@ -258,6 +259,7 @@ type DestinationMetaLike = {
     emergency_medical?: string;
     hidden_gem_title?: string;
     hidden_gem_desc?: string;
+    image?: string;
 };
 
 /* ---------- strict guards & accessors (no `any`) ---------- */
@@ -433,6 +435,7 @@ function buildDestinationMetaFromHistoryRow(
         emergency_medical: k.emergency_medical,
         hidden_gem_title: k.hidden_gem_title,
         hidden_gem_desc: k.hidden_gem_desc,
+        image: hist.backdrop_image_url ?? undefined,
     };
 
     return { meta, heroUrl: hist.backdrop_image_url };
@@ -671,7 +674,7 @@ export default async function TripIdPage({
                 | { name: string; lat?: number; lng?: number }[]
                 | undefined);
 
-    const enrichedInputs = {
+    const enrichedInputs: any = {
         ...(parsedInputs ?? {}),
         ...(enrichedDestList ? { destinations: enrichedDestList } : {}),
         ...(destMeta
@@ -694,6 +697,7 @@ export default async function TripIdPage({
             inputs: enrichedInputs as TripRow["inputs"],
             start_date: trip.start_date ?? undefined,
             end_date: trip.end_date ?? undefined,
+            trip_title: trip.title ?? undefined,
         },
         days,
         places: places.map((p) => ({
@@ -748,6 +752,7 @@ export default async function TripIdPage({
                 startDate={trip.start_date ?? undefined}
                 estCost={typeof trip.est_total_cost === "number" ? Math.round(trip.est_total_cost) : undefined}
                 currency={tripCurrency}
+                interests={enrichedInputs?.interests as string[] | undefined}
             >
                 <div className="flex flex-wrap gap-2 pt-2">
                     <TripActionsClient
@@ -763,7 +768,7 @@ export default async function TripIdPage({
             </ParallaxHero>
 
             {/* Main Content */}
-            <div className="relative z-10 -mt-8 mx-auto w-full max-w-6xl px-4 pb-20">
+            <div className="relative z-10 -mt-20 mx-auto w-full max-w-6xl px-4 pb-20">
 
                 {/* Viewer */}
                 <div

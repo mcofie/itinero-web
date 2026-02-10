@@ -10,11 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Plane, ArrowRight, CheckCircle2, Globe2, ShieldCheck } from "lucide-react";
+import { Loader2, Plane, ArrowRight, CheckCircle2, Globe, ShieldCheck, Mail, Sparkles, Zap, ArrowLeft, ArrowUpRight, Lock, Key } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Script from "next/script";
 import { handleGoogleAuthAction } from "@/app/actions/google-auth";
 import { sendMagicLink } from "@/app/actions/auth-magic";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 declare global {
     interface Window {
@@ -31,7 +33,6 @@ export default function LoginPage() {
     const [isSent, setIsSent] = useState(false);
     const [busy, setBusy] = useState(false);
 
-    // If already signed-in, bounce to /trips
     useEffect(() => {
         (async () => {
             const { data } = await sb.auth.getSession();
@@ -68,9 +69,6 @@ export default function LoginPage() {
     const initGoogle = () => {
         if (typeof window !== "undefined" && window.google) {
             const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-            if (!clientId) {
-                console.warn("Google Client ID is missing. Please set NEXT_PUBLIC_GOOGLE_CLIENT_ID.");
-            }
             window.google.accounts.id.initialize({
                 client_id: clientId || "YOUR_GOOGLE_CLIENT_ID",
                 callback: handleCredentialResponse,
@@ -82,7 +80,7 @@ export default function LoginPage() {
                 window.google.accounts.id.renderButton(btn, {
                     theme: "outline",
                     size: "large",
-                    width: "420", // Matches max-w-[420px] container
+                    width: "360",
                     shape: "rectangular",
                     text: "continue_with",
                 });
@@ -92,20 +90,17 @@ export default function LoginPage() {
 
     useEffect(() => {
         initGoogle();
-    }, [isSent]); // Re-init google button if we switch back from sent state
+    }, [isSent]);
 
     async function handleEmail() {
         if (!email) return;
         setBusy(true);
         try {
-            // Updated to use custom server action for multi-tenancy support
             const { error } = await sendMagicLink({
                 email,
                 redirectTo: `${window.location.origin}/auth/callback`,
             });
-
             if (error) throw new Error(String(error));
-
             setIsSent(true);
             toast.success("Magic link sent!");
         } catch (e: unknown) {
@@ -116,195 +111,171 @@ export default function LoginPage() {
         }
     }
 
-    if (isSent) {
-        return (
-            <div className="min-h-screen w-full flex bg-background font-sans text-foreground overflow-hidden">
-                {/* Left Side (Same as before) - could extract to component but keeping inline for simplicity */}
-                <div className="hidden lg:flex lg:w-1/2 relative bg-primary overflow-hidden">
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop')] bg-cover bg-center" />
-                    <div className="absolute inset-0 bg-primary/90 mix-blend-hard-light" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
-
-                    <div className="relative z-10 flex flex-col justify-between w-full p-12 text-primary-foreground">
-                        <div>
-                            <Link href="/" className="inline-flex items-center gap-3 font-bold text-3xl tracking-tight text-white">
-                                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm border border-white/10 shadow-xl">
-                                    <Plane className="h-6 w-6 text-white" />
-                                </span>
-                                Itinero
-                            </Link>
-                        </div>
-                        <div className="max-w-lg space-y-4">
-                            <h1 className="text-4xl font-bold">Check your inbox</h1>
-                            <p className="text-lg opacity-90">We've sent a magic link to your email.</p>
-                        </div>
-                        <div className="text-sm opacity-60">© 2025 Itinero Inc.</div>
-                    </div>
-                </div>
-
-                {/* Right Side - Success State */}
-                <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative bg-slate-50 dark:bg-slate-900">
-                    <div className="w-full max-w-[420px] text-center space-y-6">
-                        <div className="mx-auto h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mb-6">
-                            <CheckCircle2 className="h-10 w-10" />
-                        </div>
-                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Check your email</h2>
-                        <p className="text-slate-600 dark:text-slate-400 text-lg">
-                            We've sent a magic link to <span className="font-bold text-slate-900 dark:text-white">{email}</span>. Click the link to sign in.
-                        </p>
-                        <div className="pt-4">
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsSent(false)}
-                                className="h-12 w-full rounded-xl border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
-                            >
-                                Back to login
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="min-h-screen w-full flex bg-background font-sans text-foreground overflow-hidden">
-            {/* Left Side - Visual/Brand */}
-            <div className="hidden lg:flex lg:w-1/2 relative bg-primary overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop')] bg-cover bg-center" />
-                <div className="absolute inset-0 bg-primary/90 mix-blend-hard-light" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-blue-100 selection:text-blue-900">
 
-                <div className="relative z-10 flex flex-col justify-between w-full p-12 text-primary-foreground">
-                    <div>
-                        <Link href="/" className="inline-flex items-center gap-3 font-bold text-3xl tracking-tight text-white">
-                            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm border border-white/10 shadow-xl">
-                                <Plane className="h-6 w-6 text-white" />
-                            </span>
-                            Itinero
-                        </Link>
-                    </div>
-
-                    <div className="space-y-8 max-w-lg">
-                        <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="text-5xl font-extrabold leading-tight tracking-tight"
-                        >
-                            {tAuth("startJourney")}
-                        </motion.h1>
-                        <motion.p
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="text-lg text-primary-foreground/80 leading-relaxed"
-                        >
-                            Join thousands of travelers planning their next adventure with Itinero. Experience seamless trip organization like never before.
-                        </motion.p>
-
-                        <div className="grid grid-cols-1 gap-4 pt-4">
-                            {[
-                                { icon: Globe2, text: "Explore destinations worldwide" },
-                                { icon: CheckCircle2, text: "Smart itinerary planning" },
-                                { icon: ShieldCheck, text: "Secure and reliable" }
-                            ].map((item, idx) => (
-                                <motion.div
-                                    key={idx}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.4 + (idx * 0.1) }}
-                                    className="flex items-center gap-3"
-                                >
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">
-                                        <item.icon className="h-4 w-4" />
-                                    </div>
-                                    <span className="font-medium">{item.text}</span>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="text-sm text-primary-foreground/60">
-                        © 2025 Itinero Inc. All rights reserved.
-                    </div>
-                </div>
-            </div>
-
-            {/* Right Side - Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative">
-                {/* Mobile Logo */}
-                <div className="absolute top-6 left-6 lg:hidden">
-                    <Link href="/" className="inline-flex items-center gap-2 font-bold text-xl tracking-tight text-primary">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                            <Plane className="h-4 w-4" />
-                        </span>
-                        Itinero
-                    </Link>
+            {/* --- Hero Header (Resources Style) --- */}
+            <div className="bg-slate-900 pt-24 pb-48 text-white relative overflow-hidden">
+                <div className="absolute inset-0 z-0">
+                    <Image
+                        src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"
+                        alt="Auth background"
+                        fill
+                        className="object-cover opacity-20 blur-sm scale-110"
+                        priority
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-900/80 to-slate-950" />
                 </div>
 
-                <div className="w-full max-w-[420px] space-y-8">
-                    <div className="text-center lg:text-left">
-                        <h2 className="text-3xl font-bold tracking-tight">
-                            Get started
-                        </h2>
-                        <p className="mt-2 text-muted-foreground">
-                            Enter your email to sign in or create an account.
-                        </p>
+                <div className="container mx-auto px-6 relative z-10 max-w-6xl text-center">
+                    <div className="inline-flex items-center gap-3 text-blue-400 font-bold tracking-widest uppercase text-xs mb-6">
+                        <Lock className="h-4 w-4" />
+                        Secure Entry Point
                     </div>
-
-                    <div className="space-y-6">
-                        <div id="google-button-container" className="w-full h-[40px] flex justify-center overflow-hidden rounded-xl" />
-
-                        <div className="relative my-2">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-border" />
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-background px-2 text-muted-foreground font-medium">{tAuth("continueWith")}</span>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    autoComplete="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="h-12 rounded-xl bg-muted/30 border-input focus-visible:ring-primary/30 transition-all font-medium"
-                                    placeholder="name@example.com"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') handleEmail();
-                                    }}
-                                />
-                            </div>
-
-                            <Button
-                                onClick={handleEmail}
-                                disabled={busy || !email}
-                                className="h-12 w-full rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-base shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
-                            >
-                                {busy ? (
-                                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> {tAuth("wait")}</>
-                                ) : (
-                                    <>Continue with Email <ArrowRight className="ml-2 h-5 w-5" /></>
-                                )}
-                            </Button>
-                        </div>
-                    </div>
-
-                    <p className="text-center text-xs text-muted-foreground px-8">
-                        {tAuth("agreement")} <Link href="/terms" className="underline hover:text-foreground">{tAuth("terms")}</Link> and <Link href="/privacy" className="underline hover:text-foreground">{tAuth("privacy")}</Link>.
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
+                        Traveler's Login
+                    </h1>
+                    <p className="text-slate-400 max-w-xl mx-auto text-lg leading-relaxed">
+                        Access your synchronized itineraries, reward points, and offline intelligence from any device.
                     </p>
                 </div>
             </div>
+
+            {/* --- Main Content Grid --- */}
+            <div className="container mx-auto px-6 -mt-24 relative z-20 max-w-4xl">
+                <AnimatePresence mode="wait">
+                    {isSent ? (
+                        <SuccessView key="success" email={email} onBack={() => setIsSent(false)} />
+                    ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="bg-white dark:bg-slate-900 rounded-3xl p-10 shadow-xl border border-slate-200 dark:border-slate-800"
+                            >
+                                <div className="space-y-8">
+                                    <div className="space-y-4">
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 text-center">Fast Connect</div>
+                                        <div className="flex justify-center">
+                                            <div id="google-button-container" className="h-[48px] overflow-hidden" />
+                                        </div>
+                                    </div>
+
+                                    <div className="relative">
+                                        <div className="absolute inset-0 flex items-center">
+                                            <div className="w-full border-t border-slate-100 dark:border-slate-800" />
+                                        </div>
+                                        <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+                                            <span className="bg-white dark:bg-slate-900 px-4 text-slate-300">or magic link</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Email address</Label>
+                                            <div className="relative group">
+                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
+                                                <Input
+                                                    id="email"
+                                                    type="email"
+                                                    value={email}
+                                                    onChange={(e) => setEmail(e.target.value)}
+                                                    className="h-12 pl-12 rounded-xl border-slate-200 bg-slate-50 dark:bg-slate-950 focus:border-blue-500/50 transition-all font-medium focus-visible:ring-0"
+                                                    placeholder="traveler@example.com"
+                                                    onKeyDown={(e) => e.key === 'Enter' && handleEmail()}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <Button
+                                            onClick={handleEmail}
+                                            disabled={busy || !email}
+                                            className="w-full h-12 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold transition-all"
+                                        >
+                                            {busy ? (
+                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                            ) : (
+                                                <div className="flex items-center gap-2">
+                                                    Continue with Email
+                                                    <ArrowRight className="h-4 w-4" />
+                                                </div>
+                                            )}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="space-y-6"
+                            >
+                                <InfoBlock
+                                    icon={Key}
+                                    title="Passwordless Access"
+                                    desc="We use magic links for maximum security. No passwords to remember or lose."
+                                />
+                                <InfoBlock
+                                    icon={ShieldCheck}
+                                    title="Privacy First"
+                                    desc="Your data is encrypted and synced only when you authorize a device."
+                                />
+                                <div className="p-6 bg-slate-900 text-white rounded-3xl relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                                        <Plane className="h-12 w-12" />
+                                    </div>
+                                    <h4 className="font-bold text-sm mb-2">New to Itinero?</h4>
+                                    <p className="text-xs text-slate-400 mb-6">Create an account to start building AI-powered itineraries today.</p>
+                                    <Link href="/signup" className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                                        Create Traveler Profile <ArrowUpRight className="h-3 w-3" />
+                                    </Link>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+            </div>
+
             <Script
                 src="https://accounts.google.com/gsi/client"
                 onLoad={initGoogle}
             />
+        </div>
+    );
+}
+
+function SuccessView({ email, onBack }: any) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-12 shadow-2xl border border-slate-200 dark:border-slate-800 max-w-xl mx-auto text-center"
+        >
+            <div className="h-20 w-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-8">
+                <Mail className="h-8 w-8" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Check your Email</h2>
+            <p className="text-slate-500 mb-10 leading-relaxed font-medium">
+                We've sent a magic link to <span className="font-bold text-slate-900 dark:text-white">{email}</span>.<br />
+                Click the link in the message to sign in instantly.
+            </p>
+            <Button onClick={onBack} variant="outline" className="h-12 px-8 rounded-xl border-slate-200">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Login
+            </Button>
+        </motion.div>
+    );
+}
+
+function InfoBlock({ icon: Icon, title, desc }: any) {
+    return (
+        <div className="flex gap-4 p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="h-10 w-10 shrink-0 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-blue-600">
+                <Icon className="h-5 w-5" />
+            </div>
+            <div>
+                <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-1">{title}</h4>
+                <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
+            </div>
         </div>
     );
 }

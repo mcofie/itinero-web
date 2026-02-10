@@ -18,6 +18,7 @@
         "pricing": "Precios",
         "getStarted": "Empezar",
         "theme": "Tema",
+        "login": "Iniciar sesión",
         "logout": "Cerrar sesión"
     },
     "Actions": {
@@ -176,5 +177,15 @@
             "label": "Progreso del viaje",
             "day": "Día"
         }
+    },
+    "Terms": {
+        "title": "Términos de Servicio",
+        "lastUpdated": "Última actualización",
+        "intro": "Bienvenido a Itinero. Al utilizar nuestro servicio, aceptas estos términos. Por favor, léelos atentamente."
+    },
+    "Privacy": {
+        "title": "Política de Privacidad",
+        "lastUpdated": "Última actualización",
+        "intro": "Tu privacidad es importante para nosotros. Esta política explica cómo recopilamos, utilizamos y protegemos tu información personal."
     }
 }

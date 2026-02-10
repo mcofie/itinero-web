@@ -15,7 +15,25 @@ type Props = {
     startDate?: string;
     estCost?: number;
     currency?: string;
+    interests?: string[];
     children?: React.ReactNode;
+};
+
+const getInterestEmoji = (interest: string) => {
+    const lower = interest.toLowerCase();
+    if (lower.includes("hiking")) return "🥾";
+    if (lower.includes("food") || lower.includes("dining")) return "🍽️";
+    if (lower.includes("shopping")) return "🛍️";
+    if (lower.includes("art")) return "🎨";
+    if (lower.includes("wildlife") || lower.includes("nature")) return "🐾";
+    if (lower.includes("culture")) return "🏛️";
+    if (lower.includes("history")) return "📜";
+    if (lower.includes("beach")) return "🏖️";
+    if (lower.includes("nightlife")) return "🌙";
+    if (lower.includes("photography")) return "📸";
+    if (lower.includes("adventure")) return "🧗";
+    if (lower.includes("wellness") || lower.includes("relaxation")) return "🧘";
+    return "✨";
 };
 
 export function ParallaxHero({
@@ -24,6 +42,7 @@ export function ParallaxHero({
     startDate,
     estCost,
     currency = "USD",
+    interests,
     children,
 }: Props) {
     const ref = React.useRef<HTMLDivElement>(null);
@@ -69,38 +88,39 @@ export function ParallaxHero({
     return (
         <section
             ref={ref}
-            className="relative h-[60vh] min-h-[400px] w-full overflow-hidden border-b border-slate-200 dark:border-slate-800"
+            className="relative h-[65vh] min-h-[500px] w-full overflow-hidden"
         >
             {/* Background Image with Parallax */}
             <motion.div
-                className="absolute inset-0 bg-slate-900"
+                className="absolute inset-0 bg-slate-950"
                 style={{ y, scale }}
             >
                 <Image
                     src={heroUrl}
                     alt={title}
                     fill
-                    className="object-cover opacity-80"
+                    className="object-cover opacity-80 scale-105"
                     priority
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent" />
+                <div className="absolute inset-0 bg-black/40" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent" />
             </motion.div>
 
             {/* Content Container */}
             <motion.div
-                className="absolute inset-0 mx-auto flex max-w-6xl w-full flex-col justify-between p-6 md:p-10"
+                className="absolute inset-0 mx-auto flex max-w-6xl w-full flex-col justify-between p-8 md:p-12 pb-32 md:pb-40"
                 style={{ opacity }}
             >
                 {/* Top Bar */}
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start relative z-10">
                     <Button
                         asChild
                         variant="ghost"
                         size="sm"
-                        className="rounded-full border border-white/10 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 transition-all"
+                        className="rounded-full border border-white/10 bg-white/5 text-white backdrop-blur-md hover:bg-white/20 transition-all font-medium py-6 px-6"
                     >
                         <Link href="/trips">
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Trips
+                            <ArrowLeft className="mr-3 h-4 w-4" /> Back to Trips
                         </Link>
                     </Button>
 
@@ -108,9 +128,9 @@ export function ParallaxHero({
                         <div className="animate-in fade-in slide-in-from-top-4 duration-700 delay-200">
                             <Badge
                                 variant="secondary"
-                                className="rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest shadow-lg"
+                                className="rounded-full bg-blue-500/20 text-blue-400 backdrop-blur-xl border border-blue-500/30 px-5 py-2 text-[10px] font-bold uppercase tracking-[0.2em] shadow-2xl"
                             >
-                                <Clock className="mr-2 h-3.5 w-3.5 text-blue-400" />
+                                <Clock className="mr-2 h-3.5 w-3.5" />
                                 {timeLeft}
                             </Badge>
                         </div>
@@ -118,37 +138,47 @@ export function ParallaxHero({
                 </div>
 
                 {/* Bottom Content */}
-                <div className="space-y-6">
-                    <div className="flex flex-wrap items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
-                        {startDate && (
-                            <Badge
-                                variant="outline"
-                                className="rounded-full border-white/30 bg-white/10 px-3 py-1 text-white backdrop-blur-md font-medium"
-                            >
-                                <CalendarDays className="mr-2 h-3.5 w-3.5" />
-                                {formatDateRange(startDate, undefined)}
-                            </Badge>
-                        )}
-                        {typeof estCost === "number" && (
-                            <Badge
-                                variant="outline"
-                                className="rounded-full border-emerald-400/30 bg-emerald-500/20 px-3 py-1 text-emerald-100 backdrop-blur-md font-medium"
-                            >
-                                <DollarSign className="mr-1 h-3.5 w-3.5" />
-                                Est. {currency} {estCost}
-                            </Badge>
+                <div className="space-y-6 relative z-10">
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        <h1 className="max-w-4xl text-5xl font-bold tracking-tight text-white drop-shadow-2xl leading-[1.05] md:text-7xl transition-all">
+                            {title}
+                        </h1>
+
+                        {interests && interests.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-6">
+                                {interests.map((interest, i) => (
+                                    <Badge
+                                        key={i}
+                                        variant="outline"
+                                        className="border-white/20 bg-white/10 text-white backdrop-blur-sm px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest hover:bg-white/20 transition-all flex items-center gap-2"
+                                    >
+                                        <span className="text-base">{getInterestEmoji(interest)}</span>
+                                        {interest}
+                                    </Badge>
+                                ))}
+                            </div>
                         )}
                     </div>
 
-                    <h1 className="max-w-4xl text-5xl font-extrabold tracking-tight text-white drop-shadow-xl leading-[1.1] md:text-7xl animate-in fade-in slide-in-from-bottom-8 duration-700">
-                        {title}
-                    </h1>
-
-                    {children && (
-                        <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-                            {children}
-                        </div>
-                    )}
+                    <div className="flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+                        {startDate && (
+                            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-slate-300 backdrop-blur-md font-bold text-xs uppercase tracking-widest">
+                                <CalendarDays className="h-4 w-4 text-blue-400" />
+                                {formatDateRange(startDate, undefined)}
+                            </div>
+                        )}
+                        {typeof estCost === "number" && (
+                            <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-emerald-400 backdrop-blur-md font-bold text-xs uppercase tracking-widest">
+                                <DollarSign className="h-4 w-4" />
+                                Est. {currency} {estCost}
+                            </div>
+                        )}
+                        {children && (
+                            <div className="ml-2">
+                                {children}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </motion.div>
         </section>
