@@ -87,6 +87,7 @@
             "title": "Verified Destinations",
             "desc": "Expertly curated activities and professional routing for these regions.",
             "viewAll": "View all destinations",
+            "experienceCurated": "Experience Curated Itineraries",
             "itinerariesSuffix": "Itineraries",
             "featured": "Featured Destination"
         },
@@ -103,6 +104,77 @@
             "company": "Company",
             "stayUpdated": "Stay Updated",
             "emailPlaceholder": "Email"
+        }
+    },
+    "Pricing": {
+        "Hero": {
+            "title1": "Thoughtful Planning,",
+            "title2": "Simple Pricing.",
+            "subtitle": "Pay only for what you need. Unlock human-curated itineraries, budget precision, and local intelligence with simple point bundles.",
+            "pointsFlexibility": "Flexible Point Bundles"
+        },
+        "Currency": {
+            "display": "Show prices in:",
+            "approx": "approx."
+        },
+        "Packs": {
+            "starter": {
+                "name": "Weekend Escape",
+                "note": "Perfect for one short trip"
+            },
+            "value": {
+                "name": "Frequent Explorer",
+                "note": "Our most popular choice"
+            },
+            "power": {
+                "name": "Global Nomad",
+                "note": "Best value for serial travellers"
+            },
+            "bestValue": "Best Value",
+            "buyPoints": "Get Points"
+        },
+        "Features": {
+            "title": "Built for Reliability",
+            "subtitle": "Every point you spend unlocks professional-grade clarity and expert-vetted insights.",
+            "intelligence": {
+                "title": "Expert Intelligence",
+                "desc": "Access social etiquette, dress codes, and emergency directories curated by residents."
+            },
+            "budget": {
+                "title": "Budget Precision",
+                "desc": "Real-time currency conversion and cost benchmarks to keep you on track."
+            },
+            "exports": {
+                "title": "Embassy-Ready Exports",
+                "desc": "Professional PDF itineraries accepted by embassies for visa applications."
+            },
+            "networks": {
+                "title": "Local Networks",
+                "desc": "Verified insights from locals and guides that algorithms often miss."
+            },
+            "sync": {
+                "title": "Calendar Sync",
+                "desc": "Push your schedule directly to Google, Apple, or Outlook calendars."
+            },
+            "support": {
+                "title": "Priority Support",
+                "desc": "Reliable help from our team before and during your journey."
+            }
+        },
+        "FAQ": {
+            "title": "Common Questions",
+            "currency": {
+                "q": "How does currency work?",
+                "a": "We process payments in GHS. The selector shows estimated prices in your local currency, but your card will be charged the GHS equivalent."
+            },
+            "expiry": {
+                "q": "Do points expire?",
+                "a": "Points are valid for 12 months. We'll remind you before they expire so you can plan your next adventure."
+            },
+            "refunds": {
+                "q": "What if I'm not satisfied?",
+                "a": "We're hell-bent on your satisfaction. If an itinerary doesn't meet our quality bar, we'll restore your points immediately."
+            }
         }
     },
     "TripDetails": {

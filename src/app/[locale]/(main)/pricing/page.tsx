@@ -2,23 +2,25 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
     Calendar,
     Check,
-    Download,
-    Map,
+    FileText,
+    ShieldCheck,
+    Users2,
     Share2,
     Sparkles,
-    Coins
+    Coins,
+    HeartHandshake,
+    Wallet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
 import { Accordion, AccordionItem, AccordionContent, AccordionTrigger } from "@/components/ui/accordion";
-
 import { cn } from "@/lib/utils";
 
 /* ---------------- Pricing model (LOCAL CURRENCY FIRST) ---------------- */
-type Pack = { id: string; points: number; ghs: number; best?: boolean; note?: string };
+type Pack = { id: string; points: number; ghs: number; best?: boolean };
 
 const GHS_PER_POINT = 0.4;
 
@@ -43,9 +45,9 @@ const CURRENCIES: Array<{ code: string; label: string }> = [
 ];
 
 const PACKS: Pack[] = [
-    { id: "starter", points: 100, ghs: 100 * GHS_PER_POINT, note: "Perfect for one trip" },
-    { id: "value", points: 300, ghs: 300 * GHS_PER_POINT, best: true, note: "Most popular • 3 trips" },
-    { id: "power", points: 1000, ghs: 1000 * GHS_PER_POINT, note: "Best value • 10 trips" },
+    { id: "starter", points: 100, ghs: 100 * GHS_PER_POINT },
+    { id: "value", points: 300, ghs: 300 * GHS_PER_POINT, best: true },
+    { id: "power", points: 1000, ghs: 1000 * GHS_PER_POINT },
 ];
 
 /* ---------------- Format + conversion helpers ---------------- */
@@ -55,10 +57,10 @@ function formatMoney(code: string, amount: number) {
         return new Intl.NumberFormat(undefined, {
             style: "currency",
             currency: code,
-            maximumFractionDigits: 2,
+            maximumFractionDigits: 0,
         }).format(amount);
     } catch {
-        return `${code} ${amount.toFixed(2)}`;
+        return `${code} ${Math.round(amount)}`;
     }
 }
 
@@ -68,45 +70,41 @@ function convertFromGhs(ghs: number, targetCode: string) {
 }
 
 export default function PricingPage() {
+    const t = useTranslations("Pricing");
     const [displayCur, setDisplayCur] = useState<string>("GHS");
 
     return (
-        <div
-            className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 dark:bg-slate-950 dark:text-white dark:selection:bg-blue-900 dark:selection:text-white transition-colors duration-300">
-
+        <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900 dark:bg-slate-950 dark:text-white dark:selection:bg-blue-900 dark:selection:text-white transition-colors duration-300">
             {/* ===== Hero Section ===== */}
             <section className="relative overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32">
                 {/* Background Blobs */}
-                <div
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none">
-                    <div
-                        className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-50/80 blur-3xl mix-blend-multiply opacity-70 animate-blob dark:bg-blue-900/20 dark:mix-blend-screen"></div>
-                    <div
-                        className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-50/80 blur-3xl mix-blend-multiply opacity-70 animate-blob animation-delay-2000 dark:bg-indigo-900/20 dark:mix-blend-screen"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-full pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-50/80 blur-3xl mix-blend-multiply opacity-70 animate-blob dark:bg-blue-900/20 dark:mix-blend-screen" />
+                    <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-50/80 blur-3xl mix-blend-multiply opacity-70 animate-blob animation-delay-2000 dark:bg-indigo-900/20 dark:mix-blend-screen" />
                 </div>
 
                 <div className="relative mx-auto max-w-4xl px-6 text-center">
-                    <div
-                        className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1 text-sm font-medium text-blue-700 mb-6 backdrop-blur-sm dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/50 px-3 py-1 text-sm font-medium text-blue-700 mb-6 backdrop-blur-sm dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300">
                         <Coins className="h-4 w-4" />
-                        <span>Point-based flexibility</span>
+                        <span>{t("Hero.pointsFlexibility")}</span>
                     </div>
 
                     <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl mb-6 dark:text-white">
-                        Simple pricing for <br className="hidden sm:block" />
-                        <span
-                            className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">smarter travel.</span>
+                        {t("Hero.title1")} <br className="hidden sm:block" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">
+                            {t("Hero.title2")}
+                        </span>
                     </h1>
 
                     <p className="mx-auto max-w-2xl text-lg text-slate-600 mb-10 leading-relaxed dark:text-slate-400">
-                        Pay only for what you plan. Unlock complete, AI-powered itineraries with points.
-                        No monthly subscriptions, no hidden fees.
+                        {t("Hero.subtitle")}
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <div
-                            className="flex items-center gap-3 rounded-2xl bg-white p-1.5 border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800">
-                            <span className="pl-3 text-sm font-medium text-slate-500 dark:text-slate-400">Display currency:</span>
+                        <div className="flex items-center gap-3 rounded-2xl bg-white p-1.5 border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+                            <span className="pl-3 text-sm font-medium text-slate-500 dark:text-slate-400">
+                                {t("Currency.display")}
+                            </span>
                             <select
                                 id="currency"
                                 value={displayCur}
@@ -138,15 +136,14 @@ export default function PricingPage() {
                                 )}
                             >
                                 {pack.best && (
-                                    <div
-                                        className="absolute -top-4 left-0 right-0 mx-auto w-fit rounded-full bg-blue-600 px-4 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md dark:bg-blue-500">
-                                        Best Value
+                                    <div className="absolute -top-4 left-0 right-0 mx-auto w-fit rounded-full bg-blue-600 px-4 py-1 text-xs font-bold uppercase tracking-wide text-white shadow-md dark:bg-blue-500">
+                                        {t("Packs.bestValue")}
                                     </div>
                                 )}
 
                                 <div className="mb-6">
                                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">{pack.points} Points</h3>
-                                    <p className="text-sm font-medium text-slate-500 mt-1 dark:text-slate-400">{pack.note}</p>
+                                    <p className="text-sm font-medium text-slate-500 mt-1 dark:text-slate-400">{t(`Packs.${pack.id}.name`)}</p>
                                 </div>
 
                                 <div className="mb-8 flex items-baseline gap-1">
@@ -154,19 +151,17 @@ export default function PricingPage() {
                                         {formatMoney(displayCur, displayAmount)}
                                     </span>
                                     {displayCur !== 'GHS' && (
-                                        <span
-                                            className="text-xs text-slate-400 font-medium dark:text-slate-500">approx.</span>
+                                        <span className="text-xs text-slate-400 font-medium dark:text-slate-500">{t("Currency.approx")}</span>
                                     )}
                                 </div>
 
                                 <ul className="mb-8 space-y-4 flex-1">
-                                    <Li>Full itinerary unlock</Li>
-                                    <Li>PDF export & sharing</Li>
-                                    <Li>Calendar sync</Li>
-                                    {pack.best || pack.id === 'power' ? (
-                                        <Li>Priority support</Li>
-                                    ) : (
-                                        <Li faded>Standard support</Li>
+                                    <Li>{t("Features.intelligence.title")}</Li>
+                                    <Li>{t("Features.budget.title")}</Li>
+                                    <Li>{t("Features.exports.title")}</Li>
+                                    <Li>{t("Features.networks.title")}</Li>
+                                    {pack.id === "power" && (
+                                        <Li>{t("Features.support.title")}</Li>
                                     )}
                                 </ul>
 
@@ -180,7 +175,7 @@ export default function PricingPage() {
                                     )}
                                 >
                                     <Link href={`/checkout?points=${pack.points}`}>
-                                        Buy Points
+                                        {t("Packs.buyPoints")}
                                     </Link>
                                 </Button>
 
@@ -198,44 +193,44 @@ export default function PricingPage() {
             {/* ===== Features Grid ===== */}
             <section className="mx-auto max-w-6xl px-6 py-24 border-t border-slate-100 dark:border-slate-800">
                 <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl dark:text-white">What you get with
-                        points</h2>
+                    <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl dark:text-white">
+                        {t("Features.title")}
+                    </h2>
                     <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-                        Every itinerary you unlock is yours forever. Use your points to access premium planning
-                        features.
+                        {t("Features.subtitle")}
                     </p>
                 </div>
 
                 <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                     <FeatureCard
-                        icon={<Sparkles className="h-6 w-6 text-blue-600 dark:text-blue-400" />}
-                        title="AI-Optimized Routes"
-                        desc="Day-by-day plans that make sense logistically, saving you time on the road."
+                        icon={<ShieldCheck className="h-6 w-6 text-blue-600 dark:text-blue-400" />}
+                        title={t("Features.intelligence.title")}
+                        desc={t("Features.intelligence.desc")}
                     />
                     <FeatureCard
-                        icon={<Map className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />}
-                        title="Interactive Maps"
-                        desc="Visualise your trip with pins for every stop, hotel, and activity."
+                        icon={<Wallet className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />}
+                        title={t("Features.budget.title")}
+                        desc={t("Features.budget.desc")}
                     />
                     <FeatureCard
-                        icon={<Download className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />}
-                        title="Offline PDF"
-                        desc="Download a beautiful, print-ready version of your trip for when signal drops."
+                        icon={<FileText className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />}
+                        title={t("Features.exports.title")}
+                        desc={t("Features.exports.desc")}
                     />
                     <FeatureCard
-                        icon={<Share2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />}
-                        title="Easy Sharing"
-                        desc="Send a read-only link to friends or family so they can follow along."
+                        icon={<Users2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />}
+                        title={t("Features.networks.title")}
+                        desc={t("Features.networks.desc")}
                     />
                     <FeatureCard
                         icon={<Calendar className="h-6 w-6 text-amber-600 dark:text-amber-400" />}
-                        title="Calendar Sync"
-                        desc="Push your itinerary directly to Google Calendar, Outlook, or Apple Calendar."
+                        title={t("Features.sync.title")}
+                        desc={t("Features.sync.desc")}
                     />
                     <FeatureCard
-                        icon={<Check className="h-6 w-6 text-slate-600 dark:text-slate-400" />}
-                        title="7-Day Free Edits"
-                        desc="Make tweaks to your unlocked itinerary for a week without spending extra points."
+                        icon={<HeartHandshake className="h-6 w-6 text-rose-600 dark:text-rose-400" />}
+                        title={t("Features.support.title")}
+                        desc={t("Features.support.desc")}
                     />
                 </div>
             </section>
@@ -243,26 +238,19 @@ export default function PricingPage() {
             {/* ===== FAQ ===== */}
             <section className="bg-slate-50 py-24 dark:bg-slate-900/50">
                 <div className="mx-auto max-w-3xl px-6">
-                    <h2 className="text-3xl font-bold text-slate-900 mb-12 text-center dark:text-white">Frequently
-                        Asked Questions</h2>
+                    <h2 className="text-3xl font-bold text-slate-900 mb-12 text-center dark:text-white">
+                        {t("FAQ.title")}
+                    </h2>
 
                     <Accordion type="single" collapsible className="w-full space-y-4">
-                        <FAQItem value="currency" question="How does the currency conversion work?">
-                            We process all payments in <strong>Ghana Cedis (GHS)</strong>. The currency dropdown
-                            lets you see estimated prices in USD, EUR, etc., based on current rates, but your card
-                            will be charged the GHS amount.
+                        <FAQItem value="currency" question={t("FAQ.currency.q")}>
+                            {t("FAQ.currency.a")}
                         </FAQItem>
-                        <FAQItem value="expiry" question="Do my points expire?">
-                            Points are valid for <strong>12 months</strong> from the date of purchase. We&apos;ll send
-                            you a reminder before they expire so you can use them up!
+                        <FAQItem value="expiry" question={t("FAQ.expiry.q")}>
+                            {t("FAQ.expiry.a")}
                         </FAQItem>
-                        <FAQItem value="refunds" question="Can I get a refund if I'm not happy?">
-                            If an itinerary fails to generate or has major issues, please contact support. We handle
-                            refunds and point restorations on a case-by-case basis to ensure you&apos;re satisfied.
-                        </FAQItem>
-                        <FAQItem value="topup" question="Can I top up just a few points?">
-                            Currently, we offer the fixed point bundles shown above. This helps us keep transaction
-                            fees low and pass the savings on to you.
+                        <FAQItem value="refunds" question={t("FAQ.refunds.q")}>
+                            {t("FAQ.refunds.a")}
                         </FAQItem>
                     </Accordion>
 
@@ -282,11 +270,10 @@ export default function PricingPage() {
 
 /* ---------- UI Helpers ---------- */
 
-function Li({ children, faded = false }: { children: React.ReactNode; faded?: boolean }) {
+function Li({ children }: { children: React.ReactNode }) {
     return (
-        <li className={cn("flex items-center gap-3 text-sm font-medium", faded ? "text-slate-400 dark:text-slate-600" : "text-slate-700 dark:text-slate-200")}>
-            <div
-                className={cn("flex h-5 w-5 items-center justify-center rounded-full", faded ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-600" : "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400")}>
+        <li className="flex items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-200">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                 <Check className="h-3 w-3" />
             </div>
             {children}
@@ -296,8 +283,7 @@ function Li({ children, faded = false }: { children: React.ReactNode; faded?: bo
 
 function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
     return (
-        <div
-            className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:bg-slate-900 dark:border-slate-800">
+        <div className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:bg-slate-900 dark:border-slate-800">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-800">
                 {icon}
             </div>
@@ -311,10 +297,8 @@ function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: stri
 
 function FAQItem({ value, question, children }: { value: string, question: string, children: React.ReactNode }) {
     return (
-        <AccordionItem value={value}
-            className="border border-slate-200 rounded-2xl px-6 bg-white data-[state=open]:border-blue-200 data-[state=open]:bg-blue-50/30 transition-all dark:bg-slate-900 dark:border-slate-800 dark:data-[state=open]:border-blue-900 dark:data-[state=open]:bg-blue-900/10">
-            <AccordionTrigger
-                className="text-base font-semibold text-slate-800 hover:no-underline py-5 dark:text-slate-200">
+        <AccordionItem value={value} className="border border-slate-200 rounded-2xl px-6 bg-white data-[state=open]:border-blue-200 data-[state=open]:bg-blue-50/30 transition-all dark:bg-slate-900 dark:border-slate-800 dark:data-[state=open]:border-blue-900 dark:data-[state=open]:bg-blue-900/10">
+            <AccordionTrigger className="text-base font-semibold text-slate-800 hover:no-underline py-5 dark:text-slate-200">
                 {question}
             </AccordionTrigger>
             <AccordionContent className="text-slate-600 leading-relaxed pb-6 dark:text-slate-400">

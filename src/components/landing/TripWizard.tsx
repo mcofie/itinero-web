@@ -362,13 +362,13 @@ export default function TripWizard() {
             : "Select dates";
 
     return (
-        <div className="w-full bg-slate-50/50 px-4 pt-6 pb-12 text-slate-900 dark:bg-slate-950 dark:text-white">
+        <div className="w-full bg-transparent px-0 pt-0 pb-4 sm:px-4 sm:pt-6 sm:pb-12 text-slate-900 dark:text-white">
             <div className="mx-auto w-full max-w-2xl">
                 {/* Header / Progress */}
-                <div className="mb-8 flex items-center justify-between px-2">
+                <div className="mb-4 sm:mb-8 flex items-center justify-between px-4 sm:px-2">
                     <div className="flex items-center gap-2">
                         <div
-                            className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 dark:bg-blue-900 dark:text-blue-200">
+                            className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-blue-100 text-xs sm:text-sm font-bold text-blue-700 dark:bg-blue-900 dark:text-blue-200">
                             {step + 1}
                         </div>
                         <span
@@ -396,9 +396,9 @@ export default function TripWizard() {
                 {/* Main Card */}
                 <motion.div
                     layout
-                    className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 flex flex-col dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
+                    className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200 bg-white shadow-lg sm:shadow-xl shadow-slate-200/50 flex flex-col dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
                 >
-                    <div className="p-4 md:p-8 flex-1">
+                    <div className="p-4 sm:p-8 flex-1">
                         <AnimatePresence mode="wait">
                             {/* STEP 0: DESTINATION */}
                             {step === 0 && (
@@ -423,7 +423,7 @@ export default function TripWizard() {
                                         hint={dateDisplay}
                                     >
                                         <div
-                                            className="flex justify-center rounded-2xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                                            className="flex justify-center rounded-2xl border border-slate-100 bg-slate-50/50 p-2 sm:p-4 dark:border-slate-800 dark:bg-slate-800/50">
                                             <Calendar
                                                 mode="range"
                                                 selected={
@@ -660,9 +660,9 @@ export default function TripWizard() {
                             variant="ghost"
                             onClick={goBack}
                             disabled={step === 0 || busy}
-                            className="text-slate-500 hover:bg-slate-200/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                            className="text-slate-500 hover:bg-slate-200/50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white px-3 sm:px-4"
                         >
-                            <ChevronLeft className="mr-2 h-4 w-4" /> Back
+                            <ChevronLeft className="mr-1 sm:mr-2 h-4 w-4" /> Back
                         </Button>
 
                         <Button
@@ -733,14 +733,14 @@ function FieldBlock({
     children: React.ReactNode;
 }) {
     return (
-        <div className="space-y-6 w-full">
+        <div className="space-y-4 sm:space-y-6 w-full">
             <div className="flex items-center gap-3">
                 <div
-                    className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
-                    <Icon className="h-6 w-6" />
+                    className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
                         {label}
                     </h2>
                     {hint && (

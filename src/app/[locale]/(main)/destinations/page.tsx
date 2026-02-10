@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, Sparkles, Clock, Plane, ArrowRight } from "lucide-react";
 
+export const dynamic = "force-dynamic";
 
 /* --- Data Configuration --- */
 
@@ -17,127 +18,57 @@ interface Destination {
     image: string;
     status: DestinationStatus;
     description: string;
+    countryCode?: string | null;
 }
 
-const DESTINATIONS: Destination[] = [
-    // --- Active ---
-    {
-        id: "france",
-        name: "France",
-        image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
-        status: "active",
-        description: "From the romance of Paris to the lavender fields of Provence."
-    },
-    {
-        id: "italy",
-        name: "Italy",
-        image: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9",
-        status: "active",
-        description: "Ancient history, exquisite cuisine, and the rolling hills of Tuscany."
-    },
-    {
-        id: "turkey",
-        name: "Turkey",
-        image: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b",
-        status: "active",
-        description: "Where East meets West, featuring bazaars, mosques, and fairy chimneys."
-    },
-    {
-        id: "ghana",
-        name: "Ghana",
-        image: "https://images.unsplash.com/photo-1532302989211-173c1d2d5445",
-        status: "active",
-        description: "Experience the vibrant culture, history, and coastlines of West Africa."
-    },
-    {
-        id: "kenya",
-        name: "Kenya",
-        image: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e",
-        status: "active",
-        description: "Home to the classic safari, vast savannahs, and the Maasai Mara."
-    },
-    {
-        id: "south-africa",
-        name: "South Africa",
-        image: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99",
-        status: "active",
-        description: "From Cape Town's table mountain to wineries and wildlife."
-    },
-    {
-        id: "tanzania",
-        name: "Tanzania",
-        image: "https://images.unsplash.com/photo-1516426122078-c23e76319801",
-        status: "active",
-        description: "Witness the Serengeti migration and the heights of Kilimanjaro."
-    },
-    {
-        id: "morocco",
-        name: "Morocco",
-        image: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70",
-        status: "active",
-        description: "Get lost in the colorful medinas, deserts, and Atlas mountains."
-    },
-    {
-        id: "rwanda",
-        name: "Rwanda",
-        image: "https://images.unsplash.com/photo-1565372954320-44076d647781",
-        status: "active",
-        description: "The land of a thousand hills and majestic mountain gorillas."
-    },
-    {
-        id: "thailand",
-        name: "Thailand",
-        image: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a",
-        status: "active",
-        description: "Tropical beaches, opulent royal palaces, and ancient ruins."
-    },
-    {
-        id: "dubai",
-        name: "Dubai",
-        image: "https://images.unsplash.com/photo-1512453979798-5ea904f18431",
-        status: "active",
-        description: "Ultramodern architecture, luxury shopping, and lively nightlife."
-    },
-    {
-        id: "singapore",
-        name: "Singapore",
-        image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd",
-        status: "active",
-        description: "A melting pot of culture, futuristic gardens, and world-class food."
-    },
-    // --- Coming Soon ---
-    {
-        id: "japan",
-        name: "Japan",
-        image: "https://images.unsplash.com/photo-1528164344705-47542687000d",
-        status: "coming_soon",
-        description: "Cherry blossoms, ancient temples, and neon-lit cities."
-    },
-    {
-        id: "uganda",
-        name: "Uganda",
-        image: "https://images.unsplash.com/photo-1573122350758-f622c465342b",
-        status: "coming_soon",
-        description: "The pearl of Africa, featuring the source of the Nile."
-    },
-    {
-        id: "malaysia",
-        name: "Malaysia",
-        image: "https://images.unsplash.com/photo-1596422846543-75c6fc197f07",
-        status: "coming_soon",
-        description: "Rainforests, beaches, and the iconic Petronas Twin Towers."
-    },
-];
+function getFlagEmoji(code?: string | null) {
+    if (!code || code.length !== 2) return "";
+    const codePoints = code
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt(0));
+    try {
+        return String.fromCodePoint(...codePoints);
+    } catch {
+        return "";
+    }
+}
+
+function getCountryName(code?: string | null) {
+    if (!code) return "";
+    try {
+        const displayNames = new Intl.DisplayNames(['en'], { type: 'region' });
+        return displayNames.of(code.toUpperCase()) || code;
+    } catch {
+        return code;
+    }
+}
 
 export default async function DestinationsPage() {
     const sb = await createClientServerRSC();
     const { data: { user: _user } } = await sb.auth.getUser();
 
-    const activeDestinations = DESTINATIONS.filter((d) => d.status === "active");
-    const comingSoonDestinations = DESTINATIONS.filter((d) => d.status === "coming_soon");
+    // Fetch destinations from the DB
+    const { data: destRows } = await sb
+        .schema("itinero")
+        .from("destinations")
+        .select("id, name, cover_url, category, popularity, country_code")
+        .order("popularity", { ascending: false });
+
+    const destinations: Destination[] = (destRows || []).map(row => ({
+        id: row.id,
+        name: row.name || "Unknown",
+        image: row.cover_url || "https://images.unsplash.com/photo-1488646953014-85cb44e25828",
+        status: (row.popularity || 0) > 0 ? "active" : "coming_soon",
+        description: row.category || "Explore the wonders of this beautiful destination.",
+        countryCode: row.country_code
+    }));
+
+    const activeDestinations = destinations.filter((d) => d.status === "active");
+    const comingSoonDestinations = destinations.filter((d) => d.status === "coming_soon");
 
     return (
-        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
 
             {/* Header Section */}
             <section
@@ -244,7 +175,7 @@ function DestinationCard({ destination }: { destination: Destination }) {
             );
         }
         return <div
-            className="group block h-full cursor-not-allowed opacity-80 grayscale hover:grayscale-0 transition-all duration-500">{children}</div>;
+            className="group block h-full cursor-not-allowed opacity-80 grayscale hover:grayscale-0 transition-all duration-700">{children}</div>;
     };
 
     return (
@@ -273,22 +204,22 @@ function DestinationCard({ destination }: { destination: Destination }) {
                         <div className="mb-3">
                             {isActive ? (
                                 <Badge
-                                    className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-md">
+                                    className="bg-blue-600 hover:bg-blue-700 text-white border-none shadow-lg">
                                     <Sparkles className="mr-1.5 h-3 w-3 text-yellow-300" /> Popular
                                 </Badge>
                             ) : (
-                                <Badge className="bg-slate-800/80 text-slate-300 border-slate-700 backdrop-blur-md">
+                                <Badge className="bg-slate-800 text-slate-300 border-slate-700">
                                     Coming Soon
                                 </Badge>
                             )}
                         </div>
 
-                        <h3 className="text-2xl font-bold text-white mb-2">
+                        <h3 className="text-2xl font-bold text-white mb-0.5">
                             {destination.name}
                         </h3>
 
-                        <p className="text-slate-300 text-sm line-clamp-2 leading-relaxed">
-                            {destination.description}
+                        <p className="text-slate-300 text-sm font-medium opacity-80 mb-2">
+                            {getFlagEmoji(destination.countryCode)} {getCountryName(destination.countryCode)}
                         </p>
                     </div>
 
@@ -298,7 +229,7 @@ function DestinationCard({ destination }: { destination: Destination }) {
                             className="mt-4 opacity-0 transform translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
                             <Button size="sm"
                                 className="w-full rounded-full bg-white text-slate-900 hover:bg-blue-50 font-bold">
-                                Plan Trip <ArrowRight className="ml-2 h-4 w-4" />
+                                View curated trips <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
                         </div>
                     )}
