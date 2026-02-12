@@ -15,7 +15,7 @@ export default async function AdminItineroPage() {
     } = await sb.auth.getUser();
 
     if (!user) {
-        redirect("/login");
+        redirect("/admin/login");
     }
 
     // Fetch Destinations

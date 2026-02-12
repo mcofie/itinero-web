@@ -17,10 +17,13 @@ export default async function AdminLayout({
         redirect("/admin/login");
     }
 
-    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminEmailEnv = process.env.ADMIN_EMAIL;
+    const allowedEmails = adminEmailEnv?.split(",").map(e => e.trim().toLowerCase()) || [];
+    const userEmail = user?.email?.toLowerCase();
 
     // Strict check: fails if ADMIN_EMAIL is not set or if user email doesn't match
-    if (!adminEmail || user.email !== adminEmail) {
+    if (allowedEmails.length === 0 || !userEmail || !allowedEmails.includes(userEmail)) {
+        console.warn(`Admin access denied for user: ${userEmail || 'Unknown'}. Allowed: ${adminEmailEnv || 'None'}`);
         // Redirect to home page if not authorized
         redirect("/");
     }
