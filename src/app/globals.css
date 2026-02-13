@@ -116,8 +116,9 @@
     --destructive: oklch(0.704 0.191 22.216);
     --destructive-foreground: var(--foreground);
 
-    --border: oklch(0.25 0.04 260);
+    --border: oklch(0.18 0.03 260);
     --input: var(--border);
+
     --ring: var(--primary);
 
     --sidebar: var(--card);

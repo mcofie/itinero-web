@@ -13,6 +13,8 @@ import {
 import { Menu, LayoutDashboard, LogOut } from "lucide-react";
 import { AdminSidebar } from "./AdminSidebar";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { ThemeToggle } from "@/components/ThemeToggle";
+
 
 export function AdminMobileNav({
     userEmail,
@@ -41,7 +43,9 @@ export function AdminMobileNav({
             </Link>
 
             <div className="flex items-center gap-2">
+                <ThemeToggle />
                 <Sheet open={open} onOpenChange={setOpen}>
+
                     <SheetTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-500">
                             <Menu className="h-5 w-5" />

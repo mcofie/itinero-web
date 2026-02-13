@@ -13,9 +13,12 @@ import {
     ArrowLeft,
     LogOut,
     Users,
-    CreditCard
+    CreditCard,
+    Book,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
+
 
 export function AdminSidebar({
     userEmail,
@@ -164,11 +167,26 @@ export function AdminSidebar({
                         Transactions
                     </Link>
                 </Button>
+                <Button
+                    asChild
+                    variant="ghost"
+                    className={cn(
+                        "w-full justify-start gap-3 font-medium h-11 px-3 rounded-lg transition-all duration-200",
+                        isActive("/admin/itinero/photobooks")
+                            ? "bg-blue-600 text-white shadow-md shadow-blue-900/20"
+                            : "text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+                    )}
+                >
+                    <Link href="/admin/itinero/photobooks">
+                        <Book className="h-[18px] w-[18px]" />
+                        Photo Books
+                    </Link>
+                </Button>
             </nav>
 
             <div className="p-4 border-t border-slate-800 bg-[#0b1120] shrink-0 space-y-4">
                 {userEmail && (
-                    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-800 overflow-hidden">
+                    <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-800/50 border border-slate-800 overflow-hidden relative">
                         <Avatar className="h-8 w-8 rounded-lg shadow-lg ring-1 ring-white/10">
                             <AvatarImage src={avatarUrl ?? ""} />
                             <AvatarFallback className="bg-blue-600 text-white text-[10px] font-bold">
@@ -183,8 +201,14 @@ export function AdminSidebar({
                                 {userEmail}
                             </p>
                         </div>
+                        <div className="absolute right-1 top-1">
+                            {/* ThemeToggle usually has its own background/hover, 
+                                but in sidebar it should look integrated */}
+                            <ThemeToggle />
+                        </div>
                     </div>
                 )}
+
 
                 <div className="space-y-1">
                     <Link href="/" className="block">

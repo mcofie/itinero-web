@@ -77,7 +77,7 @@ export default function CreatorsClient({
 
                 <div className="flex flex-col md:flex-row items-center gap-4">
                     {/* Filter Tabs */}
-                    <div className="flex bg-white dark:bg-slate-900 p-1 rounded-2xl shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
+                    <div className="flex bg-white dark:bg-slate-900 p-1 rounded-2xl shadow-sm ring-1 ring-border">
                         <Button
                             variant={currentFilter === "all" ? "default" : "ghost"}
                             size="sm"
@@ -104,8 +104,8 @@ export default function CreatorsClient({
                         </Button>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
-                        <div className="px-4 py-2 text-sm font-bold border-r border-slate-100 dark:border-slate-800 text-slate-500">
+                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm ring-1 ring-border">
+                        <div className="px-4 py-2 text-sm font-bold border-r border-border text-slate-500">
                             Page {currentPage} of {totalPages || 1}
                         </div>
                         <div className="flex items-center">
@@ -133,10 +133,10 @@ export default function CreatorsClient({
             </div>
 
             {/* Main Table Content */}
-            <div className="rounded-[2.5rem] border-none bg-white dark:bg-slate-900 shadow-2xl shadow-slate-200/50 dark:shadow-none ring-1 ring-slate-200 dark:ring-slate-800 overflow-hidden">
+            <div className="rounded-[2.5rem] border-none bg-white dark:bg-slate-900 shadow-2xl shadow-slate-200/50 dark:shadow-none ring-1 ring-border overflow-hidden">
                 <Table>
                     <TableHeader className="bg-slate-50/50 dark:bg-slate-800/30">
-                        <TableRow className="hover:bg-transparent border-slate-100 dark:border-slate-800">
+                        <TableRow className="hover:bg-transparent border-border">
                             <TableHead className="h-14 font-black text-[10px] uppercase tracking-widest text-slate-400 pl-10">Architect</TableHead>
                             <TableHead className="h-14 font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">Itineraries</TableHead>
                             <TableHead className="h-14 font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">Experience Points</TableHead>
@@ -145,7 +145,7 @@ export default function CreatorsClient({
                     </TableHeader>
                     <TableBody>
                         {creators.map((c) => (
-                            <TableRow key={c.userId} className="group border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-white/5 transition-all duration-300">
+                            <TableRow key={c.userId} className="group border-border/50 hover:bg-slate-50/50 dark:hover:bg-white/5 transition-all duration-300">
                                 <TableCell className="pl-10 py-5">
                                     <div className="flex items-center gap-5">
                                         <Link href={`/admin/itinero/creators/${c.userId}`}>
@@ -210,7 +210,7 @@ export default function CreatorsClient({
                 )}
 
                 {/* Visual Footer for pagination (redundant but aesthetic) */}
-                <div className="p-6 bg-slate-50 dark:bg-slate-800/20 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
+                <div className="p-6 bg-slate-50 dark:bg-slate-800/20 flex items-center justify-between border-t border-border">
                     <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                         Showing {creators.length} of {totalCount} records
                     </div>

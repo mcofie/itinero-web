@@ -4,9 +4,8 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,10 +26,9 @@ import {
     Plug,
     CloudSun,
     Wallet,
-    X,
-    ExternalLink, SmartphoneNfc,
+    ExternalLink,
+    SmartphoneNfc,
     ArrowRight,
-    Info,
     TrendingDown,
     Trophy,
 } from "lucide-react";
@@ -44,6 +42,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { notifyTripCreatedAction } from "@/app/actions/trips";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /* =========================
    Types
@@ -247,8 +246,6 @@ export default function PreviewClient({
 }) {
     const sb = getSupabaseBrowser();
     const router = useRouter();
-    const { resolvedTheme } = useTheme();
-    const isDark = (resolvedTheme ?? "dark") === "dark";
 
     // Client state
     const [preview, setPreview] = React.useState<PreviewResponse | null>(null);
@@ -261,8 +258,6 @@ export default function PreviewClient({
     const [insufficientOpen, setInsufficientOpen] = React.useState(false);
     const [saving, setSaving] = React.useState(false);
 
-    const [paywallLeft, setPaywallLeft] = React.useState<number>(10);
-    const [showPaywall, setShowPaywall] = React.useState<boolean>(false);
 
     // Destination meta override from DB
     const [destMetaFromDb, setDestMetaFromDb] =
@@ -318,25 +313,6 @@ export default function PreviewClient({
         })();
     }, [points, sb]);
 
-    // Countdown to paywall
-    React.useEffect(() => {
-        if (showPaywall) return;
-        let left = 10;
-        setPaywallLeft(left);
-
-        const timer = window.setInterval(() => {
-            left -= 1;
-            setPaywallLeft(left);
-            if (left <= 0) {
-                window.clearInterval(timer);
-                setShowPaywall(true);
-            }
-        }, 1000);
-
-        return () => {
-            window.clearInterval(timer);
-        };
-    }, [showPaywall]);
 
     const inputs = React.useMemo(() => preview?.trip_summary?.inputs, [preview]);
     const tripTitle = React.useMemo(() => {
@@ -431,13 +407,34 @@ export default function PreviewClient({
 
     if (loading) {
         return (
-            <div className="mx-auto grid min-h-[40vh] max-w-4xl place-items-center">
-                <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                    <Loader2 className="h-5 w-5 animate-spin text-blue-600" /> Loading preview…
+            <div className="w-full">
+                <div className="relative h-[50vh] min-h-[400px] w-full bg-slate-200 dark:bg-slate-900 overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+                    <div className="absolute inset-0 flex items-end pb-12 md:pb-16">
+                        <div className="mx-auto w-full max-w-5xl px-4 md:max-w-6xl space-y-4">
+                            <div className="flex flex-col gap-4">
+                                <Skeleton className="h-6 w-32 rounded-full bg-white/20" />
+                                <Skeleton className="h-12 md:h-16 w-3/4 max-w-xl bg-white/20" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="mx-auto w-full max-w-5xl px-4 py-12 md:max-w-6xl">
+                    <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+                        <div className="space-y-8">
+                            <Skeleton className="h-40 w-full rounded-3xl" />
+                            <Skeleton className="h-96 w-full rounded-3xl" />
+                        </div>
+                        <div className="space-y-6">
+                            <Skeleton className="h-64 w-full rounded-3xl" />
+                            <Skeleton className="h-48 w-full rounded-3xl" />
+                        </div>
+                    </div>
                 </div>
             </div>
         );
     }
+
 
     if (!preview) {
         return (
@@ -623,6 +620,73 @@ export default function PreviewClient({
 
                     {/* RIGHT: Sidebar */}
                     <div className="space-y-6 lg:sticky lg:top-8 h-fit">
+                        {/* Unlock Trip Card */}
+                        <div
+                            className="rounded-3xl border border-slate-200 bg-white shadow-lg overflow-hidden dark:bg-slate-900 dark:border-slate-800 ring-1 ring-blue-500/20">
+                            <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-6 text-white">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-md">
+                                        <Sparkles className="h-5 w-5 text-white" />
+                                    </div>
+                                    <h3 className="font-bold text-lg leading-tight">Unlock Full Trip</h3>
+                                </div>
+                                <p className="text-blue-100 text-xs font-medium leading-relaxed">
+                                    Unlock the complete itinerary, interactive maps, PDF exports, and calendar sync.
+                                </p>
+                            </div>
+                            <div className="p-6 space-y-6">
+                                <div className="space-y-3">
+                                    <SidebarPerk icon={MapIcon} text="Interactive Maps" />
+                                    <SidebarPerk icon={Download} text="PDF Export" />
+                                    <SidebarPerk icon={CalendarDays} text="Calendar Sync" />
+                                    <SidebarPerk icon={PencilLine} text="Full Editing" />
+                                </div>
+
+                                <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="flex justify-between items-center mb-4 text-sm">
+                                        <span className="text-slate-500 font-medium">Points Required</span>
+                                        <span className="font-bold text-slate-900 dark:text-white">{requiredPoints} pts</span>
+                                    </div>
+                                    <div className="flex justify-between items-center mb-6 text-sm">
+                                        <span className="text-slate-500 font-medium">Your Balance</span>
+                                        <span className={cn(
+                                            "font-bold",
+                                            points !== null && points >= requiredPoints ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500"
+                                        )}>
+                                            {pointsBusy ? "..." : (points ?? 0)} pts
+                                        </span>
+                                    </div>
+
+                                    <Button
+                                        className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]"
+                                        onClick={handleBuy}
+                                        disabled={saving}
+                                    >
+                                        {saving ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                Unlocking...
+                                            </>
+                                        ) : (
+                                            <span className="flex items-center gap-2">
+                                                Unlock Now <ArrowRight className="h-4 w-4" />
+                                            </span>
+                                        )}
+                                    </Button>
+
+                                    {points !== null && points < requiredPoints && (
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full mt-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 text-xs font-bold"
+                                            onClick={() => router.push(`/checkout?points=${requiredPoints}`)}
+                                        >
+                                            Top up points
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
                         {placesWithCoords.length > 0 && (
                             <div
                                 className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
@@ -693,47 +757,6 @@ export default function PreviewClient({
                 </div>
             </main>
 
-            {/* Floating Paywall Countdown */}
-            {!showPaywall && paywallLeft > 0 && (
-                <div className="fixed bottom-6 right-6 z-50">
-                    <div
-                        className="flex items-center gap-3 rounded-full bg-slate-900 text-white px-5 py-2.5 shadow-xl dark:bg-white dark:text-slate-900">
-                        <div className="relative h-4 w-4">
-                            <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
-                                <path
-                                    className="text-slate-700 dark:text-slate-200"
-                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                />
-                                <path
-                                    className="text-blue-500 transition-all duration-1000 ease-linear"
-                                    strokeDasharray={`${(paywallLeft / 10) * 100}, 100`}
-                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                />
-                            </svg>
-                        </div>
-                        <span className="text-xs font-bold">Free Preview: {paywallLeft}s</span>
-                    </div>
-                </div>
-            )}
-
-            {/* Full Screen Paywall */}
-            {showPaywall && (
-                <FullScreenPaywallOverlay
-                    onBuy={handleBuy}
-                    onSave={handleSave}
-                    onClose={() => setShowPaywall(false)}
-                    points={pointsBusy ? null : points}
-                    required={requiredPoints}
-                    saving={saving}
-                    forceTheme={isDark ? "dark" : "light"}
-                />
-            )}
 
             {/* Not enough points dialog */}
             <Dialog open={insufficientOpen} onOpenChange={setInsufficientOpen}>
@@ -976,203 +999,13 @@ function InterestChips({ interests, dark }: { interests: string[]; dark?: boolea
     );
 }
 
-/* Full Screen Paywall Component */
-function FullScreenPaywallOverlay({
-    onBuy,
-    onSave,
-    onClose,
-    points,
-    required,
-    saving,
-    forceTheme,
-}: {
-    onBuy: () => void;
-    onSave: () => void;
-    onClose: () => void;
-    points: number | null;
-    required: number;
-    saving: boolean;
-    forceTheme: "dark" | "light";
-}) {
-    const hasEnough = points !== null && points >= required;
-    const router = useRouter();
-
-    const handlePrimaryAction = () => {
-        if (hasEnough) {
-            onBuy();
-        } else {
-            router.push(`/checkout?points=${Math.max(10, required)}`);
-        }
-    };
-
+function SidebarPerk({ icon: Icon, text }: { icon: any; text: string }) {
     return (
-        <AnimatePresence>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                data-theme={forceTheme}
-                className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4"
-            >
-                <motion.div
-                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                    className="relative w-full max-w-2xl overflow-hidden rounded-[2.5rem] bg-white shadow-2xl ring-1 ring-white/10 dark:bg-slate-950 dark:ring-slate-800"
-                >
-                    {/* Close Button */}
-                    <button
-                        onClick={onClose}
-                        className="absolute right-5 top-5 z-20 rounded-full bg-black/10 p-2 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/20 hover:text-white dark:bg-white/10 dark:hover:bg-white/20"
-                    >
-                        <X className="h-5 w-5" />
-                    </button>
-
-                    {/* Premium Header */}
-                    <div
-                        className="relative flex h-64 flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-violet-600 via-blue-600 to-indigo-600 text-center text-white">
-                        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-20 mix-blend-overlay" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-
-                        <motion.div
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="relative z-10 flex flex-col items-center gap-4 p-6"
-                        >
-                            <div
-                                className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 shadow-inner backdrop-blur-md ring-1 ring-white/30">
-                                <Sparkles className="h-8 w-8 text-white" />
-                            </div>
-                            <div className="space-y-1">
-                                <h2 className="text-3xl font-black tracking-tight md:text-4xl">
-                                    Unlock Your Full Trip
-                                </h2>
-                                <p className="text-blue-100 font-medium text-lg">
-                                    Get the complete itinerary, maps, and offline access.
-                                </p>
-                            </div>
-                        </motion.div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-8 md:p-10">
-                        {/* Perks Grid */}
-                        <div className="mb-10 grid gap-x-8 gap-y-6 sm:grid-cols-2">
-                            <PerkItem
-                                icon={MapIcon}
-                                title="Interactive Maps"
-                                desc="Navigate easily with pinned locations."
-                            />
-                            <PerkItem
-                                icon={Download}
-                                title="PDF Export"
-                                desc="Save offline for when signal drops."
-                            />
-                            <PerkItem
-                                icon={CalendarDays}
-                                title="Calendar Sync"
-                                desc="Add to Google/Apple Calendar."
-                            />
-                            <PerkItem
-                                icon={PencilLine}
-                                title="Full Customization"
-                                desc="Edit every detail of your plan."
-                            />
-                        </div>
-
-                        {/* Cost & Actions */}
-                        <div className="flex flex-col items-center gap-6">
-                            {/* Points Status */}
-                            <div
-                                className="flex items-center gap-3 rounded-full bg-slate-50 px-5 py-2.5 text-sm font-medium text-slate-600 ring-1 ring-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:ring-slate-800">
-                                <span className="flex items-center gap-1.5">
-                                    <span className="text-slate-400">Cost:</span>
-                                    <span className="font-bold text-slate-900 dark:text-white">{required} pts</span>
-                                </span>
-                                <span className="h-4 w-px bg-slate-300 dark:bg-slate-700" />
-                                <span className="flex items-center gap-1.5">
-                                    <span className="text-slate-400">Balance:</span>
-                                    <span
-                                        className={cn(
-                                            "font-bold",
-                                            hasEnough
-                                                ? "text-emerald-600 dark:text-emerald-400"
-                                                : "text-rose-500 dark:text-rose-400"
-                                        )}
-                                    >
-                                        {points ?? "..."} pts
-                                    </span>
-                                </span>
-                            </div>
-
-                            {/* Buttons */}
-                            <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-                                <Button
-                                    size="lg"
-                                    onClick={handlePrimaryAction}
-                                    disabled={saving}
-                                    className={cn(
-                                        "relative h-14 flex-1 rounded-2xl text-base font-bold shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98]",
-                                        hasEnough
-                                            ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 hover:shadow-blue-500/25"
-                                            : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
-                                    )}
-                                >
-                                    {saving ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                            Processing...
-                                        </>
-                                    ) : hasEnough ? (
-                                        <span className="flex items-center gap-2">
-                                            Unlock Itinerary <Sparkles className="h-4 w-4" />
-                                        </span>
-                                    ) : (
-                                        "Top Up Points"
-                                    )}
-                                </Button>
-
-                                <Button
-                                    size="lg"
-                                    variant="outline"
-                                    onClick={onSave}
-                                    disabled={saving}
-                                    className="h-14 flex-1 rounded-2xl border-2 border-slate-200 bg-transparent text-base font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
-                                >
-                                    Save Draft
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-            </motion.div>
-        </AnimatePresence>
-    );
-}
-
-function PerkItem({
-    icon: Icon,
-    title,
-    desc,
-}: {
-    icon: React.ElementType;
-    title: string;
-    desc: string;
-}) {
-    return (
-        <div className="flex gap-4">
-            <div
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
-                <Icon className="h-6 w-6" />
+        <div className="flex items-center gap-3">
+            <div className="h-6 w-6 rounded-lg bg-blue-50 flex items-center justify-center dark:bg-blue-900/40">
+                <Icon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
             </div>
-            <div>
-                <h4 className="font-bold text-slate-900 dark:text-white">{title}</h4>
-                <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                    {desc}
-                </p>
-            </div>
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{text}</span>
         </div>
     );
 }

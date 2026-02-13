@@ -11,6 +11,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Toaster } from "@/components/ui/sonner";
+import GlobalLoading from "./loading";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -83,7 +84,9 @@ export default async function RootLayout({
                         <Suspense fallback={null}>
                             <AppProgressBar />
                         </Suspense>
-                        {children}
+                        <Suspense fallback={<GlobalLoading />}>
+                            {children}
+                        </Suspense>
                         <Toaster />
                     </NextIntlClientProvider>
                 </ThemeProvider>

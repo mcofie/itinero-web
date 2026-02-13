@@ -476,14 +476,14 @@ export default function PlacesClient({
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                             <Input
                                 placeholder="Search by name, tag..."
-                                className="pl-10 h-11 rounded-xl border-slate-200 bg-white shadow-sm focus-visible:ring-blue-500 hover:border-blue-200 transition-colors"
+                                className="pl-10 h-11 rounded-xl border-border bg-white dark:bg-slate-950 shadow-sm focus-visible:ring-blue-500 hover:border-blue-200 transition-colors"
                                 value={placeSearch}
                                 onChange={(e) => setPlaceSearch(e.target.value)}
                             />
                         </div>
 
                         <Select value={placeFilterDestId} onValueChange={setPlaceFilterDestId}>
-                            <SelectTrigger className="w-[200px] h-11 rounded-xl border-slate-200 bg-white shadow-sm focus:ring-blue-500">
+                            <SelectTrigger className="w-[200px] h-11 rounded-xl border-border bg-white dark:bg-slate-950 shadow-sm focus:ring-blue-500">
                                 <SelectValue placeholder="Filter by Destination" />
                             </SelectTrigger>
                             <SelectContent>
@@ -504,7 +504,7 @@ export default function PlacesClient({
                                 Add Place
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[800px] max-h-[85vh] flex flex-col p-0 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 gap-0">
+                        <DialogContent className="sm:max-w-[800px] max-h-[85vh] flex flex-col p-0 bg-white dark:bg-slate-950 border-border gap-0">
                             <DialogHeader className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                                 <DialogTitle className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                     {editingPlaceId ? <Pencil className="h-4 w-4 text-blue-500" /> : <Plus className="h-4 w-4 text-blue-500" />}
@@ -534,7 +534,7 @@ export default function PlacesClient({
                                                         onValueChange={setPlaceDestinationId}
                                                     >
                                                         <SelectTrigger
-                                                            className="bg-white border-slate-200 rounded-xl dark:bg-slate-950 dark:border-slate-800 h-10">
+                                                            className="bg-white border-border rounded-xl dark:bg-slate-950 h-10">
                                                             <SelectValue placeholder="Select a destination" />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -552,7 +552,7 @@ export default function PlacesClient({
                                                     </Label>
                                                     <Select value={placeKind} onValueChange={setPlaceKind}>
                                                         <SelectTrigger
-                                                            className="bg-white border-slate-200 rounded-xl dark:bg-slate-950 dark:border-slate-800 h-10">
+                                                            className="bg-white border-border rounded-xl dark:bg-slate-950 h-10">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -728,7 +728,7 @@ export default function PlacesClient({
                                                             className={cn(
                                                                 "flex items-center justify-between p-3 rounded-xl border transition-all",
                                                                 isOpen
-                                                                    ? "bg-white border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800"
+                                                                    ? "bg-white border-border shadow-sm dark:bg-slate-900"
                                                                     : "bg-slate-50 border-transparent dark:bg-slate-950 opacity-70"
                                                             )}>
                                                             <div className="flex items-center gap-3">
@@ -779,7 +779,7 @@ export default function PlacesClient({
                     </Dialog>
                 </div>
 
-                <Card className="border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-slate-950 rounded-xl">
+                <Card className="border border-border/60 shadow-sm overflow-hidden bg-white dark:bg-slate-950 rounded-xl">
                     <Table>
                         <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                             <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">

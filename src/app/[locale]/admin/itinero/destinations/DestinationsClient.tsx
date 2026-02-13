@@ -287,7 +287,7 @@ export default function DestinationsClient({
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                         <Input
                             placeholder="Search destinations..."
-                            className="pl-10 h-11 rounded-xl border-slate-200 bg-white shadow-sm focus-visible:ring-blue-500 hover:border-blue-200 transition-colors"
+                            className="pl-10 h-11 rounded-xl border-border bg-white dark:bg-slate-950 shadow-sm focus-visible:ring-blue-500 hover:border-blue-200 transition-colors"
                             value={destSearch}
                             onChange={(e) => setDestSearch(e.target.value)}
                         />
@@ -457,10 +457,10 @@ export default function DestinationsClient({
                     </Dialog>
                 </div>
 
-                <Card className="border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-slate-950 rounded-xl">
+                <Card className="border border-border/60 shadow-sm overflow-hidden bg-white dark:bg-slate-950 rounded-xl">
                     <Table>
                         <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
-                            <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800">
+                            <TableRow className="hover:bg-transparent border-b border-border">
                                 <TableHead className="font-semibold text-slate-500 w-[250px]">Name</TableHead>
                                 <TableHead className="font-semibold text-slate-500">Location</TableHead>
                                 <TableHead className="font-semibold text-slate-500">Category</TableHead>
@@ -486,7 +486,7 @@ export default function DestinationsClient({
                                     <TableRow key={d.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/50 transition-colors">
                                         <TableCell className="font-medium">
                                             <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 border border-slate-100 dark:border-slate-700">
+                                                <div className="h-10 w-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0 border border-border">
                                                     <TableImage url={d.cover_url} alt={d.name ?? "Destination"}
                                                         icon={Globe} />
                                                 </div>
@@ -557,7 +557,7 @@ export default function DestinationsClient({
 
                 {/* Pagination Controls */}
                 {filteredDestinations.length > pageSize && (
-                    <div className="flex items-center justify-between border-t border-slate-200 dark:border-slate-800 px-4 py-4 bg-white dark:bg-slate-950 rounded-b-lg">
+                    <div className="flex items-center justify-between border-t border-border px-4 py-4 bg-white dark:bg-slate-950 rounded-b-lg">
                         <div className="text-sm text-slate-500 dark:text-slate-400">
                             Showing <span className="font-medium text-slate-900 dark:text-slate-200">{(currentPage - 1) * pageSize + 1}</span> to <span className="font-medium text-slate-900 dark:text-slate-200">{Math.min(currentPage * pageSize, filteredDestinations.length)}</span> of <span className="font-medium text-slate-900 dark:text-slate-200">{filteredDestinations.length}</span> entries
                         </div>

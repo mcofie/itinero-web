@@ -64,7 +64,8 @@ export default async function CreatorsPage({
 
         const creatorIds = Array.from(new Set(creatorIdsData?.map(t => t.user_id) || []));
         if (creatorIds.length > 0) {
-            query = query.not("id", "in", `(${creatorIds.join(",")})`);
+            // Using array instead of manual string formatting for safer Supabase query
+            query = query.not("id", "in", creatorIds);
         }
     }
 
@@ -73,8 +74,9 @@ export default async function CreatorsPage({
         .range(offset, offset + pageSize - 1);
 
     if (error) {
-        console.error("Error fetching creators:", error);
+        console.error("Error fetching creators:", JSON.stringify(error, null, 2));
     }
+
 
     const userIds = rawUsers?.map(u => u.id) || [];
     let ledgerBalanceMap = new Map<string, number>();

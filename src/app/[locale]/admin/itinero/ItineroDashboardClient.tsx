@@ -21,6 +21,7 @@ import {
     Flag,
     Users,
     MessageSquare,
+    Book,
 } from "lucide-react";
 import { DestinationOption, PlaceOption } from "./types";
 import { TableImage } from "@/components/admin/AdminShared";
@@ -81,7 +82,7 @@ export default function ItineroDashboardClient({
 
             {/* Stats Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="border border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 rounded-xl relative overflow-hidden group hover:shadow-md transition-all">
+                <Card className="border border-border/60 shadow-sm bg-white dark:bg-slate-950 rounded-xl relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute right-0 top-0 h-24 w-24 bg-blue-50 dark:bg-blue-900/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wide">
@@ -97,7 +98,7 @@ export default function ItineroDashboardClient({
                     </CardContent>
                 </Card>
 
-                <Card className="border border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 rounded-xl relative overflow-hidden group hover:shadow-md transition-all">
+                <Card className="border border-border/60 shadow-sm bg-white dark:bg-slate-950 rounded-xl relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute right-0 top-0 h-24 w-24 bg-emerald-50 dark:bg-emerald-900/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wide">
@@ -113,7 +114,7 @@ export default function ItineroDashboardClient({
                     </CardContent>
                 </Card>
 
-                <Card className="border border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 rounded-xl relative overflow-hidden group hover:shadow-md transition-all">
+                <Card className="border border-border/60 shadow-sm bg-white dark:bg-slate-950 rounded-xl relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute right-0 top-0 h-24 w-24 bg-amber-50 dark:bg-amber-900/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wide">
@@ -129,7 +130,7 @@ export default function ItineroDashboardClient({
                     </CardContent>
                 </Card>
 
-                <Card className="border border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 rounded-xl relative overflow-hidden group hover:shadow-md transition-all">
+                <Card className="border border-border/60 shadow-sm bg-white dark:bg-slate-950 rounded-xl relative overflow-hidden group hover:shadow-md transition-all">
                     <div className="absolute right-0 top-0 h-24 w-24 bg-purple-50 dark:bg-purple-900/10 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110" />
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium text-slate-500 uppercase tracking-wide">
@@ -148,7 +149,7 @@ export default function ItineroDashboardClient({
 
             <div className="grid gap-6 md:grid-cols-2">
                 {/* Quick Actions Card */}
-                <Card className="border border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 rounded-xl h-full">
+                <Card className="border border-border/60 shadow-sm bg-white dark:bg-slate-950 rounded-xl h-full">
                     <CardHeader>
                         <CardTitle className="text-lg font-semibold flex items-center gap-2">
                             <Activity className="h-5 w-5 text-blue-600" />
@@ -159,7 +160,7 @@ export default function ItineroDashboardClient({
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <Button asChild variant="outline" className="w-full justify-start h-12 text-left rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 border-slate-200 shadow-sm group">
+                        <Button asChild variant="outline" className="w-full justify-start h-12 text-left rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 border-border shadow-sm group">
                             <Link href="/admin/itinero/destinations">
                                 <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 p-2 rounded-lg mr-3 group-hover:scale-105 transition-transform">
                                     <Globe className="h-4 w-4" />
@@ -171,7 +172,7 @@ export default function ItineroDashboardClient({
                                 <ArrowRight className="ml-auto h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </Button>
-                        <Button asChild variant="outline" className="w-full justify-start h-12 text-left rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 border-slate-200 shadow-sm group">
+                        <Button asChild variant="outline" className="w-full justify-start h-12 text-left rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 border-border shadow-sm group">
                             <Link href="/admin/itinero/places">
                                 <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 p-2 rounded-lg mr-3 group-hover:scale-105 transition-transform">
                                     <MapPin className="h-4 w-4" />
@@ -183,7 +184,7 @@ export default function ItineroDashboardClient({
                                 <ArrowRight className="ml-auto h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </Button>
-                        <Button asChild variant="outline" className="w-full justify-start h-12 text-left rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 border-slate-200 shadow-sm group">
+                        <Button asChild variant="outline" className="w-full justify-start h-12 text-left rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 border-border shadow-sm group">
                             <Link href="/admin/itinero/users">
                                 <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-600 p-2 rounded-lg mr-3 group-hover:scale-105 transition-transform">
                                     <Users className="h-4 w-4" />
@@ -195,7 +196,7 @@ export default function ItineroDashboardClient({
                                 <ArrowRight className="ml-auto h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </Button>
-                        <Button asChild variant="outline" className="w-full justify-start h-12 text-left rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 border-slate-200 shadow-sm group">
+                        <Button asChild variant="outline" className="w-full justify-start h-12 text-left rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 border-border shadow-sm group">
                             <Link href="/admin/itinero/requests">
                                 <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 p-2 rounded-lg mr-3 group-hover:scale-105 transition-transform">
                                     <MessageSquare className="h-4 w-4" />
@@ -207,11 +208,23 @@ export default function ItineroDashboardClient({
                                 <ArrowRight className="ml-auto h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                             </Link>
                         </Button>
+                        <Button asChild variant="outline" className="w-full justify-start h-12 text-left rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 border-border shadow-sm group">
+                            <Link href="/admin/itinero/photobooks">
+                                <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 p-2 rounded-lg mr-3 group-hover:scale-105 transition-transform">
+                                    <Book className="h-4 w-4" />
+                                </span>
+                                <div className="flex flex-col items-start">
+                                    <span className="font-semibold text-slate-900 dark:text-white">Photo Books</span>
+                                    <span className="text-xs text-slate-500 font-normal">Manage printing & fulfillment</span>
+                                </div>
+                                <ArrowRight className="ml-auto h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                            </Link>
+                        </Button>
                     </CardContent>
                 </Card>
 
                 {/* Popular Destinations */}
-                <Card className="border border-slate-200/60 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 rounded-xl h-full">
+                <Card className="border border-border/60 shadow-sm bg-white dark:bg-slate-950 rounded-xl h-full">
                     <CardHeader>
                         <CardTitle className="text-lg font-semibold flex items-center gap-2">
                             <TrendingUp className="h-5 w-5 text-purple-600" />

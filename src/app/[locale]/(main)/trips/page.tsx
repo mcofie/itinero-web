@@ -46,35 +46,30 @@ export default async function TripsPage() {
     } = await sb.auth.getUser();
     if (!user) redirect("/login");
 
-    // Fetch trips
-    const { data: trips, error } = await sb
-        .schema("itinero")
-        .from("trips")
-        .select(
-            "id,user_id,title,start_date,end_date,est_total_cost,currency,cover_url,created_at"
-        )
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+    // Parallel Fetch: Trips, Profile, FX
+    const [tripsRes, profileRes, fxRes] = await Promise.all([
+        sb.schema("itinero").from("trips")
+            .select("id,user_id,title,start_date,end_date,est_total_cost,currency,cover_url,created_at")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false }),
+        sb.schema("itinero").from("profiles")
+            .select("preferred_currency")
+            .eq("id", user.id)
+            .single(),
+        sb.schema("itinero").from("fx_snapshots")
+            .select("id, rates, base_currency, created_at")
+            .eq("base_currency", "USD")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle<FxSnapshot | null>()
+    ]);
 
-    // Fetch User Profile for Preferred Currency
-    const { data: profile } = await sb
-        .schema("itinero")
-        .from("profiles")
-        .select("preferred_currency")
-        .eq("id", user.id)
-        .single();
+    const { data: trips, error } = tripsRes;
+    const { data: profile } = profileRes;
+    const { data: fxSnapshot } = fxRes;
 
     const userPreferredCurrency = profile?.preferred_currency ?? "USD";
 
-    // Fetch FX Snapshot (USD base)
-    const { data: fxSnapshot } = await sb
-        .schema("itinero")
-        .from("fx_snapshots")
-        .select("*")
-        .eq("base_currency", "USD")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle<FxSnapshot | null>();
 
     const tripsSafe: TripRow[] = (trips ?? []) as TripRow[];
     const hasTrips = tripsSafe.length > 0;

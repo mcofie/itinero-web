@@ -1,20 +1,20 @@
 import * as React from "react";
-import {redirect} from "next/navigation";
-import {createClientServerRSC} from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { createClientServerRSC } from "@/lib/supabase/server";
 import CheckoutClient from "./checkout-client";
 
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage({
-                                               searchParams,
-                                           }: {
+    searchParams,
+}: {
     searchParams: Promise<{ points?: string }>;
 }) {
     const sb = await createClientServerRSC();
 
     // Server-side auth check
     const {
-        data: {user},
+        data: { user },
     } = await sb.auth.getUser();
 
     if (!user) {
@@ -24,5 +24,9 @@ export default async function CheckoutPage({
         redirect(`/login?next=${returnUrl}`);
     }
 
-    return <CheckoutClient userEmail={user.email ?? ""}/>;
+    return (
+        <React.Suspense fallback={<div className="flex h-screen items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" /></div>}>
+            <CheckoutClient userEmail={user.email ?? ""} />
+        </React.Suspense>
+    );
 }

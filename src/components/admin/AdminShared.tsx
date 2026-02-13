@@ -17,7 +17,7 @@ export function TableImage({
     if (url) {
         return (
             <div
-                className="h-9 w-9 rounded-lg bg-slate-100 overflow-hidden relative border border-slate-100 dark:border-slate-800 dark:bg-slate-800 flex-shrink-0">
+                className="h-9 w-9 rounded-lg bg-slate-100 overflow-hidden relative border border-border dark:bg-slate-800 flex-shrink-0">
                 <Image
                     src={url}
                     alt={alt}
@@ -29,7 +29,7 @@ export function TableImage({
     }
     return (
         <div
-            className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center border border-slate-100 dark:border-slate-800 dark:bg-slate-800 flex-shrink-0">
+            className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center border border-border dark:bg-slate-800 flex-shrink-0">
             <Icon className="h-4 w-4 text-slate-400" />
         </div>
     );
@@ -58,7 +58,7 @@ export function FormInput({
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
-                className="bg-white border-slate-200 rounded-xl focus-visible:ring-blue-600 dark:bg-slate-950 dark:border-slate-800"
+                className="bg-white border-border rounded-xl focus-visible:ring-blue-600 dark:bg-slate-950"
             />
         </div>
     );
@@ -87,7 +87,7 @@ export function FormTextarea({
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
                 rows={rows}
-                className="bg-white border-slate-200 rounded-xl resize-none focus-visible:ring-blue-600 dark:bg-slate-950 dark:border-slate-800"
+                className="bg-white border-border rounded-xl resize-none focus-visible:ring-blue-600 dark:bg-slate-950"
             />
         </div>
     );

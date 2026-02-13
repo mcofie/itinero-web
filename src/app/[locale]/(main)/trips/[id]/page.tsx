@@ -483,24 +483,21 @@ export default async function TripIdPage({
     } = await sb.auth.getUser();
     if (!user) redirect("/login");
 
-    // Fetch User Profile for Preferred Currency & Passport
-    const { data: profile } = await sb
-        .schema("itinero")
-        .from("profiles")
-        .select("preferred_currency, passport_country")
-        .eq("id", user.id)
-        .single();
+    // 1) Initial Data Fetch (Parallel)
+    const [profileRes, tripRes, itemsRes, routesRes] = await Promise.all([
+        sb.schema("itinero").from("profiles").select("preferred_currency, passport_country").eq("id", user.id).single(),
+        sb.schema("itinero").from("trips").select("*").eq("id", id).maybeSingle<TripRow>(), // Kept * for now to avoid breaking complex types, but could be narrowed
+        sb.schema("itinero").from("itinerary_items").select("*").eq("trip_id", id).order("date", { ascending: true, nullsFirst: true }).order("order_index", { ascending: true }),
+        sb.schema("itinero").from("trip_day_routes").select("date,polyline6,polyline").eq("trip_id", id)
+    ]);
+
+    const { data: profile } = profileRes;
+    const { data: trip, error: tripErr } = tripRes;
+    const { data: items, error: itemsErr } = itemsRes;
+    const { data: routes } = routesRes;
 
     const userPreferredCurrency = profile?.preferred_currency ?? "USD";
     const userPassportCountry = profile?.passport_country;
-
-    // ---- Trip ----
-    const { data: trip, error: tripErr } = await sb
-        .schema("itinero")
-        .from("trips")
-        .select("*")
-        .eq("id", tripId)
-        .maybeSingle<TripRow>();
 
     if (tripErr || !trip) {
         return (
@@ -528,15 +525,6 @@ export default async function TripIdPage({
     // Determine Currency
     const tripCurrency = trip.currency ?? "USD";
 
-    // ---- Items (ordered) ----
-    const { data: items, error: itemsErr } = await sb
-        .schema("itinero")
-        .from("itinerary_items")
-        .select("*")
-        .eq("trip_id", tripId)
-        .order("date", { ascending: true, nullsFirst: true })
-        .order("order_index", { ascending: true });
-
     if (itemsErr) {
         return (
             <div className="mx-auto mt-10 max-w-2xl px-4">
@@ -559,38 +547,66 @@ export default async function TripIdPage({
 
     const safeItems: ItemRow[] = Array.isArray(items) ? (items as ItemRow[]) : [];
 
-    // ---- Places (for map markers) ----
+    // 2) Dependency-based fetches (Places & Routes were already fetched if no dependency)
+    // Places depend on item results
     const placeIds = Array.from(
         new Set(safeItems.map((r) => r.place_id).filter(Boolean))
     ) as string[];
-    let places: PlaceRow[] = [];
-    if (placeIds.length) {
-        const { data: pRows } = await sb
+
+    // Destination fetch depends on trip
+    const destId = trip.destination_id;
+
+    const [placesRes, destRes] = await Promise.all([
+        placeIds.length
+            ? sb.schema("itinero").from("places").select("id,name,lat,lng,category,popularity,cost_typical,cost_currency,tags").in("id", placeIds)
+            : Promise.resolve({ data: [] }),
+        destId
+            ? sb.schema("itinero").from("destinations").select("id,name,lat,lng,current_history_id,country_code").eq("id", destId).maybeSingle<DestinationRow>()
+            : Promise.resolve({ data: null })
+    ]);
+
+    let places = (placesRes.data ?? []) as PlaceRow[];
+    let destination = (destRes.data ?? null) as DestinationRow | null;
+
+    // 3) Final round of dependencies (History depends on destination)
+    const historyId = destination?.current_history_id;
+    const targetCity = destination?.name || (trip.inputs as any)?.destinations?.[0]?.name;
+
+    const [historyRes, guidesRes] = await Promise.all([
+        historyId
+            ? sb.schema("itinero").from("destination_history").select("id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution").eq("id", historyId).maybeSingle<DestinationHistoryRow>()
+            : Promise.resolve({ data: null }),
+        targetCity
+            ? sb.schema("itinero").from("tour_guide_requests").select("*").eq("status", "approved").ilike("city", `%${targetCity}%`)
+            : Promise.resolve({ data: [] })
+    ]);
+
+    let history = (historyRes.data ?? null) as DestinationHistoryRow | null;
+    let tourGuidesRaw = guidesRes.data ?? [];
+
+    // 4) Enrich guides with profiles if found
+    let tourGuides: any[] = [];
+    if (tourGuidesRaw.length > 0) {
+        const userIds = tourGuidesRaw.map((g: any) => g.user_id);
+        const { data: guideProfiles } = await sb
             .schema("itinero")
-            .from("places")
-            .select(
-                "id,name,lat,lng,category,popularity,cost_typical,cost_currency,tags"
-            )
-            .in("id", placeIds);
-        places = (pRows ?? []) as PlaceRow[];
+            .from("profiles")
+            .select("id, full_name, avatar_url")
+            .in("id", userIds);
+
+        tourGuides = tourGuidesRaw.map((g: any) => ({
+            ...g,
+            profiles: guideProfiles?.find((p) => p.id === g.user_id) || null,
+        }));
     }
 
-    // ---- Optional per-day polylines ----
+    // ---- Optional per-day polylines processing ----
     const polyByDate = new Map<string, string>();
-    try {
-        const { data: routes } = await sb
-            .schema("itinero")
-            .from("trip_day_routes")
-            .select("date,polyline6,polyline")
-            .eq("trip_id", tripId);
-        (routes ?? []).forEach((r: DayRouteRow) => {
-            const key = r.date ?? "";
-            const poly = r.polyline6 ?? r.polyline ?? undefined;
-            if (key && poly) polyByDate.set(key, poly);
-        });
-    } catch {
-        // ignore
-    }
+    (routes ?? []).forEach((r: DayRouteRow) => {
+        const key = r.date ?? "";
+        const poly = r.polyline6 ?? r.polyline ?? undefined;
+        if (key && poly) polyByDate.set(key, poly);
+    });
 
     // ---- Build preview-like structure ----
     const grouped = groupItemsByDayIndex(safeItems);
@@ -611,31 +627,6 @@ export default async function TripIdPage({
         lodging: getValidLodging(trip.inputs),
     }));
 
-    // ---------- Destination + history ----------
-    let destination: DestinationRow | null = null;
-    let history: DestinationHistoryRow | null = null;
-
-    if (trip.destination_id) {
-        const { data: dRow } = await sb
-            .schema("itinero")
-            .from("destinations")
-            .select("id,name,lat,lng,current_history_id,country_code")
-            .eq("id", trip.destination_id)
-            .maybeSingle<DestinationRow>();
-        destination = dRow ?? null;
-
-        if (destination?.current_history_id) {
-            const { data: hRow } = await sb
-                .schema("itinero")
-                .from("destination_history")
-                .select(
-                    "id,section,payload,sources,created_at,backdrop_image_url,backdrop_image_attribution"
-                )
-                .eq("id", destination.current_history_id)
-                .maybeSingle<DestinationHistoryRow>();
-            history = hRow ?? null;
-        }
-    }
 
     const { meta: destMeta, heroUrl } =
         buildDestinationMetaFromHistoryRow(history, destination?.country_code);
@@ -741,32 +732,8 @@ export default async function TripIdPage({
         return val as TripConfig;
     })();
 
-    // ---- Fetch Tour Guides ----
-    const targetCity = destMeta?.city || destination?.name || enrichedDestList?.[0]?.name;
-    let tourGuides: any[] = [];
+    // Guides already fetched in Step 3
 
-    if (targetCity) {
-        const { data: guides, error: guidesError } = await sb
-            .schema("itinero")
-            .from("tour_guide_requests")
-            .select("*")
-            .eq("status", "approved")
-            .ilike("city", `%${targetCity}%`);
-
-        if (guides && !guidesError && guides.length > 0) {
-            const userIds = guides.map((g) => g.user_id);
-            const { data: profiles } = await sb
-                .schema("itinero")
-                .from("profiles")
-                .select("id, full_name, avatar_url")
-                .in("id", userIds);
-
-            tourGuides = guides.map((g) => ({
-                ...g,
-                profiles: profiles?.find((p) => p.id === g.user_id) || null,
-            }));
-        }
-    }
 
     return (
         <div

@@ -1,8 +1,6 @@
 // app/not-found.tsx OR app/_not-found/page.tsx (depending on your structure)
-"use client";
-
 import Link from "next/link";
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 // import { useRouter } from "next/navigation"; // if you need it
 
 export default function NotFoundPage() {
