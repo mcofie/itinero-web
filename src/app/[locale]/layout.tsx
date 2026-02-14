@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
-import { ThemeProvider } from "@/components/providers/theme-provider";
+import ThemeProvider from "@/components/providers/theme-provider";
 import { cn } from "@/lib/utils";
 import { AppProgressBar } from "@/components/layout/AppProgress";
-import "../../../instrumentation-client"; // Initialize client-side instrumentation
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -80,7 +79,7 @@ export default async function RootLayout({
                     disableTransitionOnChange
                     themes={["light", "dark"]}
                 >
-                    <NextIntlClientProvider messages={messages}>
+                    <NextIntlClientProvider messages={messages} locale={locale}>
                         <Suspense fallback={null}>
                             <AppProgressBar />
                         </Suspense>

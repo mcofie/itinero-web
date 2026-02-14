@@ -1,3 +1,5 @@
+"use client";
+
 // instrumentation-client.js
 import posthog from 'posthog-js'
 

@@ -6,17 +6,13 @@ import { useRouter } from "@/i18n/routing";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Plane, ArrowRight, CheckCircle2, Globe, ShieldCheck, Mail, Sparkles, Zap, ArrowLeft, ArrowUpRight, Lock, Key } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, Plane, ShieldCheck, ArrowLeft, Star } from "lucide-react";
+import { motion } from "framer-motion";
 import Script from "next/script";
 import { handleGoogleAuthAction } from "@/app/actions/google-auth";
-import { sendMagicLink } from "@/app/actions/auth-magic";
-import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { Footer } from "@/components/layout/Footer";
 
 declare global {
     interface Window {
@@ -28,9 +24,6 @@ export default function LoginPage() {
     const sb = getSupabaseBrowser();
     const router = useRouter();
     const tAuth = useTranslations("Auth");
-
-    const [email, setEmail] = useState("");
-    const [isSent, setIsSent] = useState(false);
     const [busy, setBusy] = useState(false);
 
     useEffect(() => {
@@ -66,6 +59,36 @@ export default function LoginPage() {
         }
     }
 
+    const renderGoogleButton = () => {
+        if (typeof window !== "undefined" && window.google && !busy) {
+            try {
+                const btn = document.getElementById("google-button-container");
+                if (btn) {
+                    // Use getBoundingClientRect for precise width, floor it to avoid subpixel issues
+                    const rect = btn.getBoundingClientRect();
+                    const width = Math.floor(rect.width);
+
+                    // Google button min width is 200, max is 400 provided by their API.
+                    // We shouldn't send 0 or undefined.
+                    if (width > 0) {
+                        // Clear previous content
+                        btn.innerHTML = '';
+                        window.google.accounts.id.renderButton(btn, {
+                            theme: "outline",
+                            size: "large",
+                            width: width.toString(),
+                            shape: "pill",
+                            text: "continue_with",
+                            logo_alignment: "left"
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("Google button render error:", e);
+            }
+        }
+    };
+
     const initGoogle = () => {
         if (typeof window !== "undefined" && window.google) {
             const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
@@ -75,207 +98,153 @@ export default function LoginPage() {
                 auto_select: false,
                 cancel_on_tap_outside: true,
             });
-            const btn = document.getElementById("google-button-container");
-            if (btn) {
-                window.google.accounts.id.renderButton(btn, {
-                    theme: "outline",
-                    size: "large",
-                    width: "360",
-                    shape: "rectangular",
-                    text: "continue_with",
-                });
-            }
+            renderGoogleButton();
         }
     };
 
     useEffect(() => {
+        // Initial init attempt
         initGoogle();
-    }, [isSent]);
 
-    async function handleEmail() {
-        if (!email) return;
-        setBusy(true);
-        try {
-            const { error } = await sendMagicLink({
-                email,
-                redirectTo: `${window.location.origin}/auth/callback`,
+        // Polling for script load
+        const interval = setInterval(() => {
+            if (typeof window !== "undefined" && window.google) {
+                if (!document.getElementById("google-button-container")?.hasChildNodes()) {
+                    initGoogle();
+                }
+                clearInterval(interval);
+            }
+        }, 500);
+
+        // Robust Resize Observer to handle all layout changes
+        const btnContainer = document.getElementById("google-button-container");
+        let resizeObserver: ResizeObserver | null = null;
+
+        if (btnContainer) {
+            resizeObserver = new ResizeObserver(() => {
+                if (window.google) {
+                    // Debounce slightly or just call render
+                    renderGoogleButton();
+                }
             });
-            if (error) throw new Error(String(error));
-            setIsSent(true);
-            toast.success("Magic link sent!");
-        } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : String(e);
-            toast.error(tAuth("errorAuth"), { description: msg });
-        } finally {
-            setBusy(false);
+            resizeObserver.observe(btnContainer);
         }
-    }
+
+        return () => {
+            clearInterval(interval);
+            if (resizeObserver) resizeObserver.disconnect();
+        };
+    }, []);
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans selection:bg-blue-100 selection:text-blue-900">
+        <div className="min-h-screen w-full flex flex-col bg-white dark:bg-slate-950 font-sans selection:bg-blue-100 selection:text-blue-900 relative overflow-hidden">
+            <Scripts onReady={initGoogle} />
 
-            {/* --- Hero Header (Resources Style) --- */}
-            <div className="bg-slate-900 pt-24 pb-48 text-white relative overflow-hidden">
-                <div className="absolute inset-0 z-0">
-                    <Image
-                        src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"
-                        alt="Auth background"
-                        fill
-                        className="object-cover opacity-20 blur-sm scale-110"
-                        priority
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-900/80 to-slate-950" />
-                </div>
+            {/* Background Accents (Global) */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-100/40 dark:bg-blue-900/10 blur-3xl opacity-60" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-100/40 dark:bg-purple-900/10 blur-3xl opacity-60" />
+            </div>
 
-                <div className="container mx-auto px-6 relative z-10 max-w-6xl text-center">
-                    <div className="inline-flex items-center gap-3 text-blue-400 font-bold tracking-widest uppercase text-xs mb-6">
-                        <Lock className="h-4 w-4" />
-                        Secure Entry Point
+            {/* Spacer for vertical centering logic */}
+            <div className="flex-1 flex items-center justify-center w-full p-4 sm:p-6 relative z-10">
+
+                {/* Centered Card Container */}
+                <div className="w-full max-w-lg">
+
+                    {/* Header / Brand */}
+                    <div className="flex flex-col items-center mb-10 text-center">
+                        <Link href="/" className="inline-flex items-center gap-2.5 font-bold text-2xl tracking-tight text-slate-900 dark:text-white group mb-6">
+                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                                <Plane className="h-5 w-5" />
+                            </div>
+                            Itinero
+                        </Link>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+                                Welcome Back
+                            </h1>
+                            <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed max-w-sm mx-auto">
+                                Sign in to access your curated trips and AI travel plans.
+                            </p>
+                        </motion.div>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-                        Traveler's Login
-                    </h1>
-                    <p className="text-slate-400 max-w-xl mx-auto text-lg leading-relaxed">
-                        Access your synchronized itineraries, reward points, and offline intelligence from any device.
-                    </p>
+
+                    {/* Main Card Content */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1, duration: 0.5 }}
+                        className="bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 sm:p-8 shadow-xl"
+                    >
+                        <div className="space-y-8">
+                            {/* Google Button Container */}
+                            <div className="min-h-[58px] relative flex justify-center">
+                                {busy ? (
+                                    <div className="absolute inset-0 flex items-center gap-3 text-slate-500 font-bold bg-slate-50 dark:bg-slate-900 px-6 rounded-full border border-slate-200 dark:border-slate-800 justify-center w-full">
+                                        <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                                        <span>Signing in...</span>
+                                    </div>
+                                ) : (
+                                    <div className="relative z-10 w-full flex justify-center">
+                                        <div id="google-button-container" className="h-[50px] w-full" />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Trusted by 10k+ Travelers</span>
+                                <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+                            </div>
+
+                            {/* Value Props Small */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center gap-2 group transition-colors">
+                                    <div className="h-10 w-10 rounded-full bg-white dark:bg-emerald-900/20 shadow-sm flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                                        <ShieldCheck className="h-5 w-5" />
+                                    </div>
+                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Bank-Level Security</span>
+                                </div>
+                                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center gap-2 group transition-colors">
+                                    <div className="h-10 w-10 rounded-full bg-white dark:bg-amber-900/20 shadow-sm flex items-center justify-center text-amber-600 dark:text-amber-400">
+                                        <Star className="h-5 w-5" />
+                                    </div>
+                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Top Rated App</span>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Back to Home Link */}
+                    <div className="text-center mt-8">
+                        <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors px-3 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-900/50">
+                            <ArrowLeft className="h-4 w-4" />
+                            Back to Home
+                        </Link>
+                    </div>
                 </div>
             </div>
 
-            {/* --- Main Content Grid --- */}
-            <div className="container mx-auto px-6 -mt-24 relative z-20 max-w-4xl">
-                <AnimatePresence mode="wait">
-                    {isSent ? (
-                        <SuccessView key="success" email={email} onBack={() => setIsSent(false)} />
-                    ) : (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                            <motion.div
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className="bg-white dark:bg-slate-900 rounded-3xl p-10 shadow-xl border border-slate-200 dark:border-slate-800"
-                            >
-                                <div className="space-y-8">
-                                    <div className="space-y-4">
-                                        <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 text-center">Fast Connect</div>
-                                        <div className="flex justify-center">
-                                            <div id="google-button-container" className="h-[48px] overflow-hidden" />
-                                        </div>
-                                    </div>
-
-                                    <div className="relative">
-                                        <div className="absolute inset-0 flex items-center">
-                                            <div className="w-full border-t border-slate-100 dark:border-slate-800" />
-                                        </div>
-                                        <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-                                            <span className="bg-white dark:bg-slate-900 px-4 text-slate-300">or magic link</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-6">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Email address</Label>
-                                            <div className="relative group">
-                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
-                                                <Input
-                                                    id="email"
-                                                    type="email"
-                                                    value={email}
-                                                    onChange={(e) => setEmail(e.target.value)}
-                                                    className="h-12 pl-12 rounded-xl border-slate-200 bg-slate-50 dark:bg-slate-950 focus:border-blue-500/50 transition-all font-medium focus-visible:ring-0"
-                                                    placeholder="traveler@example.com"
-                                                    onKeyDown={(e) => e.key === 'Enter' && handleEmail()}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <Button
-                                            onClick={handleEmail}
-                                            disabled={busy || !email}
-                                            className="w-full h-12 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold transition-all"
-                                        >
-                                            {busy ? (
-                                                <Loader2 className="h-5 w-5 animate-spin" />
-                                            ) : (
-                                                <div className="flex items-center gap-2">
-                                                    Continue with Email
-                                                    <ArrowRight className="h-4 w-4" />
-                                                </div>
-                                            )}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                className="space-y-6"
-                            >
-                                <InfoBlock
-                                    icon={Key}
-                                    title="Passwordless Access"
-                                    desc="We use magic links for maximum security. No passwords to remember or lose."
-                                />
-                                <InfoBlock
-                                    icon={ShieldCheck}
-                                    title="Privacy First"
-                                    desc="Your data is encrypted and synced only when you authorize a device."
-                                />
-                                <div className="p-6 bg-slate-900 text-white rounded-3xl relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                                        <Plane className="h-12 w-12" />
-                                    </div>
-                                    <h4 className="font-bold text-sm mb-2">New to Itinero?</h4>
-                                    <p className="text-xs text-slate-400 mb-6">Create an account to start building AI-powered itineraries today.</p>
-                                    <Link href="/signup" className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1">
-                                        Create Traveler Profile <ArrowUpRight className="h-3 w-3" />
-                                    </Link>
-                                </div>
-                            </motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
+            {/* Footer Component */}
+            <div className="relative z-10 w-full">
+                <Footer />
             </div>
-
-            <Script
-                src="https://accounts.google.com/gsi/client"
-                onLoad={initGoogle}
-            />
         </div>
     );
 }
 
-function SuccessView({ email, onBack }: any) {
+function Scripts({ onReady }: { onReady: () => void }) {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-12 shadow-2xl border border-slate-200 dark:border-slate-800 max-w-xl mx-auto text-center"
-        >
-            <div className="h-20 w-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-8">
-                <Mail className="h-8 w-8" />
-            </div>
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Check your Email</h2>
-            <p className="text-slate-500 mb-10 leading-relaxed font-medium">
-                We've sent a magic link to <span className="font-bold text-slate-900 dark:text-white">{email}</span>.<br />
-                Click the link in the message to sign in instantly.
-            </p>
-            <Button onClick={onBack} variant="outline" className="h-12 px-8 rounded-xl border-slate-200">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Login
-            </Button>
-        </motion.div>
-    );
-}
-
-function InfoBlock({ icon: Icon, title, desc }: any) {
-    return (
-        <div className="flex gap-4 p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-            <div className="h-10 w-10 shrink-0 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-blue-600">
-                <Icon className="h-5 w-5" />
-            </div>
-            <div>
-                <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-1">{title}</h4>
-                <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
-            </div>
-        </div>
+        <Script
+            src="https://accounts.google.com/gsi/client"
+            onLoad={onReady}
+            strategy="afterInteractive"
+        />
     );
 }

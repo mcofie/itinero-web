@@ -20,7 +20,8 @@ export default async function DestinationsPage() {
         image: row.cover_url || "https://images.unsplash.com/photo-1488646953014-85cb44e25828",
         status: (row.popularity || 0) > 0 ? "active" : "coming_soon",
         description: row.category || "Explore the wonders of this beautiful destination.",
-        countryCode: row.country_code
+        countryCode: row.country_code,
+        vibe: row.category?.split(',')[0] || "Cultural"
     }));
 
     return <DestinationsClient destinations={destinations} />;

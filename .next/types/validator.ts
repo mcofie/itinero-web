@@ -74,6 +74,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/[locale]/(main)/destinations/[id]/curated/[duration]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/[locale]/destinations/[id]/curated/[duration]">> = Specific
+  const handler = {} as typeof import("../../src/app/[locale]/(main)/destinations/[id]/curated/[duration]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/[locale]/(main)/destinations/[id]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/[locale]/destinations/[id]">> = Specific
+  const handler = {} as typeof import("../../src/app/[locale]/(main)/destinations/[id]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/[locale]/(main)/destinations/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/[locale]/destinations">> = Specific
@@ -96,6 +114,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends AppPageConfig<"/[locale]/guided-tours">> = Specific
   const handler = {} as typeof import("../../src/app/[locale]/(main)/guided-tours/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/[locale]/(main)/photobooks/create/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/[locale]/photobooks/create">> = Specific
+  const handler = {} as typeof import("../../src/app/[locale]/(main)/photobooks/create/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/[locale]/(main)/photobooks/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/[locale]/photobooks">> = Specific
+  const handler = {} as typeof import("../../src/app/[locale]/(main)/photobooks/page.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
@@ -245,6 +281,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/[locale]/admin/itinero/photobooks/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/[locale]/admin/itinero/photobooks">> = Specific
+  const handler = {} as typeof import("../../src/app/[locale]/admin/itinero/photobooks/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/[locale]/admin/itinero/places/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/[locale]/admin/itinero/places">> = Specific
@@ -285,6 +330,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends AppPageConfig<"/[locale]/admin/login">> = Specific
   const handler = {} as typeof import("../../src/app/[locale]/admin/login/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/[locale]/admin/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/[locale]/admin">> = Specific
+  const handler = {} as typeof import("../../src/app/[locale]/admin/page.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check

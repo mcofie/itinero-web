@@ -19,6 +19,7 @@ export interface Destination {
     status: DestinationStatus;
     description: string;
     countryCode?: string | null;
+    vibe?: string;
 }
 
 function getFlagEmoji(code?: string | null) {
@@ -201,7 +202,7 @@ function DestinationCard({ destination, index }: { destination: Destination; ind
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.5 }}
         >
-            <Link href={`/trip-maker?dest=${destination.name}`} className="group block h-full relative">
+            <Link href={`/destinations/${destination.id}`} className="group block h-full relative">
                 <div className="relative h-[480px] w-full overflow-hidden rounded-[2rem] bg-slate-900 shadow-xl transition-all duration-500 group-hover:-translate-y-2 group-hover:shadow-2xl ring-1 ring-black/5 dark:ring-white/10">
 
                     {/* Background Image */}
@@ -223,6 +224,15 @@ function DestinationCard({ destination, index }: { destination: Destination; ind
                             {getCountryName(destination.countryCode)}
                         </div>
                     </div>
+
+                    {/* Vibe Badge */}
+                    {destination.vibe && (
+                        <div className="absolute top-4 right-4">
+                            <div className="px-3 py-1.5 rounded-full bg-blue-600/90 backdrop-blur-md border border-blue-400/30 text-white text-[10px] font-black uppercase tracking-widest shadow-lg">
+                                {destination.vibe}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Content */}
                     <div className="absolute bottom-0 left-0 right-0 p-8 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">

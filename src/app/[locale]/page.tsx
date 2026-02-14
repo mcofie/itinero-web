@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import Globe from "@/components/landing/Globe";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 
 /* ---------- Data ---------- */
@@ -201,66 +202,7 @@ export default function LandingPage() {
                 </section>
 
                 {/* Footer */}
-                <footer className="bg-white border-t border-slate-200 pt-20 pb-12 dark:bg-slate-950 dark:border-slate-800">
-                    <div className="mx-auto max-w-7xl px-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-20">
-                            <div className="lg:col-span-4">
-                                <Link href="/" className="flex items-center gap-3 font-black text-2xl tracking-tighter text-slate-900 mb-6 dark:text-white">
-                                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-600/30">
-                                        <Plane className="h-5 w-5" />
-                                    </span>
-                                    Itinero
-                                </Link>
-                                <p className="text-slate-500 text-base leading-relaxed max-w-xs mb-8 dark:text-slate-400">
-                                    {tLanding("Footer.desc")}
-                                </p>
-                                <div className="flex gap-4">
-                                    <SocialLink href="#" icon={Twitter} />
-                                    <SocialLink href="#" icon={Instagram} />
-                                    <SocialLink href="#" icon={Github} />
-                                </div>
-                            </div>
-
-                            <div className="lg:col-span-2 lg:col-start-6">
-                                <FooterHeading>{tLanding("Footer.product")}</FooterHeading>
-                                <ul className="space-y-4">
-                                    <FooterLink href="/features">Features</FooterLink>
-                                    <FooterLink href="/pricing">{tNav("pricing")}</FooterLink>
-                                    <FooterLink href="/destinations">Destinations</FooterLink>
-                                </ul>
-                            </div>
-
-                            <div className="lg:col-span-2">
-                                <FooterHeading>{tLanding("Footer.company")}</FooterHeading>
-                                <ul className="space-y-4">
-                                    <FooterLink href="/about-us">About Us</FooterLink>
-                                    <FooterLink href="/blog">Blog</FooterLink>
-                                </ul>
-                            </div>
-
-                            <div className="lg:col-span-4">
-                                <FooterHeading>{tLanding("Footer.stayUpdated")}</FooterHeading>
-                                <p className="text-sm text-slate-500 mb-6 dark:text-slate-400">Join our newsletter for travel tips and updates.</p>
-                                <div className="flex gap-2 p-1.5 bg-slate-50 rounded-2xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-                                    <Input placeholder={tLanding("Footer.emailPlaceholder")} className="bg-transparent border-none focus-visible:ring-0 placeholder:text-slate-400 text-sm h-11" />
-                                    <Button size="icon" className="h-11 w-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shrink-0 shadow-lg shadow-blue-600/20">
-                                        <ArrowRight className="h-5 w-5" />
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-6 dark:border-slate-800">
-                            <div className="text-sm font-medium text-slate-400 dark:text-slate-500">
-                                © {new Date().getFullYear()} Itinero Inc. {tFooter("rights")}
-                            </div>
-                            <div className="flex gap-8 text-sm font-semibold text-slate-600 dark:text-slate-400">
-                                <Link href="/terms" className="hover:text-blue-600 transition-colors">Terms</Link>
-                                <Link href="/privacy" className="hover:text-blue-600 transition-colors">Privacy</Link>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
+                <Footer />
             </main>
         </div>
     );
@@ -437,27 +379,5 @@ function PortalVisual() {
             <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-blue-600/20 blur-[120px] rounded-full -z-10 animate-pulse" />
             <div className="absolute -top-10 -right-10 w-64 h-64 bg-indigo-600/20 blur-[120px] rounded-full -z-10" />
         </div>
-    );
-}
-
-function SocialLink({ href, icon: Icon }: { href: string; icon: any }) {
-    return (
-        <Link href={href} className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all dark:bg-slate-900 dark:hover:bg-slate-800">
-            <Icon className="h-5 w-5" />
-        </Link>
-    );
-}
-
-function FooterHeading({ children }: { children: React.ReactNode }) {
-    return <h3 className="font-black text-slate-900 text-sm uppercase tracking-[0.2em] mb-8 dark:text-white">{children}</h3>;
-}
-
-function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
-    return (
-        <li>
-            <Link href={href} className="text-slate-500 hover:text-blue-600 transition-colors font-medium dark:text-slate-400">
-                {children}
-            </Link>
-        </li>
     );
 }

@@ -118,13 +118,7 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                                     </>
                                 ) : (
                                     <>
-                                        <MobileNavItem href="/pricing" active={pathname === "/pricing"}>
-                                            <CreditCard className="mr-3 h-4 w-4" /> {tNav("pricing")}
-                                        </MobileNavItem>
                                         <div className="mt-4 flex flex-col gap-2 p-2">
-                                            <Button variant="outline" className="w-full rounded-full" asChild>
-                                                <Link href="/login">{tNav("login")}</Link>
-                                            </Button>
                                             <Button className="w-full rounded-full bg-blue-600 font-semibold text-white" asChild>
                                                 <Link href="/login">{tNav("getStarted")}</Link>
                                             </Button>
@@ -166,9 +160,6 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                         </>
                     ) : (
                         <>
-                            <NavItem href="/pricing" active={pathname === "/pricing"}>
-                                {tNav("pricing")}
-                            </NavItem>
                         </>
                     )}
                 </nav>
@@ -265,9 +256,6 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                     ) : (
                         <>
                             <div className="hidden md:flex items-center gap-2">
-                                <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white px-4 py-2 rounded-full transition-colors">
-                                    {tNav("login")}
-                                </Link>
                                 <Button asChild className="rounded-full bg-blue-600 px-6 font-semibold text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 dark:bg-blue-500 dark:hover:bg-blue-600">
                                     <Link href="/login">{tNav("getStarted")}</Link>
                                 </Button>

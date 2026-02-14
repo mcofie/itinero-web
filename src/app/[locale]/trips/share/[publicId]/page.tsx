@@ -25,6 +25,7 @@ import { SharedTripIntelligence } from "./SharedTripIntelligence";
 import { ExchangeRateCard } from "@/components/trips/ExchangeRateCard";
 import { WeatherWidget } from "@/components/trips/WeatherWidget";
 import MapSection from "./MapSection";
+import { Footer } from "@/components/layout/Footer";
 
 /* ---------------- Types (Preserved) ---------------- */
 
@@ -843,32 +844,7 @@ export default async function PublicTripPage({
                 )}
             </div>
 
-            {/* Footer */}
-            <footer
-                className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-12 text-center transition-colors duration-300">
-                <div className="mx-auto max-w-md px-6 space-y-4">
-                    <div
-                        className="flex items-center justify-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
-                        <span
-                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
-                            <Plane className="h-4 w-4" />
-                        </span>
-                        Itinero
-                    </div>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Plan your next adventure in minutes.
-                    </p>
-                    <Button
-                        asChild
-                        className="rounded-full bg-slate-900 text-white hover:bg-slate-800 px-6 mt-4 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
-                    >
-                        <Link href="/trip-maker">Start Planning Free</Link>
-                    </Button>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 pt-8">
-                        © {new Date().getFullYear()} Itinero Inc.
-                    </p>
-                </div>
-            </footer>
+            <Footer />
         </div>
     );
 }
