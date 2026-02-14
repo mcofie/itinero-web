@@ -41,7 +41,8 @@ import {
     ShieldCheck,
     Star,
     BookOpen,
-    Type
+    Type,
+    Palette
 } from "lucide-react";
 import {
     Flower,
@@ -162,7 +163,7 @@ const ICON_MAP: Record<string, any> = {
     "Modern Geometry": Cube, "Heart Lucide": Heart, "Camera Lucide": Camera, "Mountain Lucide": Mountain, "Globe Lucide": Globe, "MapPin Lucide": MapPin
 };
 
-const CoverLayoutRenderer = ({ tplId, pTitle, pSubtitle, pImages, pColor, pIcon, pSymbol, pFont, pFoil = 'none', isCard = false }: any) => {
+const CoverLayoutRenderer = ({ tplId, pTitle, pSubtitle, pImages, pColor, pIcon, pSymbol, pFont, pFoil = 'none', isCard = false, onSelectCategory }: any) => {
     const IconComponent = pIcon ? ICON_MAP[pIcon] || null : null;
     const fontStyle = pFont ? { fontFamily: FONTS.find(f => f.id === pFont)?.family } : {};
 
@@ -182,32 +183,33 @@ const CoverLayoutRenderer = ({ tplId, pTitle, pSubtitle, pImages, pColor, pIcon,
     if (tplId === "modern-minimal") {
         content = (
             <div className={cn("h-full grid grid-cols-12 gap-4", isCard ? "p-4" : "p-12 ml-6 py-16")}>
-                <div className="col-span-5 flex flex-col justify-center space-y-2">
-                    {IconComponent && <IconComponent className={cn("opacity-60", isCard ? "h-2 w-2" : "h-8 w-8")} style={{ color: pColor }} />}
-                    {pSymbol && <Image src={pSymbol} alt="S" width={isCard ? 10 : 32} height={isCard ? 10 : 32} className="opacity-60" />}
-                    <h1 className={cn("font-[1000] uppercase tracking-tighter leading-none mix-blend-multiply", isCard ? "text-[10px]" : "text-4xl")} style={{ color: pColor, ...fontStyle }}>{tTitle}</h1>
-                    <p className={cn("font-black uppercase tracking-tight opacity-70", isCard ? "text-[6px]" : "text-lg")} style={{ color: pColor, ...fontStyle }}>{tSubtitle}</p>
+                <div className="col-span-12 flex flex-col justify-center space-y-2 cursor-pointer group" onClick={() => onSelectCategory?.("typography")}>
+                    {IconComponent && <IconComponent className={cn("opacity-60 group-hover:scale-110 group-hover:text-blue-500 transition-all", isCard ? "h-2 w-2" : "h-8 w-8")} style={{ color: pColor }} />}
+                    {pSymbol && <Image src={pSymbol} alt="S" width={isCard ? 10 : 32} height={isCard ? 10 : 32} className="opacity-60 group-hover:opacity-100 transition-all" />}
+                    <h1 className={cn("font-[1000] uppercase tracking-tighter leading-none mix-blend-multiply group-hover:text-blue-600 transition-all", isCard ? "text-[10px]" : "text-4xl")} style={{ color: pColor, ...fontStyle }}>{tTitle}</h1>
+                    <p className={cn("font-black uppercase tracking-tight opacity-70 group-hover:opacity-100 transition-all", isCard ? "text-[6px]" : "text-lg")} style={{ color: pColor, ...fontStyle }}>{tSubtitle}</p>
                 </div>
-                <div className="col-span-1" />
-                <div className="col-span-6 grid grid-cols-2 gap-1.5 h-full">
-                    {[0, 1, 2, 3].map((i) => (
-                        <div key={i} className="bg-slate-200/50 rounded-md overflow-hidden relative shadow-sm">
-                            {pImages[i] ? <Image src={pImages[i].preview_url} alt="P" fill className="object-cover" /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="h-4 w-4" /></div>}
-                        </div>
-                    ))}
-                </div>
+                {!isCard && (
+                    <div className="col-span-12 grid grid-cols-4 gap-2 h-32 mt-4 cursor-pointer" onClick={() => onSelectCategory?.("aesthetic")}>
+                        {[0, 1, 2, 3].map((i) => (
+                            <div key={i} className="bg-slate-200/50 rounded-lg overflow-hidden relative shadow-sm hover:scale-105 transition-transform">
+                                {pImages[i] ? <Image src={pImages[i].preview_url} alt="P" fill className="object-cover" /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="h-4 w-4" /></div>}
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         );
     } else if (tplId === "classic-heritage") {
         content = (
-            <div className={cn("h-full flex flex-col items-center justify-between text-center", isCard ? "p-4" : "p-12 ml-6 py-16")}>
+            <div className={cn("h-full flex flex-col items-center justify-between text-center cursor-pointer group", isCard ? "p-4" : "p-12 ml-6 py-16")} onClick={() => onSelectCategory?.("typography")}>
                 <div className="space-y-1 flex flex-col items-center">
-                    {IconComponent && <IconComponent className={cn("mx-auto opacity-80 mb-2", isCard ? "h-3 w-3" : "h-12 w-12")} style={pFoil !== 'none' ? { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' } : { color: pColor }} />}
+                    {IconComponent && <IconComponent className={cn("mx-auto opacity-80 mb-2 group-hover:scale-110 transition-all", isCard ? "h-3 w-3" : "h-12 w-12")} style={pFoil !== 'none' ? { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' } : { color: pColor }} />}
                     {pSymbol && <Image src={pSymbol} alt="S" width={isCard ? 12 : 48} height={isCard ? 12 : 48} className="mx-auto" />}
                     <span className={cn("font-black uppercase tracking-[0.3em] opacity-40", isCard ? "text-[4px]" : "text-[10px]")} style={{ ...fontStyle, ...foilStyle }}>Studio Edition</span>
-                    <h1 className={cn("font-[1000] uppercase tracking-tight mix-blend-multiply", isCard ? "text-xs" : "text-5xl")} style={{ ...fontStyle, ...foilStyle }}>{tTitle}</h1>
+                    <h1 className={cn("font-[1000] uppercase tracking-tight mix-blend-multiply group-hover:text-blue-600 transition-all", isCard ? "text-xs" : "text-5xl")} style={{ ...fontStyle, ...foilStyle }}>{tTitle}</h1>
                 </div>
-                <div className={cn("w-full aspect-square border-white shadow-xl relative overflow-hidden", isCard ? "max-w-[60px] border-2" : "max-w-[300px] border-8")}>
+                <div className={cn("w-full aspect-square border-white shadow-xl relative overflow-hidden transition-transform group-hover:scale-95", isCard ? "max-w-[60px] border-2" : "max-w-[300px] border-8")}>
                     {pImages[0] ? <Image src={pImages[0].preview_url} alt="P" fill className="object-cover" /> : <div className="absolute inset-0 bg-slate-100 flex items-center justify-center opacity-20"><ImageIcon className="h-6 w-6" /></div>}
                 </div>
                 <p className={cn("font-black uppercase tracking-widest opacity-70 italic", isCard ? "text-[6px]" : "text-lg")} style={{ ...fontStyle, ...foilStyle }}>{tSubtitle}</p>
@@ -370,16 +372,15 @@ const BackCoverRenderer = ({ pImages, pColor, isCard = false }: any) => {
 
 export default function PhotobookEditor({ user, initialData }: { user: any, initialData?: any }) {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState<"design" | "images" | "preview">("design");
+    const [activeTab, setActiveTab] = useState<"images" | "design" | "preview">("images"); // Default to images first
     const [templateId, setTemplateId] = useState(initialData?.template_id || TEMPLATES[0].id);
-    const [designerCategory, setDesignerCategory] = useState<"color" | "symbol" | "typography">("color");
+    const [designerCategory, setDesignerCategory] = useState<"layout" | "aesthetic" | "typography" | "print">("layout");
 
     // Design States
     const [coverBgColor, setCoverBgColor] = useState("#ffffff");
     const [coverTextColor, setCoverTextColor] = useState("#0f172a");
     const [coverIconName, setCoverIconName] = useState<string | null>("Heart");
     const [coverSymbol, setCoverSymbol] = useState<string>("");
-    const [layoutStyle, setLayoutStyle] = useState<"stacked" | "standard" | "offset" | "creative">("stacked");
     const [title, setTitle] = useState(initialData?.title || "OUR SUMMER");
     const [subtitle, setSubtitle] = useState(initialData?.subtitle || "GREECE 2025");
     const [sizeId, setSizeId] = useState("small");
@@ -450,8 +451,13 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
     const globalFontStyle = { fontFamily: activeFontFamily };
 
     const totalPages = 12 + Math.ceil(internalImages.length / 2) * 2;
-
     const cost = Math.round(150 * (SIZES.find(s => s.id === sizeId)?.price_multiplier || 1));
+
+    const steps = [
+        { id: "images", label: "1. Upload Photos", icon: ImageIcon },
+        { id: "design", label: "2. Design Cover", icon: Layout },
+        { id: "preview", label: "3. Proof & Pay", icon: ShoppingBag },
+    ];
 
     const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -495,7 +501,7 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
 
 
     return (
-        <div className="min-h-screen bg-[#fafafb] dark:bg-slate-950 font-outfit">
+        <div className="h-screen flex flex-col bg-[#fafafb] dark:bg-slate-950 font-outfit overflow-hidden">
             <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 bg-white/70 backdrop-blur-xl dark:bg-slate-900/70 dark:border-slate-800/60">
                 <div className="max-w-[1800px] mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-10">
@@ -520,42 +526,23 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                 </div>
             </header>
 
-            <main className="max-w-[1800px] mx-auto px-6 lg:px-12 py-12">
-                <div className="flex items-center justify-center mb-16">
+            <main className="flex-1 max-h-[960px] overflow-hidden flex flex-col p-4 lg:p-8 max-w-[1900px] mx-auto w-full my-auto">
+                <div className="flex-shrink-0 flex items-center justify-center mb-6">
                     <div className="flex p-1.5 bg-slate-200/40 rounded-2xl dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 shadow-sm backdrop-blur-md">
-                        <button
-                            onClick={() => setActiveTab("design")}
-                            className={cn(
-                                "flex items-center gap-2.5 px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300",
-                                activeTab === "design"
-                                    ? "bg-white shadow-md text-blue-600 dark:bg-slate-800 dark:text-blue-400"
-                                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
-                            )}
-                        >
-                            <Layout className="h-4 w-4" /> Design
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("images")}
-                            className={cn(
-                                "flex items-center gap-2.5 px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300",
-                                activeTab === "images"
-                                    ? "bg-white shadow-md text-blue-600 dark:bg-slate-800 dark:text-blue-400"
-                                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
-                            )}
-                        >
-                            <ImageIcon className="h-4 w-4" /> Photos
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("preview")}
-                            className={cn(
-                                "flex items-center gap-2.5 px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300",
-                                activeTab === "preview"
-                                    ? "bg-slate-900 border-slate-900 shadow-md text-white dark:bg-white dark:text-slate-900"
-                                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
-                            )}
-                        >
-                            <ShoppingBag className="h-4 w-4" /> Proofing
-                        </button>
+                        {steps.map((step) => (
+                            <button
+                                key={step.id}
+                                onClick={() => setActiveTab(step.id as any)}
+                                className={cn(
+                                    "flex items-center gap-2.5 px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300",
+                                    activeTab === step.id
+                                        ? "bg-white shadow-md text-blue-600 dark:bg-slate-800 dark:text-blue-400"
+                                        : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-300"
+                                )}
+                            >
+                                <step.icon className="h-4 w-4" /> {step.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
@@ -563,102 +550,139 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                     {activeTab === "design" && (
                         <motion.div
                             key="design"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            className="space-y-16"
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            className="flex-1 flex flex-col min-h-0"
                         >
-                            {/* Templates Table */}
-                            <section>
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="h-10 w-10 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600 dark:bg-amber-900/30">
-                                        <Grid className="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-3xl font-black tracking-tight">Component Arrangement</h2>
-                                        <p className="text-sm text-slate-500 font-medium tracking-wide">Select the layout structure for your project</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Simplified Templates */}
-                                    {TEMPLATES.map((tmpl) => (
-                                        <button
-                                            key={tmpl.id}
-                                            onClick={() => setTemplateId(tmpl.id)}
-                                            className={cn(
-                                                "group relative flex p-6 rounded-[2.5rem] border transition-all duration-500 overflow-hidden",
-                                                templateId === tmpl.id
-                                                    ? "border-blue-600 bg-white shadow-xl ring-4 ring-blue-500/5 dark:border-blue-500 dark:bg-slate-900"
-                                                    : "border-slate-200/60 bg-white/50 hover:bg-white dark:bg-slate-900/50 dark:hover:bg-slate-900 dark:border-slate-800"
-                                            )}
-                                        >
-                                            <div className="w-[120px] aspect-[4/5] transition-all duration-700 group-hover:scale-105 relative overflow-hidden shadow-2xl shrink-0" style={{
-                                                backgroundColor: templateId === tmpl.id ? coverBgColor : '#f8fafc',
-                                                borderRadius: isRounded ? '0.2rem 1rem 1rem 0.2rem' : '0.1rem'
-                                            }}>
-                                                <CoverLayoutRenderer
-                                                    tplId={tmpl.id}
-                                                    pTitle={title}
-                                                    pSubtitle={subtitle}
-                                                    pImages={coverImages.length > 0 ? coverImages : images.slice(0, 8)}
-                                                    pColor={coverTextColor}
-                                                    pIcon={coverIconName}
-                                                    pSymbol={coverSymbol}
-                                                    pFont={coverFont}
-                                                    isCard={true}
-                                                />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
-                                            </div>
-                                            <div className="flex-1 pl-6 text-left flex flex-col justify-center">
-                                                <h3 className="font-extrabold text-slate-900 dark:text-white text-lg mb-1">{tmpl.name}</h3>
-                                                <p className="text-[11px] text-slate-500 font-bold leading-relaxed opacity-80">{tmpl.description}</p>
-                                                {templateId === tmpl.id && (
-                                                    <div className="mt-3 flex items-center gap-2 text-blue-600 dark:text-blue-400 font-black text-[9px] uppercase tracking-widest">
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" /> Focused View
-                                                    </div>
+                            <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+                                {/* Design Studio Sidebar - Full Height to Fit Container */}
+                                <div className="w-full lg:w-[480px] h-full flex-shrink-0 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex">
+                                    {/* Studio Rail - Pro Icon Menu */}
+                                    <div className="w-20 flex-shrink-0 bg-slate-900 dark:bg-black flex flex-col items-center py-8 gap-4 border-r border-white/5">
+                                        {[
+                                            { id: "layout", icon: Grid, label: "Layout" },
+                                            { id: "aesthetic", icon: Sparkles, label: "Aesthetic" },
+                                            { id: "typography", icon: Type, label: "Typography" },
+                                            { id: "print", icon: ShoppingBag, label: "Print" },
+                                        ].map((cat) => (
+                                            <button
+                                                key={cat.id}
+                                                onClick={() => setDesignerCategory(cat.id as any)}
+                                                className={cn(
+                                                    "group relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300",
+                                                    designerCategory === cat.id
+                                                        ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                                                        : "text-slate-500 hover:text-slate-300 hover:bg-white/5"
                                                 )}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </section>
+                                            >
+                                                <cat.icon className="h-5 w-5" />
+                                                <span className="absolute left-[calc(100%+8px)] bg-slate-800 text-white text-[10px] px-2 py-1 rounded hidden group-hover:block whitespace-nowrap z-50 font-black uppercase tracking-widest">
+                                                    {cat.label}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
 
-                            <div className="flex flex-col lg:flex-row gap-16">
-                                {/* Design Sidebar */}
-                                <div className="w-full lg:w-[420px] flex-shrink-0">
-                                    <div className="sticky top-32 space-y-8">
-                                        <div className="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200/60 dark:border-slate-800 shadow-xl p-6">
-                                            <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl mb-8">
-                                                {[
-                                                    { id: "color", label: "Color", icon: Sparkles },
-                                                    { id: "symbol", label: "Symbol", icon: ImageIcon },
-                                                    { id: "typography", label: "Text", icon: Layout },
-                                                ].map((cat) => (
-                                                    <button
-                                                        key={cat.id}
-                                                        onClick={() => setDesignerCategory(cat.id as any)}
-                                                        className={cn(
-                                                            "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                                                            designerCategory === cat.id
-                                                                ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
-                                                                : "text-slate-500 hover:text-slate-700"
-                                                        )}
-                                                    >
-                                                        <cat.icon className="h-3.5 w-3.5" />
-                                                        <span className="hidden sm:inline">{cat.label}</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-
-                                            <div className="space-y-8 h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                                                {designerCategory === "color" && (
-                                                    <div className="space-y-8">
+                                    {/* Properties Panel */}
+                                    <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
+                                        <AnimatePresence mode="wait">
+                                            <motion.div
+                                                key={designerCategory}
+                                                initial={{ opacity: 0, x: 10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -10 }}
+                                                transition={{ duration: 0.2 }}
+                                                className="p-8 space-y-10"
+                                            >
+                                                {designerCategory === "layout" && (
+                                                    <div className="space-y-10">
                                                         <div className="space-y-6">
                                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                                <Sparkles className="h-3 w-3" /> Curated Palettes
+                                                                <Grid className="h-3 w-3" /> Cover Arrangement
                                                             </p>
-                                                            <div className="grid grid-cols-1 gap-3">
+                                                            <div className="grid grid-cols-2 gap-4">
+                                                                {TEMPLATES.map((tmpl) => (
+                                                                    <button
+                                                                        key={tmpl.id}
+                                                                        onClick={() => setTemplateId(tmpl.id)}
+                                                                        className={cn(
+                                                                            "group relative flex flex-col p-3 rounded-2xl border transition-all duration-300 text-center",
+                                                                            templateId === tmpl.id
+                                                                                ? "border-blue-600 bg-blue-50/30 dark:border-blue-500/30 dark:bg-blue-900/10 shadow-md ring-1 ring-blue-100/50"
+                                                                                : "border-slate-100 bg-slate-50/50 hover:bg-white dark:border-slate-800 dark:bg-slate-800/20"
+                                                                        )}
+                                                                    >
+                                                                        <div className="w-full aspect-[4/5] bg-white dark:bg-slate-800 rounded-lg shadow-sm overflow-hidden relative mb-3">
+                                                                            <CoverLayoutRenderer
+                                                                                tplId={tmpl.id}
+                                                                                pTitle={""}
+                                                                                pSubtitle={""}
+                                                                                pImages={images.slice(0, 4)}
+                                                                                pColor={"#cbd5e1"}
+                                                                                isCard={true}
+                                                                            />
+                                                                        </div>
+                                                                        <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tighter truncate w-full">{tmpl.name}</p>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-6">
+                                                                <Maximize2 className="h-3 w-3" /> Edge Geometry
+                                                            </p>
+                                                            <div className="grid grid-cols-2 gap-3">
+                                                                <button
+                                                                    onClick={() => setIsRounded(true)}
+                                                                    className={cn(
+                                                                        "p-4 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all",
+                                                                        isRounded ? "border-blue-600 bg-blue-50 text-blue-600" : "border-slate-100 bg-slate-50 text-slate-400"
+                                                                    )}
+                                                                >
+                                                                    Modern Rounded
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setIsRounded(false)}
+                                                                    className={cn(
+                                                                        "p-4 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all",
+                                                                        !isRounded ? "border-blue-600 bg-blue-50 text-blue-600" : "border-slate-100 bg-slate-50 text-slate-400"
+                                                                    )}
+                                                                >
+                                                                    Classic Sharp
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-4">
+                                                                <ShieldCheck className="h-3 w-3" /> Artisan Specs
+                                                            </p>
+                                                            <div className="p-4 bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 space-y-3">
+                                                                <div className="flex justify-between items-baseline">
+                                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Resolution</span>
+                                                                    <span className="text-[10px] font-black text-emerald-600">300 DPI (OPTIMAL)</span>
+                                                                </div>
+                                                                <div className="flex justify-between items-baseline">
+                                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Estimated Weight</span>
+                                                                    <span className="text-[10px] font-black text-slate-600 dark:text-slate-300">1.2 KG</span>
+                                                                </div>
+                                                                <div className="flex justify-between items-baseline">
+                                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Stock Grade</span>
+                                                                    <span className="text-[10px] font-black text-slate-600 dark:text-slate-300">ULTRA-PREMIUM</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {designerCategory === "aesthetic" && (
+                                                    <div className="space-y-10">
+                                                        <div className="space-y-6">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                                <Sparkles className="h-3 w-3" /> Art Palettes
+                                                            </p>
+                                                            <div className="grid grid-cols-1 gap-2">
                                                                 {[
                                                                     { name: "Aegean", colors: ["#0369a1", "#f0f9ff", "#ffffff"], label: "Deep Sea" },
                                                                     { name: "Forest", colors: ["#166534", "#f0fdf4", "#ffffff"], label: "Nature" },
@@ -671,9 +695,9 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                                                             setCoverBgColor(p.colors[0]);
                                                                             setCoverTextColor(p.colors[2]);
                                                                         }}
-                                                                        className="w-full hover:bg-slate-50 dark:hover:bg-slate-800/50 p-3 rounded-2xl border border-transparent hover:border-slate-100 transition-all text-left"
+                                                                        className="w-full hover:bg-slate-50 dark:hover:bg-slate-800/50 p-4 rounded-2xl border border-transparent hover:border-slate-100 transition-all text-left flex items-center justify-between"
                                                                     >
-                                                                        <div className="flex items-center gap-3">
+                                                                        <div className="flex items-center gap-4">
                                                                             <div className="flex -space-x-2">
                                                                                 {p.colors.map((c, i) => (
                                                                                     <div key={i} className="h-8 w-8 rounded-full border-2 border-white dark:border-slate-900 shadow-sm" style={{ backgroundColor: c }} />
@@ -684,13 +708,16 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                                                                 <p className="text-[10px] font-bold text-slate-400">{p.label}</p>
                                                                             </div>
                                                                         </div>
+                                                                        <div className="h-4 w-4 rounded-full border border-slate-200" style={{ backgroundColor: p.colors[0] }} />
                                                                     </button>
                                                                 ))}
                                                             </div>
                                                         </div>
 
-                                                        <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Background</p>
+                                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                                <Palette className="h-3 w-3" /> Core Background
+                                                            </p>
                                                             <div className="grid grid-cols-5 gap-3">
                                                                 {["#8eb6d9", "#b8e1dd", "#f5b8c8", "#f9e9ad", "#ffffff", "#0f172a", "#166534", "#ff9a3d", "#be123c", "#4338ca"].map((c) => (
                                                                     <button
@@ -705,348 +732,172 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                                                 ))}
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                )}
-
-                                                {designerCategory === "symbol" && (
-                                                    <div className="space-y-8">
-                                                        {[
-                                                            {
-                                                                name: "Global Destinations",
-                                                                symbols: [
-                                                                    { id: "Paris", path: "/images/photobooks/paris-tower.png", label: "Paris" },
-                                                                    { id: "Athens", path: "/images/photobooks/greece-eye.png", label: "Athens" },
-                                                                    { id: "Amalfi", path: "/images/photobooks/italy-lemon.png", label: "Amalfi" },
-                                                                    { id: "London", icon: Crown, label: "London" },
-                                                                    { id: "New York", icon: Buildings, label: "NYC" },
-                                                                    { id: "Coastal", icon: Lighthouse, label: "Coastal" },
-                                                                    { id: "Europe", icon: CastleTurret, label: "Europe" },
-                                                                    { id: "Travel", icon: SuitcaseRolling, label: "Travel" },
-                                                                    { id: "SF", icon: Bridge, label: "SF" },
-                                                                ]
-                                                            },
-                                                            {
-                                                                name: "Artisanal Assets",
-                                                                symbols: [
-                                                                    { id: "maple", path: "/images/photobooks/maple-leaf.png" },
-                                                                    { id: "palm", path: "/images/photobooks/palm-tree.png" },
-                                                                    { id: "mountains", path: "/images/photobooks/mountains.png" },
-                                                                    { id: "seashell", path: "/images/photobooks/seashell.png" },
-                                                                    { id: "parrot", path: "/images/photobooks/parrot.png" },
-                                                                    { id: "turtle", path: "/images/photobooks/turtle.png" },
-                                                                    { id: "coconut", path: "/images/photobooks/coconut.png" },
-                                                                ]
-                                                            },
-                                                            {
-                                                                name: "Modern Geometry",
-                                                                symbols: [
-                                                                    { id: "Heart Lucide", icon: Heart, label: "Heart" },
-                                                                    { id: "Camera Lucide", icon: Camera, label: "Lens" },
-                                                                    { id: "Mountain Lucide", icon: Mountain, label: "Peak" },
-                                                                    { id: "Globe Lucide", icon: Globe, label: "World" },
-                                                                    { id: "MapPin Lucide", icon: MapPin, label: "Pin" },
-                                                                ]
-                                                            },
-                                                            {
-                                                                name: "Studio Embellishments",
-                                                                symbols: [
-                                                                    { id: "Flower", icon: Flower },
-                                                                    { id: "Butterfly", icon: Butterfly },
-                                                                    { id: "Bird", icon: Bird },
-                                                                    { id: "Anchor", icon: Anchor },
-                                                                    { id: "Moon Ph", icon: Moon },
-                                                                    { id: "Rainbow", icon: Rainbow },
-                                                                    { id: "Leaf Ph", icon: Leaf },
-                                                                ]
-                                                            }
-                                                        ].map((collection) => (
-                                                            <div key={collection.name} className="space-y-4">
-                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{collection.name}</p>
-                                                                <div className="grid grid-cols-3 gap-3">
-                                                                    {collection.symbols.map((s: any) => (
-                                                                        <button
-                                                                            key={s.id}
-                                                                            onClick={() => {
-                                                                                if (s.icon) {
-                                                                                    setCoverIconName(s.id);
-                                                                                    setCoverSymbol("");
-                                                                                } else {
-                                                                                    setCoverSymbol(s.path);
-                                                                                    setCoverIconName(null);
-                                                                                }
-                                                                            }}
-                                                                            className={cn(
-                                                                                "aspect-square rounded-2xl bg-slate-50/50 dark:bg-white/5 border-2 flex items-center justify-center p-3 transition-all group/asset relative",
-                                                                                (s.icon ? coverIconName === s.id : coverSymbol === s.path)
-                                                                                    ? "border-blue-600 bg-white shadow-md scale-105"
-                                                                                    : "border-transparent hover:border-slate-200"
-                                                                            )}
-                                                                        >
-                                                                            {s.icon ? (
-                                                                                <s.icon className="h-6 w-6 text-slate-600 group-hover:text-slate-900" weight={!s.id.includes("Lucide") ? "duotone" : undefined} />
-                                                                            ) : (
-                                                                                <div className="relative w-full h-full">
-                                                                                    <Image src={s.path} alt={s.id} fill className="object-contain" />
-                                                                                </div>
-                                                                            )}
-                                                                            {s.label && (
-                                                                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[8px] px-1.5 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 font-black">
-                                                                                    {s.label}
-                                                                                </div>
-                                                                            )}
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
+                                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-6">
+                                                                <ImageIcon className="h-3 w-3" /> Hero Embellishments
+                                                            </p>
+                                                            <div className="grid grid-cols-3 gap-3">
+                                                                {[
+                                                                    { id: "Paris", path: "/images/photobooks/paris-tower.png" },
+                                                                    { id: "Athens", path: "/images/photobooks/greece-eye.png" },
+                                                                    { id: "Amalfi", path: "/images/photobooks/italy-lemon.png" },
+                                                                    { id: "Globe Lucide", icon: Globe },
+                                                                    { id: "Heart Lucide", icon: Heart },
+                                                                    { id: "Camera Lucide", icon: Camera },
+                                                                ].map((s: any) => (
+                                                                    <button
+                                                                        key={s.id}
+                                                                        onClick={() => {
+                                                                            if (s.icon) {
+                                                                                setCoverIconName(s.id);
+                                                                                setCoverSymbol("");
+                                                                            } else {
+                                                                                setCoverSymbol(s.path);
+                                                                                setCoverIconName(null);
+                                                                            }
+                                                                        }}
+                                                                        className={cn(
+                                                                            "aspect-square rounded-2xl border-2 flex items-center justify-center p-3 transition-all",
+                                                                            (s.icon ? coverIconName === s.id : coverSymbol === s.path) ? "border-blue-600 bg-white shadow-sm ring-1 ring-blue-100" : "border-slate-50 bg-slate-50/50"
+                                                                        )}
+                                                                    >
+                                                                        {s.icon ? <s.icon className="h-6 w-6 text-slate-400" /> : <div className="relative w-full h-full"><Image src={s.path} alt={s.id} fill className="object-contain" /></div>}
+                                                                    </button>
+                                                                ))}
                                                             </div>
-                                                        ))}
+                                                        </div>
+
+                                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                                                <Sun className="h-3 w-3" /> Laboratory Mood
+                                                            </p>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                {Object.values(THEMES).map((t) => (
+                                                                    <button key={t.id} onClick={() => setStudioTheme(t.id as any)} className={cn("p-3 rounded-xl border flex items-center gap-3 transition-all", studioTheme === t.id ? "border-blue-600 bg-blue-50/30 text-blue-600" : "border-slate-50 bg-slate-50/50 text-slate-400")}>
+                                                                        <div className={cn("h-4 w-4 rounded-full border border-slate-200 shadow-inner", t.bg)} />
+                                                                        <p className="text-[10px] font-black uppercase tracking-tighter">{t.name}</p>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 )}
 
                                                 {designerCategory === "typography" && (
-                                                    <div className="space-y-8">
-                                                        <div className="grid grid-cols-1 gap-4">
-                                                            {[
-                                                                { id: "stacked", name: "Poster", desc: "Bold, centered aesthetic", icon: Layout },
-                                                                { id: "standard", name: "Classic", desc: "Minimalist header focus", icon: AlignLeft },
-                                                            ].map((style) => (
-                                                                <button
-                                                                    key={style.id}
-                                                                    onClick={() => setLayoutStyle(style.id as any)}
-                                                                    className={cn(
-                                                                        "w-full flex items-start gap-4 p-4 rounded-2xl border transition-all text-left",
-                                                                        layoutStyle === style.id ? "border-blue-600 bg-white shadow-md" : "border-transparent bg-slate-50/50 hover:bg-white"
-                                                                    )}
-                                                                >
-                                                                    <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center", layoutStyle === style.id ? "bg-blue-600 text-white" : "bg-white text-slate-400")}>
-                                                                        <style.icon className="h-5 w-5" />
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-xs font-black text-slate-900 uppercase tracking-wider">{style.name}</p>
-                                                                        <p className="text-[10px] font-bold text-slate-400">{style.desc}</p>
-                                                                    </div>
-                                                                </button>
-                                                            ))}
-                                                        </div>
-
-                                                        <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Typeface Selection</p>
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                {FONTS.map((font) => (
-                                                                    <button
-                                                                        key={font.id}
-                                                                        onClick={() => setCoverFont(font.id)}
-                                                                        className={cn(
-                                                                            "p-3 rounded-xl border transition-all text-left group",
-                                                                            coverFont === font.id ? "border-blue-600 bg-white shadow-sm" : "border-transparent bg-slate-50 hover:bg-white"
-                                                                        )}
-                                                                    >
-                                                                        <p className={cn("text-xs font-bold text-slate-900 mb-1 truncate", coverFont === font.id ? "text-blue-600" : "")} style={{ fontFamily: font.family }}>{font.name}</p>
-                                                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest opacity-40">SAMPLE TYPE</p>
-                                                                    </button>
-                                                                ))}
+                                                    <div className="space-y-10">
+                                                        <div className="space-y-6">
+                                                            <div className="flex items-center justify-between">
+                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                                    <Type className="h-3 w-3" /> Headline Control
+                                                                </p>
+                                                                <button onClick={generateMagicTitle} className="text-[9px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-tighter hover:bg-blue-100 transition-colors">Magic Pen</button>
                                                             </div>
-                                                        </div>
-
-                                                        <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Headline Control</p>
-                                                                <button
-                                                                    onClick={generateMagicTitle}
-                                                                    className="flex items-center gap-1.5 text-[9px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-2.5 py-1 rounded-full hover:bg-purple-100 transition-colors"
-                                                                >
-                                                                    <Sparkles className="h-2.5 w-2.5" /> Magic Pen
-                                                                </button>
-                                                            </div>
-                                                            <div className="space-y-1.5">
-                                                                <label className="text-[9px] font-black text-slate-500 uppercase ml-1 opacity-60">Headline</label>
-                                                                <div className="relative group">
-                                                                    <Input
-                                                                        value={title}
-                                                                        onChange={(e) => setTitle(e.target.value.toUpperCase())}
-                                                                        className="h-11 rounded-xl border-slate-200 font-bold bg-white/50 focus:bg-white transition-all shadow-none"
-                                                                        placeholder="LOCATION"
-                                                                        style={{ fontFamily: FONTS.find(f => f.id === coverFont)?.family }}
-                                                                    />
+                                                            <div className="space-y-4">
+                                                                <div className="space-y-1.5">
+                                                                    <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Primary Title</label>
+                                                                    <Input value={title} onChange={(e) => setTitle(e.target.value.toUpperCase())} className="h-11 rounded-xl border-slate-100 font-bold bg-slate-50/50 focus:bg-white shadow-none transition-all" />
+                                                                </div>
+                                                                <div className="space-y-1.5">
+                                                                    <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Subcaption</label>
+                                                                    <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value.toUpperCase())} className="h-11 rounded-xl border-slate-100 font-bold bg-slate-50/50 focus:bg-white shadow-none transition-all" />
+                                                                </div>
+                                                                <div className="space-y-1.5">
+                                                                    <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Vertical Spine</label>
+                                                                    <Input value={spineText} onChange={(e) => setSpineText(e.target.value.toUpperCase())} className="h-11 rounded-xl border-slate-100 font-bold bg-slate-50/50 focus:bg-white shadow-none transition-all" />
                                                                 </div>
                                                             </div>
-                                                            <div className="space-y-1.5">
-                                                                <label className="text-[9px] font-black text-slate-500 uppercase ml-1 opacity-60">Sub-caption</label>
-                                                                <Input
-                                                                    value={subtitle}
-                                                                    onChange={(e) => setSubtitle(e.target.value.toUpperCase())}
-                                                                    className="h-11 rounded-xl border-slate-200 font-bold bg-white/50 focus:bg-white transition-all shadow-none"
-                                                                    placeholder="YEAR"
-                                                                    style={{ fontFamily: FONTS.find(f => f.id === coverFont)?.family }}
-                                                                />
-                                                            </div>
                                                         </div>
 
-                                                        <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Studio Mood</p>
-                                                            <div className="grid grid-cols-1 gap-2">
-                                                                {Object.values(THEMES).map((t) => (
-                                                                    <button
-                                                                        key={t.id}
-                                                                        onClick={() => setStudioTheme(t.id as any)}
-                                                                        className={cn(
-                                                                            "p-3 rounded-xl border transition-all text-left group flex items-center justify-between",
-                                                                            studioTheme === t.id ? "border-blue-600 bg-white shadow-sm" : "border-transparent bg-slate-50 hover:bg-white"
-                                                                        )}
-                                                                    >
-                                                                        <div className="flex items-center gap-3">
-                                                                            <div className={cn("h-4 w-4 rounded-full border border-slate-200 shadow-inner", t.bg)} />
-                                                                            <p className={cn("text-xs font-bold text-slate-900", studioTheme === t.id ? "text-blue-600" : "")}>{t.name}</p>
-                                                                        </div>
-                                                                        {studioTheme === t.id && <Check className="h-3 w-3 text-blue-600" />}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-
-
-                                                        <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Spine Customization</p>
-                                                            <div className="space-y-1.5">
-                                                                <label className="text-[9px] font-black text-slate-500 uppercase ml-1 opacity-60">Vertical Spine Text</label>
-                                                                <Input
-                                                                    value={spineText}
-                                                                    onChange={(e) => setSpineText(e.target.value.toUpperCase())}
-                                                                    className="h-11 rounded-xl border-slate-200 font-bold bg-white/50 focus:bg-white transition-all shadow-none"
-                                                                    placeholder="SPINE TITLE"
-                                                                />
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Text Color</p>
-                                                            <div className="flex gap-2">
-                                                                <input
-                                                                    type="color"
-                                                                    value={coverTextColor}
-                                                                    onChange={(e) => setCoverTextColor(e.target.value)}
-                                                                    className="h-10 w-20 rounded-lg cursor-pointer border-2 border-slate-100 dark:border-slate-800"
-                                                                />
-                                                                <Input
-                                                                    value={coverTextColor}
-                                                                    onChange={(e) => setCoverTextColor(e.target.value)}
-                                                                    className="h-10 rounded-xl border-slate-200 font-bold bg-white/50 focus:bg-white transition-all shadow-none"
-                                                                />
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Define FOILS constant here or import it */}
-                                                        {/* For the purpose of this edit, I'm defining it inline as it's not provided in the original snippet */}
-                                                        {/* In a real application, this would likely be a global constant or imported */}
-                                                        {/* Assuming FOILS is defined like: */}
-                                                        {/* const FOILS = {
-                                                            none: { id: "none", name: "None", gradient: "none" },
-                                                            gold: { id: "gold", name: "Gold", gradient: "linear-gradient(to bottom right, #d4af37, #f0e68c, #d4af37)" },
-                                                            silver: { id: "silver", name: "Silver", gradient: "linear-gradient(to bottom right, #c0c0c0, #e6e8fa, #c0c0c0)" },
-                                                            roseGold: { id: "roseGold", name: "Rose Gold", gradient: "linear-gradient(to bottom right, #b76e79, #e0b0ff, #b76e79)" },
-                                                            copper: { id: "copper", name: "Copper", gradient: "linear-gradient(to bottom right, #b87333, #e7a37a, #b87333)" },
-                                                        }; */}
-
-                                                        <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Artisan Foil Finish</p>
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                {(Object.values(FOILS)).map((f) => (
-                                                                    <button
-                                                                        key={f.id}
-                                                                        onClick={() => setCoverFoil(f.id as any)}
-                                                                        className={cn(
-                                                                            "p-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all text-left flex items-center justify-between",
-                                                                            coverFoil === f.id ? "border-blue-600 bg-white shadow-md text-blue-600" : "border-transparent bg-slate-50 text-slate-400 hover:bg-white"
-                                                                        )}
-                                                                    >
-                                                                        {f.name}
-                                                                        {f.id !== 'none' && (
-                                                                            <div className="h-3 w-3 rounded-full shadow-inner" style={{ background: f.gradient as string }} />
-                                                                        )}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Texture & Finish</p>
-                                                            <div className="grid grid-cols-1 gap-2">
-                                                                {(Object.values(MATERIALS)).map((m) => (
-                                                                    <button
-                                                                        key={m.id}
-                                                                        onClick={() => setCoverMaterial(m.id as any)}
-                                                                        className={cn(
-                                                                            "flex items-center justify-between p-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all",
-                                                                            coverMaterial === m.id ? "border-blue-600 bg-white shadow-sm text-blue-600" : "border-transparent bg-slate-50 text-slate-400 hover:bg-white"
-                                                                        )}
-                                                                    >
-                                                                        {m.name}
-                                                                        {coverMaterial === m.id && <Check className="h-3 w-3" />}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Corner Finish</p>
+                                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Typeface Selection</p>
                                                             <div className="grid grid-cols-2 gap-3">
-                                                                <button
-                                                                    onClick={() => setIsRounded(true)}
-                                                                    className={cn(
-                                                                        "p-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all",
-                                                                        isRounded ? "border-blue-600 bg-white shadow-sm text-blue-600" : "border-transparent bg-slate-50 text-slate-400 hover:bg-white"
-                                                                    )}
-                                                                >
-                                                                    Modern Rounded
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => setIsRounded(false)}
-                                                                    className={cn(
-                                                                        "p-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all",
-                                                                        !isRounded ? "border-blue-600 bg-white shadow-sm text-blue-600" : "border-transparent bg-slate-50 text-slate-400 hover:bg-white"
-                                                                    )}
-                                                                >
-                                                                    Classic Sharp
-                                                                </button>
+                                                                {FONTS.map((font) => (
+                                                                    <button key={font.id} onClick={() => setCoverFont(font.id)} className={cn("p-4 rounded-2xl border text-left transition-all", coverFont === font.id ? "border-blue-600 bg-blue-50/30" : "border-slate-50 bg-slate-50/50 hover:bg-white")}>
+                                                                        <p className="text-xs font-bold truncate mb-1" style={{ fontFamily: font.family }}>{font.name}</p>
+                                                                        <p className="text-[8px] font-black opacity-30 uppercase tracking-widest">Digital Print</p>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Text Color</p>
+                                                            <div className="flex gap-2">
+                                                                <input type="color" value={coverTextColor} onChange={(e) => setCoverTextColor(e.target.value)} className="h-10 w-20 rounded-lg cursor-pointer border-2 border-slate-100 bg-white" />
+                                                                <Input value={coverTextColor} onChange={(e) => setCoverTextColor(e.target.value)} className="h-10 rounded-xl border-slate-100 font-bold bg-slate-50/50 w-full" />
                                                             </div>
                                                         </div>
                                                     </div>
                                                 )}
-                                            </div>
-                                        </div>
 
-                                        <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[2rem] border border-slate-200/60 dark:border-slate-800 p-6">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Print Format</p>
-                                            <div className="grid grid-cols-1 gap-2">
-                                                {SIZES.map((size) => (
-                                                    <button
-                                                        key={size.id}
-                                                        onClick={() => setSizeId(size.id)}
-                                                        className={cn(
-                                                            "flex items-center justify-between p-4 rounded-2xl border transition-all",
-                                                            sizeId === size.id ? "border-blue-600 bg-white shadow-sm" : "border-transparent text-slate-500 hover:bg-white"
-                                                        )}
-                                                    >
-                                                        <div className="text-left">
-                                                            <p className="text-[10px] font-black uppercase text-slate-900 leading-none mb-1">{size.name}</p>
-                                                            <p className="text-[8px] font-bold text-slate-400 uppercase">{size.dimensions}</p>
+                                                {designerCategory === "print" && (
+                                                    <div className="space-y-10">
+                                                        <div className="space-y-6">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                                                <ShoppingBag className="h-3 w-3" /> Material & Finish
+                                                            </p>
+                                                            <div className="grid grid-cols-1 gap-2">
+                                                                {Object.values(MATERIALS).map((m) => (
+                                                                    <button key={m.id} onClick={() => setCoverMaterial(m.id as any)} className={cn("flex items-center justify-between p-4 rounded-2xl border text-[10px] font-black uppercase transition-all", coverMaterial === m.id ? "border-blue-600 bg-blue-50/30 text-blue-600 shadow-sm" : "border-slate-50 bg-slate-50/50 text-slate-400 hover:bg-white")}>
+                                                                        {m.name} {coverMaterial === m.id && <Check className="h-3 w-3" />}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
                                                         </div>
-                                                        <p className="text-[10px] font-black text-slate-900">
-                                                            {size.price_multiplier === 1 ? "Baseline" : `+ ${Math.round((size.price_multiplier - 1) * 100)}%`}
-                                                        </p>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
+
+                                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                                                <Trophy className="h-3 w-3" /> Artisan Foil
+                                                            </p>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                {Object.values(FOILS).map((f) => (
+                                                                    <button key={f.id} onClick={() => setCoverFoil(f.id as any)} className={cn("p-4 rounded-2xl border text-[9px] font-black uppercase tracking-widest flex items-center justify-between transition-all", coverFoil === f.id ? "border-blue-600 bg-white text-blue-600 shadow-sm" : "border-slate-50 bg-slate-50/50 text-slate-400 hover:bg-white")}>
+                                                                        {f.name} {f.id !== 'none' && <div className="h-4 w-4 rounded-full shadow-inner border border-white/20" style={{ background: f.gradient || 'transparent' }} />}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                                                <Maximize2 className="h-3 w-3" /> Physical Dimensions
+                                                            </p>
+                                                            <div className="grid grid-cols-1 gap-2">
+                                                                {SIZES.map((size) => (
+                                                                    <button key={size.id} onClick={() => setSizeId(size.id)} className={cn("flex items-center justify-between p-4 rounded-2xl border transition-all", sizeId === size.id ? "border-blue-600 bg-blue-50/30 text-blue-600" : "border-slate-50 bg-slate-50/50 text-slate-400 hover:bg-white")}>
+                                                                        <div className="text-left"><p className="text-[10px] font-black uppercase mb-0.5">{size.name}</p><p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{size.dimensions}</p></div>
+                                                                        <p className="text-[10px] font-black">{size.price_multiplier === 1 ? "Included" : `+${Math.round((size.price_multiplier - 1) * 100)}%`}</p>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </motion.div>
+                                        </AnimatePresence>
                                     </div>
                                 </div>
-
-                                {/* Immersive Studio Stage */}
-                                <div className="flex-1 min-w-0" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
+                                <div className="flex-1 min-w-0 flex flex-col min-h-0" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
                                     <div className={cn(
-                                        "rounded-[4rem] p-16 lg:p-32 flex flex-col items-center justify-center min-h-[800px] border shadow-[inset_0_2px_40px_rgba(0,0,0,0.02)] relative group overflow-hidden transition-all duration-1000",
+                                        "flex-1 rounded-[2.5rem] p-8 lg:p-12 flex flex-col items-center justify-center border shadow-[inset_0_2px_40px_rgba(0,0,0,0.02)] relative group overflow-hidden transition-all duration-1000",
                                         THEMES[studioTheme].bg,
                                         THEMES[studioTheme].border
                                     )}>
+                                        {/* Quick Lighting Controls */}
+                                        <div className="absolute top-10 right-10 flex gap-2">
+                                            {Object.values(THEMES).map((t) => (
+                                                <button
+                                                    key={t.id}
+                                                    onClick={() => setStudioTheme(t.id as any)}
+                                                    className={cn(
+                                                        "h-8 w-8 rounded-full border shadow-sm transition-all hover:scale-110",
+                                                        studioTheme === t.id ? "border-blue-500 ring-2 ring-blue-100 scale-110" : "border-white dark:border-slate-800"
+                                                    )}
+                                                    style={{ backgroundColor: t.id === 'loft' ? '#f8fafc' : t.id === 'midnight' ? '#0f172a' : '#fff7ed' }}
+                                                    title={t.name}
+                                                />
+                                            ))}
+                                        </div>
 
                                         {/* 3D Environment Background Elements */}
                                         <div className="absolute inset-0 opacity-40 pointer-events-none">
@@ -1064,27 +915,41 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                         </div>
 
 
-                                        <div className="absolute top-10 flex flex-col items-center gap-4 z-30">
-                                            <div className="flex items-center gap-2 px-4 py-1.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-full shadow-sm border border-slate-200/50 dark:border-slate-800/50">
-                                                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Live Simulation Ready</p>
-                                            </div>
-
-                                            <div className="flex items-center gap-3">
+                                        {/* Unified Studio Stage Controls */}
+                                        <div className="absolute bottom-10 inset-x-0 flex flex-col items-center gap-6 z-30">
+                                            <div className="flex items-center gap-4 p-2 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl rounded-full shadow-2xl border border-white/20">
                                                 <button
                                                     onClick={() => setIsFlipped(!isFlipped)}
-                                                    className="group/flip flex items-center gap-3 px-6 py-2.5 bg-slate-900 border border-slate-700 text-white rounded-full font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all"
+                                                    className="flex items-center gap-2.5 px-6 py-2.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-full font-black text-[9px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
                                                 >
-                                                    <Move className={cn("h-3.5 w-3.5 transition-transform duration-500", isFlipped ? "rotate-180" : "")} />
-                                                    {isFlipped ? "Show Front" : "Flip to Back"}
+                                                    <Move className={cn("h-3 w-3 transition-transform duration-500", isFlipped ? "rotate-180" : "")} />
+                                                    {isFlipped ? "Front" : "Back"}
                                                 </button>
+
+                                                <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
+
+                                                <div className="flex items-center gap-4 px-4">
+                                                    <ImageIcon className="h-3 w-3 text-slate-400" />
+                                                    <input
+                                                        type="range"
+                                                        min="0"
+                                                        max="1"
+                                                        step="0.01"
+                                                        value={peekProgress}
+                                                        onChange={(e) => setPeekProgress(parseFloat(e.target.value))}
+                                                        className="w-32 h-1 bg-slate-200 rounded-full appearance-none cursor-pointer accent-blue-600"
+                                                    />
+                                                    <span className="text-[9px] font-black text-slate-900 dark:text-white w-6">{Math.round(peekProgress * 100)}%</span>
+                                                </div>
+
+                                                <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
 
                                                 <button
                                                     onClick={() => setIsCinemaMode(true)}
-                                                    className="flex items-center gap-3 px-6 py-2.5 bg-white text-slate-900 border border-slate-200 rounded-full font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all"
+                                                    className="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full hover:bg-white dark:hover:bg-slate-700 transition-all shadow-sm"
+                                                    title="Cinema Mode"
                                                 >
-                                                    <Maximize2 className="h-3.5 w-3.5" />
-                                                    Cinema Mode
+                                                    <Maximize2 className="h-4 w-4" />
                                                 </button>
                                             </div>
                                         </div>
@@ -1131,6 +996,7 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                                             pSymbol={coverSymbol}
                                                             pFont={coverFont}
                                                             pFoil={coverFoil}
+                                                            onSelectCategory={setDesignerCategory}
                                                         />
                                                     )}
                                                 </div>
@@ -1158,22 +1024,34 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                             </div>
                                         </motion.div>
 
-                                        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-[60%] h-8 bg-black/10 blur-[40px] rounded-full" />
 
-                                        <div className="absolute bottom-10 inset-x-0 flex flex-col items-center gap-4 z-30">
-                                            <div className="flex items-center gap-6 px-8 py-4 bg-white/40 backdrop-blur-3xl rounded-3xl border border-white/20 shadow-2xl">
-                                                <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Thumb Through</p>
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max="1"
-                                                    step="0.01"
-                                                    value={peekProgress}
-                                                    onChange={(e) => setPeekProgress(parseFloat(e.target.value))}
-                                                    className="w-48 accent-slate-900"
-                                                />
-                                                <span className="text-[10px] font-black text-slate-900 w-8">{Math.round(peekProgress * 100)}%</span>
-                                            </div>
+                                    </div>
+
+                                    {/* Integrated Media Tray - Compact Asset Access */}
+                                    <div className="mt-4 flex-shrink-0 space-y-3">
+                                        <div className="flex items-center justify-between px-2">
+                                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] flex items-center gap-2">
+                                                <ImageIcon className="h-2.5 w-2.5" /> Asset Library <span className="text-slate-200">|</span> <span className="text-blue-500 font-bold">{images.length} PHOTOS</span>
+                                            </p>
+                                        </div>
+                                        <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar-horizontal scroll-smooth">
+                                            {images.slice(0, 20).map((img) => (
+                                                <button
+                                                    key={img.id}
+                                                    onClick={() => toggleImageRole(img.id)}
+                                                    className={cn(
+                                                        "flex-shrink-0 w-16 aspect-square rounded-xl overflow-hidden border-2 transition-all group relative",
+                                                        img.role === "cover" ? "border-amber-400 shadow-sm scale-105" : "border-white dark:border-slate-800 hover:border-slate-200"
+                                                    )}
+                                                >
+                                                    <Image src={img.preview_url} alt="asset" fill className="object-cover" />
+                                                    {img.role === "cover" && <div className="absolute top-0.5 right-0.5"><Star className="h-2 w-2 text-amber-400 fill-amber-400" /></div>}
+                                                </button>
+                                            ))}
+                                            <label className="flex-shrink-0 w-16 aspect-square rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center bg-slate-50/50 hover:bg-white hover:border-blue-500 cursor-pointer transition-all">
+                                                <input type="file" multiple accept="image/*" onChange={handleUpload} className="hidden" />
+                                                <Plus className="h-4 w-4 text-slate-400" />
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -1184,10 +1062,10 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                     {activeTab === "images" && (
                         <motion.div
                             key="images"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="space-y-20 pb-20"
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            className="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-12"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
@@ -1217,7 +1095,7 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                 </div>
 
                                 {coverImages.length === 0 ? (
-                                    <div className="h-40 border-2 border-dashed border-slate-100 rounded-[2rem] flex flex-col items-center justify-center bg-slate-50/30">
+                                    <div className="h-40 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center bg-slate-50/30">
                                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No pictures assigned to cover yet</p>
                                     </div>
                                 ) : (
@@ -1279,7 +1157,13 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                     )}
 
                     {activeTab === "preview" && (
-                        <div className="space-y-12 pb-20">
+                        <motion.div
+                            key="preview"
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            className="flex-1 overflow-y-auto custom-scrollbar pr-4 space-y-12"
+                        >
                             <div className="flex items-center justify-between mb-12">
                                 <div className="flex items-center gap-4">
                                     <div className="h-10 w-10 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600">
@@ -1321,8 +1205,12 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                                     tplId={templateId}
                                                     pTitle={title}
                                                     pSubtitle={subtitle}
-                                                    pImages={images}
+                                                    pImages={coverImages.length > 0 ? coverImages : images.slice(0, 8)}
                                                     pColor={coverTextColor}
+                                                    pIcon={coverIconName}
+                                                    pSymbol={coverSymbol}
+                                                    pFont={coverFont}
+                                                    pFoil={coverFoil}
                                                 />
                                                 <div className="absolute inset-y-0 left-0 w-8 bg-black/10 blur-[1px] opacity-40" />
                                             </div>
@@ -1355,7 +1243,7 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                                 backgroundColor: coverBgColor,
                                                 borderRadius: isRounded ? '3rem 0.2rem 0.2rem 3rem' : '0.1rem'
                                             }}>
-                                                <BackCoverRenderer pImages={images} pColor={coverTextColor} />
+                                                <BackCoverRenderer pImages={coverImages.length > 0 ? coverImages : images.slice(0, 8)} pColor={coverTextColor} />
                                                 <div className="absolute inset-y-0 right-0 w-8 bg-black/10 blur-[1px] opacity-40" />
                                             </div>
                                         </div>
@@ -1370,7 +1258,7 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                 </div>
 
                                 <div className="lg:col-span-4 lg:sticky lg:top-32 h-fit space-y-8">
-                                    <Card className="rounded-[2.5rem] border-slate-200 shadow-2xl overflow-hidden bg-white/80 backdrop-blur-xl">
+                                    <Card className="rounded-3xl border-slate-200 shadow-xl overflow-hidden bg-white/80 backdrop-blur-xl dark:bg-slate-900/80 dark:border-slate-800">
                                         <CardContent className="p-8 space-y-8">
                                             <div className="space-y-4">
                                                 <div className="flex items-center gap-3 mb-2">
@@ -1388,7 +1276,7 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                                         <span className="text-slate-500 font-bold uppercase tracking-widest">Total Pages</span>
                                                         <span className="font-black">{totalPages + 2 /* Front + Back cover handled separately in count often, but here spreads + covers */} SPREADS Content</span>
                                                     </div>
-                                                    <div className="flex justify-between text-sm p-5 bg-slate-900 shadow-2xl text-white rounded-[2rem]">
+                                                    <div className="flex justify-between text-sm p-5 bg-slate-900 shadow-xl text-white rounded-3xl">
                                                         <span className="font-black uppercase text-[10px] tracking-widest">Grand Total</span>
                                                         <span className="font-black text-xl">GHS {cost}</span>
                                                     </div>
@@ -1419,7 +1307,7 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                                     </Card>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     )}
                 </AnimatePresence>
 
@@ -1548,7 +1436,7 @@ export default function PhotobookEditor({ user, initialData }: { user: any, init
                     )}
                 </AnimatePresence>
             </main>
-        </div>
+        </div >
     );
 }
 
