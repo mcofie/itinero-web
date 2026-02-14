@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 import { getLatestFxSnapshot, convertUsingSnapshot } from "@/lib/fx/fx";
+import { differenceInDays } from "date-fns";
 
 
 import {
@@ -345,6 +346,13 @@ export default function TripWizard() {
             setState((s) => ({ ...s, start_date: "", end_date: "" }));
             return;
         }
+        if (range.from && range.to) {
+            const days = differenceInDays(range.to, range.from) + 1;
+            if (days > 14) {
+                toast.error("Trips are limited to 14 days maximum.");
+                return;
+            }
+        }
         const from = range.from ? toDateOnlyString(range.from) : "";
         const to = range.to ? toDateOnlyString(range.to) : "";
         setState((s) => ({ ...s, start_date: from, end_date: to }));
@@ -422,6 +430,9 @@ export default function TripWizard() {
                                         icon={CalendarDays}
                                         hint={dateDisplay}
                                     >
+                                        <div className="mb-4 text-xs font-medium text-slate-500 text-center">
+                                            Max trip duration is 14 days.
+                                        </div>
                                         <div
                                             className="flex justify-center rounded-2xl border border-slate-100 bg-slate-50/50 p-2 sm:p-4 dark:border-slate-800 dark:bg-slate-800/50">
                                             <Calendar
@@ -437,6 +448,7 @@ export default function TripWizard() {
                                                 onSelect={handleRangeChange}
                                                 disabled={[{ before: new Date() }]}
                                                 className="bg-transparent"
+                                                max={14}
                                                 classNames={{
                                                     months: "gap-4",
                                                     head_cell:

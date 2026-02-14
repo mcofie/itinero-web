@@ -21,12 +21,12 @@ type Props = {
 };
 
 export default function DateRangePicker({
-                                            value,
-                                            onChange,
-                                            disablePast,
-                                            className,
-                                            months = 2,
-                                        }: Props) {
+    value,
+    onChange,
+    disablePast,
+    className,
+    months = 2,
+}: Props) {
     // Normalize possibly-null/partial into a proper DateRange or undefined
     const selected: DateRange | undefined = useMemo(() => {
         if (!value) return undefined;
@@ -51,6 +51,7 @@ export default function DateRangePicker({
             onSelect={onChange}
             disabled={disabled}
             className={cn("rounded-xl border bg-card p-3 md:p-4", className)}
+            max={14}
         />
     );
 }

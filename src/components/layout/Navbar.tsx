@@ -17,6 +17,9 @@ import {
     Sheet,
     SheetContent,
     SheetTrigger,
+    SheetHeader,
+    SheetTitle,
+    SheetDescription,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -77,6 +80,12 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="left" className="w-[300px] p-0 border-r-slate-200 dark:border-slate-800 dark:bg-slate-950">
+                            <SheetHeader className="sr-only">
+                                <SheetTitle>Navigation Menu</SheetTitle>
+                                <SheetDescription>
+                                    Access your trips, rewards, and profile.
+                                </SheetDescription>
+                            </SheetHeader>
                             <div className="p-6 border-b border-slate-100 dark:border-slate-800">
                                 <Link href={userEmail ? "/trips" : "/"} className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
                                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">

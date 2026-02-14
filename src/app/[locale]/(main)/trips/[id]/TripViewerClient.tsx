@@ -300,8 +300,8 @@ export default function TripViewerClient({
 
             {/* 2. Premium Tabs */}
             <Tabs defaultValue="overview" className="w-full">
-                <div className="mb-10 px-1">
-                    <TabsList className="h-14 w-full justify-start gap-1 bg-slate-100/50 dark:bg-slate-900/50 p-1.5 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 backdrop-blur-sm overflow-x-auto scrollbar-hide">
+                <div className="sticky top-0 z-30 mb-8 md:mb-10 px-0 md:px-1">
+                    <TabsList className="h-16 md:h-14 w-full justify-around md:justify-start gap-1 bg-white/80 dark:bg-slate-900/80 p-1.5 rounded-none md:rounded-2xl border-b md:border border-slate-200/60 dark:border-slate-800/60 backdrop-blur-md overflow-x-auto scrollbar-hide shadow-lg md:shadow-none">
                         {[
                             { value: "overview", label: t("Tabs.overview"), icon: Globe },
                             { value: "days", label: t("Tabs.itinerary"), icon: Calendar },
@@ -313,10 +313,10 @@ export default function TripViewerClient({
                             <TabsTrigger
                                 key={tab.value}
                                 value={tab.value}
-                                className="flex-1 md:flex-none h-full rounded-xl gap-2 px-6 font-bold text-sm tracking-tight transition-all duration-300 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-blue-300 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+                                className="flex-1 md:flex-none h-full rounded-xl flex flex-col md:flex-row gap-1 md:gap-2 px-2 md:px-6 font-bold text-[10px] md:text-sm tracking-tight transition-all duration-300 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm dark:data-[state=active]:bg-slate-800 dark:data-[state=active]:text-blue-300 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                             >
-                                <tab.icon className="h-4 w-4" />
-                                <span className="hidden sm:inline">{tab.label}</span>
+                                <tab.icon className="h-5 w-5 md:h-4 md:w-4" />
+                                <span className="hidden md:inline">{tab.label}</span>
                             </TabsTrigger>
                         ))}
                     </TabsList>
@@ -1196,7 +1196,7 @@ function MetricTile({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: delay * 0.1, duration: 0.5, ease: "easeOut" }}
             className={cn(
-                "group relative overflow-hidden rounded-2xl p-7 transition-all duration-500 border shadow-sm",
+                "group relative overflow-hidden rounded-2xl p-5 md:p-7 transition-all duration-500 border shadow-sm",
                 highlight
                     ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-xl hover:-translate-y-1"
                     : "bg-white dark:bg-slate-950/50 border-slate-200/60 dark:border-slate-800/60 hover:shadow-2xl hover:-translate-y-1 hover:border-blue-500/20"
@@ -1208,12 +1208,12 @@ function MetricTile({
                 highlight ? "bg-white/20" : "bg-blue-500/10"
             )} />
 
-            <div className="flex flex-col h-full justify-between gap-6 relative z-10">
+            <div className="flex flex-col h-full justify-between gap-4 md:gap-6 relative z-10">
                 <div className="flex items-start justify-between">
                     <div className="space-y-1">
                         <span
                             className={cn(
-                                "text-[10px] font-bold uppercase tracking-[0.25em] block",
+                                "text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] md:tracking-[0.25em] block",
                                 highlight ? "text-slate-400" : "text-slate-400 dark:text-slate-500"
                             )}
                         >
@@ -1222,12 +1222,12 @@ function MetricTile({
                     </div>
                     {Icon && (
                         <div className={cn(
-                            "h-10 w-10 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110",
+                            "h-8 w-8 md:h-10 md:w-10 rounded-xl md:rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110",
                             highlight
                                 ? "bg-white/10 text-white"
                                 : "bg-slate-50 dark:bg-slate-900 text-slate-400 group-hover:bg-blue-500 group-hover:text-white group-hover:shadow-lg group-hover:shadow-blue-500/25"
                         )}>
-                            <Icon className="h-5 w-5" />
+                            <Icon className="h-4 w-4 md:h-5 md:w-5" />
                         </div>
                     )}
                 </div>

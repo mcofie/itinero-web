@@ -2,11 +2,12 @@
 "use client";
 
 import * as React from "react";
-import {Calendar} from "@/components/ui/calendar";
-import {Button} from "@/components/ui/button";
-import {DateRange} from "react-day-picker";
-import {useMemo, useState} from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { DateRange } from "react-day-picker";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { differenceInDays } from "date-fns";
 
 export default function HeroDatePicker() {
     const [range, setRange] = useState<DateRange | undefined>({
@@ -14,11 +15,17 @@ export default function HeroDatePicker() {
         to: undefined,
     });
 
+    const isInvalidRange = useMemo(() => {
+        if (!range?.from || !range?.to) return false;
+        return differenceInDays(range.to, range.from) >= 14;
+    }, [range]);
+
     const summary = useMemo(() => {
         const f = range?.from ? range.from.toLocaleDateString() : "Start";
         const t = range?.to ? range.to.toLocaleDateString() : "End";
+        if (isInvalidRange) return "Limit exceeded (Max 14 days)";
         return `${f} — ${t}`;
-    }, [range]);
+    }, [range, isInvalidRange]);
 
     const qs = useMemo(() => {
         const p = new URLSearchParams();
@@ -28,7 +35,15 @@ export default function HeroDatePicker() {
     }, [range]);
 
     const disabled =
-        !range?.from || !range?.to || range.to < range.from;
+        !range?.from || !range?.to || range.to < range.from || isInvalidRange;
+
+    const onSelect = (newRange: DateRange | undefined) => {
+        if (newRange?.from && newRange?.to) {
+            const days = differenceInDays(newRange.to, newRange.from) + 1;
+            if (days > 14) return;
+        }
+        setRange(newRange);
+    };
 
     return (
         <div
@@ -39,7 +54,7 @@ export default function HeroDatePicker() {
                         Pick travel dates
                     </div>
                     <div className="text-xs text-slate-600 dark:text-slate-400">
-                        Choose a start and end date to prefill your itinerary.
+                        Choose a start and end date (max 14 days).
                     </div>
                 </div>
                 <div className="text-xs tabular-nums text-slate-700 dark:text-slate-300">
@@ -53,9 +68,10 @@ export default function HeroDatePicker() {
                     mode="range"
                     numberOfMonths={2}
                     selected={range}
-                    onSelect={setRange}
+                    onSelect={onSelect}
                     defaultMonth={range?.from}
                     className="w-full"
+                    max={14}
                 />
             </div>
 
@@ -63,7 +79,7 @@ export default function HeroDatePicker() {
                 <Button
                     variant="outline"
                     className="border-slate-300 dark:border-slate-700"
-                    onClick={() => setRange({from: undefined, to: undefined})}
+                    onClick={() => setRange({ from: undefined, to: undefined })}
                 >
                     Clear
                 </Button>

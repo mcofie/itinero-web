@@ -1,61 +1,83 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
-import { Sparkles, Image as ImageIcon } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 export default function HeroCollage() {
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Mouse movement for parallax
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+
+    const mouseXSpring = useSpring(x);
+    const mouseYSpring = useSpring(y);
+
+    const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["5deg", "-5deg"]);
+    const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-5deg", "5deg"]);
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!containerRef.current || window.innerWidth <= 1024) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const xPct = mouseX / width - 0.5;
+        const yPct = mouseY / height - 0.5;
+        x.set(xPct);
+        y.set(yPct);
+    };
+
+    const handleMouseLeave = () => {
+        x.set(0);
+        y.set(0);
+    };
+
     return (
-        <div className="relative hidden lg:flex items-center justify-center h-[500px]">
-            <div className="relative w-full h-full max-w-[500px]">
-                {/* Main Image */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-96 z-20 rounded-3xl overflow-hidden shadow-2xl ring-8 ring-white dark:ring-slate-900 rotate-[-4deg]"
-                >
-                    <Image src="/collage_image_1.png" alt="Travel 1" fill className="object-cover" />
-                </motion.div>
+        <div
+            ref={containerRef}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="relative w-full overflow-hidden rounded-2xl lg:rounded-3xl lg:perspective-1000 lg:cursor-crosshair bg-white dark:bg-slate-900/50"
+        >
+            <motion.div
+                style={{
+                    rotateX: x.get() === 0 ? 0 : rotateX,
+                    rotateY: y.get() === 0 ? 0 : rotateY,
+                    transformStyle: "preserve-3d",
+                }}
+                className="relative aspect-[4/3] lg:aspect-square w-full scale-105 lg:scale-100"
+            >
+                <Image
+                    src="/itinero_goods.png"
+                    alt="Itinero Goods Collection"
+                    fill
+                    className="object-contain"
+                    priority
+                />
 
-                {/* Accent 1 */}
+                {/* The "Workshop" Badge */}
                 <motion.div
-                    initial={{ opacity: 0, x: 50, rotate: 15 }}
-                    animate={{ opacity: 1, x: 0, rotate: 8 }}
-                    transition={{ duration: 1, delay: 0.4 }}
-                    className="absolute top-[10%] right-[5%] w-48 h-64 z-10 rounded-[1.5rem] overflow-hidden shadow-xl ring-4 ring-white dark:ring-slate-900"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute top-4 right-4 lg:top-8 lg:right-8 w-16 h-16 lg:w-24 lg:h-24 flex lg:flex items-center justify-center opacity-40 lg:opacity-80 pointer-events-none"
+                    style={{ z: 50 }}
                 >
-                    <Image src="/collage_image_2.png" alt="Travel 2" fill className="object-cover" />
+                    <svg viewBox="0 0 100 100" className="w-full h-full fill-slate-900/10 dark:fill-white/10 uppercase font-black text-[12px] lg:text-[10px] tracking-tighter">
+                        <path id="circlePath" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" fill="none" />
+                        <text className="font-mono">
+                            <textPath href="#circlePath">
+                                • ITINERO WORKSHOP • QUALITY GUARANTEED • ITINERO WORKSHOP •
+                            </textPath>
+                        </text>
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-1 h-1 lg:w-2 lg:h-2 rounded-full bg-blue-500/20" />
+                    </div>
                 </motion.div>
-
-                {/* Accent 2 */}
-                <motion.div
-                    initial={{ opacity: 0, x: -50, rotate: -15 }}
-                    animate={{ opacity: 1, x: 0, rotate: -12 }}
-                    transition={{ duration: 1, delay: 0.6 }}
-                    className="absolute bottom-[10%] left-[5%] w-56 h-40 z-10 rounded-[1.5rem] overflow-hidden shadow-xl ring-4 ring-white dark:ring-slate-900"
-                >
-                    <Image src="/collage_image_3.png" alt="Travel 3" fill className="object-cover" />
-                </motion.div>
-
-                {/* Floating Icons/Decorations */}
-                <motion.div
-                    animate={{ y: [0, -15, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-[20%] left-[10%] p-4 rounded-2xl bg-white shadow-lg z-30 dark:bg-slate-800"
-                >
-                    <Sparkles className="h-6 w-6 text-amber-500" />
-                </motion.div>
-
-                <motion.div
-                    animate={{ y: [0, 15, 0] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                    className="absolute bottom-[20%] right-[15%] p-4 rounded-2xl bg-blue-600 shadow-lg z-30 text-white"
-                >
-                    <ImageIcon className="h-6 w-6" />
-                </motion.div>
-            </div>
+            </motion.div>
         </div>
     );
 }

@@ -103,6 +103,12 @@
             "startFree": "Start Free Itinerary",
             "viewPricing": "View Pricing"
         },
+        "Photobook": {
+            "title": "Itinero Goods®",
+            "desc": "Printed with care. Bound for life. A tiny photobook workshop + travel shop + itinerary lab. Built for the curious, because some stories belong on a shelf.",
+            "specs": "Format: 10x10 Hardcover • Paper: FSC-Certified Silk • Binding: Lay-flat Workshop",
+            "cta": "Start Creating"
+        },
         "Footer": {
             "desc": "Thoughtful travel planning designed to help you live within budget and explore the world with expert-curated reliability.",
             "product": "Product",

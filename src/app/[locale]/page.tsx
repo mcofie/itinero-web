@@ -10,13 +10,14 @@ import { Input } from "@/components/ui/input";
 import TripWizard from "@/components/landing/TripWizard";
 import {
     ShieldCheck, FileCheck, Coins, BookOpen, Users2, FileText, Wallet, CalendarPlus, Plane,
-    Ticket, Mail, ArrowRight, Twitter, Instagram, Github, Menu, Shirt, PhoneCall, Lightbulb, Sparkles
+    Ticket, Mail, ArrowRight, Twitter, Instagram, Github, Menu, Shirt, PhoneCall, Lightbulb, Sparkles, CheckCircle2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Globe from "@/components/landing/Globe";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import HeroCollage from "@/app/[locale]/(main)/photobooks/HeroCollage";
 
 /* ---------- Data ---------- */
 const SUPPORTED = [
@@ -172,6 +173,7 @@ export default function LandingPage() {
                 <BentoFeatures />
                 <StatsSection />
                 <ParallaxDestinations />
+                <PhotobookSection />
 
                 {/* CTA */}
                 <section className="py-24 lg:py-32 bg-blue-600 text-white dark:bg-blue-700 relative overflow-hidden">
@@ -391,6 +393,78 @@ function ParallaxDestinations() {
                             </motion.div>
                         );
                     })}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function PhotobookSection() {
+    const tLanding = useTranslations("Landing");
+
+    return (
+        <section className="py-16 lg:py-40 bg-slate-50 dark:bg-slate-900/50 overflow-hidden relative">
+            {/* Grain Texture */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-multiply dark:mix-blend-overlay dark:opacity-[0.05]"
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+            />
+
+            <div className="mx-auto max-w-7xl px-6 relative z-10">
+                <div className="flex flex-col gap-10 lg:gap-24">
+                    {/* Header Block like SimpleBits */}
+                    <motion.div {...fadeUp} className="max-w-3xl">
+                        {/* Refined Step Indicator from user reference */}
+                        <div className="flex items-center justify-between gap-6 mb-10 border-b border-slate-200/60 dark:border-white/5 pb-8">
+                            <div className="flex items-center gap-5">
+                                <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400 font-black text-base">
+                                    1
+                                </div>
+                                <span className="text-xl font-black uppercase tracking-tight text-slate-800 dark:text-slate-200">Goods</span>
+                            </div>
+
+                            {/* Progress Pills */}
+                            <div className="flex gap-1.5">
+                                <div className="h-2 w-6 rounded-full bg-blue-600" />
+                                {[...Array(7)].map((_, i) => (
+                                    <div key={i} className="h-2 w-6 rounded-full bg-slate-200 dark:bg-slate-800" />
+                                ))}
+                            </div>
+                        </div>
+
+                        <h2 className="text-5xl lg:text-8xl font-black tracking-tight text-slate-900 dark:text-white mb-8 uppercase leading-[0.85]">
+                            {tLanding("Photobook.title")}
+                        </h2>
+
+                        <p className="text-xl md:text-2xl lg:text-4xl text-slate-600 dark:text-slate-400 font-medium leading-snug lg:leading-tight max-w-2xl">
+                            {tLanding("Photobook.desc")}
+                        </p>
+                    </motion.div>
+
+                    {/* Massive Visual Spread */}
+                    <div className="relative w-full flex flex-col gap-8 lg:gap-16">
+                        <HeroCollage />
+
+                        {/* Tactile Technical Specs - Redesigned as a Card for Mobile */}
+                        <motion.div
+                            {...fadeUp}
+                            transition={{ delay: 0.3 }}
+                            className="bg-white dark:bg-slate-900 p-6 md:p-10 rounded-2xl md:rounded-3xl shadow-sm border border-slate-200/60 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6"
+                        >
+                            <span className="font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] text-slate-400 font-black shrink-0">Specs & Origin</span>
+                            <p className="font-mono text-[10px] md:text-xs uppercase tracking-widest text-slate-500 dark:text-slate-500 md:text-right leading-loose md:leading-normal">
+                                {tLanding("Photobook.specs")}
+                            </p>
+                        </motion.div>
+                    </div>
+
+                    {/* Subtle CTA link or Button below */}
+                    <motion.div {...fadeUp} transition={{ delay: 0.4 }}>
+                        <Button asChild size="lg" className="h-16 px-10 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 font-bold transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-slate-900/10">
+                            <Link href="/photobooks/create">
+                                {tLanding("Photobook.cta")} <ArrowRight className="ml-2 h-5 w-5" />
+                            </Link>
+                        </Button>
+                    </motion.div>
                 </div>
             </div>
         </section>
