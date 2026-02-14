@@ -303,6 +303,55 @@ function BentoFeatures() {
 
 function ParallaxDestinations() {
     const tLanding = useTranslations("Landing");
+    const [counts, setCounts] = useState<Record<string, number>>({});
+
+    useEffect(() => {
+        const fetchCounts = async () => {
+            const sb = getSupabaseBrowser();
+            const codes = SUPPORTED.map(s => s.countryCode);
+
+            try {
+                // 1. Get destination IDs for these countries
+                const { data: dests } = await sb
+                    .schema("itinero")
+                    .from("destinations")
+                    .select("id, country_code")
+                    .in("country_code", codes);
+
+                if (dests) {
+                    const destIdsByCountry: Record<string, number[]> = {};
+                    dests.forEach(d => {
+                        if (!destIdsByCountry[d.country_code]) destIdsByCountry[d.country_code] = [];
+                        destIdsByCountry[d.country_code].push(d.id);
+                    });
+
+                    const newCounts: Record<string, number> = {};
+
+                    await Promise.all(codes.map(async (code) => {
+                        const ids = destIdsByCountry[code] || [];
+                        if (ids.length === 0) {
+                            newCounts[code] = 0;
+                            return;
+                        }
+                        const { count } = await sb
+                            .schema("itinero")
+                            .from("places")
+                            .select("*", { count: 'exact', head: true })
+                            .in("destination_id", ids);
+
+                        newCounts[code] = count || 0;
+                    }));
+
+                    setCounts(newCounts);
+                }
+            } catch (err) {
+                console.error("Failed to fetch destination counts", err);
+            }
+        };
+
+        fetchCounts();
+    }, []);
+
     return (
         <section className="py-24 lg:py-32 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
             <div className="mx-auto max-w-7xl px-6">
@@ -311,29 +360,37 @@ function ParallaxDestinations() {
                         <h2 className="text-4xl md:text-6xl font-black tracking-tighter dark:text-white mb-6 underline decoration-blue-500 decoration-8 underline-offset-8">{tLanding("Destinations.title")}</h2>
                         <p className="text-xl text-slate-600 dark:text-slate-400 font-medium">{tLanding("Destinations.desc")}</p>
                     </div>
-                    <Button variant="outline" className="h-14 px-8 rounded-full border-2 border-slate-200 font-bold hover:bg-slate-50 transition-all dark:border-slate-800 dark:hover:bg-slate-800">
-                        Explore All <ArrowRight className="ml-2 h-5 w-5" />
+                    <Button asChild variant="outline" className="h-14 px-8 rounded-full border-2 border-slate-200 font-bold hover:bg-slate-50 transition-all dark:border-slate-800 dark:hover:bg-slate-800">
+                        <Link href="/destinations">
+                            Explore All <ArrowRight className="ml-2 h-5 w-5" />
+                        </Link>
                     </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {SUPPORTED.map((c, index) => (
-                        <motion.div
-                            key={c.name}
-                            {...fadeUp}
-                            transition={{ delay: index * 0.1 }}
-                            className="relative aspect-[4/5] overflow-hidden rounded-[2rem] group cursor-pointer shadow-lg"
-                        >
-                            <Image src={c.image} alt={c.name} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent p-10 flex flex-col justify-end text-white">
-                                <div className="flex items-center gap-3 mb-4 scale-90 origin-left transform group-hover:scale-100 transition-transform duration-500">
-                                    <span className="text-3xl shadow-xl">{getFlagEmoji(c.countryCode)}</span>
-                                    <div className="h-px w-8 bg-white/50" />
+                    {SUPPORTED.map((c, index) => {
+                        const count = counts[c.countryCode];
+                        // Fallback to static "120+" style if loading or no data, OR use the real count if available
+                        const displayCount = count !== undefined ? `${count}+` : c.itineraries;
+
+                        return (
+                            <motion.div
+                                key={c.name}
+                                {...fadeUp}
+                                transition={{ delay: index * 0.1 }}
+                                className="relative aspect-[4/5] overflow-hidden rounded-[2rem] group cursor-pointer shadow-lg"
+                            >
+                                <Image src={c.image} alt={c.name} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent p-10 flex flex-col justify-end text-white">
+                                    <div className="flex items-center gap-3 mb-4 scale-90 origin-left transform group-hover:scale-100 transition-transform duration-500">
+                                        <span className="text-3xl shadow-xl">{getFlagEmoji(c.countryCode)}</span>
+                                        <div className="h-px w-8 bg-white/50" />
+                                    </div>
+                                    <h3 className="text-3xl font-black tracking-tight mb-2">{c.name}</h3>
+                                    <p className="text-sm text-blue-300 font-black uppercase tracking-widest">{displayCount} {tLanding("Destinations.itinerariesSuffix")}</p>
                                 </div>
-                                <h3 className="text-3xl font-black tracking-tight mb-2">{c.name}</h3>
-                                <p className="text-sm text-blue-300 font-black uppercase tracking-widest">{c.itineraries} {tLanding("Destinations.itinerariesSuffix")}</p>
-                            </div>
-                        </motion.div>
-                    ))}
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </div>
         </section>

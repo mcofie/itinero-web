@@ -525,7 +525,7 @@ function dayLabel(index: number, day: Day) {
     const left = `Day ${index + 1}`;
     if (!day.date) return `${left}`;
     const d = new Date(`${day.date}T00:00:00`);
-    const right = d.toLocaleDateString(undefined, {
+    const right = d.toLocaleDateString("en-US", {
         weekday: "short",
         day: "numeric",
     });
@@ -550,7 +550,7 @@ function isFiniteNum(n: unknown): n is number {
 
 function formatMoney(n: number, currency: string) {
     try {
-        return new Intl.NumberFormat(undefined, {
+        return new Intl.NumberFormat("en-US", {
             style: "currency",
             currency,
             minimumFractionDigits: 2,
@@ -570,7 +570,7 @@ function formatMinutes(min: number) {
 
 function friendlyDate(ymd: string) {
     const d = new Date(`${ymd}T00:00:00`);
-    return d.toLocaleDateString(undefined, {
+    return d.toLocaleDateString("en-US", {
         weekday: "long",
         month: "long",
         day: "numeric",

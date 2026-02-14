@@ -27,6 +27,7 @@ import DynamicItineraryMap from "@/components/maps/DynamicMap";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import PublicItineraryClient from "@/app/[locale]/trips/share/[publicId]/public-itinerary-client";
+import CuratedItineraryActions from "./CuratedItineraryActions";
 
 export const dynamic = "force-dynamic";
 
@@ -160,14 +161,7 @@ export default async function CuratedItineraryPage({
                             </p>
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Button variant="outline" className="rounded-xl border-slate-700 bg-slate-800 text-white hover:bg-slate-700">
-                                <Share2 className="h-4 w-4 mr-2" /> Share
-                            </Button>
-                            <Button className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
-                                <Download className="h-4 w-4 mr-2" /> Export PDF
-                            </Button>
-                        </div>
+                        <CuratedItineraryActions />
                     </div>
 
                     {/* Persona Selector */}
