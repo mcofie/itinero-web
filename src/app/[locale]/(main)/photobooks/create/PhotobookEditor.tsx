@@ -91,6 +91,19 @@ const FONTS = [
     { id: 'font-fun', name: 'Beach Party', family: '"Bangers", cursive', import: 'Bangers' },
 ];
 
+const FOILS = {
+    none: { id: 'none', name: 'Ink Print', gradient: null },
+    gold: { id: 'gold', name: '24K Gold', gradient: 'linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c)' },
+    silver: { id: 'silver', name: 'Sterling', gradient: 'linear-gradient(135deg, #a1a2a3, #e8e9ea, #7b7d7e, #f2f3f4, #949596)' },
+    copper: { id: 'copper', name: 'Aged Copper', gradient: 'linear-gradient(135deg, #b87333, #f0c29a, #8b4513, #e9967a, #a0522d)' }
+} as const;
+
+const THEMES = {
+    loft: { id: 'loft', name: 'Daylight Loft', bg: 'bg-slate-50/50', border: 'border-slate-200/50', accent: 'slate', desk: 'https://www.transparenttextures.com/patterns/natural-paper.png' },
+    midnight: { id: 'midnight', name: 'Midnight Studio', bg: 'bg-slate-900', border: 'border-slate-800', accent: 'indigo', desk: 'https://www.transparenttextures.com/patterns/dark-matter.png' },
+    workshop: { id: 'workshop', name: 'Artisan Workshop', bg: 'bg-orange-50/30', border: 'border-orange-200/30', accent: 'orange', desk: 'https://www.transparenttextures.com/patterns/pinstriped-suit.png' }
+} as const;
+
 const TEMPLATES = [
     {
         id: "modern-minimal",
@@ -142,215 +155,223 @@ const SIZES = [
     { id: "large", name: "Gallery Edition", dimensions: "11x14 in", price_multiplier: 1.6 }
 ];
 
-export default function PhotobookEditor() {
-    const ICON_MAP: Record<string, any> = {
-        Heart, Camera, Sun, Palmtree, Mountain, Globe, Compass, Plane, MapPin,
-        Flower, Butterfly, Bird, Anchor, "Moon Ph": Moon, Rainbow, "Leaf Ph": Leaf,
-        London: Crown, "New York": Buildings, Coastal: Lighthouse, Europe: CastleTurret, Travel: SuitcaseRolling, SF: Bridge,
-        "Modern Geometry": Cube, "Heart Lucide": Heart, "Camera Lucide": Camera, "Mountain Lucide": Mountain, "Globe Lucide": Globe, "MapPin Lucide": MapPin
-    };
+const ICON_MAP: Record<string, any> = {
+    Heart, Camera, Sun, Palmtree, Mountain, Globe, Compass, Plane, MapPin,
+    Flower, Butterfly, Bird, Anchor, "Moon Ph": Moon, Rainbow, "Leaf Ph": Leaf,
+    London: Crown, "New York": Buildings, Coastal: Lighthouse, Europe: CastleTurret, Travel: SuitcaseRolling, SF: Bridge,
+    "Modern Geometry": Cube, "Heart Lucide": Heart, "Camera Lucide": Camera, "Mountain Lucide": Mountain, "Globe Lucide": Globe, "MapPin Lucide": MapPin
+};
 
-    const CoverLayoutRenderer = ({ tplId, pTitle, pSubtitle, pImages, pColor, pIcon, pSymbol, pFont, isCard = false }: any) => {
-        const IconComponent = pIcon ? ICON_MAP[pIcon] || null : null;
-        const fontStyle = pFont ? { fontFamily: FONTS.find(f => f.id === pFont)?.family } : {};
+const CoverLayoutRenderer = ({ tplId, pTitle, pSubtitle, pImages, pColor, pIcon, pSymbol, pFont, pFoil = 'none', isCard = false }: any) => {
+    const IconComponent = pIcon ? ICON_MAP[pIcon] || null : null;
+    const fontStyle = pFont ? { fontFamily: FONTS.find(f => f.id === pFont)?.family } : {};
 
-        const tTitle = pTitle || "LOCATION";
-        const tSubtitle = pSubtitle || "JOURNEY";
+    const foilStyle: any = pFoil !== 'none' ? {
+        backgroundImage: FOILS[pFoil as keyof typeof FOILS].gradient,
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundSize: '200% auto',
+        animation: 'shimmer 3s linear infinite'
+    } : { color: pColor };
 
-        let content = null;
+    const tTitle = pTitle || "LOCATION";
+    const tSubtitle = pSubtitle || "JOURNEY";
 
-        if (tplId === "modern-minimal") {
-            content = (
-                <div className={cn("h-full grid grid-cols-12 gap-4", isCard ? "p-4" : "p-12 ml-6 py-16")}>
-                    <div className="col-span-5 flex flex-col justify-center space-y-2">
-                        {IconComponent && <IconComponent className={cn("opacity-60", isCard ? "h-2 w-2" : "h-8 w-8")} style={{ color: pColor }} />}
-                        {pSymbol && <Image src={pSymbol} alt="S" width={isCard ? 10 : 32} height={isCard ? 10 : 32} className="opacity-60" />}
-                        <h1 className={cn("font-[1000] uppercase tracking-tighter leading-none mix-blend-multiply", isCard ? "text-[10px]" : "text-4xl")} style={{ color: pColor, ...fontStyle }}>{tTitle}</h1>
-                        <p className={cn("font-black uppercase tracking-tight opacity-70", isCard ? "text-[6px]" : "text-lg")} style={{ color: pColor, ...fontStyle }}>{tSubtitle}</p>
-                    </div>
-                    <div className="col-span-1" />
-                    <div className="col-span-6 grid grid-cols-2 gap-1.5 h-full">
-                        {[0, 1, 2, 3].map((i) => (
-                            <div key={i} className="bg-slate-200/50 rounded-md overflow-hidden relative shadow-sm">
-                                {pImages[i] ? <Image src={pImages[i].preview_url} alt="P" fill className="object-cover" /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="h-4 w-4" /></div>}
-                            </div>
-                        ))}
-                    </div>
+    let content = null;
+
+    if (tplId === "modern-minimal") {
+        content = (
+            <div className={cn("h-full grid grid-cols-12 gap-4", isCard ? "p-4" : "p-12 ml-6 py-16")}>
+                <div className="col-span-5 flex flex-col justify-center space-y-2">
+                    {IconComponent && <IconComponent className={cn("opacity-60", isCard ? "h-2 w-2" : "h-8 w-8")} style={{ color: pColor }} />}
+                    {pSymbol && <Image src={pSymbol} alt="S" width={isCard ? 10 : 32} height={isCard ? 10 : 32} className="opacity-60" />}
+                    <h1 className={cn("font-[1000] uppercase tracking-tighter leading-none mix-blend-multiply", isCard ? "text-[10px]" : "text-4xl")} style={{ color: pColor, ...fontStyle }}>{tTitle}</h1>
+                    <p className={cn("font-black uppercase tracking-tight opacity-70", isCard ? "text-[6px]" : "text-lg")} style={{ color: pColor, ...fontStyle }}>{tSubtitle}</p>
                 </div>
-            );
-        } else if (tplId === "classic-heritage") {
-            content = (
-                <div className={cn("h-full flex flex-col items-center justify-between text-center", isCard ? "p-4" : "p-12 ml-6 py-16")}>
-                    <div className="space-y-1">
-                        {IconComponent && <IconComponent className={cn("mx-auto opacity-80", isCard ? "h-3 w-3" : "h-12 w-12")} style={{ color: pColor }} />}
-                        {pSymbol && <Image src={pSymbol} alt="S" width={isCard ? 12 : 48} height={isCard ? 12 : 48} className="mx-auto" />}
-                        <span className={cn("font-black uppercase tracking-[0.3em] opacity-40", isCard ? "text-[4px]" : "text-[10px]")} style={{ color: pColor, ...fontStyle }}>Studio Edition</span>
-                        <h1 className={cn("font-[1000] uppercase tracking-tight mix-blend-multiply", isCard ? "text-xs" : "text-5xl")} style={{ color: pColor, ...fontStyle }}>{tTitle}</h1>
-                    </div>
-                    <div className={cn("w-full aspect-square border-white shadow-xl relative overflow-hidden", isCard ? "max-w-[60px] border-2" : "max-w-[300px] border-8")}>
-                        {pImages[0] ? <Image src={pImages[0].preview_url} alt="P" fill className="object-cover" /> : <div className="absolute inset-0 bg-slate-100 flex items-center justify-center opacity-20"><ImageIcon className="h-6 w-6" /></div>}
-                    </div>
-                    <p className={cn("font-black uppercase tracking-widest opacity-70 italic", isCard ? "text-[6px]" : "text-lg")} style={{ color: pColor, ...fontStyle }}>{tSubtitle}</p>
-                </div>
-            );
-        } else if (tplId === "adventure") {
-            content = (
-                <div className={cn("h-full relative overflow-hidden", isCard ? "p-4" : "p-12 ml-6 py-16")}>
-                    <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-4 opacity-70 scale-110">
-                        {[0, 1].map((i) => (
-                            <div key={i} className={cn("relative rounded-lg shadow-xl overflow-hidden border-white", isCard ? "border-[2px]" : "border-4", i === 0 ? "rotate-3" : "-rotate-6 translate-x-4 translate-y-4")}>
-                                {pImages[i] ? <Image src={pImages[i].preview_url} alt="P" fill className="object-cover" /> : <div className="absolute inset-0 bg-slate-200" />}
-                            </div>
-                        ))}
-                    </div>
-                    <div className="relative h-full flex flex-col items-center justify-center z-10 text-center pointer-events-none">
-                        {IconComponent && <IconComponent className={cn("mb-2 opacity-90 backdrop-blur-sm", isCard ? "h-3 w-3" : "h-14 w-14")} style={{ color: pColor }} />}
-                        <h1 className={cn("font-[1000] uppercase tracking-tight drop-shadow-2xl", isCard ? "text-lg" : "text-6xl")} style={{ color: pColor, ...fontStyle }}>{tTitle}</h1>
-                        <p className={cn("font-black uppercase tracking-[0.5em] mt-1 drop-shadow-lg", isCard ? "text-[4px]" : "text-xs")} style={{ color: pColor, ...fontStyle }}>{tSubtitle}</p>
-                    </div>
-                </div>
-            );
-        } else if (tplId === "panorama") {
-            content = (
-                <div className={cn("h-full flex flex-col justify-end gap-4", isCard ? "p-4" : "p-12 ml-6 py-16")}>
-                    <div className="flex-1 rounded-2xl overflow-hidden relative shadow-2xl border-white bg-slate-100 border-x-4">
-                        {pImages[0] ? <Image src={pImages[0].preview_url} alt="P" fill className="object-cover" /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="h-10 w-10" /></div>}
-                        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
-                        <div className="absolute bottom-6 inset-x-0 text-center px-4 flex flex-col items-center">
-                            {IconComponent && <IconComponent className={cn("mb-2 text-white/80", isCard ? "h-2 w-2" : "h-10 w-10")} />}
-                            <h1 className={cn("font-black text-white uppercase tracking-tighter", isCard ? "text-[10px]" : "text-4xl")} style={{ ...fontStyle }}>{tTitle}</h1>
-                        </div>
-                    </div>
-                    <div className="flex justify-between items-center px-2">
-                        <p className={cn("font-black uppercase tracking-widest opacity-50", isCard ? "text-[4px]" : "text-[10px]")} style={{ color: pColor, ...fontStyle }}>{tSubtitle}</p>
-                        <div className={cn("bg-white/40 h-0.5", isCard ? "w-4" : "w-12")} />
-                    </div>
-                </div>
-            );
-        } else if (tplId === "mosaic") {
-            content = (
-                <div className={cn("h-full grid grid-cols-4 grid-rows-4 gap-1", isCard ? "p-2" : "p-12 ml-6 py-16")}>
-                    <div className="col-span-2 row-span-2 relative rounded overflow-hidden shadow-sm bg-slate-200">
-                        {pImages[0] ? <Image src={pImages[0].preview_url} alt="P" fill className="object-cover" /> : null}
-                    </div>
-                    {[1, 2, 3, 4, 5, 6, 7].map(i => (
-                        <div key={i} className="relative rounded overflow-hidden shadow-sm bg-slate-100">
-                            {pImages[i] ? <Image src={pImages[i].preview_url} alt="P" fill className="object-cover" /> : null}
+                <div className="col-span-1" />
+                <div className="col-span-6 grid grid-cols-2 gap-1.5 h-full">
+                    {[0, 1, 2, 3].map((i) => (
+                        <div key={i} className="bg-slate-200/50 rounded-md overflow-hidden relative shadow-sm">
+                            {pImages[i] ? <Image src={pImages[i].preview_url} alt="P" fill className="object-cover" /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="h-4 w-4" /></div>}
                         </div>
                     ))}
-                    <div className="col-span-4 mt-auto space-y-1">
-                        {IconComponent && <IconComponent className={cn("opacity-40", isCard ? "h-2 w-2" : "h-6 w-6")} style={{ color: pColor }} />}
-                        <h1 className={cn("font-black uppercase tracking-tight mix-blend-multiply", isCard ? "text-[10px]" : "text-3xl")} style={{ color: pColor, ...fontStyle }}>{tTitle}</h1>
-                        <p className={cn("font-bold uppercase tracking-widest opacity-60", isCard ? "text-[4px]" : "text-[8px]")} style={{ color: pColor, ...fontStyle }}>{tSubtitle}</p>
-                    </div>
                 </div>
-            );
-        } else if (tplId === "editorial") {
-            content = (
-                <div className={cn("h-full flex flex-col gap-6", isCard ? "p-4" : "p-12 ml-6 py-16")}>
-                    <div className="space-y-2 border-b-2 pb-6 border-current opacity-80" style={{ borderColor: pColor, color: pColor }}>
-                        {IconComponent && <IconComponent className={cn("mb-2", isCard ? "h-4 w-4" : "h-12 w-12")} />}
-                        <h1 className={cn("font-[1000] uppercase tracking-[-0.05em] leading-[0.8]", isCard ? "text-xl" : "text-7xl")} style={{ ...fontStyle }}>{tTitle}</h1>
-                        <p className={cn("font-black uppercase tracking-[0.4em]", isCard ? "text-[5px]" : "text-sm")} style={{ ...fontStyle }}>{tSubtitle}</p>
-                    </div>
-                    <div className="flex-1 flex gap-4">
-                        <div className="flex-1 relative rounded-lg overflow-hidden bg-slate-50">
-                            {pImages[0] ? <Image src={pImages[0].preview_url} alt="P" fill className="object-cover" /> : null}
-                        </div>
-                        <div className="w-1/3 flex flex-col gap-3">
-                            {[1, 2].map(i => (
-                                <div key={i} className="flex-1 relative rounded bg-slate-100 overflow-hidden">
-                                    {pImages[i] ? <Image src={pImages[i].preview_url} alt="P" fill className="object-cover" /> : null}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            );
-        } else if (tplId === "symbolic") {
-            content = (
-                <div className={cn("h-full flex flex-col items-center justify-center relative overflow-hidden", isCard ? "p-4" : "p-12 ml-6")}>
-                    {/* The Hero: Massive Background Watermark */}
-                    <div className="absolute inset-x-0 inset-y-0 flex items-center justify-center pointer-events-none opacity-[0.07] overflow-hidden -rotate-6">
-                        {IconComponent && <IconComponent className="w-[110%] h-[110%] scale-110" style={{ color: pColor }} />}
-                        {pSymbol && <Image src={pSymbol} alt="S" fill className="object-contain scale-110" />}
-                    </div>
-
-                    <div className="flex flex-col items-center space-y-12 z-10 w-full">
-                        <div className="text-center space-y-6">
-                            <div className="h-0.5 w-16 bg-current mx-auto opacity-20" style={{ color: pColor }} />
-
-                            <div className="space-y-4">
-                                <h1 className={cn("font-[1000] uppercase tracking-[0.4em] leading-tight mix-blend-multiply", isCard ? "text-[12px]" : "text-6xl")} style={{ color: pColor, ...fontStyle }}>
-                                    {tTitle}
-                                </h1>
-                                <div className="flex items-center justify-center gap-4">
-                                    <div className="h-px flex-1 bg-current opacity-10" style={{ color: pColor }} />
-                                    <p className={cn("font-black uppercase tracking-[0.6em] opacity-40 whitespace-nowrap", isCard ? "text-[5px]" : "text-sm")} style={{ color: pColor, ...fontStyle }}>
-                                        {tSubtitle}
-                                    </p>
-                                    <div className="h-px flex-1 bg-current opacity-10" style={{ color: pColor }} />
-                                </div>
-                            </div>
-
-                            <div className="h-0.5 w-16 bg-current mx-auto opacity-20" style={{ color: pColor }} />
-                        </div>
-                    </div>
-
-                    {/* Subtle Identification */}
-                    <p className="absolute bottom-12 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-[1.5em] opacity-20 whitespace-nowrap" style={{ color: pColor }}>
-                        STRICTLY ARCHIVAL
-                    </p>
-                </div>
-            );
-        }
-
-        return (
-            <div className="relative h-full w-full">
-                {content}
-                {!isCard && (
-                    <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-[0.5em] opacity-30 text-center w-full" style={{ color: pColor }}>
-                        Limited Edition • Itinero Studio
-                    </p>
-                )}
             </div>
         );
-    };
-
-    const BackCoverRenderer = ({ pImages, pColor, isCard = false }: any) => {
-        return (
-            <div className={cn("h-full flex flex-col items-center justify-center p-12 text-center relative", isCard ? "scale-75" : "")}>
-                <div className="space-y-12 flex flex-col items-center">
-                    <div className="w-32 h-32 rounded-2xl bg-slate-100 flex items-center justify-center border-4 border-white shadow-2xl rotate-3 overflow-hidden relative">
-                        {pImages.length > 0 ? (
-                            <Image src={pImages[pImages.length - 1].preview_url} alt="Back" fill className="object-cover" />
-                        ) : (
-                            <div className="absolute inset-0 bg-slate-200 flex items-center justify-center">
-                                <Compass className="h-10 w-10 text-slate-400 opacity-20" />
-                            </div>
-                        )}
-                    </div>
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                            <div className="h-px w-8 bg-current opacity-20" style={{ color: pColor }} />
-                            <p className="text-[10px] font-black uppercase tracking-[0.5em] opacity-40" style={{ color: pColor }}>FINIS</p>
-                            <div className="h-px w-8 bg-current opacity-20" style={{ color: pColor }} />
+    } else if (tplId === "classic-heritage") {
+        content = (
+            <div className={cn("h-full flex flex-col items-center justify-between text-center", isCard ? "p-4" : "p-12 ml-6 py-16")}>
+                <div className="space-y-1 flex flex-col items-center">
+                    {IconComponent && <IconComponent className={cn("mx-auto opacity-80 mb-2", isCard ? "h-3 w-3" : "h-12 w-12")} style={pFoil !== 'none' ? { filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' } : { color: pColor }} />}
+                    {pSymbol && <Image src={pSymbol} alt="S" width={isCard ? 12 : 48} height={isCard ? 12 : 48} className="mx-auto" />}
+                    <span className={cn("font-black uppercase tracking-[0.3em] opacity-40", isCard ? "text-[4px]" : "text-[10px]")} style={{ ...fontStyle, ...foilStyle }}>Studio Edition</span>
+                    <h1 className={cn("font-[1000] uppercase tracking-tight mix-blend-multiply", isCard ? "text-xs" : "text-5xl")} style={{ ...fontStyle, ...foilStyle }}>{tTitle}</h1>
+                </div>
+                <div className={cn("w-full aspect-square border-white shadow-xl relative overflow-hidden", isCard ? "max-w-[60px] border-2" : "max-w-[300px] border-8")}>
+                    {pImages[0] ? <Image src={pImages[0].preview_url} alt="P" fill className="object-cover" /> : <div className="absolute inset-0 bg-slate-100 flex items-center justify-center opacity-20"><ImageIcon className="h-6 w-6" /></div>}
+                </div>
+                <p className={cn("font-black uppercase tracking-widest opacity-70 italic", isCard ? "text-[6px]" : "text-lg")} style={{ ...fontStyle, ...foilStyle }}>{tSubtitle}</p>
+            </div>
+        );
+    } else if (tplId === "adventure") {
+        content = (
+            <div className={cn("h-full relative overflow-hidden", isCard ? "p-4" : "p-12 ml-6 py-16")}>
+                <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-4 opacity-70 scale-110">
+                    {[0, 1].map((i) => (
+                        <div key={i} className={cn("relative rounded-lg shadow-xl overflow-hidden border-white", isCard ? "border-[2px]" : "border-4", i === 0 ? "rotate-3" : "-rotate-6 translate-x-4 translate-y-4")}>
+                            {pImages[i] ? <Image src={pImages[i].preview_url} alt="P" fill className="object-cover" /> : <div className="absolute inset-0 bg-slate-200" />}
                         </div>
-                        <h2 className="text-2xl font-[1000] uppercase tracking-tighter mix-blend-multiply" style={{ color: pColor }}>Itinero Studio</h2>
-                        <p className="text-[9px] font-black uppercase tracking-widest opacity-30" style={{ color: pColor }}>Made with Adventure in Mind</p>
+                    ))}
+                </div>
+                <div className="relative h-full flex flex-col items-center justify-center z-10 text-center pointer-events-none">
+                    {IconComponent && <IconComponent className={cn("mb-2 opacity-90 backdrop-blur-sm", isCard ? "h-3 w-3" : "h-14 w-14")} style={{ color: pColor }} />}
+                    <h1 className={cn("font-[1000] uppercase tracking-tight drop-shadow-2xl", isCard ? "text-lg" : "text-6xl")} style={{ color: pColor, ...fontStyle }}>{tTitle}</h1>
+                    <p className={cn("font-black uppercase tracking-[0.5em] mt-1 drop-shadow-lg", isCard ? "text-[4px]" : "text-xs")} style={{ color: pColor, ...fontStyle }}>{tSubtitle}</p>
+                </div>
+            </div>
+        );
+    } else if (tplId === "panorama") {
+        content = (
+            <div className={cn("h-full flex flex-col justify-end gap-4", isCard ? "p-4" : "p-12 ml-6 py-16")}>
+                <div className="flex-1 rounded-2xl overflow-hidden relative shadow-2xl border-white bg-slate-100 border-x-4">
+                    {pImages[0] ? <Image src={pImages[0].preview_url} alt="P" fill className="object-cover" /> : <div className="absolute inset-0 flex items-center justify-center opacity-10"><ImageIcon className="h-10 w-10" /></div>}
+                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-6 inset-x-0 text-center px-4 flex flex-col items-center">
+                        {IconComponent && <IconComponent className={cn("mb-2 text-white/80", isCard ? "h-2 w-2" : "h-10 w-10")} />}
+                        <h1 className={cn("font-black text-white uppercase tracking-tighter", isCard ? "text-[10px]" : "text-4xl")} style={{ ...fontStyle }}>{tTitle}</h1>
                     </div>
-                    <div className="mt-8 pt-8 border-t w-32 border-current opacity-10 flex flex-col items-center gap-2" style={{ color: pColor }}>
-                        <div className="w-full h-8 bg-current opacity-30 rounded-sm" />
-                        <p className="text-[7px] font-black tracking-widest">CERTIFIED ARTISAN</p>
+                </div>
+                <div className="flex justify-between items-center px-2">
+                    <p className={cn("font-black uppercase tracking-widest opacity-50", isCard ? "text-[4px]" : "text-[10px]")} style={{ color: pColor, ...fontStyle }}>{tSubtitle}</p>
+                    <div className={cn("bg-white/40 h-0.5", isCard ? "w-4" : "w-12")} />
+                </div>
+            </div>
+        );
+    } else if (tplId === "mosaic") {
+        content = (
+            <div className={cn("h-full grid grid-cols-4 grid-rows-4 gap-1", isCard ? "p-2" : "p-12 ml-6 py-16")}>
+                <div className="col-span-2 row-span-2 relative rounded overflow-hidden shadow-sm bg-slate-200">
+                    {pImages[0] ? <Image src={pImages[0].preview_url} alt="P" fill className="object-cover" /> : null}
+                </div>
+                {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                    <div key={i} className="relative rounded overflow-hidden shadow-sm bg-slate-100">
+                        {pImages[i] ? <Image src={pImages[i].preview_url} alt="P" fill className="object-cover" /> : null}
+                    </div>
+                ))}
+                <div className="col-span-4 mt-auto space-y-1">
+                    {IconComponent && <IconComponent className={cn("opacity-40", isCard ? "h-2 w-2" : "h-6 w-6")} style={{ color: pColor }} />}
+                    <h1 className={cn("font-black uppercase tracking-tight mix-blend-multiply", isCard ? "text-[10px]" : "text-3xl")} style={{ color: pColor, ...fontStyle }}>{tTitle}</h1>
+                    <p className={cn("font-bold uppercase tracking-widest opacity-60", isCard ? "text-[4px]" : "text-[8px]")} style={{ color: pColor, ...fontStyle }}>{tSubtitle}</p>
+                </div>
+            </div>
+        );
+    } else if (tplId === "editorial") {
+        content = (
+            <div className={cn("h-full flex flex-col gap-6", isCard ? "p-4" : "p-12 ml-6 py-16")}>
+                <div className="space-y-2 border-b-2 pb-6 border-current opacity-80" style={{ borderColor: pColor, color: pColor }}>
+                    {IconComponent && <IconComponent className={cn("mb-2", isCard ? "h-4 w-4" : "h-12 w-12")} />}
+                    <h1 className={cn("font-[1000] uppercase tracking-[-0.05em] leading-[0.8]", isCard ? "text-xl" : "text-7xl")} style={{ ...fontStyle }}>{tTitle}</h1>
+                    <p className={cn("font-black uppercase tracking-[0.4em]", isCard ? "text-[5px]" : "text-sm")} style={{ ...fontStyle }}>{tSubtitle}</p>
+                </div>
+                <div className="flex-1 flex gap-4">
+                    <div className="flex-1 relative rounded-lg overflow-hidden bg-slate-50">
+                        {pImages[0] ? <Image src={pImages[0].preview_url} alt="P" fill className="object-cover" /> : null}
+                    </div>
+                    <div className="w-1/3 flex flex-col gap-3">
+                        {[1, 2].map(i => (
+                            <div key={i} className="flex-1 relative rounded bg-slate-100 overflow-hidden">
+                                {pImages[i] ? <Image src={pImages[i].preview_url} alt="P" fill className="object-cover" /> : null}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
         );
-    };
+    } else if (tplId === "symbolic") {
+        content = (
+            <div className={cn("h-full flex flex-col items-center justify-center relative overflow-hidden", isCard ? "p-4" : "p-12 ml-6")}>
+                {/* The Hero: Massive Background Watermark */}
+                <div className="absolute inset-x-0 inset-y-0 flex items-center justify-center pointer-events-none opacity-[0.07] overflow-hidden -rotate-6">
+                    {IconComponent && <IconComponent className="w-[110%] h-[110%] scale-110" style={{ color: pColor }} />}
+                    {pSymbol && <Image src={pSymbol} alt="S" fill className="object-contain scale-110" />}
+                </div>
 
+                <div className="flex flex-col items-center space-y-12 z-10 w-full">
+                    <div className="text-center space-y-6">
+                        <div className="h-0.5 w-16 bg-current mx-auto opacity-20" style={{ color: pColor }} />
+
+                        <div className="space-y-4">
+                            <h1 className={cn("font-[1000] uppercase tracking-[0.4em] leading-tight mix-blend-multiply", isCard ? "text-[12px]" : "text-6xl")} style={{ color: pColor, ...fontStyle }}>
+                                {tTitle}
+                            </h1>
+                            <div className="flex items-center justify-center gap-4">
+                                <div className="h-px flex-1 bg-current opacity-10" style={{ color: pColor }} />
+                                <p className={cn("font-black uppercase tracking-[0.6em] opacity-40 whitespace-nowrap", isCard ? "text-[5px]" : "text-sm")} style={{ color: pColor, ...fontStyle }}>
+                                    {tSubtitle}
+                                </p>
+                                <div className="h-px flex-1 bg-current opacity-10" style={{ color: pColor }} />
+                            </div>
+                        </div>
+
+                        <div className="h-0.5 w-16 bg-current mx-auto opacity-20" style={{ color: pColor }} />
+                    </div>
+                </div>
+
+                {/* Subtle Identification */}
+                <p className="absolute bottom-12 left-1/2 -translate-x-1/2 text-[8px] font-black uppercase tracking-[1.5em] opacity-20 whitespace-nowrap" style={{ color: pColor }}>
+                    STRICTLY ARCHIVAL
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="relative h-full w-full">
+            {content}
+            {!isCard && (
+                <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[9px] font-black uppercase tracking-[0.5em] opacity-30 text-center w-full" style={{ color: pColor }}>
+                    Limited Edition • Itinero Studio
+                </p>
+            )}
+        </div>
+    );
+};
+
+const BackCoverRenderer = ({ pImages, pColor, isCard = false }: any) => {
+    return (
+        <div className={cn("h-full flex flex-col items-center justify-center p-12 text-center relative", isCard ? "scale-75" : "")}>
+            <div className="space-y-12 flex flex-col items-center">
+                <div className="w-32 h-32 rounded-2xl bg-slate-100 flex items-center justify-center border-4 border-white shadow-2xl rotate-3 overflow-hidden relative">
+                    {pImages.length > 0 ? (
+                        <Image src={pImages[pImages.length - 1].preview_url} alt="Back" fill className="object-cover" />
+                    ) : (
+                        <div className="absolute inset-0 bg-slate-200 flex items-center justify-center">
+                            <Compass className="h-10 w-10 text-slate-400 opacity-20" />
+                        </div>
+                    )}
+                </div>
+                <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                        <div className="h-px w-8 bg-current opacity-20" style={{ color: pColor }} />
+                        <p className="text-[10px] font-black uppercase tracking-[0.5em] opacity-40" style={{ color: pColor }}>FINIS</p>
+                        <div className="h-px w-8 bg-current opacity-20" style={{ color: pColor }} />
+                    </div>
+                    <h2 className="text-2xl font-[1000] uppercase tracking-tighter mix-blend-multiply" style={{ color: pColor }}>Itinero Studio</h2>
+                    <p className="text-[9px] font-black uppercase tracking-widest opacity-30" style={{ color: pColor }}>Made with Adventure in Mind</p>
+                </div>
+                <div className="mt-8 pt-8 border-t w-32 border-current opacity-10 flex flex-col items-center gap-2" style={{ color: pColor }}>
+                    <div className="w-full h-8 bg-current opacity-30 rounded-sm" />
+                    <p className="text-[7px] font-black tracking-widest">CERTIFIED ARTISAN</p>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default function PhotobookEditor({ user, initialData }: { user: any, initialData?: any }) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<"design" | "images" | "preview">("design");
-    const [templateId, setTemplateId] = useState(TEMPLATES[0].id);
+    const [templateId, setTemplateId] = useState(initialData?.template_id || TEMPLATES[0].id);
     const [designerCategory, setDesignerCategory] = useState<"color" | "symbol" | "typography">("color");
 
     // Design States
@@ -359,16 +380,20 @@ export default function PhotobookEditor() {
     const [coverIconName, setCoverIconName] = useState<string | null>("Heart");
     const [coverSymbol, setCoverSymbol] = useState<string>("");
     const [layoutStyle, setLayoutStyle] = useState<"stacked" | "standard" | "offset" | "creative">("stacked");
-    const [title, setTitle] = useState("OUR SUMMER");
-    const [subtitle, setSubtitle] = useState("GREECE 2025");
+    const [title, setTitle] = useState(initialData?.title || "OUR SUMMER");
+    const [subtitle, setSubtitle] = useState(initialData?.subtitle || "GREECE 2025");
     const [sizeId, setSizeId] = useState("small");
     const [isFlipped, setIsFlipped] = useState(false);
     const [isRounded, setIsRounded] = useState(true);
     const [isCinemaMode, setIsCinemaMode] = useState(false);
     const [coverMaterial, setCoverMaterial] = useState<keyof typeof MATERIALS>("linen");
     const [coverFont, setCoverFont] = useState(FONTS[0].id);
+    const [coverFoil, setCoverFoil] = useState<keyof typeof FOILS>("none");
+    const [studioTheme, setStudioTheme] = useState<keyof typeof THEMES>("loft");
     const [spineText, setSpineText] = useState("OUR SUMMER 2025");
     const [peekProgress, setPeekProgress] = useState(0);
+
+
 
     // Mouse Tracking for 3D Tilt
     const mouseX = useMotionValue(0);
@@ -390,17 +415,30 @@ export default function PhotobookEditor() {
     };
 
     // Image States
-    const [images, setImages] = useState<any[]>([]);
+    const [images, setImages] = useState<any[]>(initialData?.images || []);
 
     useEffect(() => {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = `https://fonts.googleapis.com/css2?family=${FONTS.map(f => f.import).join('&family=')}&display=swap`;
         document.head.appendChild(link);
+
+        // Inject Shimmer Animation
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes shimmer {
+                0% { background-position: -200% center; }
+                100% { background-position: 200% center; }
+            }
+        `;
+        document.head.appendChild(style);
+
         return () => {
             document.head.removeChild(link);
+            document.head.removeChild(style);
         };
     }, []);
+
 
     const coverImages = images.filter(img => img.role === "cover");
 
@@ -438,8 +476,23 @@ export default function PhotobookEditor() {
     };
 
     const handlePayment = () => {
-        router.push("/photobooks/success");
+        router.push("/photobooks/checkout");
     };
+
+    const generateMagicTitle = () => {
+        const scenarios = [
+            { t: "ETERNAL HORIZONS", s: "A MEDITERRANEAN ODYSSEY" },
+            { t: "STUDIO ARCHIVE", s: "CURATED MOMENTS VOL. 1" },
+            { t: "WILD HEARTS", s: "LOST IN THE CANYON" },
+            { t: "URBAN POETRY", s: "CITY NIGHTS & NEON LIGHTS" },
+            { t: "GOLDEN STATE", s: "PACIFIC COAST HIGHWAY" },
+            { t: "THE ANTHOLOGY", s: "OUR GREATEST ADVENTURE" }
+        ];
+        const random = scenarios[Math.floor(Math.random() * scenarios.length)];
+        setTitle(random.t);
+        setSubtitle(random.s);
+    };
+
 
     return (
         <div className="min-h-screen bg-[#fafafb] dark:bg-slate-950 font-outfit">
@@ -795,16 +848,26 @@ export default function PhotobookEditor() {
                                                         </div>
 
                                                         <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
-                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Headline Control</p>
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Headline Control</p>
+                                                                <button
+                                                                    onClick={generateMagicTitle}
+                                                                    className="flex items-center gap-1.5 text-[9px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-2.5 py-1 rounded-full hover:bg-purple-100 transition-colors"
+                                                                >
+                                                                    <Sparkles className="h-2.5 w-2.5" /> Magic Pen
+                                                                </button>
+                                                            </div>
                                                             <div className="space-y-1.5">
                                                                 <label className="text-[9px] font-black text-slate-500 uppercase ml-1 opacity-60">Headline</label>
-                                                                <Input
-                                                                    value={title}
-                                                                    onChange={(e) => setTitle(e.target.value.toUpperCase())}
-                                                                    className="h-11 rounded-xl border-slate-200 font-bold bg-white/50 focus:bg-white transition-all shadow-none"
-                                                                    placeholder="LOCATION"
-                                                                    style={{ fontFamily: FONTS.find(f => f.id === coverFont)?.family }}
-                                                                />
+                                                                <div className="relative group">
+                                                                    <Input
+                                                                        value={title}
+                                                                        onChange={(e) => setTitle(e.target.value.toUpperCase())}
+                                                                        className="h-11 rounded-xl border-slate-200 font-bold bg-white/50 focus:bg-white transition-all shadow-none"
+                                                                        placeholder="LOCATION"
+                                                                        style={{ fontFamily: FONTS.find(f => f.id === coverFont)?.family }}
+                                                                    />
+                                                                </div>
                                                             </div>
                                                             <div className="space-y-1.5">
                                                                 <label className="text-[9px] font-black text-slate-500 uppercase ml-1 opacity-60">Sub-caption</label>
@@ -817,6 +880,29 @@ export default function PhotobookEditor() {
                                                                 />
                                                             </div>
                                                         </div>
+
+                                                        <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Studio Mood</p>
+                                                            <div className="grid grid-cols-1 gap-2">
+                                                                {Object.values(THEMES).map((t) => (
+                                                                    <button
+                                                                        key={t.id}
+                                                                        onClick={() => setStudioTheme(t.id as any)}
+                                                                        className={cn(
+                                                                            "p-3 rounded-xl border transition-all text-left group flex items-center justify-between",
+                                                                            studioTheme === t.id ? "border-blue-600 bg-white shadow-sm" : "border-transparent bg-slate-50 hover:bg-white"
+                                                                        )}
+                                                                    >
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className={cn("h-4 w-4 rounded-full border border-slate-200 shadow-inner", t.bg)} />
+                                                                            <p className={cn("text-xs font-bold text-slate-900", studioTheme === t.id ? "text-blue-600" : "")}>{t.name}</p>
+                                                                        </div>
+                                                                        {studioTheme === t.id && <Check className="h-3 w-3 text-blue-600" />}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
 
                                                         <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
                                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Spine Customization</p>
@@ -832,6 +918,56 @@ export default function PhotobookEditor() {
                                                         </div>
 
                                                         <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Text Color</p>
+                                                            <div className="flex gap-2">
+                                                                <input
+                                                                    type="color"
+                                                                    value={coverTextColor}
+                                                                    onChange={(e) => setCoverTextColor(e.target.value)}
+                                                                    className="h-10 w-20 rounded-lg cursor-pointer border-2 border-slate-100 dark:border-slate-800"
+                                                                />
+                                                                <Input
+                                                                    value={coverTextColor}
+                                                                    onChange={(e) => setCoverTextColor(e.target.value)}
+                                                                    className="h-10 rounded-xl border-slate-200 font-bold bg-white/50 focus:bg-white transition-all shadow-none"
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Define FOILS constant here or import it */}
+                                                        {/* For the purpose of this edit, I'm defining it inline as it's not provided in the original snippet */}
+                                                        {/* In a real application, this would likely be a global constant or imported */}
+                                                        {/* Assuming FOILS is defined like: */}
+                                                        {/* const FOILS = {
+                                                            none: { id: "none", name: "None", gradient: "none" },
+                                                            gold: { id: "gold", name: "Gold", gradient: "linear-gradient(to bottom right, #d4af37, #f0e68c, #d4af37)" },
+                                                            silver: { id: "silver", name: "Silver", gradient: "linear-gradient(to bottom right, #c0c0c0, #e6e8fa, #c0c0c0)" },
+                                                            roseGold: { id: "roseGold", name: "Rose Gold", gradient: "linear-gradient(to bottom right, #b76e79, #e0b0ff, #b76e79)" },
+                                                            copper: { id: "copper", name: "Copper", gradient: "linear-gradient(to bottom right, #b87333, #e7a37a, #b87333)" },
+                                                        }; */}
+
+                                                        <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Artisan Foil Finish</p>
+                                                            <div className="grid grid-cols-2 gap-2">
+                                                                {(Object.values(FOILS)).map((f) => (
+                                                                    <button
+                                                                        key={f.id}
+                                                                        onClick={() => setCoverFoil(f.id as any)}
+                                                                        className={cn(
+                                                                            "p-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all text-left flex items-center justify-between",
+                                                                            coverFoil === f.id ? "border-blue-600 bg-white shadow-md text-blue-600" : "border-transparent bg-slate-50 text-slate-400 hover:bg-white"
+                                                                        )}
+                                                                    >
+                                                                        {f.name}
+                                                                        {f.id !== 'none' && (
+                                                                            <div className="h-3 w-3 rounded-full shadow-inner" style={{ background: f.gradient as string }} />
+                                                                        )}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
                                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Texture & Finish</p>
                                                             <div className="grid grid-cols-1 gap-2">
                                                                 {(Object.values(MATERIALS)).map((m) => (
@@ -906,13 +1042,27 @@ export default function PhotobookEditor() {
 
                                 {/* Immersive Studio Stage */}
                                 <div className="flex-1 min-w-0" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
-                                    <div className="bg-slate-50/50 dark:bg-slate-900/40 rounded-[4rem] p-16 lg:p-32 flex flex-col items-center justify-center min-h-[800px] border border-slate-200/50 dark:border-slate-800/50 shadow-[inset_0_2px_40px_rgba(0,0,0,0.02)] relative group overflow-hidden">
+                                    <div className={cn(
+                                        "rounded-[4rem] p-16 lg:p-32 flex flex-col items-center justify-center min-h-[800px] border shadow-[inset_0_2px_40px_rgba(0,0,0,0.02)] relative group overflow-hidden transition-all duration-1000",
+                                        THEMES[studioTheme].bg,
+                                        THEMES[studioTheme].border
+                                    )}>
 
                                         {/* 3D Environment Background Elements */}
-                                        <div className="absolute inset-0 opacity-20 pointer-events-none">
-                                            <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-slate-400 to-transparent" />
-                                            <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-slate-400 to-transparent" />
+                                        <div className="absolute inset-0 opacity-40 pointer-events-none">
+                                            {/* Textured Desk Surface */}
+                                            <div className="absolute inset-0 bg-repeat opacity-10" style={{ backgroundImage: `url("${THEMES[studioTheme].desk}")` }} />
+
+                                            {studioTheme === 'loft' && (
+                                                <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-slate-300 to-transparent" />
+                                            )}
+                                            {studioTheme === 'midnight' && (
+                                                <div className="absolute inset-0 bg-gradient-radial from-indigo-500/10 to-transparent flex items-center justify-center">
+                                                    <div className="w-[800px] h-[800px] blur-[150px] bg-indigo-500/5 rounded-full" />
+                                                </div>
+                                            )}
                                         </div>
+
 
                                         <div className="absolute top-10 flex flex-col items-center gap-4 z-30">
                                             <div className="flex items-center gap-2 px-4 py-1.5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-full shadow-sm border border-slate-200/50 dark:border-slate-800/50">
@@ -951,21 +1101,21 @@ export default function PhotobookEditor() {
                                         >
                                             <div
                                                 className={cn(
-                                                    "aspect-[4/5] shadow-[30px_50px_100px_rgba(0,0,0,0.25)] relative overflow-hidden transition-all duration-700",
+                                                    "aspect-[4/5] shadow-[30px_50px_100px_rgba(0,0,0,0.4)] relative overflow-hidden transition-all duration-700",
                                                     isRounded
                                                         ? (isFlipped ? "rounded-[3rem_0.5rem_0.5rem_3rem]" : "rounded-[0.5rem_3rem_3rem_0.5rem]")
                                                         : "rounded-[0.1rem]"
                                                 )}
                                                 style={{ backgroundColor: coverBgColor }}
                                             >
-                                                <div className="absolute inset-0 pointer-events-none z-10"
+                                                <div className="absolute inset-x-0 inset-y-0 pointer-events-none z-10"
                                                     style={{
                                                         backgroundImage: `url("${MATERIALS[coverMaterial].texture}")`,
                                                         opacity: MATERIALS[coverMaterial].opacity,
                                                         mixBlendMode: MATERIALS[coverMaterial].blend as any
                                                     }}
                                                 />
-                                                <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
+                                                <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
 
                                                 <div className={cn("h-full w-full", isFlipped ? "[transform:rotateY(180deg)]" : "")}>
                                                     {isFlipped ? (
@@ -980,6 +1130,7 @@ export default function PhotobookEditor() {
                                                             pIcon={coverIconName}
                                                             pSymbol={coverSymbol}
                                                             pFont={coverFont}
+                                                            pFoil={coverFoil}
                                                         />
                                                     )}
                                                 </div>
@@ -1356,6 +1507,7 @@ export default function PhotobookEditor() {
                                                     pIcon={coverIconName}
                                                     pSymbol={coverSymbol}
                                                     pFont={coverFont}
+                                                    pFoil={coverFoil}
                                                 />
                                             )}
                                         </div>

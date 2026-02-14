@@ -99,7 +99,11 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                                             <Star className="mr-3 h-4 w-4" /> {tNav("rewards")}
                                         </MobileNavItem>
                                         <MobileNavItem href="/photobooks" active={pathname?.startsWith("/photobooks")}>
-                                            <Sparkles className="mr-3 h-4 w-4" /> {tNav("photobook")}
+                                            <Sparkles className="mr-3 h-4 w-4" />
+                                            <div className="flex items-center gap-2">
+                                                {tNav("photobook")}
+                                                <span className="bg-rose-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded-full tracking-widest leading-none">NEW</span>
+                                            </div>
                                         </MobileNavItem>
                                         <MobileNavItem href="/profile" active={pathname === "/profile"}>
                                             <User className="mr-3 h-4 w-4" /> {tNav("profile")}
@@ -154,7 +158,10 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                                 {tNav("rewards")}
                             </NavItem>
                             <NavItem href="/photobooks" active={pathname?.startsWith("/photobooks")}>
-                                {tNav("photobook")}
+                                <div className="flex items-center gap-2">
+                                    {tNav("photobook")}
+                                    <span className="bg-rose-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded-full tracking-widest leading-none">NEW</span>
+                                </div>
                             </NavItem>
                         </>
                     ) : (
