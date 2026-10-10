@@ -29,6 +29,12 @@ const nextConfig = {
         ],
     },
     poweredByHeader: false,
+    async headers() {
+        return [{
+            source: '/images/landing/optimized/:path*',
+            headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        }];
+    },
     async rewrites() {
         return [
             {

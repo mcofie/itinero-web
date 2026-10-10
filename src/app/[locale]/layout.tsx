@@ -11,6 +11,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Toaster } from "@/components/ui/sonner";
 import GlobalLoading from "./loading";
+import { SITE_URL, SITE_TITLE, SITE_DESCRIPTION, SOCIAL_IMAGE } from "@/lib/site-metadata";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -25,23 +26,29 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: {
-        template: "%s | Itinero",
-        default: "Itinero — Turn Your Trip Photos Into a Book",
+    metadataBase: SITE_URL,
+    applicationName: "Itinero",
+    title: { template: "%s | Itinero", default: SITE_TITLE },
+    description: SITE_DESCRIPTION,
+    icons: {
+        icon: [
+            { url: "/favicon.ico", sizes: "16x16 32x32 48x48" },
+            { url: "/brand/itinero-camera.svg", type: "image/svg+xml", sizes: "any" },
+        ],
+        apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
     },
-    description: "Turn the photos from your favorite trips into beautiful printed photo books. Choose your photos, make it yours, and keep the memories close.",
     openGraph: {
-        title: "Itinero — Turn Your Trip Photos Into a Book",
-        description: "Turn your favorite travel photos into a beautiful printed photo book.",
-        url: "https://itinero.app",
+        title: SITE_TITLE,
+        description: SITE_DESCRIPTION,
         siteName: "Itinero",
-        locale: "en_US",
         type: "website",
+        images: [SOCIAL_IMAGE],
     },
     twitter: {
         card: "summary_large_image",
-        title: "Itinero — Turn Your Trip Photos Into a Book",
-        description: "Turn your favorite travel photos into a beautiful printed photo book.",
+        title: SITE_TITLE,
+        description: SITE_DESCRIPTION,
+        images: [SOCIAL_IMAGE],
     },
 };
 

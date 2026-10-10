@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState, type CSSProperties, type ReactNode } from "react";
-import Image from "next/image";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import LandingImage from "./LandingImage";
+import { LazyMotion, domAnimation, m, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { BookOpen, Camera, Heart, ImagePlus, Layers, MapPin, Pencil, Plus, Smile, Sun } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import styles from "./PhotoAlbumLanding.module.css";
@@ -29,30 +29,60 @@ function CameraMark() {
 
 function Hero({ covers }: { covers: FeaturedTravelCovers }) {
     const ref = useRef<HTMLDivElement>(null);
+    const stickyRef = useRef<HTMLDivElement>(null);
+    const bookRef = useRef<HTMLDivElement>(null);
+    const [geometry, setGeometry] = useState({ travel: 0, start: 0, height: 0 });
     const reduced = useReducedMotion();
-    const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
-    const y = useTransform(scrollYProgress, [0, 1], ["0%", "-155%"]);
+    const { scrollY, scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+    useLayoutEffect(() => {
+        const section = ref.current;
+        const sticky = stickyRef.current;
+        const book = bookRef.current;
+        if (!section || !sticky || !book) return;
+        const measure = () => {
+            // Match the reference: release when the rotated book's bottom-left
+            // corner reaches 85% of the viewport, then move the whole hero together.
+            const bottom = book.offsetTop + book.offsetHeight * Math.cos(20 * Math.PI / 180);
+            const travel = Math.max(0, bottom - window.innerHeight * .85);
+            const start = section.getBoundingClientRect().top + window.scrollY;
+            const height = sticky.offsetHeight + travel;
+            setGeometry(previous => previous.travel === travel && previous.start === start && previous.height === height ? previous : { travel, start, height });
+        };
+        measure();
+        const observer = new ResizeObserver(measure);
+        observer.observe(sticky);
+        observer.observe(book);
+        window.addEventListener("resize", measure);
+        return () => { observer.disconnect(); window.removeEventListener("resize", measure); };
+    }, []);
+    const y = useTransform(() => -Math.min(geometry.travel, Math.max(0, scrollY.get() - geometry.start)));
+    const titleY = useTransform(scrollYProgress, [0, .5, 1], [0, -10, 0]);
 
-    return <section ref={ref} className={styles.heroJourney} aria-label="Meet Itinero" style={{ "--hero-cover-color": TRAVEL_COVERS_BY_ID[covers[0]].color } as CSSProperties}>
-        <div className={styles.heroSticky}>
+    return <section ref={ref} className={styles.heroJourney} aria-label="Meet Itinero" style={{ "--hero-cover-color": TRAVEL_COVERS_BY_ID[covers[0]].color, "--hero-height": geometry.height ? `${geometry.height}px` : undefined } as CSSProperties}>
+        <div ref={stickyRef} className={styles.heroSticky}>
             <div className={styles.heroCopy}>
-                <p className={styles.handwriting}>Dear travellers,</p>
-                <h1><span>meet</span><span>itinero<span className={styles.titlePeriod}>.</span></span></h1>
-                <p className={styles.heroSubtitle}>It’s a photo album that <span className={styles.handwriting}>actually!</span><br />brings your trips back.</p>
+                <p className={`${styles.handwriting} ${styles.heroGreeting}`}>Dear travellers,</p>
+                <m.h1 aria-label="meet itinero." style={{ y: reduced ? 0 : titleY }}>
+                    {["meet", "itinero"].map((word, line) => <span key={word} aria-hidden="true">
+                        {[...word].map((letter, i) => <span key={i} className={styles.heroLetter} style={{ "--letter-delay": `${.12 + line * .25 + i * .045}s` } as CSSProperties}>{letter}</span>)}
+                        {line === 1 && <span className={styles.titlePeriod}>.</span>}
+                    </span>)}
+                </m.h1>
+                <p className={styles.heroSubtitle}>It’s a photo album that <span className={`${styles.handwriting} ${styles.heroActually}`}>actually!<svg viewBox="0 0 140 14" fill="none" aria-hidden="true"><path d="M3 9C32 2 91 2 136 7M20 13C51 8 96 9 119 11" pathLength="1" /></svg></span><br />brings your trips back.</p>
             </div>
             <div className={styles.heroAction}>
-                <Link href="/photobooks/create" className={styles.outlineButton}>Make mine!</Link>
+                <Link prefetch={false} href="/make-album" className={styles.outlineButton}>Make mine!</Link>
                 <p>Your favourite photos. Beautifully bound.</p>
             </div>
             <div className={styles.mobileShowcase} aria-hidden="true">
-                <div className={styles.showcaseLeft}><TravelAlbumCover design={covers[1]} eager /></div>
-                <div className={styles.showcaseRight}><TravelAlbumCover design={covers[2]} eager /></div>
-                <div className={styles.showcaseFront}><TravelAlbumCover design={covers[0]} eager /></div>
+                <div className={styles.showcaseLeft}><TravelAlbumCover design={covers[1]} eager media="mobile" /></div>
+                <div className={styles.showcaseRight}><TravelAlbumCover design={covers[2]} eager media="mobile" /></div>
+                <div className={styles.showcaseFront}><TravelAlbumCover design={covers[0]} eager media="mobile" prominent /></div>
                 <span className={styles.showcaseCaption}>a little piece of somewhere wonderful</span>
             </div>
-            <motion.div className={styles.heroBook} style={{ rotate: -20, y: reduced ? 0 : y }} aria-hidden="true">
-                <TravelAlbumCover design={covers[0]} eager />
-            </motion.div>
+            <m.div ref={bookRef} className={styles.heroBook} style={{ rotate: -20, y: reduced ? 0 : y }} aria-hidden="true">
+                <TravelAlbumCover design={covers[0]} eager media="desktop" prominent />
+            </m.div>
         </div>
     </section>;
 }
@@ -68,9 +98,9 @@ function OverheadPhoto({ album }: { album: OverheadAlbum }) {
     const y = useTransform(scrollYProgress, [0, 1], ["-4%", "4%"]);
 
     return <div ref={ref} className={styles.overheadPhoto}>
-        <motion.div className={styles.overheadParallax} style={{ y: reduced ? 0 : y, inset: reduced ? 0 : undefined }}>
-            <Image src={album.src} alt={`Overhead view of a Black woman's hand holding the ${album.country} photo album above a white table with a potted plant`} fill sizes="100vw" className={styles.heldAlbumPhoto} unoptimized />
-        </motion.div>
+        <m.div className={styles.overheadParallax} style={{ y: reduced ? 0 : y, inset: reduced ? 0 : undefined }}>
+            <LandingImage src={album.src} alt={`Overhead view of a Black woman's hand holding the ${album.country} photo album above a white table with a potted plant`} fill sizes="100vw" className={styles.heldAlbumPhoto} />
+        </m.div>
     </div>;
 }
 
@@ -106,7 +136,7 @@ const notes: { icon: ReactNode; label: ReactNode }[] = [
 function Reassurance() {
     return <section className={styles.reassurance}>
         <h2>Everything you’d want.<br />Nothing you’d forget.</h2>
-        <div className={styles.stickyNotes}>{notes.map((note, i) => <motion.div key={i} className={styles.stickyNote} initial={{ y: 45, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true, amount: .15 }} transition={{ delay: i * .07 }}><div>{note.icon}</div><p>{note.label}</p></motion.div>)}</div>
+        <div className={styles.stickyNotes}>{notes.map((note, i) => <m.div key={i} className={styles.stickyNote} initial={{ y: 45, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true, amount: .15 }} transition={{ delay: i * .07 }}><div>{note.icon}</div><p>{note.label}</p></m.div>)}</div>
     </section>;
 }
 
@@ -117,7 +147,7 @@ function OtherThings() {
 
 function GalleryBook({ design, className }: { design: TravelCoverId; className: string }) {
     const name = TRAVEL_COVERS_BY_ID[design].country;
-    return <Link href="/photobooks/create" className={`${styles.scatteredBook} ${className}`} aria-label={`Make your own photo album — ${name} cover`}>
+    return <Link prefetch={false} href="/photobooks/create" className={`${styles.scatteredBook} ${className}`} aria-label={`Make your own photo album — ${name} cover`}>
         <TravelAlbumCover design={design} />
     </Link>;
 }
@@ -134,7 +164,7 @@ function CoverGallery({ covers }: { covers: FeaturedTravelCovers }) {
     const x = useTransform(scrollYProgress, [0, 1], ["0%", "-72.972973%"]);
     return <section ref={ref} className={styles.coverJourney} id="your-way" aria-labelledby="cover-heading">
         <div className={styles.coverViewport}>
-            <motion.div className={styles.coverTrack} style={{ x: reduced ? 0 : x }}>
+            <m.div className={styles.coverTrack} style={{ x: reduced ? 0 : x }}>
                 <div className={`${styles.coverPanel} ${styles.coverOpening}`}>
                     <GalleryBook design={covers[0]} className={styles.bookItaly} />
                     <div className={styles.coverHeading}><span className={styles.handwriting}>Made for keeping</span><h2 id="cover-heading">Your album.<br />Your way.</h2></div>
@@ -147,21 +177,21 @@ function CoverGallery({ covers }: { covers: FeaturedTravelCovers }) {
                 <div className={`${styles.coverPanel} ${styles.coverRome}`}>
                     <GalleryBook design={covers[2]} className={styles.bookRome} />
                     <div className={`${styles.coverNote} ${styles.romeNote}`}>for the places<br />you fell in love with<DrawnArrow /></div>
-                    <div className={`${styles.loosePhoto} ${styles.romePhoto}`}><Image src={photos[0]} width={400} height={450} alt="A sunlit Italian coastal town" /><span>take me back ♡</span></div>
+                    <div className={`${styles.loosePhoto} ${styles.romePhoto}`}><LandingImage src={photos[0]} width={400} height={450} sizes="(max-width: 540px) 45vw, 30vw" alt="A sunlit Italian coastal town" /><span>take me back ♡</span></div>
                 </div>
                 <div className={`${styles.coverPanel} ${styles.coverTokyo}`}>
                     <GalleryBook design={covers[3]} className={styles.bookTokyo} />
                     <div className={`${styles.coverNote} ${styles.tokyoNote}`}>all those little moments.<br />a proper place to keep them.<DrawnArrow /></div>
-                    <div className={`${styles.loosePhoto} ${styles.memoryPhotoOne}`}><Image src={photos[1]} width={400} height={450} alt="A favourite view from a trip" /><span>the scenic route</span></div>
-                    <div className={`${styles.loosePhoto} ${styles.memoryPhotoTwo}`}><Image src={photos[2]} width={400} height={450} alt="A travel memory to print" /><span>remember this?</span></div>
+                    <div className={`${styles.loosePhoto} ${styles.memoryPhotoOne}`}><LandingImage src={photos[1]} width={400} height={450} sizes="(max-width: 540px) 45vw, 30vw" alt="A favourite view from a trip" /><span>the scenic route</span></div>
+                    <div className={`${styles.loosePhoto} ${styles.memoryPhotoTwo}`}><LandingImage src={photos[2]} width={400} height={450} sizes="(max-width: 540px) 45vw, 30vw" alt="A travel memory to print" /><span>remember this?</span></div>
                     <Sticker kind="star" color="#f1c650" className={styles.coverStar} />
                 </div>
                 <div className={`${styles.coverPanel} ${styles.coverClosing}`}>
                     <GalleryBook design={covers[4]} className={styles.bookVietnam} />
                     <GalleryBook design={covers[5]} className={styles.bookAmsterdam} />
-                    <div className={`${styles.coverNote} ${styles.finalNote}`}>and a cover that<br />feels like you.<DrawnArrow /><Link href="/photobooks/create" className={styles.coverStart}>Make it yours ↗</Link></div>
+                    <div className={`${styles.coverNote} ${styles.finalNote}`}>and a cover that<br />feels like you.<DrawnArrow /><Link prefetch={false} href="/photobooks/create" className={styles.coverStart}>Make it yours ↗</Link></div>
                 </div>
-            </motion.div>
+            </m.div>
         </div>
     </section>;
 }
@@ -174,19 +204,19 @@ const faqs = [
     ["Can I add my own words?", "Yes. Add a title and captions to help tell the story behind the photos."],
     ["Can I change things before I order?", "Yes. You can rearrange photos, change your cover, and preview your book in the studio before placing an order."],
     ["Can I make one as a gift?", "Absolutely. A book of shared memories makes a lovely gift. You can create an album for someone using photos you have permission to print."],
-    ["How do I get started?", "Choose ‘Make mine!’ to sign in and open the photo book studio. From there, you can upload photos and start putting your album together."],
+    ["How do I get started?", "The album experience is coming soon. We’re getting everything ready for your next story."],
 ];
 
 export default function PhotoAlbumLanding({ featuredCovers, overheadAlbum }: { featuredCovers: FeaturedTravelCovers; overheadAlbum: OverheadAlbum }) {
     const reduced = useReducedMotion();
     const [openFaq, setOpenFaq] = useState<number | null>(null);
-    return <div className={`${styles.site} ${reduced ? styles.reducedMotion : ""}`}>
+    return <LazyMotion features={domAnimation} strict><div className={`${styles.site} ${reduced ? styles.reducedMotion : ""}`}>
         <a className={styles.skipLink} href="#how-it-works">Skip to how it works</a>
-        <header className={styles.header}><Link href="/" aria-label="Itinero home" className={styles.logo}><CameraMark /></Link><Link href="/photobooks/create" className={styles.outlineButton}>Make mine!</Link></header>
+        <header className={styles.header}><Link prefetch={false} href="/" aria-label="Itinero home" className={styles.logo}><CameraMark /></Link><Link prefetch={false} href="/make-album" className={styles.outlineButton}>Make mine!</Link></header>
         <main><Hero covers={featuredCovers} /><Reassurance />{features.map((feature, i) => <FeatureScene key={feature.scene} feature={feature} index={i} album={overheadAlbum} />)}<OtherThings /><CoverGallery covers={featuredCovers} />
             <section className={styles.faq}><h2>Questions you might have</h2><div>{faqs.map(([question, answer], i) => <div className={styles.faqRow} key={question}><h3><button aria-expanded={openFaq === i} aria-controls={`album-faq-${i}`} onClick={() => setOpenFaq(openFaq === i ? null : i)}>{question}<Plus size={18} className={openFaq === i ? styles.expanded : ""} /></button></h3><div id={`album-faq-${i}`} hidden={openFaq !== i}><p>{answer}</p></div></div>)}</div></section>
-            <section className={styles.story}><div className={styles.filmstrip}>{["/images/how-it-works.png", ...photos.slice(0, 3)].map((src, i) => <div key={`${src}-${i}`}><Image src={src} alt="A moment from a trip" fill sizes="25vw" /></div>)}</div><div className={styles.storyText}><span className={styles.handwriting}>real<br />⌄</span><h2>Make a story<br />out of your camera roll</h2><Link href="/photobooks/create" className={styles.outlineButton}>Let’s make a book</Link></div></section>
+            <section className={styles.story}><div className={styles.filmstrip}>{["/images/how-it-works.png", ...photos.slice(0, 3)].map((src, i) => <div key={`${src}-${i}`}><LandingImage src={src} alt="A moment from a trip" fill sizes="25vw" /></div>)}</div><div className={styles.storyText}><span className={styles.handwriting}>real<br />⌄</span><h2>Make a story<br />out of your camera roll</h2><Link prefetch={false} href="/photobooks/create" className={styles.outlineButton}>Let’s make a book</Link></div></section>
         </main>
-        <footer className={styles.footer}><div className={styles.footerTop}><h2>Making books that<br />bring trips back.</h2><nav aria-label="Footer"><div><a href="#how-it-works">How it works</a><a href="#your-way">Make it yours</a><Link href="/photobooks">My albums</Link></div><div><Link href="/photobooks/create">Make a book</Link><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link></div></nav></div><Link href="/" className={styles.footerWordmark} aria-label="Itinero home">itinero</Link><div className={styles.footerBottom}><span>© {new Date().getFullYear()} Itinero</span><span>For the trips that stay with you.</span></div></footer>
-    </div>;
+        <footer className={styles.footer}><div className={styles.footerTop}><h2>Making books that<br />bring trips back.</h2><nav aria-label="Footer"><div><a href="#how-it-works">How it works</a><a href="#your-way">Make it yours</a><Link prefetch={false} href="/photobooks">My albums</Link></div><div><Link prefetch={false} href="/photobooks/create">Make a book</Link><Link prefetch={false} href="/terms">Terms</Link><Link prefetch={false} href="/privacy">Privacy</Link></div></nav></div><Link prefetch={false} href="/" className={styles.footerWordmark} aria-label="Itinero home">itinero</Link><div className={styles.footerBottom}><span>© {new Date().getFullYear()} Itinero</span><span>For the trips that stay with you.</span></div></footer>
+    </div></LazyMotion>;
 }

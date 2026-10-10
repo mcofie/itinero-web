@@ -6,6 +6,13 @@ import { routing } from "@/i18n/routing";
 const intlMiddleware = createMiddleware(routing);
 
 export async function middleware(request: NextRequest) {
+    // The public landing page does not read session state. Avoid an auth roundtrip;
+    // authenticated app routes still refresh and validate the session below.
+    const pathname = request.nextUrl.pathname.replace(/\/$/, "");
+    if (pathname === "" || pathname === "/make-album" || routing.locales.some(locale => pathname === `/${locale}` || pathname === `/${locale}/make-album`)) {
+        return intlMiddleware(request);
+    }
+
     let response = NextResponse.next({
         request: {
             headers: request.headers,

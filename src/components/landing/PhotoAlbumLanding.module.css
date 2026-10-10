@@ -1,7 +1,4 @@
-@font-face{font-family:AlbumGelica;src:url('/fonts/landing/gelica-regular.woff2') format('woff2');font-weight:400;font-display:swap}
-@font-face{font-family:AlbumHand;src:url('/fonts/landing/handwritten.woff2') format('woff2');font-display:swap}
-@font-face{font-family:AlbumRound;src:url('/fonts/landing/lilita-one.ttf') format('truetype');font-weight:400;font-display:swap}
-.site{position:relative;--paper:#fdfbf9;--ink:#2b1a07;--orange:#ed7936;background:var(--paper);color:var(--ink);font-family:AlbumGelica,Georgia,serif;overflow:clip;color-scheme:light}
+.site{position:relative;--paper:#fdfbf9;--ink:#2b1a07;--orange:#ed7936;background:var(--paper);color:var(--ink);font-family:var(--font-album-serif),Georgia,serif;overflow:clip;color-scheme:light}
 .site *{box-sizing:border-box}
 :global(html):has(.site){scroll-behavior:auto}
 .site h1,.site h2,.site h3,.site p{margin:0;font-weight:400}
@@ -9,7 +6,7 @@
 .site button,.site a{-webkit-tap-highlight-color:transparent}
 .site a:focus-visible,.site button:focus-visible{outline:3px solid #ed7936;outline-offset:7px}
 .site ::selection{background:#ffe4a0;color:#2b1a07}
-.handwriting{font-family:AlbumHand,'Comic Sans MS',cursive!important;color:var(--orange);font-size:28px;line-height:1.2}
+.handwriting{font-family:var(--font-album-hand),'Comic Sans MS',cursive!important;color:var(--orange);font-size:28px;line-height:1.2}
 .header{position:fixed;top:0;left:0;z-index:40;width:100%;padding:28px 3.4%;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
 .header>a{pointer-events:auto}
 .logo{width:54px;height:58px;filter:drop-shadow(0 2px 1px #2b1a071b);transition:transform .2s}
@@ -19,16 +16,26 @@
 .outlineButton:hover{background:#fff2d8;transform:rotate(-2deg)}
 .skipLink{position:fixed;top:12px;left:90px;z-index:100;padding:12px;background:#fff;transform:translateY(-160%)}
 .skipLink:focus{transform:none}
-.heroJourney{position:relative;height:210svh;min-height:1300px}
+.heroJourney{position:relative;height:var(--hero-height,210svh);min-height:0}
 .heroSticky{height:100svh;min-height:700px;position:sticky;top:0;overflow:hidden;perspective:2400px}
 .heroCopy{position:absolute;z-index:3;left:14%;top:10.5%;pointer-events:none}
 .heroCopy>.handwriting{font-size:24px;margin-bottom:0}
-.heroCopy h1{font-family:AlbumRound,'Arial Rounded MT Bold',sans-serif;font-size:clamp(90px,7.2vw,120px);line-height:.77;letter-spacing:-.035em;margin-left:-5px}
+.heroCopy h1{font-family:var(--font-album-round),'Arial Rounded MT Bold',sans-serif;font-size:clamp(90px,7.2vw,120px);line-height:.77;letter-spacing:-.035em;margin-left:-5px}
 .heroCopy h1>span{display:block}
 .heroCopy h1>span+span{margin-top:0}
-.titlePeriod{color:var(--ink)}
+.heroGreeting{animation:heroGreetingIn .65s ease-out both}
+.heroLetter{display:inline-block;animation:heroLetterIn .75s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--letter-delay);transform-origin:50% 85%}
+.titlePeriod{display:inline-block;color:var(--orange);animation:heroDotIn .65s cubic-bezier(.2,.8,.2,1) .8s both}
+@keyframes heroLetterIn{from{opacity:1;transform:translateY(24px) rotate(7deg)}to{opacity:1;transform:translateY(0) rotate(0)}}
+@keyframes heroGreetingIn{from{opacity:1;transform:translateY(8px) rotate(-3deg)}to{opacity:1;transform:translateY(0) rotate(0)}}
+@keyframes heroDotIn{0%{opacity:0;transform:translateY(-20px) scale(.65)}65%{opacity:1;transform:translateY(3px) scale(1.12,.88)}100%{opacity:1;transform:translateY(0) scale(1)}}
 .heroSubtitle{font-size:28px;line-height:1.4!important;margin-top:46px!important;letter-spacing:-.035em}
 .heroSubtitle .handwriting{display:inline-block;font-size:29px;transform:rotate(-5deg);margin-left:10px;letter-spacing:0}
+.heroActually{position:relative}
+.heroActually svg{position:absolute;left:-4%;bottom:-8px;width:108%;height:14px;overflow:visible}
+.heroActually path{stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:0;animation:heroUnderlineIn .85s ease-out .65s both}
+@keyframes heroUnderlineIn{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@media(prefers-reduced-motion:reduce){.heroGreeting,.heroLetter,.titlePeriod,.heroActually path{animation:none}}
 .heroAction{position:absolute;left:14.4%;bottom:8.5%;z-index:5}
 .heroAction p{font-family:var(--font-geist-sans),Arial,sans-serif;color:#918a7d;font-size:16px;margin-top:28px}
 .heroBook{position:absolute;top:51%;left:42%;width:44vw;max-width:760px;aspect-ratio:.69;transform-origin:0 0;transform-style:preserve-3d;will-change:transform}
@@ -39,13 +46,13 @@
 .sticker{width:90px;height:90px;filter:drop-shadow(1px 3px 1px #0002)}
 .pageFlower{position:absolute;left:12%;bottom:17%;width:19%;height:auto;transform:rotate(-14deg)}
 .pageHeart{position:absolute;right:10%;bottom:17%;width:16%;height:auto;transform:rotate(15deg)}
-.pagePrompt{position:absolute;bottom:8%;left:0;width:100%;text-align:center;font-family:AlbumHand,cursive;font-size:19px;letter-spacing:.08em}
+.pagePrompt{position:absolute;bottom:8%;left:0;width:100%;text-align:center;font-family:var(--font-album-hand),cursive;font-size:19px;letter-spacing:.08em}
 .turningCover{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d}
 .coverFront,.coverBack{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform-style:preserve-3d}
 .coverBack{transform:rotateY(180deg);border-radius:5px 2px 2px 5px;background:linear-gradient(90deg,#ffffff12,transparent 93%,#00000018),var(--hero-cover-color,#dfad3e);box-shadow:inset 5px 4px 12px #e9c79a70}
 .coverBack>svg{position:absolute;bottom:7%;left:10%;width:11%;opacity:.2;mix-blend-mode:multiply}
 .backPocket{position:absolute;left:7%;right:6%;bottom:6%;height:40%;border-bottom:2px solid #84633f;border-left:1px solid #84633f50;border-radius:0 0 0 15px;background:linear-gradient(125deg,transparent,#c7a47c35)}
-.openBookLink{position:absolute;bottom:6%;left:0;width:100%;text-align:center;font:25px AlbumHand,cursive;color:#4d3b24}
+.openBookLink{position:absolute;bottom:6%;left:0;width:100%;text-align:center;font:25px var(--font-album-hand),cursive;color:#4d3b24}
 .reassurance{position:relative;padding:110px 6% 65px;min-height:670px;text-align:center}
 .reassurance h2{font-size:40px;line-height:1.5;letter-spacing:-.03em}
 .stickyNotes{display:flex;justify-content:center;gap:3%;padding-top:94px}
@@ -53,7 +60,7 @@
 .stickyNote:after{content:'';position:absolute;left:0;right:0;top:0;height:18%;background:linear-gradient(#caae3425,transparent)}
 .stickyNote:nth-child(2){rotate:-5deg;translate:0 -32px}.stickyNote:nth-child(3){rotate:0deg;translate:0 10px}.stickyNote:nth-child(4){rotate:4deg;translate:0 -20px}
 .stickyNote svg{width:37px;height:37px;stroke-width:1.5;transform:rotate(-9deg)}
-.stickyNote p{font:clamp(20px,2.2vw,33px)/1.25 AlbumHand,cursive;margin-top:20px}
+.stickyNote p{font:clamp(20px,2.2vw,33px)/1.25 var(--font-album-hand),cursive;margin-top:20px}
 .featureScene{position:relative;min-height:600px;aspect-ratio:3/2;scroll-margin-top:0;overflow:hidden;background:#f2e7d4}
 .sceneArt{position:absolute;inset:0}
 .heldAlbumPhoto{object-fit:cover;object-position:left center}
@@ -63,7 +70,7 @@
 .featureCard h2{font-size:36px;line-height:1.2;padding:0 31px 42px;letter-spacing:-.025em}
 .featureCard h2 span{color:var(--scene-accent)}
 .featureCard button{display:flex;justify-content:space-between;align-items:center;gap:16px;width:100%;padding:15px 30px;border-top:1px solid #e2dcd5;color:#382d20;cursor:pointer;font-family:var(--font-geist-sans),Arial,sans-serif;font-size:19px;line-height:1.3;text-align:left;transition:color .2s,background .2s}
-.featureCard button>span:last-child{font:20px AlbumGelica,serif;min-width:23px;text-align:center;color:#3a3024}
+.featureCard button>span:last-child{font:20px var(--font-album-serif),serif;min-width:23px;text-align:center;color:#3a3024}
 .featureCard button[aria-selected=true]{color:var(--scene-accent)}
 .featureCard button:hover{background:#eee8df70}
 .sky .featureCard{left:auto;right:3vw}
@@ -71,7 +78,7 @@
 .otherHeading{position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);text-align:center}
 .otherHeading>span{display:block;font-size:25px;margin-bottom:8px}
 .otherHeading h2{font-size:34px;white-space:nowrap}
-.doodle{position:absolute;text-align:center;font:25px/1.12 AlbumHand,cursive;transform:rotate(-6deg)}
+.doodle{position:absolute;text-align:center;font:25px/1.12 var(--font-album-hand),cursive;transform:rotate(-6deg)}
 .doodle svg{width:72px;height:72px;stroke-width:1.4;margin:0 auto 16px}
 .doodle:nth-of-type(2){left:8%;top:12%;rotate:-5deg}.doodle:nth-of-type(3){left:27%;top:4%;rotate:12deg}.doodle:nth-of-type(4){right:26%;top:5%;rotate:-7deg}.doodle:nth-of-type(5){right:8%;top:18%;rotate:10deg}.doodle:nth-of-type(6){left:8%;bottom:20%;rotate:9deg}.doodle:nth-of-type(7){left:31%;bottom:11%;rotate:-3deg}.doodle:nth-of-type(8){right:24%;bottom:12%;rotate:10deg}.doodle:nth-of-type(9){right:6%;bottom:24%;rotate:-2deg}
 
@@ -106,7 +113,7 @@
 .footerTop nav{display:flex;gap:95px;padding:4px 1% 0;font:18px/1.4 var(--font-geist-sans),Arial,sans-serif}
 .footerTop nav>div{display:flex;flex-direction:column;gap:22px}
 .footer a:hover{text-decoration:underline;text-underline-offset:6px}
-.footerWordmark{display:block;font:clamp(170px,29vw,580px)/1 AlbumRound,sans-serif;letter-spacing:-.045em;color:#d15f26;text-shadow:0 2px 2px #f78e5466,0 -2px 3px #a33f1950;margin:40px -5px 20px;text-align:center}
+.footerWordmark{display:block;font:clamp(170px,29vw,580px)/1 var(--font-album-round),sans-serif;letter-spacing:-.045em;color:#d15f26;text-shadow:0 2px 2px #f78e5466,0 -2px 3px #a33f1950;margin:40px -5px 20px;text-align:center}
 .footerWordmark:hover{text-decoration:none!important}
 .footerBottom{font:12px/1.5 var(--font-geist-sans),Arial,sans-serif;display:flex;justify-content:space-between;gap:20px;color:#ffeddd}
 .reducedMotion .heroJourney{height:100svh;min-height:700px}.reducedMotion .heroBook{transform:rotate(-20deg)}
@@ -152,7 +159,7 @@
     .showcaseLeft{left:4%;top:15%;transform:rotate(-13deg)}
     .showcaseRight{right:4%;top:15%;transform:rotate(13deg)}
     .mobileShowcase>.showcaseFront{left:26%;top:3%;width:48%;transform:rotate(-3deg);z-index:2}
-    .showcaseCaption{position:absolute;bottom:8px;left:0;width:100%;text-align:center;font:21px AlbumHand,cursive;color:#ac744e}
+    .showcaseCaption{position:absolute;bottom:8px;left:0;width:100%;text-align:center;font:21px var(--font-album-hand),cursive;color:#ac744e}
     .reassurance{min-height:0;padding:65px 7% 60px}
     .reassurance h2{font-size:30px;line-height:1.45}
     .stickyNotes{padding-top:48px;gap:26px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-width:560px;margin:auto}
@@ -201,7 +208,7 @@
 .coverHeading{position:absolute;left:34%;top:40%;width:33%;text-align:center;z-index:5}
 .coverHeading>.handwriting{display:block;font-size:27px;margin-bottom:24px}
 .coverHeading h2{font-size:clamp(38px,3.2vw,52px);line-height:1.2}
-.coverNote{position:absolute;z-index:4;font:24px/1.15 AlbumHand,cursive;text-align:center;color:#392b19}
+.coverNote{position:absolute;z-index:4;font:24px/1.15 var(--font-album-hand),cursive;text-align:center;color:#392b19}
 .drawnArrow{display:block;width:76px;height:60px;margin:14px auto 0}
 .lemonNote{left:31%;top:14%;rotate:-7deg}.lemonNote .drawnArrow{transform:scaleX(-1);margin-left:0}
 .teaNote{right:29%;bottom:15%;rotate:-6deg}
@@ -211,7 +218,7 @@
 .romeNote{right:0;top:12%;rotate:7deg}
 .loosePhoto{position:absolute;padding:12px 12px 45px;background:#fffdf5;box-shadow:1px 5px 12px #4c35231c;z-index:3}
 .loosePhoto img{display:block;width:100%;height:100%;object-fit:cover}
-.loosePhoto span{position:absolute;bottom:12px;left:0;right:0;text-align:center;font:23px AlbumHand,cursive;color:#75614a}
+.loosePhoto span{position:absolute;bottom:12px;left:0;right:0;text-align:center;font:23px var(--font-album-hand),cursive;color:#75614a}
 .romePhoto{right:-2%;bottom:9%;width:29%;height:32%;rotate:12deg}
 .bookTokyo{left:6%;top:14%;width:38%;--book-angle:7deg}
 .tokyoNote{right:14%;top:12%;rotate:-5deg}
@@ -221,7 +228,7 @@
 .bookVietnam{left:0;top:4%;width:37%;--book-angle:-6deg}
 .bookAmsterdam{right:2%;top:22%;width:37%;--book-angle:9deg}
 .finalNote{left:35%;top:59%;width:27%;rotate:-5deg;font-size:29px}
-.coverStart{display:inline-block;margin-top:28px;border-bottom:1px solid #b9a793;padding:10px 0;font:16px AlbumGelica,Georgia,serif;rotate:5deg}
+.coverStart{display:inline-block;margin-top:28px;border-bottom:1px solid #b9a793;padding:10px 0;font:16px var(--font-album-serif),Georgia,serif;rotate:5deg}
 @media(min-width:901px) and (max-height:760px){
  .scatteredBook{max-width:49svh}.bookItaly{left:0}.bookIstanbul{right:0}.bookRome{left:19%}.bookTokyo{left:10%}.bookVietnam{left:7%}.bookAmsterdam{right:6%}
 }
