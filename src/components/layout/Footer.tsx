@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
-import { Plane, Heart } from "lucide-react";
+import { BookOpen, Heart } from "lucide-react";
 import { LocaleSwitcher } from "@/components/layout/LocaleSwitcher";
 import { cn } from "@/lib/utils";
 
@@ -17,13 +17,13 @@ export function Footer({ className }: { className?: string }) {
                 <div className="flex flex-col md:flex-row justify-between items-center gap-10">
                     <div className="flex flex-col items-center md:items-start gap-4">
                         <Link href="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-slate-900 dark:text-white group">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
-                                <Plane className="h-4 w-4" />
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#34463b] text-white shadow-lg shadow-[#34463b]/20 group-hover:scale-110 transition-transform">
+                                <BookOpen className="h-4 w-4" />
                             </div>
                             Itinero
                         </Link>
                         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs text-center md:text-left leading-relaxed">
-                            Plan smarter trips with AI. Build complete itineraries in minutes.
+                            Turn the photos from your favorite trips into a beautiful book you can hold onto.
                         </p>
                     </div>
 
@@ -35,11 +35,8 @@ export function Footer({ className }: { className?: string }) {
                             <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-widest text-[10px]">
                                 {tFooter("privacy")}
                             </Link>
-                            <Link href="/destinations" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-widest text-[10px]">
-                                {tFooter("destinations")}
-                            </Link>
-                            <Link href="/rewards" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-widest text-[10px]">
-                                {tFooter("rewards")}
+                            <Link href="/photobooks" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-widest text-[10px]">
+                                Photo books
                             </Link>
                             <Link href="/pricing" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors uppercase tracking-widest text-[10px]">
                                 {tFooter("pricing")}

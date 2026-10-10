@@ -27,12 +27,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
     title: {
         template: "%s | Itinero",
-        default: "Itinero - Plan Smarter Trips",
+        default: "Itinero — Turn Your Trip Photos Into a Book",
     },
-    description: "Plan smarter trips in minutes. Build complete itineraries with activities, routes, and budgets in one place.",
+    description: "Turn the photos from your favorite trips into beautiful printed photo books. Choose your photos, make it yours, and keep the memories close.",
     openGraph: {
-        title: "Itinero - Plan Smarter Trips",
-        description: "Build complete itineraries with activities, routes, and budgets in one place.",
+        title: "Itinero — Turn Your Trip Photos Into a Book",
+        description: "Turn your favorite travel photos into a beautiful printed photo book.",
         url: "https://itinero.app",
         siteName: "Itinero",
         locale: "en_US",
@@ -40,8 +40,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: "summary_large_image",
-        title: "Itinero - Plan Smarter Trips",
-        description: "Build complete itineraries with activities, routes, and budgets in one place.",
+        title: "Itinero — Turn Your Trip Photos Into a Book",
+        description: "Turn your favorite travel photos into a beautiful printed photo book.",
     },
 };
 

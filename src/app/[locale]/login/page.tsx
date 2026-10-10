@@ -7,7 +7,7 @@ import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 import { toast } from "sonner";
-import { Loader2, Plane, ShieldCheck, ArrowLeft, Star } from "lucide-react";
+import { Loader2, BookOpen, ImagePlus, ArrowLeft, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import Script from "next/script";
 import { handleGoogleAuthAction } from "@/app/actions/google-auth";
@@ -30,14 +30,14 @@ export default function LoginPage() {
         (async () => {
             const { data } = await sb.auth.getSession();
             if (data.session) {
-                router.replace("/trips");
+                router.replace("/photobooks");
                 router.refresh();
             }
         })();
 
         const { data: sub } = sb.auth.onAuthStateChange((evt) => {
             if (evt === "SIGNED_IN") {
-                router.replace("/trips");
+                router.replace("/photobooks");
                 router.refresh();
             }
         });
@@ -50,7 +50,7 @@ export default function LoginPage() {
             await handleGoogleAuthAction(response.credential);
             toast.success(tAuth("successSignIn"));
             router.refresh();
-            router.replace("/trips");
+            router.replace("/photobooks");
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
             toast.error(tAuth("errorGoogle"), { description: msg });
@@ -156,7 +156,7 @@ export default function LoginPage() {
                     <div className="flex flex-col items-center mb-10 text-center">
                         <Link href="/" className="inline-flex items-center gap-2.5 font-bold text-2xl tracking-tight text-slate-900 dark:text-white group mb-6">
                             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                                <Plane className="h-5 w-5" />
+                                <BookOpen className="h-5 w-5" />
                             </div>
                             Itinero
                         </Link>
@@ -170,7 +170,7 @@ export default function LoginPage() {
                                 Welcome Back
                             </h1>
                             <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed max-w-sm mx-auto">
-                                Sign in to access your curated trips and AI travel plans.
+                                Sign in to create a photo book or pick up where you left off.
                             </p>
                         </motion.div>
                     </div>
@@ -199,7 +199,7 @@ export default function LoginPage() {
 
                             <div className="flex items-center gap-4">
                                 <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Trusted by 10k+ Travelers</span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Your next photo book starts here</span>
                                 <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
                             </div>
 
@@ -207,15 +207,15 @@ export default function LoginPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center gap-2 group transition-colors">
                                     <div className="h-10 w-10 rounded-full bg-white dark:bg-emerald-900/20 shadow-sm flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                                        <ShieldCheck className="h-5 w-5" />
+                                        <ImagePlus className="h-5 w-5" />
                                     </div>
-                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Bank-Level Security</span>
+                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Your favourite photos</span>
                                 </div>
                                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center gap-2 group transition-colors">
                                     <div className="h-10 w-10 rounded-full bg-white dark:bg-amber-900/20 shadow-sm flex items-center justify-center text-amber-600 dark:text-amber-400">
-                                        <Star className="h-5 w-5" />
+                                        <Heart className="h-5 w-5" />
                                     </div>
-                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Top Rated App</span>
+                                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Made into memories</span>
                                 </div>
                             </div>
                         </div>

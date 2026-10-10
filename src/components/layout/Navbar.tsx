@@ -25,12 +25,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     LogOut,
     User,
-    Calendar,
-    Star,
     Plus,
     Menu,
     Sparkles,
-    Plane,
+    BookOpen,
     CreditCard,
     Bell,
 } from "lucide-react";
@@ -45,10 +43,9 @@ type Props = {
     onLogout?: () => void;
 };
 
-export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }: Props) {
+export function Navbar({ userEmail, avatarUrl, fullName, onLogout }: Props) {
     const pathname = usePathname();
     const tNav = useTranslations("Navigation");
-    const tActions = useTranslations("Actions");
 
     const initials = (email?: string | null, name?: string | null) => {
         if (name) {
@@ -83,13 +80,13 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                             <SheetHeader className="sr-only">
                                 <SheetTitle>Navigation Menu</SheetTitle>
                                 <SheetDescription>
-                                    Access your trips, rewards, and profile.
+                                    Access your photo books and profile.
                                 </SheetDescription>
                             </SheetHeader>
                             <div className="p-6 border-b border-slate-100 dark:border-slate-800">
-                                <Link href={userEmail ? "/trips" : "/"} className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
-                                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
-                                        <Plane className="h-4 w-4" />
+                                <Link href={userEmail ? "/photobooks" : "/"} className="flex items-center gap-2 font-bold text-xl tracking-tight text-[#34463b]">
+                                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#34463b] text-white">
+                                        <BookOpen className="h-4 w-4" />
                                     </span>
                                     Itinero
                                 </Link>
@@ -97,18 +94,8 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                             <div className="p-4 flex flex-col gap-1">
                                 {userEmail ? (
                                     <>
-                                        <MobileNavItem href="/trips" active={pathname?.startsWith("/trips")}>
-                                            <Calendar className="mr-3 h-4 w-4" /> {tNav("trips")}
-                                        </MobileNavItem>
-                                        <MobileNavItem href="/preview" active={pathname === "/preview"}>
-                                            <Sparkles className="mr-3 h-4 w-4" /> {tNav("preview")}
-                                            {hasPreview && <span className="ml-auto h-2 w-2 rounded-full bg-blue-500 animate-pulse" />}
-                                        </MobileNavItem>
-                                        <MobileNavItem href="/rewards" active={pathname === "/rewards"}>
-                                            <Star className="mr-3 h-4 w-4" /> {tNav("rewards")}
-                                        </MobileNavItem>
                                         <MobileNavItem href="/photobooks" active={pathname?.startsWith("/photobooks")}>
-                                            <Sparkles className="mr-3 h-4 w-4" />
+                                            <BookOpen className="mr-3 h-4 w-4" />
                                             <div className="flex items-center gap-2">
                                                 {tNav("photobook")}
                                                 <span className="bg-rose-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded-full tracking-widest leading-none">NEW</span>
@@ -119,8 +106,8 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                                         </MobileNavItem>
                                         <div className="mt-4 p-2">
                                             <Button className="w-full rounded-full bg-blue-600 font-semibold" asChild>
-                                                <Link href="/trip-maker">
-                                                    <Plus className="mr-2 h-4 w-4" /> {tActions("newTrip")}
+                                                <Link href="/photobooks/create">
+                                                    <Plus className="mr-2 h-4 w-4" /> Make a photo book
                                                 </Link>
                                             </Button>
                                         </div>
@@ -138,9 +125,9 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                         </SheetContent>
                     </Sheet>
 
-                    <Link href={userEmail ? "/trips" : "/"} className="flex items-center gap-2 font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-500">
-                            <Plane className="h-4 w-4" />
+                    <Link href={userEmail ? "/photobooks" : "/"} className="flex items-center gap-2 font-bold text-xl tracking-tight text-[#34463b]">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#34463b] text-white">
+                            <BookOpen className="h-4 w-4" />
                         </span>
                         Itinero
                     </Link>
@@ -150,16 +137,6 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                 <nav className="hidden md:flex items-center gap-1">
                     {userEmail ? (
                         <>
-                            <NavItem href="/preview" active={pathname === "/preview"}>
-                                {tNav("preview")}
-                                {hasPreview && <span className="ml-1.5 h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />}
-                            </NavItem>
-                            <NavItem href="/trips" active={pathname?.startsWith("/trips")}>
-                                {tNav("trips")}
-                            </NavItem>
-                            <NavItem href="/rewards" active={pathname === "/rewards"}>
-                                {tNav("rewards")}
-                            </NavItem>
                             <NavItem href="/photobooks" active={pathname?.startsWith("/photobooks")}>
                                 <div className="flex items-center gap-2">
                                     {tNav("photobook")}
@@ -179,9 +156,9 @@ export function Navbar({ userEmail, avatarUrl, fullName, hasPreview, onLogout }:
                         <>
                             <div className="hidden sm:flex">
                                 <Button size="sm" asChild className="h-9 items-center gap-2 rounded-full bg-blue-600 px-4 text-xs font-bold uppercase tracking-wide text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md dark:bg-blue-500 dark:hover:bg-blue-400">
-                                    <Link href="/trip-maker">
+                                    <Link href="/photobooks/create">
                                         <Plus className="h-3.5 w-3.5" strokeWidth={3} />
-                                        {tActions("newTrip")}
+                                        Make a photo book
                                     </Link>
                                 </Button>
                             </div>
