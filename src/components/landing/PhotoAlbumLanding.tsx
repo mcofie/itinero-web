@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { BookOpen, Camera, Heart, ImagePlus, Layers, MapPin, Pencil, Plus, Smile, Sun } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import styles from "./PhotoAlbumLanding.module.css";
+import TravelAlbumCover from "./TravelAlbumCover";
+import type { OverheadAlbum } from "@/lib/overhead-albums";
+import { TRAVEL_COVERS_BY_ID, type FeaturedTravelCovers, type TravelCoverId } from "@/lib/travel-covers";
 
 const photos = ["/collage_image_1.png", "/collage_image_2.png", "/collage_image_3.png", "/collage_image_4.png", "/images/how-it-works.png"];
 const roman = ["I", "II", "III", "IV", "V"];
@@ -23,76 +26,60 @@ function CameraMark() {
     return <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M10 21L21 20L25 12L40 13L44 21L54 22L55 49Q31 54 9 48Z" fill="#fffcf6" stroke="#fffcf6" strokeWidth="10" strokeLinejoin="round" /><path d="M10 21L21 20L25 12L40 13L44 21L54 22L55 49Q31 54 9 48Z" fill="#fffcf6" stroke="#302514" strokeWidth="3" strokeLinejoin="round" /><path d="M24 31C33 22 45 29 43 38C43 48 25 49 23 39C22 35 23 32 24 31Z" fill="none" stroke="#302514" strokeWidth="3" /><path d="M46 28L49 28M27 17L36 17" stroke="#302514" strokeWidth="3" strokeLinecap="round" /></svg>;
 }
 
-function AlbumCover({ title = "Italy", year = "2025", color = "brown", decoration = false }: { title?: string; year?: string; color?: string; decoration?: boolean }) {
-    return <div className={`${styles.albumCover} ${styles[color] || ""}`}>
-        <div className={styles.coverGrain} />
-        <div className={styles.coverLabel}><div className={styles.labelTitle}><small>Our trip to</small><span>{title}</span></div><div className={styles.labelBottom}><span>Year <b>{year}</b></span><span>Volume <b>01</b></span></div></div>
-        {decoration && <Sticker kind={color === "pink" ? "heart" : "flower"} color={color === "pink" ? "#ed7067" : "#8ec44f"} className={styles.coverSticker} />}
-        <span className={styles.embossedMark}><CameraMark /></span>
-    </div>;
-}
 
-function Hero() {
+function Hero({ covers }: { covers: FeaturedTravelCovers }) {
     const ref = useRef<HTMLDivElement>(null);
     const reduced = useReducedMotion();
-    const [mobile, setMobile] = useState(false);
-    useEffect(() => {
-        const query = window.matchMedia("(max-width: 700px)");
-        const sync = () => setMobile(query.matches);
-        sync();
-        query.addEventListener("change", sync);
-        return () => query.removeEventListener("change", sync);
-    }, []);
     const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
-    const rotate = useTransform(scrollYProgress, [0, .6], [-20, 0]);
-    const x = useTransform(scrollYProgress, [0, .6], ["0%", mobile ? "28%" : "18%"]);
-    const y = useTransform(scrollYProgress, [0, .6], ["0%", mobile ? "-110%" : "-30%"]);
-    const scale = useTransform(scrollYProgress, [0, .6], [1, mobile ? .55 : .77]);
-    const coverRotate = useTransform(scrollYProgress, [.28, .8], [0, -177]);
-    const copyOpacity = useTransform(scrollYProgress, [0, .24], [1, 0]);
+    const y = useTransform(scrollYProgress, [0, 1], ["0%", "-155%"]);
 
-    return <section ref={ref} className={styles.heroJourney} aria-label="Meet Itinero">
+    return <section ref={ref} className={styles.heroJourney} aria-label="Meet Itinero" style={{ "--hero-cover-color": TRAVEL_COVERS_BY_ID[covers[0]].color } as CSSProperties}>
         <div className={styles.heroSticky}>
-            <motion.div className={styles.heroCopy} style={{ opacity: reduced ? 1 : copyOpacity }}>
+            <div className={styles.heroCopy}>
                 <p className={styles.handwriting}>Dear travellers,</p>
                 <h1><span>meet</span><span>itinero<span className={styles.titlePeriod}>.</span></span></h1>
                 <p className={styles.heroSubtitle}>It’s a photo album that <span className={styles.handwriting}>actually!</span><br />brings your trips back.</p>
-            </motion.div>
-            <motion.div className={styles.heroAction} style={{ opacity: reduced ? 1 : copyOpacity }}>
+            </div>
+            <div className={styles.heroAction}>
                 <Link href="/photobooks/create" className={styles.outlineButton}>Make mine!</Link>
-                <p>Your photos. A real, hold-it-in-your-hands book.</p>
-            </motion.div>
-            <motion.div className={styles.heroBook} style={reduced ? undefined : { rotate, x, y, scale }} aria-hidden="true">
-                <div className={styles.bookPageBlock}><div className={styles.insidePage}><span className={styles.handwriting}>Hello, memories!</span><div className={styles.welcomeTitle}>Welcome<br />back to<br />your trip.</div><Sticker kind="flower" color="#b2da72" className={styles.pageFlower} /><Sticker kind="heart" color="#e76c67" className={styles.pageHeart} /><span className={styles.pagePrompt}>IT ALL STARTS WITH YOUR PHOTOS</span></div></div>
-                <motion.div className={styles.turningCover} style={reduced ? undefined : { rotateY: coverRotate }}><div className={styles.coverFront}><AlbumCover /></div><div className={styles.coverBack}><div className={styles.backPocket} /><CameraMark /></div></motion.div>
-                <div className={styles.pencil}><span /><i /></div>
+                <p>Your favourite photos. Beautifully bound.</p>
+            </div>
+            <div className={styles.mobileShowcase} aria-hidden="true">
+                <div className={styles.showcaseLeft}><TravelAlbumCover design={covers[1]} eager /></div>
+                <div className={styles.showcaseRight}><TravelAlbumCover design={covers[2]} eager /></div>
+                <div className={styles.showcaseFront}><TravelAlbumCover design={covers[0]} eager /></div>
+                <span className={styles.showcaseCaption}>a little piece of somewhere wonderful</span>
+            </div>
+            <motion.div className={styles.heroBook} style={{ rotate: -20, y: reduced ? 0 : y }} aria-hidden="true">
+                <TravelAlbumCover design={covers[0]} eager />
             </motion.div>
         </div>
     </section>;
 }
 
 const features = [
-    { scene: "meadow", intro: "It’s kinda like", accent: "a time machine", color: "#57ad61", items: ["All your favourite moments", "The places you wandered", "The people who came along", "The little things in between", "A story you can hold"], notes: ["A trip worth remembering", "Somewhere we got lost", "Together is a good place", "The little moments", "Take me back"] },
-    { scene: "sky", intro: "Your photos,", accent: "in real life.", color: "#4183d9", items: ["Pick photos from your trip", "Choose a cover you love", "Put your story in order", "Add your own words", "Preview every page"], notes: ["Our favourite escape", "A cover of our own", "One day at a time", "Wish you were here", "Every page, a memory"] },
-    { scene: "desk", intro: "A little book with", accent: "a lot of feeling", color: "#d16ba4", items: ["Made for your coffee table", "Made for a rainy afternoon", "Made to pass around", "Made for someone you love", "Made to go back to"], notes: ["The best days", "A little sunshine", "Remember when?", "For you, with love", "Let’s do it all again"] },
+    { scene: "sky", intro: "Your photos,", accent: "in real life.", color: "#4183d9", items: ["Pick photos from your trip", "Choose a cover you love", "Put your story in order", "Add your own words", "Preview every page"] },
 ];
 
-function FeatureScene({ feature, index }: { feature: typeof features[number]; index: number }) {
+function OverheadPhoto({ album }: { album: OverheadAlbum }) {
+    const ref = useRef<HTMLDivElement>(null);
+    const reduced = useReducedMotion();
+    const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+    const y = useTransform(scrollYProgress, [0, 1], ["-4%", "4%"]);
+
+    return <div ref={ref} className={styles.overheadPhoto}>
+        <motion.div className={styles.overheadParallax} style={{ y: reduced ? 0 : y, inset: reduced ? 0 : undefined }}>
+            <Image src={album.src} alt={`Overhead view of a Black woman's hand holding the ${album.country} photo album above a white table with a potted plant`} fill sizes="100vw" className={styles.heldAlbumPhoto} unoptimized />
+        </motion.div>
+    </div>;
+}
+
+function FeatureScene({ feature, index, album }: { feature: typeof features[number]; index: number; album: OverheadAlbum }) {
     const [active, setActive] = useState(0);
     const id = `album-scene-${index}`;
-    const matrices = ["matrix(.58 .147 -.285 .803 545 146)", "matrix(.57 -.095 .117 .915 321 118)", "matrix(.54 0 0 .89 462 129)"];
     return <section id={index === 0 ? "how-it-works" : undefined} className={`${styles.featureScene} ${styles[feature.scene]}`} style={{ "--scene-accent": feature.color } as CSSProperties}>
         <div id={id} className={styles.sceneArt} role="tabpanel" aria-labelledby={`${id}-tab-${active}`}>
-            <svg viewBox="0 0 900 506.25" preserveAspectRatio="xMidYMid slice" role="img" aria-label={`${feature.notes[active]} — travel photos in an album`}>
-                <rect width="900" height="507" fill="#fff9ed" />
-                <g transform={matrices[index]}>
-                    <rect x="-8" y="-8" width="325" height="330" fill="#fffaf0" />
-                    <image href={photos[(active + index) % photos.length]} x="15" y="18" width="270" height="220" preserveAspectRatio="xMidYMid slice" />
-                    <text x="150" y="272" textAnchor="middle" className={styles.sceneCaption}>{feature.notes[active]}</text>
-                    <text x="150" y="298" textAnchor="middle" className={styles.scenePageNumber}>— {active + 1} —</text>
-                </g>
-                <image href={`/images/landing/${feature.scene}.webp`} width="900" height="506.25" />
-            </svg>
+            <OverheadPhoto album={album} />
         </div>
         <div className={styles.featureCard}>
             <h2>{feature.intro}<br /><span>{feature.accent}</span></h2>
@@ -128,13 +115,55 @@ function OtherThings() {
     return <section className={styles.otherThings}><div className={styles.otherHeading}><span className={styles.handwriting}>soooo much<br />⌄</span><h2>And there’s other<br />good stuff!</h2></div>{things.map((item, i) => <div key={i} className={styles.doodle} style={{ "--doodle-index": i } as CSSProperties}>{item.icon}<p>{item.text}</p></div>)}</section>;
 }
 
-function OfflineSection() {
-    return <section className={styles.offline}><h2>A little more offline.</h2><p>Some things are better on paper.</p><div className={styles.notepaper}><span className={styles.handwriting}>The good kind of no.</span>{["no endless scrolling", "no forgotten folders", "no low-battery moments", "no notifications", "just your favourite people", "and places"].map((line, i) => <div key={line}><span>{i < 4 ? "×" : "♡"}</span>{line}</div>)}</div><div className={styles.offlineStar}><Sticker kind="star" color="#f5c44c" /><p>screen-free<br />reminiscing</p></div><div className={styles.offlineHeart}><Sticker kind="heart" color="#ef746c" /><p>made<br />with feeling</p></div></section>;
+function GalleryBook({ design, className }: { design: TravelCoverId; className: string }) {
+    const name = TRAVEL_COVERS_BY_ID[design].country;
+    return <Link href="/photobooks/create" className={`${styles.scatteredBook} ${className}`} aria-label={`Make your own photo album — ${name} cover`}>
+        <TravelAlbumCover design={design} />
+    </Link>;
 }
 
-function CoverGallery() {
-    const covers = [{ title: "Greece", color: "cloud", className: styles.galleryOne }, { title: "Paris", color: "pink", className: styles.galleryTwo }, { title: "Japan", color: "blue", className: styles.galleryThree }, { title: "Bali", color: "green", className: styles.galleryFour }, { title: "Ghana", color: "orange", className: styles.galleryFive }, { title: "Iceland", color: "grey", className: styles.gallerySix }];
-    return <section className={styles.coverGallery} id="your-way"><div className={styles.galleryHeading}><span className={styles.handwriting}>Like making</span><h2>Our photo book.<br />Our way.</h2></div>{covers.map(cover => <Link key={cover.title} href="/photobooks/create" className={`${styles.galleryAlbum} ${cover.className}`} aria-label={`Create your own ${cover.title} photo album`}><AlbumCover title={cover.title} color={cover.color} decoration /></Link>)}<span className={`${styles.galleryNote} ${styles.noteOne}`}>a little blue<br />for the big blue sea ↙</span><span className={`${styles.galleryNote} ${styles.noteTwo}`}>cute pinks ↗</span><span className={`${styles.galleryNote} ${styles.noteThree}`}>every trip deserves<br />its own cover</span><span className={`${styles.galleryNote} ${styles.noteFour}`}>and the little details<br />that make it yours ↗</span><Sticker color="#629de0" className={styles.galleryFlower} /><Sticker kind="heart" color="#ef796f" className={styles.galleryHeart} /><Sticker kind="star" color="#ffd35a" className={styles.galleryStar} /><div className={styles.travelStickers}>{["paris-tower", "italy-lemon", "palm-tree", "sun", "seashell", "mountains"].map(name => <Image key={name} src={`/images/photobooks/${name}.png`} width={130} height={130} alt="" />)}</div></section>;
+function DrawnArrow({ className = "" }: { className?: string }) {
+    return <svg className={`${styles.drawnArrow} ${className}`} viewBox="0 0 90 70" fill="none" aria-hidden="true"><path d="M8 6C7 44 34 58 77 47M65 38L80 47L69 60" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>;
+}
+
+function CoverGallery({ covers }: { covers: FeaturedTravelCovers }) {
+    const ref = useRef<HTMLElement>(null);
+    const reduced = useReducedMotion();
+    const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+    // Four scenes span 370vw; the last frame ends at the viewport edge.
+    const x = useTransform(scrollYProgress, [0, 1], ["0%", "-72.972973%"]);
+    return <section ref={ref} className={styles.coverJourney} id="your-way" aria-labelledby="cover-heading">
+        <div className={styles.coverViewport}>
+            <motion.div className={styles.coverTrack} style={{ x: reduced ? 0 : x }}>
+                <div className={`${styles.coverPanel} ${styles.coverOpening}`}>
+                    <GalleryBook design={covers[0]} className={styles.bookItaly} />
+                    <div className={styles.coverHeading}><span className={styles.handwriting}>Made for keeping</span><h2 id="cover-heading">Your album.<br />Your way.</h2></div>
+                    <GalleryBook design={covers[1]} className={styles.bookIstanbul} />
+                    <div className={`${styles.coverNote} ${styles.lemonNote}`}>somewhere unforgettable<DrawnArrow /></div>
+                    <div className={`${styles.coverNote} ${styles.teaNote}`}>your kind of colour<DrawnArrow /></div>
+                    <Sticker kind="flower" color="#a9c875" className={styles.coverFlower} />
+                    <Sticker kind="heart" color="#ec827d" className={styles.coverHeart} />
+                </div>
+                <div className={`${styles.coverPanel} ${styles.coverRome}`}>
+                    <GalleryBook design={covers[2]} className={styles.bookRome} />
+                    <div className={`${styles.coverNote} ${styles.romeNote}`}>for the places<br />you fell in love with<DrawnArrow /></div>
+                    <div className={`${styles.loosePhoto} ${styles.romePhoto}`}><Image src={photos[0]} width={400} height={450} alt="A sunlit Italian coastal town" /><span>take me back ♡</span></div>
+                </div>
+                <div className={`${styles.coverPanel} ${styles.coverTokyo}`}>
+                    <GalleryBook design={covers[3]} className={styles.bookTokyo} />
+                    <div className={`${styles.coverNote} ${styles.tokyoNote}`}>all those little moments.<br />a proper place to keep them.<DrawnArrow /></div>
+                    <div className={`${styles.loosePhoto} ${styles.memoryPhotoOne}`}><Image src={photos[1]} width={400} height={450} alt="A favourite view from a trip" /><span>the scenic route</span></div>
+                    <div className={`${styles.loosePhoto} ${styles.memoryPhotoTwo}`}><Image src={photos[2]} width={400} height={450} alt="A travel memory to print" /><span>remember this?</span></div>
+                    <Sticker kind="star" color="#f1c650" className={styles.coverStar} />
+                </div>
+                <div className={`${styles.coverPanel} ${styles.coverClosing}`}>
+                    <GalleryBook design={covers[4]} className={styles.bookVietnam} />
+                    <GalleryBook design={covers[5]} className={styles.bookAmsterdam} />
+                    <div className={`${styles.coverNote} ${styles.finalNote}`}>and a cover that<br />feels like you.<DrawnArrow /><Link href="/photobooks/create" className={styles.coverStart}>Make it yours ↗</Link></div>
+                </div>
+            </motion.div>
+        </div>
+    </section>;
 }
 
 const faqs = [
@@ -148,14 +177,13 @@ const faqs = [
     ["How do I get started?", "Choose ‘Make mine!’ to sign in and open the photo book studio. From there, you can upload photos and start putting your album together."],
 ];
 
-export default function PhotoAlbumLanding() {
+export default function PhotoAlbumLanding({ featuredCovers, overheadAlbum }: { featuredCovers: FeaturedTravelCovers; overheadAlbum: OverheadAlbum }) {
     const reduced = useReducedMotion();
     const [openFaq, setOpenFaq] = useState<number | null>(null);
     return <div className={`${styles.site} ${reduced ? styles.reducedMotion : ""}`}>
         <a className={styles.skipLink} href="#how-it-works">Skip to how it works</a>
         <header className={styles.header}><Link href="/" aria-label="Itinero home" className={styles.logo}><CameraMark /></Link><Link href="/photobooks/create" className={styles.outlineButton}>Make mine!</Link></header>
-        <main><Hero /><Reassurance />{features.map((feature, i) => <FeatureScene key={feature.scene} feature={feature} index={i} />)}<OtherThings /><OfflineSection /><CoverGallery />
-            <section className={styles.inGoodHands}><div className={styles.handsPhotos}>{photos.slice(0, 4).map((src, i) => <div key={src}><Image src={src} alt={["A seaside town to remember", "A favourite travel moment", "A trip worth printing", "A little piece of an adventure"][i]} fill sizes="(max-width: 700px) 42vw, 25vw" /></div>)}</div><div className={styles.careMessage}><h2>Good memories.<br />In good hands.</h2><span className={styles.handwriting}>made by you, for you ♡</span></div></section>
+        <main><Hero covers={featuredCovers} /><Reassurance />{features.map((feature, i) => <FeatureScene key={feature.scene} feature={feature} index={i} album={overheadAlbum} />)}<OtherThings /><CoverGallery covers={featuredCovers} />
             <section className={styles.faq}><h2>Questions you might have</h2><div>{faqs.map(([question, answer], i) => <div className={styles.faqRow} key={question}><h3><button aria-expanded={openFaq === i} aria-controls={`album-faq-${i}`} onClick={() => setOpenFaq(openFaq === i ? null : i)}>{question}<Plus size={18} className={openFaq === i ? styles.expanded : ""} /></button></h3><div id={`album-faq-${i}`} hidden={openFaq !== i}><p>{answer}</p></div></div>)}</div></section>
             <section className={styles.story}><div className={styles.filmstrip}>{["/images/how-it-works.png", ...photos.slice(0, 3)].map((src, i) => <div key={`${src}-${i}`}><Image src={src} alt="A moment from a trip" fill sizes="25vw" /></div>)}</div><div className={styles.storyText}><span className={styles.handwriting}>real<br />⌄</span><h2>Make a story<br />out of your camera roll</h2><Link href="/photobooks/create" className={styles.outlineButton}>Let’s make a book</Link></div></section>
         </main>
