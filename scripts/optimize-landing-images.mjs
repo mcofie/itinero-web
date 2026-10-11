@@ -7,7 +7,7 @@ import path from 'node:path';
 const root = process.cwd();
 const output = path.join(root, 'public/images/landing/optimized');
 await mkdir(output, { recursive: true });
-const covers = (await readdir('public/images/landing/covers')).filter(name => name.endsWith('.png'));
+const covers = (await readdir('public/images/landing/covers')).filter(name => name.endsWith('.webp'));
 const sources = [
     ...covers.map(name => `/images/landing/covers/${name}`),
     '/images/landing/hand-held-italy-album-v3.png',
@@ -26,7 +26,7 @@ for (const source of sources) {
     for (const width of widths) {
         const buffer = await sharp(input).resize({ width, withoutEnlargement: true }).webp({ quality: 88, effort: 6, smartSubsample: true }).toBuffer();
         const hash = createHash('sha256').update(buffer).digest('hex').slice(0, 12);
-        const name = `${path.basename(source, '.png')}-${width}-${hash}.webp`;
+        const name = `${path.parse(source).name}-${width}-${hash}.webp`;
         await writeFile(path.join(output, name), buffer);
         variants.push({ width, src: `/images/landing/optimized/${name}` });
         if (width === metadata.width) fullSizeBytes += buffer.length;

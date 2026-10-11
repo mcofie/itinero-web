@@ -1,5 +1,7 @@
 # Country cover generation prompts
 
+> Archived: these prompts describe the earlier flat, text-baked covers. The current 70-cover scenic collection is described in [country-cover-library.md](./country-cover-library.md).
+
 Generated with the built-in image generation tool, using the existing Italy, Tokyo, and Rome covers as visual references. Original outputs are preserved; production copies are in `public/images/landing/covers/` at 1024 × 1536 pixels.
 
 Italy and Vietnam reuse the original artwork documented in [travel-cover-prompts.md](./travel-cover-prompts.md).

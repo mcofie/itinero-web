@@ -1,5 +1,5 @@
-/** Popular country destinations, guided by UN Tourism's November 2025 arrivals table.
- * Country-level artwork only; see docs/design/country-cover-library.md for selection notes.
+/** Illustrated country destinations for the album builder and landing page.
+ * See docs/design/country-cover-library.md for artwork and selection notes.
  */
 export const TRAVEL_COVERS = [
     { id: "france", country: "France", color: "#023678" },
@@ -32,26 +32,46 @@ export const TRAVEL_COVERS = [
     { id: "egypt", country: "Egypt", color: "#fdefb3" },
     { id: "czechia", country: "Czechia", color: "#f9976e" },
     { id: "indonesia", country: "Indonesia", color: "#fca56f" },
-    { id: "ghana", country: "Ghana", color: "#d94d2f", artOnly: true },
-    { id: "south-africa", country: "South Africa", color: "#5fa992", artOnly: true },
-    { id: "kenya", country: "Kenya", color: "#f3ac30", artOnly: true },
-    { id: "nigeria", country: "Nigeria", color: "#0c3174", artOnly: true },
-    { id: "tanzania", country: "Tanzania", color: "#d2736f", artOnly: true },
-    { id: "switzerland", country: "Switzerland", color: "#15473b", artOnly: true },
-    { id: "australia", country: "Australia", color: "#f86761", artOnly: true },
-    { id: "brazil", country: "Brazil", color: "#fc7612", artOnly: true },
-    { id: "ireland", country: "Ireland", color: "#28432c", artOnly: true },
-    { id: "norway", country: "Norway", color: "#143351", artOnly: true },
-    { id: "singapore", country: "Singapore", color: "#e95245", artOnly: true },
-    { id: "philippines", country: "Philippines", color: "#10a6ad", artOnly: true },
-    { id: "cambodia", country: "Cambodia", color: "#f8ac24", artOnly: true },
-    { id: "new-zealand", country: "New Zealand", color: "#065655", artOnly: true },
-    { id: "argentina", country: "Argentina", color: "#a984a2", artOnly: true },
-    { id: "chile", country: "Chile", color: "#f6783d", artOnly: true },
-    { id: "peru", country: "Peru", color: "#ae3623", artOnly: true },
-    { id: "colombia", country: "Colombia", color: "#18b4c3", artOnly: true },
-    { id: "rwanda", country: "Rwanda", color: "#8a9c7f", artOnly: true },
-    { id: "senegal", country: "Senegal", color: "#f87372", artOnly: true },
+    { id: "ghana", country: "Ghana", color: "#d94d2f" },
+    { id: "south-africa", country: "South Africa", color: "#5fa992" },
+    { id: "kenya", country: "Kenya", color: "#f3ac30" },
+    { id: "nigeria", country: "Nigeria", color: "#0c3174" },
+    { id: "tanzania", country: "Tanzania", color: "#d2736f" },
+    { id: "switzerland", country: "Switzerland", color: "#15473b" },
+    { id: "australia", country: "Australia", color: "#f86761" },
+    { id: "brazil", country: "Brazil", color: "#fc7612" },
+    { id: "ireland", country: "Ireland", color: "#28432c" },
+    { id: "norway", country: "Norway", color: "#143351" },
+    { id: "singapore", country: "Singapore", color: "#e95245" },
+    { id: "philippines", country: "Philippines", color: "#10a6ad" },
+    { id: "cambodia", country: "Cambodia", color: "#f8ac24" },
+    { id: "new-zealand", country: "New Zealand", color: "#065655" },
+    { id: "argentina", country: "Argentina", color: "#a984a2" },
+    { id: "chile", country: "Chile", color: "#f6783d" },
+    { id: "peru", country: "Peru", color: "#ae3623" },
+    { id: "colombia", country: "Colombia", color: "#18b4c3" },
+    { id: "rwanda", country: "Rwanda", color: "#8a9c7f" },
+    { id: "senegal", country: "Senegal", color: "#f87372" },
+    { id: "cote-divoire", country: "Côte d’Ivoire", color: "#dcb176" },
+    { id: "togo", country: "Togo", color: "#b9905b" },
+    { id: "benin", country: "Benin", color: "#6ba4a5" },
+    { id: "uganda", country: "Uganda", color: "#759d71" },
+    { id: "namibia", country: "Namibia", color: "#d8845b" },
+    { id: "mauritius", country: "Mauritius", color: "#70aeb4" },
+    { id: "tunisia", country: "Tunisia", color: "#a1b6b1" },
+    { id: "sweden", country: "Sweden", color: "#6fa8bd" },
+    { id: "finland", country: "Finland", color: "#748f90" },
+    { id: "iceland", country: "Iceland", color: "#789aa5" },
+    { id: "belgium", country: "Belgium", color: "#b87969" },
+    { id: "hungary", country: "Hungary", color: "#9b6c84" },
+    { id: "jordan", country: "Jordan", color: "#b76454" },
+    { id: "qatar", country: "Qatar", color: "#b98471" },
+    { id: "sri-lanka", country: "Sri Lanka", color: "#bf784c" },
+    { id: "nepal", country: "Nepal", color: "#677c9c" },
+    { id: "taiwan", country: "Taiwan", color: "#d57570" },
+    { id: "costa-rica", country: "Costa Rica", color: "#518e81" },
+    { id: "dominican-republic", country: "Dominican Republic", color: "#73adb7" },
+    { id: "ecuador", country: "Ecuador", color: "#97a0aa" },
 ] as const;
 
 export type TravelCoverId = (typeof TRAVEL_COVERS)[number]["id"];
@@ -63,8 +83,7 @@ export const TRAVEL_COVERS_BY_ID = Object.fromEntries(
 ) as Record<TravelCoverId, TravelCover>;
 
 export function coverImagePath(id: TravelCoverId) {
-    const cover = TRAVEL_COVERS_BY_ID[id];
-    return `/images/landing/covers/${id}.${"artOnly" in cover ? "webp" : "png"}`;
+    return `/images/landing/covers/${id}.webp`;
 }
 
 export function coverThumbnailPath(id: TravelCoverId) {

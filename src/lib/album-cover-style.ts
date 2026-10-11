@@ -34,9 +34,16 @@ export function normalizeCoverTextColor(value: unknown): string {
 
 export function coverInk(background: string): string {
     const hex = background.replace("#", "");
-    const channels = [0, 2, 4].map(index => parseInt(hex.slice(index, index + 2), 16) / 255);
-    const brightness = channels.reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
-    return brightness < 0.55 ? "#fff8dc" : "#2b1a07";
+    const channels = [0, 2, 4].map(index => {
+        const channel = parseInt(hex.slice(index, index + 2), 16) / 255;
+        return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+    const luminance = channels.reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+    const ivoryLuminance = 0.93;
+    const inkLuminance = 0.012;
+    const ivoryContrast = (ivoryLuminance + 0.05) / (luminance + 0.05);
+    const inkContrast = (luminance + 0.05) / (inkLuminance + 0.05);
+    return ivoryContrast >= inkContrast ? "#fff8dc" : "#2b1a07";
 }
 
 export function resolveCoverTextColor(selected: string, background: string): string {

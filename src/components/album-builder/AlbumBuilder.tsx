@@ -21,11 +21,13 @@ const layouts: { id: AlbumLayout; name: string; description: string; count: stri
 ];
 const steps = ["Cover", "Photos", "Pages", "Review"] as const;
 const typefaceClasses = { bold: styles.typefaceBold, serif: styles.typefaceSerif, handwritten: styles.typefaceHandwritten };
+const searchAliases: Record<string, string> = { "cote-divoire": "ivory coast", usa: "america", uk: "britain england" };
+const searchKey = (value: string) => value.normalize("NFKD").replace(/[\u0300-\u036f’']/g, "").replace(/-/g, " ").toLowerCase();
 
 function CoverPreview({ destinationId, title, year, typeface, textColor, className = "" }: { destinationId: TravelCoverId; title: string; year: string; typeface: CoverTypeface; textColor: string; className?: string }) {
     const cover = TRAVEL_COVERS_BY_ID[destinationId];
     const heading = title.trim() || cover.country;
-    return <div className={`${styles.coverPreview} ${"artOnly" in cover ? styles.artOnly : ""} ${typefaceClasses[typeface]} ${className}`} style={{ "--cover-color": cover.color, "--cover-ink": resolveCoverTextColor(textColor, cover.color) } as CSSProperties}>
+    return <div className={`${styles.coverPreview} ${typefaceClasses[typeface]} ${className}`} style={{ "--cover-color": cover.color, "--cover-ink": resolveCoverTextColor(textColor, cover.color) } as CSSProperties}>
         {/* The illustration remains from the country set; the title area is personalized. */}
         <img src={coverImagePath(destinationId)} alt="" draggable={false} />
         <div className={styles.coverTitleArea}>
@@ -100,7 +102,10 @@ export default function AlbumBuilder() {
     photosRef.current = photos;
     const destination = TRAVEL_COVERS_BY_ID[destinationId];
     const pages = useMemo(() => groupAlbumPhotos(photos, layout), [photos, layout]);
-    const filteredCovers = useMemo(() => TRAVEL_COVERS.filter(cover => cover.country.toLowerCase().includes(search.trim().toLowerCase())), [search]);
+    const filteredCovers = useMemo(() => {
+        const query = searchKey(search.trim());
+        return TRAVEL_COVERS.filter(cover => searchKey(`${cover.country} ${cover.id} ${searchAliases[cover.id] || ""}`).includes(query));
+    }, [search]);
     const lowResolution = photos.filter(photo => Math.min(photo.width, photo.height) < 2400);
     const saveUnavailable = saveState === "unavailable";
 

@@ -92,7 +92,7 @@ function AlbumCard({ album }: { album: AlbumRow }) {
         <div className="relative flex min-h-[275px] items-center justify-center overflow-hidden bg-[#e9e0d3] p-5">
             <div className="relative aspect-[4/5] h-[245px] overflow-hidden rounded-[3px_7px_7px_3px] shadow-[7px_10px_18px_#2b1a0730] transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-[1.03]" style={{ background: cover.color }}>
                 <Image src={coverImagePath(coverId)} fill sizes="(max-width: 640px) 200px, 245px" alt="" className="object-cover" />
-                <div className="absolute inset-x-0 top-0 flex h-[27%] flex-col justify-between px-3 py-2 leading-[.9] tracking-[-.05em]" style={{ background: "artOnly" in cover ? "transparent" : cover.color, color: resolveCoverTextColor(textColor, cover.color) }}>
+                <div className="absolute inset-x-0 top-0 flex h-[27%] flex-col justify-between px-3 py-2 leading-[.9] tracking-[-.05em]" style={{ background: "transparent", color: resolveCoverTextColor(textColor, cover.color) }}>
                     <span className="flex justify-between gap-1 font-sans text-[6px] font-bold tracking-[.08em] opacity-80"><span>Itinero · travel album</span><span>{album.album_year}</span></span>
                     <strong className="line-clamp-2 break-words" style={{ fontFamily: titleFont, fontWeight: 400, textTransform: typeface === "bold" ? "uppercase" : "none", lineHeight: typeface === "handwritten" ? 1.08 : .92, fontSize: album.title.length > 22 ? 15 : album.title.length > 9 ? 19 : 27 }}>{album.title}</strong>
                 </div>

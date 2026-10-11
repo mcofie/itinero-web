@@ -1,6 +1,6 @@
 import type { AlbumLayout, AlbumPhoto } from "./album-draft";
 import { resolveCoverTextColor, type CoverTypeface } from "@/lib/album-cover-style";
-import { coverImagePath, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
+import { coverImagePath, type TravelCoverId } from "@/lib/travel-covers";
 
 // A standard 8 × 10 inch portrait proof at 300 pixels per inch.
 export const PRINT_WIDTH = 2400;
@@ -40,11 +40,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: n
     ctx.clip();
 }
 
-function paintCoverTitle(ctx: CanvasRenderingContext2D, title: string, year: string, color: string, fontFamily: string, typeface: CoverTypeface, textColor: string, artOnly: boolean) {
-    if (!artOnly) {
-        ctx.fillStyle = color;
-        ctx.fillRect(0, 0, DESIGN_WIDTH, 610);
-    }
+function paintCoverTitle(ctx: CanvasRenderingContext2D, title: string, year: string, color: string, fontFamily: string, typeface: CoverTypeface, textColor: string) {
     ctx.fillStyle = resolveCoverTextColor(textColor, color);
     const headline = (typeface === "bold" ? title.trim().toUpperCase() : title.trim()) || "My trip";
     ctx.font = "700 34px Arial, sans-serif";
@@ -238,7 +234,7 @@ export async function createAlbumPdf(options: ExportOptions): Promise<Blob> {
     const coverBitmap = await createImageBitmap(await coverResponse.blob());
     try {
         drawCropped(ctx, coverBitmap, 0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
-        paintCoverTitle(ctx, options.title, options.year, options.coverColor, options.coverFontFamily, options.coverTypeface, options.coverTextColor, "artOnly" in TRAVEL_COVERS_BY_ID[options.coverId]);
+        paintCoverTitle(ctx, options.title, options.year, options.coverColor, options.coverFontFamily, options.coverTypeface, options.coverTextColor);
         await addPage();
     } finally {
         coverBitmap.close();

@@ -10,7 +10,7 @@ export function selectOverheadAlbum(): OverheadAlbum {
 
 /** Sample without replacement once per page request, before server rendering. */
 export function selectFeaturedTravelCovers(): FeaturedTravelCovers {
-    const pool = TRAVEL_COVERS.filter(cover => !("artOnly" in cover)).map(cover => cover.id);
+    const pool = TRAVEL_COVERS.map(cover => cover.id);
     for (let i = 0; i < 6; i++) {
         const j = randomInt(i, pool.length);
         [pool[i], pool[j]] = [pool[j], pool[i]];

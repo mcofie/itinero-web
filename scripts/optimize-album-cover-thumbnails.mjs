@@ -8,7 +8,7 @@ const cityVariants = new Set(["amsterdam", "istanbul", "rome", "tokyo"]);
 await mkdir(destinationDirectory, { recursive: true });
 
 const covers = (await readdir(sourceDirectory)).filter(name =>
-    /\.(png|webp)$/i.test(name) && !cityVariants.has(path.parse(name).name),
+    /\.webp$/i.test(name) && !cityVariants.has(path.parse(name).name),
 );
 for (const name of covers) {
     const id = path.parse(name).name;
