@@ -80,6 +80,7 @@ export default function AlbumBuilder() {
     const [photos, setPhotos] = useState<AlbumPhoto[]>([]);
     const [search, setSearch] = useState("");
     const [pageIndex, setPageIndex] = useState(0);
+    const [previewExpanded, setPreviewExpanded] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
@@ -237,9 +238,14 @@ export default function AlbumBuilder() {
         if (isSavingCloud || isOrdering || isExporting) return;
         if (orderStatus !== "draft" && next < 3) return;
         setError("");
-        if (next > 0 && (!title.trim() || !/^\d{4}$/.test(year))) { setError("Add a title and a four-digit year first."); setStep(0); return; }
-        if (next > 1 && photos.length === 0) { setError("Add at least one photo to start your album."); setStep(1); return; }
-        setStep(Math.max(0, Math.min(3, next)));
+        const showStep = (index: number) => {
+            setStep(index);
+            setPreviewExpanded(false);
+            window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+        };
+        if (next > 0 && (!title.trim() || !/^\d{4}$/.test(year))) { setError("Add a title and a four-digit year first."); showStep(0); return; }
+        if (next > 1 && photos.length === 0) { setError("Add at least one photo to start your album."); showStep(1); return; }
+        showStep(Math.max(0, Math.min(3, next)));
     };
     const resetDraft = async () => {
         if (isSavingCloud || isOrdering || isExporting) return;
@@ -374,7 +380,7 @@ export default function AlbumBuilder() {
         <div className={styles.shell}>
             <aside className={styles.sidebar}>
                 <span className={styles.eyebrow}>A place for your places</span>
-                <h1>Make a little<br /><em>room to remember.</em></h1>
+                <h1>Make a little <em>room to remember.</em></h1>
                 <p>Choose a cover, bring your photos, and we’ll shape the pages with you.</p>
                 <nav className={styles.steps} aria-label="Album steps">
                     {steps.map((label, index) => <button key={label} type="button" onClick={() => goToStep(index)} disabled={orderStatus !== "draft" && index < 3} aria-current={step === index ? "step" : undefined} className={`${styles.step} ${step === index ? styles.stepActive : ""}`}><span>{String(index + 1).padStart(2, "0")}</span><strong>{label}</strong>{index < step && <Check size={16} />}</button>)}
@@ -389,11 +395,12 @@ export default function AlbumBuilder() {
                     <section className={styles.controls}>
                         {step === 0 && <>
                             <div className={styles.sectionHead}><span className={styles.hand}>first things first</span><h2>Where did you go?</h2><p>Pick the place. We’ll start with a cover made for it.</p></div>
-                            <label className={styles.searchField}><Search size={18} /><input type="search" placeholder="Find a destination" value={search} onChange={event => setSearch(event.target.value)} /></label>
+                            <label className={styles.searchField}><Search size={18} /><input type="search" aria-label="Find a destination" placeholder="Find a destination" value={search} onChange={event => setSearch(event.target.value)} /></label>
                             <div className={styles.destinationGrid}>
                                 {filteredCovers.map(cover => <button key={cover.id} type="button" onClick={() => chooseDestination(cover.id)} className={`${styles.destinationCard} ${destinationId === cover.id ? styles.destinationSelected : ""}`} aria-pressed={destinationId === cover.id}>
                                     <span className={styles.destinationThumb} style={{ backgroundColor: cover.color }}><img src={coverThumbnailPath(cover.id)} alt="" loading="lazy" /></span><span>{cover.country}</span>{destinationId === cover.id && <Check size={15} />}
                                 </button>)}
+                                {filteredCovers.length === 0 && <p className={styles.emptyDestinations}>No destination found. Try another country name.</p>}
                             </div>
                             <div className={styles.formPair}><label>Album title<input maxLength={30} value={title} onChange={event => setTitle(event.target.value)} placeholder="Our favourite trip" /></label><label>Year<input inputMode="numeric" maxLength={4} value={year} onChange={event => setYear(event.target.value.replace(/[^\d]/g, ""))} placeholder="2026" /></label></div>
                             <p className={styles.fieldHint}>The title and year appear on your cover and opening page.</p>
@@ -468,14 +475,14 @@ export default function AlbumBuilder() {
                         </>}
                     </section>
 
-                    <aside className={styles.previewColumn} aria-label="Album preview">
-                        <div className={styles.previewHeading}><span>LIVE PREVIEW</span><span>{step === 2 && pages.length ? `PAGE ${pageIndex + 1} / ${pages.length}` : "YOUR KEEPSAKE"}</span></div>
+                    <aside className={`${styles.previewColumn} ${previewExpanded ? styles.previewExpanded : ""}`} aria-label="Album preview">
+                        <div className={styles.previewHeading}><span>LIVE PREVIEW</span><span className={styles.previewDescriptor}>{step === 2 && pages.length ? `PAGE ${pageIndex + 1} / ${pages.length}` : "YOUR KEEPSAKE"}</span><button type="button" className={styles.previewExpandButton} aria-expanded={previewExpanded} onClick={() => setPreviewExpanded(expanded => !expanded)}>{previewExpanded ? "Close preview" : "View larger"}</button></div>
                         {step === 2 && pages.length ? <AlbumPagePreview photos={pages[pageIndex]} layout={layout} pageNumber={pageIndex + 1} destination={destination.country} /> : <CoverPreview destinationId={destinationId} title={title} year={year} typeface={coverTypeface} textColor={coverTextColor} />}
-                        {step === 2 && pages.length > 1 ? <div className={styles.previewPager}><button type="button" disabled={pageIndex === 0} onClick={() => setPageIndex(pageIndex - 1)} aria-label="Previous page"><ChevronLeft size={18} /></button><span>{pageIndex + 1} of {pages.length}</span><button type="button" disabled={pageIndex === pages.length - 1} onClick={() => setPageIndex(pageIndex + 1)} aria-label="Next page"><ChevronRight size={18} /></button></div> : <p className={styles.previewCaption}>{step === 3 ? "Front cover · personalized for your trip" : "A little piece of somewhere wonderful"}</p>}
+                        {step === 2 && pages.length > 1 ? <div className={styles.previewPager}><button type="button" disabled={pageIndex === 0} onClick={() => setPageIndex(pageIndex - 1)} aria-label="Previous page"><ChevronLeft size={18} /></button><span>{pageIndex + 1} of {pages.length}</span><button type="button" disabled={pageIndex === pages.length - 1} onClick={() => setPageIndex(pageIndex + 1)} aria-label="Next page"><ChevronRight size={18} /></button></div> : <p className={styles.previewCaption}>{step === 3 ? "Your cover, ready to print." : step === 2 ? "A page from your story." : "Your cover, as you make it."}</p>}
                         {step === 3 && <div className={styles.previewMiniPages}><div className={styles.miniPage}><IntroPreview title={title} destination={destination.country} year={year} count={photos.length} /></div>{pages.slice(0, 2).map((page, index) => <div className={styles.miniPage} key={index}><AlbumPagePreview photos={page} layout={layout} pageNumber={index + 1} destination={destination.country} /></div>)}</div>}
                     </aside>
                 </div>}
-                <div className={styles.actionBar}><div>{step > 0 && orderStatus === "draft" && <button type="button" className={styles.backButton} onClick={() => goToStep(step - 1)} disabled={isSavingCloud || isOrdering || isExporting}><ArrowLeft size={17} /> Back</button>}</div>{step < 3 ? <button type="button" className={styles.nextButton} onClick={() => goToStep(step + 1)} disabled={isSavingCloud || isOrdering || isExporting}>{step === 0 ? "Add your photos" : step === 1 ? "Shape the pages" : "Review your album"}<ArrowRight size={18} /></button> : <button type="button" className={styles.nextButton} onClick={() => document.querySelector(`.${styles.shippingBox}`)?.scrollIntoView({ behavior: "smooth" })} disabled={isSavingCloud || isOrdering || isExporting || !['draft', 'pending_payment'].includes(orderStatus)}>Order this album <ArrowRight size={18} /></button>}</div>
+                <div className={`${styles.actionBar} ${step === 0 ? styles.actionBarFirst : ""}`}><div>{step > 0 && orderStatus === "draft" && <button type="button" className={styles.backButton} onClick={() => goToStep(step - 1)} disabled={isSavingCloud || isOrdering || isExporting}><ArrowLeft size={17} /> Back</button>}</div>{step < 3 ? <button type="button" className={styles.nextButton} onClick={() => goToStep(step + 1)} disabled={isSavingCloud || isOrdering || isExporting}>{step === 0 ? "Add your photos" : step === 1 ? "Shape the pages" : "Review your album"}<ArrowRight size={18} /></button> : <button type="button" className={styles.nextButton} onClick={() => document.querySelector(`.${styles.shippingBox}`)?.scrollIntoView({ behavior: "smooth" })} disabled={isSavingCloud || isOrdering || isExporting || !['draft', 'pending_payment'].includes(orderStatus)}>Order this album <ArrowRight size={18} /></button>}</div>
             </main>
         </div>
     </div>;
