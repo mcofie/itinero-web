@@ -106,7 +106,7 @@ export function Navbar({ userEmail, avatarUrl, fullName, onLogout }: Props) {
                                         </MobileNavItem>
                                         <div className="mt-4 p-2">
                                             <Button className="w-full rounded-full bg-blue-600 font-semibold" asChild>
-                                                <Link href="/photobooks/create">
+                                                <Link href="/make-album">
                                                     <Plus className="mr-2 h-4 w-4" /> Make a photo book
                                                 </Link>
                                             </Button>
@@ -156,7 +156,7 @@ export function Navbar({ userEmail, avatarUrl, fullName, onLogout }: Props) {
                         <>
                             <div className="hidden sm:flex">
                                 <Button size="sm" asChild className="h-9 items-center gap-2 rounded-full bg-blue-600 px-4 text-xs font-bold uppercase tracking-wide text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md dark:bg-blue-500 dark:hover:bg-blue-400">
-                                    <Link href="/photobooks/create">
+                                    <Link href="/make-album">
                                         <Plus className="h-3.5 w-3.5" strokeWidth={3} />
                                         Make a photo book
                                     </Link>

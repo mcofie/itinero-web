@@ -85,7 +85,7 @@ export default async function PhotobooksPage() {
                             <div className="flex items-center gap-4">
                                 {hasBooks && (
                                     <Button asChild size="lg" className="rounded-full bg-blue-600 px-8 h-14 text-base font-bold shadow-2xl shadow-blue-600/30 hover:scale-105 transition-all active:scale-95 group">
-                                        <Link href="/photobooks/create">
+                                        <Link href="/make-album">
                                             <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
                                             Create New Book
                                         </Link>
@@ -121,7 +121,7 @@ export default async function PhotobooksPage() {
                     <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {/* Apple Today Style Create Card */}
                         <Link
-                            href="/photobooks/create"
+                            href="/make-album"
                             className="group relative flex min-h-[360px] flex-col items-center justify-center gap-4 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 p-8 text-center transition-all hover:bg-white hover:border-blue-500 hover:shadow-md dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-slate-900 dark:hover:border-blue-500"
                         >
                             <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white text-blue-600 shadow-xl shadow-slate-200 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 dark:bg-slate-800 dark:shadow-none dark:ring-1 dark:ring-white/10">
@@ -228,7 +228,7 @@ function EmptyState() {
 
             <div className="mt-10">
                 <Button asChild size="lg" className="rounded-full bg-blue-600 px-10 font-bold shadow-xl shadow-blue-600/20 hover:scale-105 transition-transform">
-                    <Link href="/photobooks/create">Create Your First Book</Link>
+                    <Link href="/make-album">Create Your First Book</Link>
                 </Button>
             </div>
 

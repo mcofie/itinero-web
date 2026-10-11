@@ -142,7 +142,7 @@ function OtherThings() {
 
 function GalleryBook({ design, className }: { design: TravelCoverId; className: string }) {
     const name = TRAVEL_COVERS_BY_ID[design].country;
-    return <Link prefetch={false} href="/photobooks/create" className={`${styles.scatteredBook} ${className}`} aria-label={`Make your own photo album — ${name} cover`}>
+    return <Link prefetch={false} href="/make-album" className={`${styles.scatteredBook} ${className}`} aria-label={`Make your own photo album — ${name} cover`}>
         <TravelAlbumCover design={design} />
     </Link>;
 }
@@ -184,7 +184,7 @@ function CoverGallery({ covers }: { covers: FeaturedTravelCovers }) {
                 <div className={`${styles.coverPanel} ${styles.coverClosing}`}>
                     <GalleryBook design={covers[4]} className={styles.bookVietnam} />
                     <GalleryBook design={covers[5]} className={styles.bookAmsterdam} />
-                    <div className={`${styles.coverNote} ${styles.finalNote}`}>and a cover that<br />feels like you.<DrawnArrow /><Link prefetch={false} href="/photobooks/create" className={styles.coverStart}>Make it yours ↗</Link></div>
+                    <div className={`${styles.coverNote} ${styles.finalNote}`}>and a cover that<br />feels like you.<DrawnArrow /><Link prefetch={false} href="/make-album" className={styles.coverStart}>Make it yours ↗</Link></div>
                 </div>
             </m.div>
         </div>
@@ -210,8 +210,8 @@ export default function PhotoAlbumLanding({ featuredCovers, overheadAlbum }: { f
         <header className={styles.header}><Link prefetch={false} href="/" aria-label="Itinero home" className={styles.logo}><img src="/brand/itinero-mark-animated.svg" alt="" width={76} height={46} /></Link><Link prefetch={false} href="/make-album" className={styles.outlineButton}>Make mine!</Link></header>
         <main><Hero covers={featuredCovers} /><Reassurance />{features.map((feature, i) => <FeatureScene key={feature.scene} feature={feature} index={i} album={overheadAlbum} />)}<OtherThings /><CoverGallery covers={featuredCovers} />
             <section className={styles.faq}><h2>Questions you might have</h2><div>{faqs.map(([question, answer], i) => <div className={styles.faqRow} key={question}><h3><button aria-expanded={openFaq === i} aria-controls={`album-faq-${i}`} onClick={() => setOpenFaq(openFaq === i ? null : i)}>{question}<Plus size={18} className={openFaq === i ? styles.expanded : ""} /></button></h3><div id={`album-faq-${i}`} hidden={openFaq !== i}><p>{answer}</p></div></div>)}</div></section>
-            <section className={styles.story}><div className={styles.filmstrip}>{["/images/how-it-works.png", ...photos.slice(0, 3)].map((src, i) => <div key={`${src}-${i}`}><LandingImage src={src} alt="A moment from a trip" fill sizes="25vw" /></div>)}</div><div className={styles.storyText}><span className={styles.handwriting}>real<br />⌄</span><h2>Make a story<br />out of your camera roll</h2><Link prefetch={false} href="/photobooks/create" className={styles.outlineButton}>Let’s make a book</Link></div></section>
+            <section className={styles.story}><div className={styles.filmstrip}>{["/images/how-it-works.png", ...photos.slice(0, 3)].map((src, i) => <div key={`${src}-${i}`}><LandingImage src={src} alt="A moment from a trip" fill sizes="25vw" /></div>)}</div><div className={styles.storyText}><span className={styles.handwriting}>real<br />⌄</span><h2>Make a story<br />out of your camera roll</h2><Link prefetch={false} href="/make-album" className={styles.outlineButton}>Let’s make a book</Link></div></section>
         </main>
-        <footer className={styles.footer}><div className={styles.footerTop}><h2>Making books that<br />bring trips back.</h2><nav aria-label="Footer"><div><a href="#how-it-works">How it works</a><a href="#your-way">Make it yours</a><Link prefetch={false} href="/photobooks">My albums</Link></div><div><Link prefetch={false} href="/photobooks/create">Make a book</Link><Link prefetch={false} href="/terms">Terms</Link><Link prefetch={false} href="/privacy">Privacy</Link></div></nav></div><img className={styles.footerBrandMark} src="/brand/itinero-mark-white-animated.svg" alt="" width={132} height={66} /><Link prefetch={false} href="/" className={styles.footerWordmark} aria-label="Itinero home">itinero</Link><div className={styles.footerBottom}><span>© {new Date().getFullYear()} Itinero</span><span>For the trips that stay with you.</span></div></footer>
+        <footer className={styles.footer}><div className={styles.footerTop}><h2>Making books that<br />bring trips back.</h2><nav aria-label="Footer"><div><a href="#how-it-works">How it works</a><a href="#your-way">Make it yours</a><Link prefetch={false} href="/photobooks">My albums</Link></div><div><Link prefetch={false} href="/make-album">Make a book</Link><Link prefetch={false} href="/terms">Terms</Link><Link prefetch={false} href="/privacy">Privacy</Link></div></nav></div><img className={styles.footerBrandMark} src="/brand/itinero-mark-white-animated.svg" alt="" width={132} height={66} /><Link prefetch={false} href="/" className={styles.footerWordmark} aria-label="Itinero home">itinero</Link><div className={styles.footerBottom}><span>© {new Date().getFullYear()} Itinero</span><span>For the trips that stay with you.</span></div></footer>
     </div></LazyMotion>;
 }
