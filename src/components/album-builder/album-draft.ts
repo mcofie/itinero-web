@@ -1,3 +1,5 @@
+import type { CoverTypeface } from "@/lib/album-cover-style";
+
 export type AlbumLayout = "editorial" | "gallery" | "collage";
 
 export type AlbumPhoto = {
@@ -8,12 +10,15 @@ export type AlbumPhoto = {
     width: number;
     height: number;
     caption: string;
+    storagePath?: string;
 };
 
 export type AlbumDraftMeta = {
     destinationId: string;
     title: string;
     year: string;
+    coverTypeface?: CoverTypeface;
+    coverTextColor?: string;
     layout: AlbumLayout;
     step: number;
     photoIds: string[];
@@ -94,7 +99,7 @@ export async function saveAlbumPhoto(photo: AlbumPhoto): Promise<void> {
     try {
         const transaction = db.transaction("photos", "readwrite");
         const done = transactionDone(transaction);
-        transaction.objectStore("photos").put({ id: photo.id, name: photo.name, blob: photo.blob, width: photo.width, height: photo.height } satisfies StoredPhoto);
+        transaction.objectStore("photos").put({ id: photo.id, name: photo.name, blob: photo.blob, width: photo.width, height: photo.height, storagePath: photo.storagePath } satisfies StoredPhoto);
         await done;
     } finally {
         db.close();

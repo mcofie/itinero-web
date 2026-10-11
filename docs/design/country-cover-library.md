@@ -2,14 +2,15 @@
 
 ## Selection
 
-30 country destinations guided by the 2024 arrivals ranking in UN Tourism's November 2025 World Tourism Barometer (Statistical Annex A-7, PDF page 15): [source](https://cms.czechtourism.cz/cms/getmedia/9db51d67-8a8f-4731-86b9-16b079568886/2025-world-tourism-barometer-and-statistical-annex-november-2025.pdf). Hong Kong and Macao are separately listed destinations in the source and are omitted from this country-only set; Czechia and Indonesia extend the selection to 30 countries. The source ranking is provisional and includes destinations with missing current-year data, so this is a design library of popular destinations, not a definitive live top-30 ranking.
+The original 30 country destinations were guided by the 2024 arrivals ranking in UN Tourism's November 2025 World Tourism Barometer (Statistical Annex A-7, PDF page 15): [source](https://cms.czechtourism.cz/cms/getmedia/9db51d67-8a8f-4731-86b9-16b079568886/2025-world-tourism-barometer-and-statistical-annex-november-2025.pdf). Twenty more destinations were added for the album builder across Africa, Asia, Europe, Oceania and South America. This is a design library, not a definitive current ranking.
 
 ## Rendering and selection
 
 - Original 1024 × 1536 PNG artwork, created with the built-in image generation tool using the existing Italy, Tokyo and Rome covers as style references.
+- Twenty new 1024 × 1536 WebP illustrations have clear upper space so customer titles and years are rendered by the app. Older cover artwork has baked-in title/year; the builder masks that region with the sampled artwork background before adding personalized type.
 - Italy and Vietnam reuse their original approved-direction artwork. City variants remain on disk but are not part of the country pool.
 - The country registry is `src/lib/travel-covers.ts`.
-- Each new server page request samples six distinct countries without replacement. The server sends that exact set to the client, so hydration never reshuffles the page or swaps in a second set of images.
+- Each new landing page request samples six distinct countries from the original 30 without replacement. The twenty personalized-only illustrations appear in the album builder and account collection, where the code adds the country title.
 - The hero uses the first three selected covers, and the horizontal/vertical gallery uses all six. FAQ interactions, scrolling and viewport resizing retain the selection.
 - Only the selected artwork is rendered; the entire library is not downloaded on each visit.
 - Browser back/forward navigation can restore its previous page state. A reload requests a fresh sample, which may legitimately include some countries from the previous sample.
@@ -48,7 +49,29 @@
 | Egypt | `public/images/landing/covers/egypt.png` | Pale sand-yellow background, deep burgundy title and terracotta year. Three large iconic pyramids with warm golden sun disk, crisp triangular silhouettes in golden ochre and burnt sienna, small quiet sand dune at base, no full landscape. |
 | Czechia | `public/images/landing/covers/czechia.png` | Dusty peach background, dark ink-blue title and ivory year. A large richly illustrated Prague astronomical clock face in deep teal, gold and cream with a small ornate warm sandstone surround, refined flat architectural details. |
 | Indonesia | `public/images/landing/covers/indonesia.png` | Warm peach background, forest-green title and ivory year. A large elegant Balinese split gate with two symmetrical terracotta stone towers, intricate but clear flat stepped silhouettes and tiny dark-green palm fronds at base. |
+| Ghana | `public/images/landing/covers/ghana.webp` | Cape Coast Castle, palms and coastal light on a terracotta ground. |
+| South Africa | `public/images/landing/covers/south-africa.webp` | Table Mountain and colorful Bo-Kaap houses on a jade ground. |
+| Kenya | `public/images/landing/covers/kenya.webp` | Acacia tree, Mount Kenya and savannah on an ochre ground. |
+| Nigeria | `public/images/landing/covers/nigeria.webp` | Lagos National Theatre and a dusk cityscape on a deep indigo ground. |
+| Tanzania | `public/images/landing/covers/tanzania.webp` | Kilimanjaro and acacia plain on a dusky rose ground. |
+| Switzerland | `public/images/landing/covers/switzerland.webp` | Red alpine train, viaduct, lake and snowy peaks on a pine-green ground. |
+| Australia | `public/images/landing/covers/australia.webp` | Sydney Opera House and harbor at golden hour on a coral ground. |
+| Brazil | `public/images/landing/covers/brazil.webp` | Sugarloaf Mountain, palms and shore on an orange ground. |
+| Ireland | `public/images/landing/covers/ireland.webp` | Cliffs of Moher and Atlantic surf on a moss-green ground. |
+| Norway | `public/images/landing/covers/norway.webp` | Fjord, snow-capped mountains and a red cabin on a midnight-blue ground. |
+| Singapore | `public/images/landing/covers/singapore.webp` | Supertrees, tropical palms and skyline on a coral ground. |
+| Philippines | `public/images/landing/covers/philippines.webp` | Palawan limestone islands and an outrigger boat on an ocean-teal ground. |
+| Cambodia | `public/images/landing/covers/cambodia.webp` | Angkor Wat and its reflection on a saffron ground. |
+| New Zealand | `public/images/landing/covers/new-zealand.webp` | Milford Sound, mountains and waterfall on a jade ground. |
+| Argentina | `public/images/landing/covers/argentina.webp` | La Boca facades and flowering trees on a lavender ground. |
+| Chile | `public/images/landing/covers/chile.webp` | Torres del Paine and a turquoise lake on an apricot ground. |
+| Peru | `public/images/landing/covers/peru.webp` | Machu Picchu and Andean peaks on a terracotta ground. |
+| Colombia | `public/images/landing/covers/colombia.webp` | Cartagena balconies and bougainvillea on a turquoise ground. |
+| Rwanda | `public/images/landing/covers/rwanda.webp` | Virunga volcanoes and a mountain gorilla on a sage ground. |
+| Senegal | `public/images/landing/covers/senegal.webp` | Gorée Island facades and Atlantic shore on a pink ground. |
 
 ## Shared generation brief
 
-Each new asset uses the same oversized condensed country title, right-aligned 2025, large flat travel illustration, restrained palette and 2:3 portrait format. Full per-country prompts are recorded in [country-cover-generation-prompts.md](./country-cover-generation-prompts.md).
+The original 30 assets use oversized country titles, a right-aligned 2025, a large flat illustration, a restrained palette and a 2:3 portrait format. Full prompts for the original and additional illustrations are recorded in [country-cover-generation-prompts.md](./country-cover-generation-prompts.md).
+
+The builder now renders one consistent 4:5 album cover composition for all 50 destinations: compact Itinero/year line, up to two lines of customer title, and the destination illustration below. The exported PDF follows the same proportions. Personalized-only illustrations keep their original background visible behind the title.

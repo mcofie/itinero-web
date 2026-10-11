@@ -1,247 +1,108 @@
-import * as React from "react";
-import { Link } from "@/i18n/routing";
-import { redirect } from "next/navigation";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import Image from "next/image";
-import HeroCollage from "./HeroCollage";
+import localFont from "next/font/local";
+import { redirect } from "next/navigation";
+import { ArrowRight, BookOpen, Plus } from "lucide-react";
+import { Link } from "@/i18n/routing";
+import { ALBUM_FORMAT, ALBUM_PRICE_GHS } from "@/lib/album-order";
 import { createClientServerRSC } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import {
-    Book,
-    Plus,
-    Clock,
-    Sparkles,
-    Image as ImageIcon,
-    ChevronRight,
-    ShoppingBag
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { coverImagePath, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
+import { normalizeCoverTextColor, normalizeCoverTypeface, resolveCoverTextColor } from "@/lib/album-cover-style";
+import AlbumPaymentStatus from "./AlbumPaymentStatus";
 
-export const metadata: Metadata = {
-    title: "Travel Photo Books",
-};
+const albumSerif = localFont({ src: "../../../../../public/fonts/landing/gelica-regular.woff2", variable: "--font-album-serif", display: "swap", fallback: ["Georgia", "serif"] });
+const albumHand = localFont({ src: "../../../../../public/fonts/landing/handwritten.woff2", variable: "--font-album-hand", display: "swap", fallback: ["cursive"] });
+const albumRound = localFont({ src: "../../../../../public/fonts/landing/lilita-one.ttf", variable: "--font-album-round", display: "swap", fallback: ["Arial", "sans-serif"] });
 
+export const metadata: Metadata = { title: "My albums" };
 export const dynamic = "force-dynamic";
 
-type PhotobookRow = {
+type AlbumRow = {
     id: string;
-    user_id: string;
     title: string;
     cover_template_id: string;
-    status: 'draft' | 'pending_payment' | 'paid' | 'processing' | 'shipped';
-    total_cost: number;
-    currency: string;
+    album_year: string | null;
+    cover_typeface: string | null;
+    cover_text_color: string | null;
+    status: string;
+    page_count: number | null;
+    total_cost: number | null;
+    currency: string | null;
+    updated_at: string | null;
     created_at: string;
-    image_count: number;
+    images: { count: number }[];
+};
+
+const statusNames: Record<string, string> = {
+    draft: "Draft", quote_requested: "Review requested", pending_payment: "Payment pending",
+    paid: "Paid · preparing", processing: "Printing", shipped: "On its way",
 };
 
 export default async function PhotobooksPage() {
     const sb = await createClientServerRSC();
-
     const { data: { user } } = await sb.auth.getUser();
-    if (!user) redirect("/login");
+    if (!user) redirect("/album-login");
 
-    // Fetch photobooks with image counts
-    // Note: In a real app we might use a view or a separate query for counts
-    const { data: photobooks, error } = await sb
-        .schema("itinero")
-        .from("photobooks")
-        .select(`
-            *,
-            images: photobook_images(count)
-        `)
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+    const { data } = await sb.schema("itinero").from("photobooks")
+        .select("id,title,cover_template_id,album_year,cover_typeface,cover_text_color,status,page_count,total_cost,currency,updated_at,created_at,images:photobook_images(count)")
+        .eq("user_id", user.id).order("created_at", { ascending: false });
+    const albums = (data ?? []) as AlbumRow[];
 
-    const books = (photobooks || []).map(b => ({
-        ...b,
-        image_count: (b.images?.[0] as any)?.count || 0
-    })) as PhotobookRow[];
-
-    const hasBooks = books.length > 0;
-
-    return (
-        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300 selection:bg-blue-100 dark:selection:bg-blue-900">
-            {/* Premium Header/Hero Section */}
-            <div className="relative pt-24 pb-16 overflow-hidden">
-                <div className="absolute inset-0 z-0">
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-100/50 rounded-full blur-3xl dark:bg-blue-900/10 animate-pulse" />
-                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-100/50 rounded-full blur-3xl dark:bg-indigo-900/10" />
+    return <main className={`${albumSerif.variable} ${albumHand.variable} ${albumRound.variable} min-h-screen bg-[#f6f2ec] text-[#2b1a07]`}>
+        <div className="mx-auto max-w-6xl px-5 pb-24 pt-20 sm:px-8 sm:pt-28">
+            <header className="flex flex-col gap-8 border-b border-[#dfd3c4] pb-11 md:flex-row md:items-end md:justify-between">
+                <div>
+                    <p className="mb-5 text-[11px] font-bold uppercase tracking-[.23em] text-[#c16b36]">Your collection</p>
+                    <h1 className="max-w-2xl font-[Georgia] text-5xl leading-[1.05] tracking-[-.045em] sm:text-6xl">Every trip, close<br /><em>enough to hold.</em></h1>
+                    <p className="mt-5 max-w-xl text-sm leading-6 text-[#776b60]">Your albums and orders live here. Revisit a draft, follow a delivery, or make room for another journey.</p>
                 </div>
-
-                <section className="mx-auto w-full max-w-7xl px-6 relative z-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                        <div className="space-y-8">
-                            <div className="space-y-4">
-                                <h1 className="text-5xl font-black tracking-tight text-slate-900 sm:text-7xl dark:text-white leading-[1.1]">
-                                    Your Memories, <br />
-                                    <span className="text-blue-600">Tangible.</span>
-                                </h1>
-                                <p className="text-xl text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-lg">
-                                    Transform your digital adventures into professional-grade printed photobooks. Expertly curated, beautifully bound.
-                                </p>
-                            </div>
-
-                            <div className="flex items-center gap-4">
-                                {hasBooks && (
-                                    <Button asChild size="lg" className="rounded-full bg-blue-600 px-8 h-14 text-base font-bold shadow-2xl shadow-blue-600/30 hover:scale-105 transition-all active:scale-95 group">
-                                        <Link href="/make-album">
-                                            <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
-                                            Create New Book
-                                        </Link>
-                                    </Button>
-                                )}
-                                <div className="flex -space-x-3 overflow-hidden p-1">
-                                    {[1, 2, 3, 4].map((i) => (
-                                        <div key={i} className="inline-block h-10 w-10 rounded-full ring-4 ring-white dark:ring-slate-950 overflow-hidden bg-slate-100">
-                                            <Image
-                                                src={`/collage_image_${i}.png`}
-                                                alt="User"
-                                                width={40}
-                                                height={40}
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                    ))}
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 ring-4 ring-white dark:bg-slate-800 dark:ring-slate-950">
-                                        <span className="text-[10px] font-bold text-slate-500">+2k</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Photo Collage Column */}
-                        <HeroCollage />
-                    </div>
-                </section>
-            </div>
-
-            <section className="mx-auto w-full max-w-7xl px-6 py-12">
-                {hasBooks ? (
-                    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {/* Apple Today Style Create Card */}
-                        <Link
-                            href="/make-album"
-                            className="group relative flex min-h-[360px] flex-col items-center justify-center gap-4 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 p-8 text-center transition-all hover:bg-white hover:border-blue-500 hover:shadow-md dark:bg-slate-900/50 dark:border-slate-800 dark:hover:bg-slate-900 dark:hover:border-blue-500"
-                        >
-                            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white text-blue-600 shadow-xl shadow-slate-200 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 dark:bg-slate-800 dark:shadow-none dark:ring-1 dark:ring-white/10">
-                                <Plus className="h-10 w-10 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div className="space-y-2">
-                                <span className="block text-lg font-black text-slate-900 dark:text-white">
-                                    Capture a Journey
-                                </span>
-                                <span className="block text-xs font-bold uppercase tracking-wider text-slate-400">
-                                    Start from a template
-                                </span>
-                            </div>
-                        </Link>
-
-                        {books.map((book) => (
-                            <PhotobookCard key={book.id} book={book} />
-                        ))}
-                    </div>
-                ) : (
-                    <EmptyState />
-                )}
-            </section>
+                <Link href="/make-album" className="inline-flex w-fit items-center gap-2 rounded-xl bg-[#2b1a07] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#53330e]"><Plus size={17} /> Make an album</Link>
+            </header>
         </div>
-    );
+        <AlbumPaymentStatus />
+        <section className="mx-auto -mt-10 max-w-6xl px-5 pb-28 sm:px-8" aria-label="Your albums">
+            {albums.length === 0 ? <div className="rounded-[26px] border border-[#e2d6c7] bg-[#fdfbf8] px-7 py-20 text-center shadow-[0_14px_38px_#2b1a0709]">
+                <BookOpen size={43} strokeWidth={1.3} className="mx-auto mb-5 text-[#b77950]" />
+                <h2 className="font-[Georgia] text-3xl">Your first album starts here.</h2>
+                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#817366]">Choose a destination cover and bring your favourite trip photos. We’ll help with the pages.</p>
+                <Link href="/make-album" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-[#e87836] px-5 py-3 text-sm font-bold text-white">Make my album <ArrowRight size={16} /></Link>
+            </div> : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {albums.map(album => <AlbumCard key={album.id} album={album} />)}
+                <Link href="/make-album" className="group flex min-h-[390px] flex-col items-center justify-center rounded-[22px] border-2 border-dashed border-[#d9c8b5] bg-[#fbf8f3] p-8 text-center transition hover:border-[#e87836] hover:bg-white">
+                    <span className="mb-5 grid h-16 w-16 place-items-center rounded-full bg-[#f0dfcc] text-[#b66b3d] transition group-hover:scale-110"><Plus size={27} strokeWidth={1.7} /></span>
+                    <strong className="font-[Georgia] text-2xl">Another place to keep.</strong>
+                    <span className="mt-2 text-xs text-[#8c7f70]">Make a new album</span>
+                </Link>
+            </div>}
+        </section>
+    </main>;
 }
 
-function PhotobookCard({ book }: { book: PhotobookRow }) {
-    const statusColors = {
-        draft: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
-        pending_payment: "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-900/30",
-        paid: "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30",
-        processing: "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30",
-        shipped: "bg-purple-50 text-purple-600 border-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-900/30",
-    };
-
-    return (
-        <Link
-            href={`/photobooks/create?id=${book.id}`}
-            className="group flex flex-col gap-4 rounded-3xl bg-white p-4 shadow-sm border border-slate-200 transition-all hover:shadow-md hover:-translate-y-0.5 dark:bg-slate-900 dark:border-slate-800 dark:shadow-none"
-        >
-            {/* Template Preview / Cover Placeholder */}
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
-                    <Book className="h-16 w-16 text-slate-300 dark:text-slate-700 transition-transform group-hover:scale-110" />
-                </div>
-
-                {/* Image Count Badge */}
-                <div className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-bold text-slate-900 shadow-sm backdrop-blur-sm dark:bg-slate-950/90 dark:text-white">
-                    <ImageIcon className="h-3 w-3 text-blue-500" />
-                    {book.image_count} Pages
-                </div>
-
-                {/* Status Badge */}
-                <div className={cn(
-                    "absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-                    statusColors[book.status]
-                )}>
-                    {book.status.replace('_', ' ')}
+function AlbumCard({ album }: { album: AlbumRow }) {
+    const coverId = Object.hasOwn(TRAVEL_COVERS_BY_ID, album.cover_template_id)
+        ? album.cover_template_id as TravelCoverId : "italy";
+    const cover = TRAVEL_COVERS_BY_ID[coverId];
+    const typeface = normalizeCoverTypeface(album.cover_typeface);
+    const textColor = normalizeCoverTextColor(album.cover_text_color);
+    const titleFont = typeface === "serif" ? "var(--font-album-serif), Georgia, serif"
+        : typeface === "handwritten" ? "var(--font-album-hand), cursive" : "var(--font-album-round), Arial, sans-serif";
+    const photoCount = album.images?.[0]?.count ?? 0;
+    const action = album.status === "draft" ? "Continue album" : album.status === "pending_payment" ? "Continue payment" : "View album";
+    return <Link href={`/make-album?id=${album.id}`} className="group flex min-h-[390px] flex-col overflow-hidden rounded-[22px] border border-[#e4d9cb] bg-[#fdfbf8] shadow-[0_12px_32px_#2b1a070a] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_#2b1a071a]">
+        <div className="relative flex min-h-[275px] items-center justify-center overflow-hidden bg-[#e9e0d3] p-5">
+            <div className="relative aspect-[4/5] h-[245px] overflow-hidden rounded-[3px_7px_7px_3px] shadow-[7px_10px_18px_#2b1a0730] transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-[1.03]" style={{ background: cover.color }}>
+                <Image src={coverImagePath(coverId)} fill sizes="(max-width: 640px) 200px, 245px" alt="" className="object-cover" />
+                <div className="absolute inset-x-0 top-0 flex h-[27%] flex-col justify-between px-3 py-2 leading-[.9] tracking-[-.05em]" style={{ background: "artOnly" in cover ? "transparent" : cover.color, color: resolveCoverTextColor(textColor, cover.color) }}>
+                    <span className="flex justify-between gap-1 font-sans text-[6px] font-bold tracking-[.08em] opacity-80"><span>Itinero · travel album</span><span>{album.album_year}</span></span>
+                    <strong className="line-clamp-2 break-words" style={{ fontFamily: titleFont, fontWeight: 400, textTransform: typeface === "bold" ? "uppercase" : "none", lineHeight: typeface === "handwritten" ? 1.08 : .92, fontSize: album.title.length > 22 ? 15 : album.title.length > 9 ? 19 : 27 }}>{album.title}</strong>
                 </div>
             </div>
-
-            <div className="px-2 pb-2">
-                <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-bold text-slate-900 dark:text-white truncate">
-                        {book.title}
-                    </h3>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                    <Clock className="h-3 w-3" />
-                    Last edited {new Date(book.created_at).toLocaleDateString()}
-                </p>
-
-                <div className="mt-4 flex items-center justify-between">
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">
-                        {book.total_cost > 0 ? `${book.currency} ${book.total_cost}` : "Starts at GHS 120"}
-                    </span>
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 group-hover:gap-2 transition-all uppercase tracking-widest">
-                        Continue <ChevronRight className="h-3 w-3" />
-                    </span>
-                </div>
-            </div>
-        </Link>
-    );
-}
-
-function EmptyState() {
-    return (
-        <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white py-24 text-center shadow-sm dark:bg-slate-900 dark:border-slate-800 dark:shadow-none">
-            <div className="mb-8 relative">
-                <div className="absolute inset-0 bg-blue-100 rounded-full blur-2xl opacity-50 dark:bg-blue-900/30" />
-                <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-blue-50 text-blue-600 ring-8 ring-blue-50/50 dark:bg-blue-900/20 dark:ring-blue-900/10">
-                    <Book className="h-10 w-10" />
-                </div>
-            </div>
-
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">
-                No photo books yet
-            </h2>
-
-            <p className="max-w-md text-slate-500 dark:text-slate-400 font-medium leading-relaxed px-6">
-                Your memories deserve a physical home. Create a beautiful, high-quality photobook of your favorite trips in just a few clicks.
-            </p>
-
-            <div className="mt-10">
-                <Button asChild size="lg" className="rounded-full bg-blue-600 px-10 font-bold shadow-xl shadow-blue-600/20 hover:scale-105 transition-transform">
-                    <Link href="/make-album">Create Your First Book</Link>
-                </Button>
-            </div>
-
-            <div className="mt-12 flex items-center justify-center gap-8 grayscale opacity-50">
-                <div className="flex items-center gap-2">
-                    <ImageIcon className="h-5 w-5" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Premium Print</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <ShoppingBag className="h-5 w-5" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Global Shipping</span>
-                </div>
-            </div>
+            <span className="absolute right-4 top-4 rounded-full bg-[#fdfbf8] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.08em] text-[#785236] shadow-sm">{statusNames[album.status] || album.status.replaceAll("_", " ")}</span>
         </div>
-    );
+        <div className="flex flex-1 flex-col p-5">
+            <h2 className="truncate font-[Georgia] text-2xl">{album.title}</h2>
+            <p className="mt-1 text-xs text-[#8a7d70]">{photoCount} photos · {album.page_count || "—"} proof pages · {ALBUM_FORMAT}</p>
+            <div className="mt-auto flex items-center justify-between pt-5 text-xs font-bold"><span>GHS {album.total_cost || ALBUM_PRICE_GHS}</span><span className="inline-flex items-center gap-1 text-[#ba6737]">{action} <ArrowRight size={15} /></span></div>
+        </div>
+    </Link>;
 }

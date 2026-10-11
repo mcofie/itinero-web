@@ -17,18 +17,10 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Book, User, Calendar, DollarSign, ExternalLink, BadgeCheck, Truck, Package, Clock } from "lucide-react";
-import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { Book, DollarSign, ExternalLink, Package } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { AlbumShippingAddress } from "@/lib/album-order";
 
 type PhotobookAdmin = {
     id: string;
@@ -37,40 +29,26 @@ type PhotobookAdmin = {
     total_cost: number;
     currency: string;
     created_at: string;
+    page_count?: number;
+    pdf_path?: string | null;
+    shipping_address?: AlbumShippingAddress | null;
     user: {
         email: string;
         full_name: string;
     };
-    images: { count: number }[];
+    images: { id: string; original_name?: string | null; order_index: number; width?: number | null; height?: number | null }[];
 };
 
-export default function AdminPhotobooksClient({ initialPhotobooks }: { initialPhotobooks: any[] }) {
-    const sb = getSupabaseBrowser();
+export default function AdminPhotobooksClient({ initialPhotobooks }: { initialPhotobooks: PhotobookAdmin[] }) {
     const [photobooks, setPhotobooks] = useState<PhotobookAdmin[]>(initialPhotobooks);
 
     const updateStatus = async (id: string, newStatus: string) => {
-        const { error } = await sb
-            .schema("itinero")
-            .from("photobooks")
-            .update({ status: newStatus })
-            .eq("id", id);
-
-        if (error) {
-            toast.error("Failed to update status");
-        } else {
-            setPhotobooks(photobooks.map(b => b.id === id ? { ...b, status: newStatus } : b));
+        const response = await fetch(`/api/admin/albums/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus }) });
+        const result = await response.json();
+        if (!response.ok) toast.error(result.error || "Failed to update status");
+        else {
+            setPhotobooks(current => current.map(book => book.id === id ? { ...book, status: result.status } : book));
             toast.success(`Status updated to ${newStatus}`);
-        }
-    };
-
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'draft': return <Clock className="h-3 w-3" />;
-            case 'pending_payment': return <DollarSign className="h-3 w-3" />;
-            case 'paid': return <BadgeCheck className="h-3 w-3 text-emerald-500" />;
-            case 'processing': return <Package className="h-3 w-3 text-blue-500" />;
-            case 'shipped': return <Truck className="h-3 w-3 text-purple-500" />;
-            default: return null;
         }
     };
 
@@ -92,7 +70,7 @@ export default function AdminPhotobooksClient({ initialPhotobooks }: { initialPh
                 <StatCard title="Total Books" value={photobooks.length} icon={Book} color="text-blue-600" />
                 <StatCard title="Paid/Processing" value={photobooks.filter(b => b.status === 'paid' || b.status === 'processing').length} icon={Package} color="text-emerald-600" />
                 <StatCard title="Pending Payment" value={photobooks.filter(b => b.status === 'pending_payment').length} icon={DollarSign} color="text-amber-600" />
-                <StatCard title="Revenue" value={`${photobooks[0]?.currency || 'GHS'} ${photobooks.reduce((acc, b) => acc + (b.status !== 'draft' ? b.total_cost : 0), 0).toFixed(2)}`} icon={DollarSign} color="text-emerald-600" />
+                <StatCard title="Paid revenue" value={`${photobooks[0]?.currency || 'GHS'} ${photobooks.reduce((acc, b) => acc + (['paid', 'processing', 'shipped'].includes(b.status) ? b.total_cost : 0), 0).toFixed(2)}`} icon={DollarSign} color="text-emerald-600" />
             </div>
 
             <Card className="border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -135,43 +113,31 @@ export default function AdminPhotobooksClient({ initialPhotobooks }: { initialPh
                                         </TableCell>
                                         <TableCell>
                                             <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-md text-xs font-bold">
-                                                {book.images?.[0]?.count || 0}
+                                                {book.images?.length || 0} photos · {book.page_count || "—"} proof pages
                                             </div>
                                         </TableCell>
                                         <TableCell className="font-bold">
                                             {book.currency} {book.total_cost}
                                         </TableCell>
                                         <TableCell>
-                                            <Select defaultValue={book.status} onValueChange={(val) => updateStatus(book.id, val)}>
-                                                <SelectTrigger className={cn(
-                                                    "h-8 w-[140px] text-[10px] font-bold uppercase tracking-wider rounded-full",
-                                                    book.status === 'paid' && "bg-emerald-50 text-emerald-700 border-emerald-100",
-                                                    book.status === 'processing' && "bg-blue-50 text-blue-700 border-blue-100",
-                                                    book.status === 'shipped' && "bg-purple-50 text-purple-700 border-purple-100",
-                                                    book.status === 'pending_payment' && "bg-amber-50 text-amber-700 border-amber-100",
-                                                    book.status === 'draft' && "bg-slate-100 text-slate-500 border-slate-200"
-                                                )}>
-                                                    <div className="flex items-center gap-2">
-                                                        {getStatusIcon(book.status)}
-                                                        <SelectValue />
-                                                    </div>
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="draft" className="text-xs">Draft</SelectItem>
-                                                    <SelectItem value="pending_payment" className="text-xs">Pending Payment</SelectItem>
-                                                    <SelectItem value="paid" className="text-xs">Paid</SelectItem>
-                                                    <SelectItem value="processing" className="text-xs">Processing</SelectItem>
-                                                    <SelectItem value="shipped" className="text-xs">Shipped</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            <span className={cn("rounded-full px-3 py-1 text-xs font-bold capitalize",
+                                                ['paid', 'processing', 'shipped'].includes(book.status) ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700")}>{book.status.replaceAll('_', ' ')}</span>
                                         </TableCell>
                                         <TableCell className="text-xs text-slate-500">
                                             {new Date(book.created_at).toLocaleDateString()}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                                                <ExternalLink className="h-4 w-4" />
-                                            </Button>
+                                            <details className="inline-block text-left text-xs">
+                                                <summary className="cursor-pointer rounded-lg border px-3 py-2 font-semibold">Order details</summary>
+                                                <div className="mt-2 min-w-52 space-y-2 rounded-xl border bg-white p-3 shadow-lg dark:bg-slate-900">
+                                                    {book.shipping_address && <p className="leading-5"><strong>Deliver to:</strong><br />{book.shipping_address.fullName}<br />{book.shipping_address.phone}<br />{book.shipping_address.street}, {book.shipping_address.area}<br />{book.shipping_address.landmark && <>{book.shipping_address.landmark}<br /></>}Accra, Ghana</p>}
+                                                    {book.pdf_path && <a className="flex items-center gap-1 font-semibold text-blue-600" target="_blank" rel="noreferrer" href={`/api/admin/albums/${book.id}/file`}>Open album PDF <ExternalLink size={13} /></a>}
+                                                    {book.images?.some(photo => Math.min(photo.width || 0, photo.height || 0) < 2400) && <p className="rounded-lg bg-amber-50 p-2 text-amber-800">Check low-resolution originals before printing.</p>}
+                                                    {book.images?.length > 0 && <details><summary className="cursor-pointer font-semibold">Original photos ({book.images.length})</summary><div className="mt-1 max-h-32 overflow-auto">{[...book.images].sort((a, b) => a.order_index - b.order_index).map((photo, index) => <a key={photo.id} className="block py-1 text-blue-600" target="_blank" rel="noreferrer" href={`/api/admin/albums/${book.id}/file?photo=${photo.id}`}>{index + 1}. {photo.original_name || "Photo"}</a>)}</div></details>}
+                                                    {book.status === "paid" && <button className="rounded-lg bg-blue-600 px-3 py-2 font-semibold text-white" onClick={() => void updateStatus(book.id, "processing")}>Mark printing</button>}
+                                                    {book.status === "processing" && <button className="rounded-lg bg-emerald-600 px-3 py-2 font-semibold text-white" onClick={() => void updateStatus(book.id, "shipped")}>Mark shipped</button>}
+                                                </div>
+                                            </details>
                                         </TableCell>
                                     </TableRow>
                                 ))

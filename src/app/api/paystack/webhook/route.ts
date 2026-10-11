@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { sendDiscordNotification, formatDiscordEmbed } from "@/lib/discord";
+import { reconcileAlbumPayment } from "@/lib/album-payment";
 
 const WH_SECRET = process.env.PAYSTACK_WEBHOOK_SECRET || process.env.PAYSTACK_SECRET_KEY!;
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY!;
@@ -38,6 +39,17 @@ export async function POST(req: NextRequest) {
     if (evt.event === "charge.success") {
         const tx = evt.data;
         const meta = tx.metadata || {};
+
+        if (meta.purpose === "album_order" && meta.album_id) {
+            try {
+                const status = await reconcileAlbumPayment(tx.reference);
+                if (status !== "paid") return NextResponse.json({ ok: false, error: "album_payment_unconfirmed" }, { status: 503 });
+                return NextResponse.json({ ok: true });
+            } catch (error) {
+                console.error("[paystack-webhook] Album payment failed:", error);
+                return NextResponse.json({ ok: false }, { status: 503 });
+            }
+        }
 
         if (meta.purpose !== "points_topup" || !meta.quote_id) {
             console.log("[paystack-webhook] Ignored: not a points_topup or missing quote_id", {

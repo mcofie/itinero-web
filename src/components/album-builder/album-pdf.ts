@@ -1,27 +1,27 @@
 import type { AlbumLayout, AlbumPhoto } from "./album-draft";
+import { resolveCoverTextColor, type CoverTypeface } from "@/lib/album-cover-style";
+import { coverImagePath, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
 
-export const PRINT_WIDTH = 1800;
-export const PRINT_HEIGHT = 2700;
+// A standard 8 × 10 inch portrait proof at 300 pixels per inch.
+export const PRINT_WIDTH = 2400;
+export const PRINT_HEIGHT = 3000;
+const DESIGN_WIDTH = 1800;
+const DESIGN_HEIGHT = 2250;
 
 export function groupAlbumPhotos(photos: AlbumPhoto[], layout: AlbumLayout): AlbumPhoto[][] {
     const perPage = layout === "gallery" ? 1 : layout === "collage" ? 3 : 2;
     return Array.from({ length: Math.ceil(photos.length / perPage) }, (_, index) => photos.slice(index * perPage, (index + 1) * perPage));
 }
 
-export function coverInk(background: string): string {
-    const hex = background.replace("#", "");
-    const channels = [0, 2, 4].map(index => parseInt(hex.slice(index, index + 2), 16) / 255);
-    const brightness = channels.reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
-    return brightness < 0.55 ? "#fff8dc" : "#2b1a07";
-}
-
 type ExportOptions = {
     title: string;
     destination: string;
     year: string;
-    coverId: string;
+    coverId: TravelCoverId;
     coverColor: string;
     coverFontFamily: string;
+    coverTypeface: CoverTypeface;
+    coverTextColor: string;
     layout: AlbumLayout;
     photos: AlbumPhoto[];
     onProgress?: (page: number, total: number) => void;
@@ -40,23 +40,36 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: n
     ctx.clip();
 }
 
-function paintCoverTitle(ctx: CanvasRenderingContext2D, title: string, year: string, color: string, fontFamily: string) {
-    ctx.fillStyle = color;
-    ctx.fillRect(0, 0, PRINT_WIDTH, 865);
-    ctx.fillStyle = coverInk(color);
-    const headline = title.trim().toUpperCase() || "MY TRIP";
-    let fontSize = 260;
-    do {
-        ctx.font = `900 ${fontSize}px ${fontFamily}`;
-        if (ctx.measureText(headline).width <= PRINT_WIDTH - 150) break;
-        fontSize -= 5;
-    } while (fontSize > 92);
+function paintCoverTitle(ctx: CanvasRenderingContext2D, title: string, year: string, color: string, fontFamily: string, typeface: CoverTypeface, textColor: string, artOnly: boolean) {
+    if (!artOnly) {
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, DESIGN_WIDTH, 610);
+    }
+    ctx.fillStyle = resolveCoverTextColor(textColor, color);
+    const headline = (typeface === "bold" ? title.trim().toUpperCase() : title.trim()) || "My trip";
+    ctx.font = "700 34px Arial, sans-serif";
     ctx.textBaseline = "top";
-    ctx.fillText(headline, 75, 95);
-    ctx.font = `900 118px ${fontFamily}`;
+    ctx.fillText("ITINERO · TRAVEL ALBUM", 125, 83);
+    ctx.font = "700 52px Arial, sans-serif";
     ctx.textAlign = "right";
-    ctx.fillText(year, PRINT_WIDTH - 83, 420);
+    ctx.fillText(year, DESIGN_WIDTH - 125, 75);
     ctx.textAlign = "left";
+    let fontSize = headline.length > 22 ? 145 : headline.length > 9 ? 175 : 250;
+    let lines: string[] = [];
+    for (; fontSize >= 100; fontSize -= 5) {
+        ctx.font = `400 ${fontSize}px ${fontFamily}`;
+        lines = [];
+        for (const word of headline.split(/\s+/)) {
+            const last = lines.length - 1;
+            const candidate = last < 0 ? word : `${lines[last]} ${word}`;
+            if (last < 0 || ctx.measureText(candidate).width > DESIGN_WIDTH - 250) lines.push(word);
+            else lines[last] = candidate;
+        }
+        if (lines.length <= 2 && lines.every(line => ctx.measureText(line).width <= DESIGN_WIDTH - 250)) break;
+    }
+    const lineHeight = fontSize * (typeface === "handwritten" ? 1.05 : typeface === "serif" ? .97 : .88);
+    const firstY = lines.length === 1 ? 315 : 205;
+    lines.slice(0, 2).forEach((line, index) => ctx.fillText(line, 125, firstY + index * lineHeight));
 }
 
 async function paintPhoto(ctx: CanvasRenderingContext2D, photo: AlbumPhoto, x: number, y: number, width: number, height: number) {
@@ -83,44 +96,44 @@ function paintCaption(ctx: CanvasRenderingContext2D, caption: string, x: number,
 
 async function paintInterior(ctx: CanvasRenderingContext2D, photos: AlbumPhoto[], layout: AlbumLayout, pageNumber: number, destination: string) {
     ctx.fillStyle = "#fdfbf8";
-    ctx.fillRect(0, 0, PRINT_WIDTH, PRINT_HEIGHT);
+    ctx.fillRect(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
     ctx.fillStyle = "#8e7d67";
     ctx.font = "700 30px Arial, sans-serif";
     ctx.letterSpacing = "4px";
     ctx.fillText(destination.toUpperCase(), 155, 128);
     ctx.textAlign = "right";
-    ctx.fillText(String(pageNumber).padStart(2, "0"), PRINT_WIDTH - 155, 128);
+    ctx.fillText(String(pageNumber).padStart(2, "0"), DESIGN_WIDTH - 155, 128);
     ctx.textAlign = "left";
     ctx.letterSpacing = "0px";
 
     if (photos.length === 1 || layout === "gallery") {
-        await paintPhoto(ctx, photos[0], 155, 235, 1490, 2150);
-        paintCaption(ctx, photos[0].caption, 160, 2430, 1450);
+        await paintPhoto(ctx, photos[0], 155, 235, 1490, 1690);
+        paintCaption(ctx, photos[0].caption, 160, 1970, 1450);
         return;
     }
 
     if (photos.length === 2 || layout === "editorial") {
-        await paintPhoto(ctx, photos[0], 155, 225, 1490, 990);
-        paintCaption(ctx, photos[0].caption, 160, 1240, 1450);
-        await paintPhoto(ctx, photos[1], 155, 1375, 1490, 990);
-        paintCaption(ctx, photos[1].caption, 160, 2390, 1450);
+        await paintPhoto(ctx, photos[0], 155, 225, 1490, 760);
+        paintCaption(ctx, photos[0].caption, 160, 1005, 1450);
+        await paintPhoto(ctx, photos[1], 155, 1130, 1490, 760);
+        paintCaption(ctx, photos[1].caption, 160, 1910, 1450);
         return;
     }
 
-    await paintPhoto(ctx, photos[0], 155, 225, 1490, 1120);
-    paintCaption(ctx, photos[0].caption, 160, 1370, 1450);
-    await paintPhoto(ctx, photos[1], 155, 1515, 715, 770);
-    await paintPhoto(ctx, photos[2], 930, 1515, 715, 770);
-    paintCaption(ctx, photos[1].caption, 160, 2320, 710);
-    paintCaption(ctx, photos[2].caption, 935, 2320, 710);
+    await paintPhoto(ctx, photos[0], 155, 225, 1490, 920);
+    paintCaption(ctx, photos[0].caption, 160, 1165, 1450);
+    await paintPhoto(ctx, photos[1], 155, 1310, 715, 585);
+    await paintPhoto(ctx, photos[2], 930, 1310, 715, 585);
+    paintCaption(ctx, photos[1].caption, 160, 1915, 710);
+    paintCaption(ctx, photos[2].caption, 935, 1915, 710);
 }
 
 function paintIntro(ctx: CanvasRenderingContext2D, title: string, destination: string, year: string, photoCount: number) {
     ctx.fillStyle = "#fdfbf8";
-    ctx.fillRect(0, 0, PRINT_WIDTH, PRINT_HEIGHT);
+    ctx.fillRect(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
     ctx.strokeStyle = "#d6c6ae";
     ctx.lineWidth = 3;
-    ctx.strokeRect(155, 155, PRINT_WIDTH - 310, PRINT_HEIGHT - 310);
+    ctx.strokeRect(155, 155, DESIGN_WIDTH - 310, DESIGN_HEIGHT - 310);
     ctx.fillStyle = "#e87836";
     ctx.font = "italic 65px Georgia, serif";
     ctx.fillText("the good kind of souvenir", 230, 350);
@@ -129,27 +142,27 @@ function paintIntro(ctx: CanvasRenderingContext2D, title: string, destination: s
     let fontSize = 155;
     do {
         ctx.font = `bold ${fontSize}px Georgia, serif`;
-        if (ctx.measureText(headline).width <= PRINT_WIDTH - 460) break;
+        if (ctx.measureText(headline).width <= DESIGN_WIDTH - 460) break;
         fontSize -= 5;
     } while (fontSize > 70);
-    ctx.fillText(headline, 230, 1120);
+    ctx.fillText(headline, 230, 900);
     ctx.font = "52px Georgia, serif";
-    ctx.fillText(`${destination} · ${year}`, 230, 1380);
+    ctx.fillText(`${destination} · ${year}`, 230, 1160);
     ctx.fillStyle = "#8e7d67";
     ctx.font = "32px Arial, sans-serif";
-    ctx.fillText(`${photoCount} moments worth keeping`, 230, 2310);
+    ctx.fillText(`${photoCount} moments worth keeping`, 230, 1900);
 }
 
 function paintEnding(ctx: CanvasRenderingContext2D, destination: string) {
     ctx.fillStyle = "#ed7936";
-    ctx.fillRect(0, 0, PRINT_WIDTH, PRINT_HEIGHT);
+    ctx.fillRect(0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
     ctx.fillStyle = "#fff7e9";
     ctx.font = "bold 170px Georgia, serif";
-    ctx.fillText("The end.", 160, 1190);
+    ctx.fillText("The end.", 160, 980);
     ctx.font = "italic 94px Georgia, serif";
-    ctx.fillText("For now.", 160, 1430);
+    ctx.fillText("For now.", 160, 1220);
     ctx.font = "42px Arial, sans-serif";
-    ctx.fillText(`Made from memories of ${destination}.`, 165, 2460);
+    ctx.fillText(`Made from memories of ${destination}.`, 165, 2030);
 }
 
 function makePdf(jpegs: Uint8Array[]): Blob {
@@ -176,8 +189,8 @@ function makePdf(jpegs: Uint8Array[]): Blob {
         const pageId = pageIds[index];
         const contentId = pageId + 1;
         const imageId = pageId + 2;
-        object(pageId, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 432 648] /Resources << /XObject << /Im0 ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>`);
-        const content = "q 432 0 0 648 0 0 cm /Im0 Do Q";
+        object(pageId, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 576 720] /Resources << /XObject << /Im0 ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>`);
+        const content = "q 576 0 0 720 0 0 cm /Im0 Do Q";
         object(contentId, `<< /Length ${encoder.encode(content).byteLength} >>\nstream\n${content}\nendstream`);
         offsets[imageId] = position;
         append(`${imageId} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${PRINT_WIDTH} /Height ${PRINT_HEIGHT} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.byteLength} >>\nstream\n`);
@@ -204,7 +217,7 @@ function jpegFromCanvas(canvas: HTMLCanvasElement): Promise<Uint8Array> {
     }, "image/jpeg", 0.9));
 }
 
-export async function downloadAlbumPdf(options: ExportOptions): Promise<void> {
+export async function createAlbumPdf(options: ExportOptions): Promise<Blob> {
     const groups = groupAlbumPhotos(options.photos, options.layout);
     const total = groups.length + 3;
     const canvas = document.createElement("canvas");
@@ -212,6 +225,7 @@ export async function downloadAlbumPdf(options: ExportOptions): Promise<void> {
     canvas.height = PRINT_HEIGHT;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) throw new Error("Your browser could not create the PDF preview.");
+    ctx.scale(PRINT_WIDTH / DESIGN_WIDTH, PRINT_HEIGHT / DESIGN_HEIGHT);
     const jpegs: Uint8Array[] = [];
     const addPage = async () => {
         jpegs.push(await jpegFromCanvas(canvas));
@@ -219,12 +233,12 @@ export async function downloadAlbumPdf(options: ExportOptions): Promise<void> {
         await new Promise<void>(resolve => setTimeout(resolve, 0));
     };
 
-    const coverResponse = await fetch(`/images/landing/covers/${options.coverId}.png`);
+    const coverResponse = await fetch(coverImagePath(options.coverId));
     if (!coverResponse.ok) throw new Error("The selected cover could not be loaded.");
     const coverBitmap = await createImageBitmap(await coverResponse.blob());
     try {
-        drawCropped(ctx, coverBitmap, 0, 0, PRINT_WIDTH, PRINT_HEIGHT);
-        paintCoverTitle(ctx, options.title, options.year, options.coverColor, options.coverFontFamily);
+        drawCropped(ctx, coverBitmap, 0, 0, DESIGN_WIDTH, DESIGN_HEIGHT);
+        paintCoverTitle(ctx, options.title, options.year, options.coverColor, options.coverFontFamily, options.coverTypeface, options.coverTextColor, "artOnly" in TRAVEL_COVERS_BY_ID[options.coverId]);
         await addPage();
     } finally {
         coverBitmap.close();
@@ -239,7 +253,11 @@ export async function downloadAlbumPdf(options: ExportOptions): Promise<void> {
     paintEnding(ctx, options.destination);
     await addPage();
 
-    const pdf = makePdf(jpegs);
+    return makePdf(jpegs);
+}
+
+export async function downloadAlbumPdf(options: ExportOptions): Promise<void> {
+    const pdf = await createAlbumPdf(options);
     const url = URL.createObjectURL(pdf);
     const anchor = document.createElement("a");
     anchor.href = url;

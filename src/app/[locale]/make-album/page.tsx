@@ -8,7 +8,7 @@ const albumRound = localFont({ src: "../../../../public/fonts/landing/lilita-one
 
 export const metadata: Metadata = {
     title: "Make your album",
-    description: "Make a photo album from your favorite trip. Choose a destination cover, add your photos, and download a PDF proof.",
+    description: "Create an 8 × 10 in hardcover travel album. Choose a destination cover, add your photos, save with Google, and order delivery in Accra.",
     robots: { index: false, follow: false },
 };
 

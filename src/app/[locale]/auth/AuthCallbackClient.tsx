@@ -12,7 +12,12 @@ export default function AuthCallbackClient() {
     useEffect(() => {
         const code = params.get("code");
         const error = params.get("error");
-        const next = params.get("next") || "/trips";
+        const requestedNext = params.get("next") || window.sessionStorage.getItem("itinero-auth-next") || "/photobooks";
+        window.sessionStorage.removeItem("itinero-auth-next");
+        const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/photobooks";
+        const errorDestination = next.startsWith("/make-album") || next.startsWith("/photobooks")
+            ? "/album-login" : "/login";
+        const errorNext = errorDestination === "/album-login" ? `&next=${encodeURIComponent(next)}` : "";
 
         const run = async () => {
             const sb = getSupabaseBrowser();
@@ -20,17 +25,18 @@ export default function AuthCallbackClient() {
             // If OAuth provider returned an error in the URL, bail nicely
             if (error) {
                 console.error("OAuth error:", error);
-                router.replace(`/login?error=${encodeURIComponent(error)}`);
+                router.replace(`${errorDestination}?error=${encodeURIComponent(error)}${errorNext}`);
                 return;
             }
 
             // Exchange the code for a session (Supabase)
             if (code) {
                 try {
-                    await sb.auth.exchangeCodeForSession(code);
+                    const { error: exchangeError } = await sb.auth.exchangeCodeForSession(code);
+                    if (exchangeError) throw exchangeError;
                 } catch (e) {
                     console.error("exchangeCodeForSession failed", e);
-                    router.replace("/login?error=auth_failed");
+                    router.replace(`${errorDestination}?error=auth_failed${errorNext}`);
                     return;
                 }
             }

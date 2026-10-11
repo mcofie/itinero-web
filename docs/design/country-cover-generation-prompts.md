@@ -312,3 +312,33 @@ Exact printed text: "INDONESIA" and "2025". Set country name in ONE LINE of enor
 Output ONLY the flat rectangular printed artwork edge to edge: no actual book, no spine, no mockup, no rotation, no perspective distortion of the page, no margin around the artwork, no border, no shadow, no fabric backdrop, no extra words, no watermark. No blurry or pixelated edges, no coarse noise overlay, no photographic rendering. Match the reference typography and scale very closely.
 ```
 
+# Additional personalized cover illustrations (2026-10-11)
+
+Generated with the built-in image generation tool, then converted to 1024 × 1536 WebP for the project. Each prompt used this shared brief: “Use case: illustration-story. Asset type: Itinero personalized travel album front-cover illustration, 2:3 portrait. Premium flat travel-poster illustration in a uniform contemporary hardcover series: bold simplified forms, layered paper-cut shapes, subtle print grain, confident saturated palette, crisp edges. Meaningful artwork in the lower 75%; clean continuous upper 25% for typography added later. No text, letters, numbers, logos, border, mockup or book perspective.”
+
+- **Ghana:** Cape Coast Castle facade, Ghanaian coastal palms and warm sun; deep terracotta/coral background.
+- **South Africa:** Table Mountain above brightly colored Bo-Kaap houses and plants; muted jade background.
+- **Kenya:** Umbrella acacia, Mount Kenya, golden sun and small zebra silhouette; ochre background.
+- **Nigeria:** Lagos National Theatre with palms and warm dusk; deep indigo background.
+- **Tanzania:** Mount Kilimanjaro at sunrise over an acacia-dotted plain and wildflowers; dusky rose background.
+- **Switzerland:** Red mountain train across a stone viaduct, Alps, lake and snowy peaks; pine-green background.
+- **Australia:** Sydney Opera House at golden hour, harbor and eucalyptus; coral background.
+- **Brazil:** Sugarloaf Mountain, palms and coastal wave; warm orange background.
+
+# Twelve more personalized cover illustrations (2026-10-11)
+
+Generated with the built-in image generation tool. Each asset is saved as a 1024 × 1536 WebP in `public/images/landing/covers/`. The shared prompt was: “Use case: illustration-story. Asset type: artwork for a personalized travel photo album cover, 2:3 portrait. Generate one flat edge-to-edge rectangular illustration for [country]: [subject]. Match the existing Itinero hardcover series: premium contemporary mid-century travel poster, bold simplified paper-cut and gouache shapes, clean confident silhouettes, a restrained five-color palette, slight fine print texture, crisp high-resolution edges. Use a continuous [background color] background. Reserve the upper 27% as a plain, even, uninterrupted field with no objects, pattern or gradients so the app can add typography; place all significant subject matter in the lower 73%, with a graceful transition into the same background color. No text, letters, numbers, logos, book mockup, spine, perspective, border, shadow or watermark.”
+
+- **Ireland:** Cliffs of Moher, Atlantic waves, seabirds and warm evening light; deep moss green.
+- **Norway:** Fjord, steep mountains, still water and a small red cabin; muted midnight blue.
+- **Singapore:** Gardens by the Bay Supertrees, palms and skyline; warm coral red.
+- **Philippines:** Palawan limestone islands, turquoise water and an outrigger boat; ocean teal.
+- **Cambodia:** Angkor Wat and its reflecting pool; saffron gold.
+- **New Zealand:** Milford Sound, mountain peak, waterfall and forest; deep jade.
+- **Argentina:** Colorful La Boca facades, balconies and a flowering tree; dusty lavender.
+- **Chile:** Torres del Paine, turquoise lake and sunrise; burnt apricot.
+- **Peru:** Machu Picchu and Andean peaks; terracotta red.
+- **Colombia:** Cartagena balconies, bougainvillea and a cobbled street; Caribbean turquoise.
+- **Rwanda:** Misty Virunga volcanoes, forest and mountain gorilla; sage green.
+- **Senegal:** Gorée Island facades, a palm and Atlantic shore; hibiscus pink.
+
