@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="27 34 132 66" fill="none">
+  <style>
+    svg { --logo-interval: 7s; }
+    @media (prefers-reduced-motion: no-preference) {
+      .stroke { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw var(--logo-interval) linear infinite; }
+      .brow-right { animation-delay: .12s; }
+      .eye-left { animation-delay: .24s; }
+      .eye-right { animation-delay: .36s; }
+      .brows { animation: brow-lift var(--logo-interval) ease-in-out infinite; }
+      .eyes { transform-origin: 93px 80px; animation: blink var(--logo-interval) ease-in-out infinite; }
+    }
+    @keyframes draw { 0%, 2%, 100% { stroke-dashoffset: 100; } 12%, 92% { stroke-dashoffset: 0; } }
+    @keyframes blink { 0%, 69%, 75%, 100% { transform: scaleY(1); } 71%, 73% { transform: scaleY(.12); } }
+    @keyframes brow-lift { 0%, 69%, 75%, 100% { transform: translateY(0); } 71%, 73% { transform: translateY(-2px); } }
+  </style>
+  <g stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <g class="brows">
+      <path class="stroke brow-left" pathLength="100" d="M40 62C45 53 52 48 61 46"/>
+      <path class="stroke brow-right" pathLength="100" d="M125 46C134 49 141 55 145 63"/>
+    </g>
+    <g class="eyes">
+      <path class="stroke eye-left" pathLength="100" d="M51 89C51 77 58 71 67 71C77 71 84 77 84 89"/>
+      <path class="stroke eye-right" pathLength="100" d="M101 89C101 77 108 71 118 71C128 71 136 77 136 89"/>
+    </g>
+  </g>
+</svg>

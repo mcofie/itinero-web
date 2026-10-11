@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 import { readFile, writeFile } from 'node:fs/promises';
 
-const svg = await readFile('public/brand/itinero-camera.svg');
+const svg = await readFile('public/brand/itinero-mark.svg');
 await sharp(svg).resize(180, 180).png().toFile('public/brand/apple-touch-icon.png');
 const sizes = [16, 32, 48];
 const pngs = await Promise.all(sizes.map(size => sharp(svg).resize(size, size).png().toBuffer()));

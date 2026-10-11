@@ -9,9 +9,9 @@
 .handwriting{font-family:var(--font-album-hand),'Comic Sans MS',cursive!important;color:var(--orange);font-size:28px;line-height:1.2}
 .header{position:fixed;top:0;left:0;z-index:40;width:100%;padding:28px 3.4%;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
 .header>a{pointer-events:auto}
-.logo{width:54px;height:58px;filter:drop-shadow(0 2px 1px #2b1a071b);transition:transform .2s}
+.logo{width:76px;height:46px;display:block;filter:drop-shadow(0 2px 1px #2b1a071b);transition:transform .2s}
 .logo:hover{transform:rotate(-8deg)}
-.logo svg{width:100%;height:100%}
+.logo img{display:block;width:100%;height:100%;object-fit:contain}
 .outlineButton{display:inline-flex;align-items:center;justify-content:center;padding:13px 21px;border:2px solid #423824;border-radius:17px 15px 18px 16px;background:#fdfbf9f2;color:var(--ink);font-size:20px;line-height:1.3;box-shadow:0 0 0 4px #fdfbf9,0 0 0 5px #30251414,0 3px 3px 5px #30251410;transition:transform .2s,background .2s;white-space:nowrap}
 .outlineButton:hover{background:#fff2d8;transform:rotate(-2deg)}
 .skipLink{position:fixed;top:12px;left:90px;z-index:100;padding:12px;background:#fff;transform:translateY(-160%)}
@@ -113,6 +113,7 @@
 .footerTop nav{display:flex;gap:95px;padding:4px 1% 0;font:18px/1.4 var(--font-geist-sans),Arial,sans-serif}
 .footerTop nav>div{display:flex;flex-direction:column;gap:22px}
 .footer a:hover{text-decoration:underline;text-underline-offset:6px}
+.footerBrandMark{display:block;width:132px;height:66px;margin:38px auto 0;object-fit:contain}
 .footerWordmark{display:block;font:clamp(170px,29vw,580px)/1 var(--font-album-round),sans-serif;letter-spacing:-.045em;color:#d15f26;text-shadow:0 2px 2px #f78e5466,0 -2px 3px #a33f1950;margin:40px -5px 20px;text-align:center}
 .footerWordmark:hover{text-decoration:none!important}
 .footerBottom{font:12px/1.5 var(--font-geist-sans),Arial,sans-serif;display:flex;justify-content:space-between;gap:20px;color:#ffeddd}
@@ -120,7 +121,7 @@
 @media(min-width:1750px){.heroBook{left:46%;top:43%}.heroCopy{left:15%}.heroAction{left:15%}}
 @media(max-width:1050px){.heroCopy{left:10%;top:15%}.heroCopy h1{font-size:96px}.heroCopy>.handwriting{font-size:25px}.heroSubtitle{font-size:24px}.heroAction{left:10%}.heroBook{width:53vw;left:40%;top:55%}.featureCard{max-width:38%;width:350px}.featureCard h2{font-size:29px;padding:0 24px 30px}.featureCard button{font-size:16px;padding:15px 24px}.otherThings{min-height:750px}.doodle{font-size:22px}.doodle svg{width:56px;height:56px}.galleryHeading h2{font-size:38px}.galleryNote{font-size:22px}.footerTop nav{gap:40px}.footerTop h2{font-size:33px}}
 @media(max-width:700px){
- .site h2{font-size:30px}.header{padding:20px 22px}.logo{width:43px;height:46px}.header .outlineButton{font-size:15px;padding:10px 13px;border-radius:13px}.outlineButton{font-size:18px;padding:12px 18px}
+ .site h2{font-size:30px}.header{padding:20px 22px}.logo{width:66px;height:40px}.header .outlineButton{font-size:15px;padding:10px 13px;border-radius:13px}.outlineButton{font-size:18px;padding:12px 18px}
  .heroJourney{height:165svh;min-height:1300px}.heroSticky{min-height:790px}.heroCopy{left:10%;top:120px}.heroCopy>.handwriting{font-size:24px;margin-bottom:18px}.heroCopy h1{font-size:clamp(84px,21vw,132px);line-height:.81}.heroCopy h1>span+span{margin-top:10px}.heroSubtitle{margin-top:27px!important;font-size:21px;line-height:1.4!important}.heroSubtitle .handwriting{font-size:24px;margin-left:3px}.heroAction{left:10%;top:max(440px,calc(35vw + 304px));bottom:auto;max-width:84%}.heroAction p{font-size:12px;margin-top:21px;max-width:260px}.heroBook{width:77vw;left:31%;top:max(650px,calc(35vw + 514px));max-width:none}.albumCover{border-radius:3px}.welcomeTitle{font-size:48px}.insidePage>.handwriting{font-size:25px}.pagePrompt{font-size:12px}.openBookLink{bottom:3%;font-size:19px}
  .reassurance{padding:70px 6% 55px;min-height:650px}.reassurance h2{font-size:27px;line-height:1.5}.stickyNotes{display:grid;grid-template-columns:1fr 1fr;gap:33px 20px;padding-top:65px}.stickyNote{width:100%;max-width:none;padding:14px}.stickyNote:nth-child(2){translate:0 -15px}.stickyNote:nth-child(3){translate:0 0}.stickyNote:nth-child(4){translate:0 -10px}.stickyNote svg{width:30px;height:30px}.stickyNote p{font-size:22px;margin-top:14px}
  .featureScene{min-height:0;display:flex;flex-direction:column;overflow:visible;padding-bottom:35px}.sceneArt{position:relative;height:auto;aspect-ratio:4/5;overflow:hidden}.featureCard{position:relative;top:auto!important;bottom:auto!important;left:auto!important;right:auto!important;width:100%;max-width:none;border:0;border-radius:0;box-shadow:none;padding:30px 7% 0}.featureCard h2{font-size:30px;padding:0 0 28px}.featureCard button{padding:16px 0;font-size:16px}.featureCard button>span:last-child{font-size:18px}
@@ -140,7 +141,7 @@
 @media(max-width:900px){
     .header{padding:14px 22px;background:#fdfbf9ed;backdrop-filter:blur(16px);border-bottom:1px solid #e9e3da80}
     .header .outlineButton{font-size:15px;padding:10px 16px;min-height:44px}
-    .logo{width:42px;height:44px}
+    .logo{width:66px;height:40px}
     .heroJourney,.reducedMotion .heroJourney{height:auto;min-height:0}
     .heroSticky,.reducedMotion .heroSticky{position:relative;height:auto;min-height:0;padding:115px 24px 30px;display:flex;flex-direction:column;align-items:center;overflow:hidden}
     .heroCopy{position:relative;left:auto;top:auto;width:100%;text-align:center;opacity:1!important}

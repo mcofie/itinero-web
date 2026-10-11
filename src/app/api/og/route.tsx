@@ -6,15 +6,20 @@ export const runtime = "nodejs";
 export const dynamic = "force-static";
 
 export async function GET() {
-    const [font, italy, japan] = await Promise.all([
+    const [font, italy, japan, mark] = await Promise.all([
         readFile(path.join(process.cwd(), "public/fonts/landing/lilita-one.ttf")),
         readFile(path.join(process.cwd(), "public/images/landing/covers/italy.png")),
         readFile(path.join(process.cwd(), "public/images/landing/covers/japan.png")),
+        readFile(path.join(process.cwd(), "public/brand/itinero-mark.svg")),
     ]);
     return new ImageResponse(
         <div style={{ width: "100%", height: "100%", display: "flex", background: "#fdfbf9", color: "#2b1a07", padding: "64px", overflow: "hidden" }}>
             <div style={{ display: "flex", flexDirection: "column", width: 570, justifyContent: "center" }}>
-                <div style={{ display: "flex", fontFamily: "AlbumRound", fontSize: 42, color: "#ed7936", marginBottom: 34 }}>itinero.</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 18, fontFamily: "AlbumRound", fontSize: 42, color: "#ed7936", marginBottom: 34 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`data:image/svg+xml;base64,${mark.toString("base64")}`} width={76} height={44} alt="" />
+                    <span>itinero.</span>
+                </div>
                 <div style={{ display: "flex", flexDirection: "column", fontFamily: "AlbumRound", fontSize: 90, lineHeight: 1 }}>
                     <span>Your trips.</span><span>In print.</span>
                 </div>
