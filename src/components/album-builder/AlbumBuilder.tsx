@@ -11,6 +11,7 @@ import { EDITABLE_STATUSES, isOrderStatus, STATUS_INFO, type OrderStatus } from 
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 import { clearAlbumDraft, deleteAlbumPhoto, loadAlbumDraft, saveAlbumDraft, saveAlbumPhoto, type AlbumDraftMeta, type AlbumLayout, type AlbumPhoto } from "./album-draft";
 import { createAlbumPdf, downloadAlbumPdf, groupAlbumPhotos } from "./album-pdf";
+import { AlbumWorkspaceSkeleton } from "./AlbumBuilderSkeleton";
 import styles from "./AlbumBuilder.module.css";
 
 const YEAR = String(new Date().getFullYear());
@@ -451,7 +452,7 @@ export default function AlbumBuilder({ pricing }: { pricing: AlbumPricing }) {
             <main className={styles.workspace}>
                 <div className={styles.workspaceTop}><span>STEP {String(step + 1).padStart(2, "0")} / 04</span><span>{photos.length ? `${photos.length} photos · ${pages.length + 3} pages` : "Your story starts here"}</span></div>
                 {error && <div className={styles.error} role="alert">{error}</div>}
-                {!ready ? <div className={styles.loading}><LoaderCircle className={styles.spin} /> Opening your album…</div> : <div className={styles.workGrid} aria-busy={isSavingCloud || isOrdering || isExporting}>
+                {!ready ? <AlbumWorkspaceSkeleton /> : <div className={styles.workGrid} aria-busy={isSavingCloud || isOrdering || isExporting}>
                     <section className={styles.controls}>
                         {step === 0 && <>
                             <div className={styles.sectionHead}><span className={styles.hand}>first things first</span><h2>Where did you go?</h2><p>Pick the place. We’ll start with a cover made for it.</p></div>

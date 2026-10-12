@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import AlbumBuilder from "@/components/album-builder/AlbumBuilder";
+import { albumFontVariables } from "@/components/album/album-fonts";
 import { getAlbumSettings } from "@/lib/album-settings-server";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const albumSerif = localFont({ src: "../../../../public/fonts/landing/gelica-regular.woff2", variable: "--font-album-serif", display: "swap", fallback: ["Georgia", "serif"] });
-const albumHand = localFont({ src: "../../../../public/fonts/landing/handwritten.woff2", variable: "--font-album-hand", display: "swap", fallback: ["cursive"] });
-const albumRound = localFont({ src: "../../../../public/fonts/landing/lilita-one.ttf", variable: "--font-album-round", display: "swap", fallback: ["Arial", "sans-serif"] });
 
 export const metadata: Metadata = {
     title: "Make your album",
@@ -19,5 +15,5 @@ export const dynamic = "force-dynamic";
 
 export default async function MakeAlbumPage() {
     const { pricing } = await getAlbumSettings(createAdminClient());
-    return <div className={`${albumSerif.variable} ${albumHand.variable} ${albumRound.variable}`}><AlbumBuilder pricing={pricing} /></div>;
+    return <div className={albumFontVariables}><AlbumBuilder pricing={pricing} /></div>;
 }
