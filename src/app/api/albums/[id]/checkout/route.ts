@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ALBUM_BUCKET, ALBUM_PRICE_GHS, ALBUM_PRICE_MINOR, parseAccraAddress } from "@/lib/album-order";
+import { ALBUM_BUCKET, parseAccraAddress } from "@/lib/album-order";
 import { albumServerContext, UUID_PATTERN } from "@/lib/album-server";
+import { notifyCustomer, ORDER_FIELDS, recordOrderEvent, type OrderRow } from "@/lib/album-orders-server";
+import { quoteAlbumPrice } from "@/lib/album-pricing-server";
 
 export const runtime = "nodejs";
 
@@ -39,14 +41,36 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         return NextResponse.json({ error: "Your album PDF is still uploading." }, { status: 400 });
     }
 
+    const quote = await quoteAlbumPrice(admin, { code: body?.discountCode, userId: user.id, albumId: id });
+    if ("error" in quote) return NextResponse.json({ error: quote.error }, { status: 400 });
+    const now = new Date().toISOString();
+    const order = {
+        shipping_address: address, pdf_path: proofPath, currency: "GHS",
+        customer_email: user.email, customer_name: user.user_metadata?.full_name || user.user_metadata?.name || address.fullName,
+        subtotal: quote.subtotal, total_cost: quote.total, discount_id: quote.discount?.id ?? null,
+        discount_code: quote.discount?.code ?? null, discount_amount: quote.discount?.amount ?? 0,
+        submitted_at: now, status_changed_at: now, updated_at: now,
+    };
+
+    // A fully discounted album has nothing to charge, so it is placed straight away.
+    if (quote.total <= 0) {
+        const { data: placed, error: placeError } = await admin.schema("itinero").from("photobooks")
+            .update({ ...order, status: "paid", paid_at: now, payment_reference: `free-${id}`, payment_url: null })
+            .eq("id", id).eq("user_id", user.id).eq("status", "draft").select(ORDER_FIELDS).maybeSingle<OrderRow>();
+        if (placeError || !placed) return NextResponse.json({ error: "Could not record your order. Please try again." }, { status: 503 });
+        await recordOrderEvent(admin, { photobookId: id, kind: "status", fromStatus: "draft", toStatus: "paid", actor: `Discount ${quote.discount?.code}`, message: "Fully discounted; no payment needed." });
+        await notifyCustomer(admin, placed, "paid");
+        return NextResponse.json({ free: true, albumId: id });
+    }
+
     const origin = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
     const paystackResponse = await fetch("https://api.paystack.co/transaction/initialize", {
         method: "POST",
         headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-            email: user.email, amount: ALBUM_PRICE_MINOR, currency: "GHS",
+            email: user.email, amount: Math.round(quote.total * 100), currency: "GHS",
             callback_url: `${origin}/photobooks?payment=return`,
-            metadata: { purpose: "album_order", album_id: id, user_id: user.id },
+            metadata: { purpose: "album_order", album_id: id, user_id: user.id, discount_code: quote.discount?.code ?? null },
         }),
         cache: "no-store",
     });
@@ -56,10 +80,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     }
 
     const { data: saved, error: saveError } = await admin.schema("itinero").from("photobooks").update({
-        status: "pending_payment", shipping_address: address, pdf_path: proofPath,
-        total_cost: ALBUM_PRICE_GHS, currency: "GHS", payment_reference: payment.data.reference,
-        payment_url: payment.data.authorization_url,
-        submitted_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+        ...order, status: "pending_payment", payment_reference: payment.data.reference, payment_url: payment.data.authorization_url,
     }).eq("id", id).eq("user_id", user.id).eq("status", "draft").select("id").maybeSingle();
     if (saveError || !saved) return NextResponse.json({ error: "Could not record your order. Please try again." }, { status: 503 });
     return NextResponse.json({ authorizationUrl: payment.data.authorization_url, reference: payment.data.reference });

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ALBUM_BUCKET, ALBUM_PRICE_GHS } from "@/lib/album-order";
 import { albumServerContext, UUID_PATTERN } from "@/lib/album-server";
 import { TRAVEL_COVERS_BY_ID } from "@/lib/travel-covers";
+import { EDITABLE_STATUSES, type OrderStatus } from "@/lib/album-fulfilment";
 import { DEFAULT_COVER_TEXT_COLOR, DEFAULT_COVER_TYPEFACE, isCoverTextColor, isCoverTypeface } from "@/lib/album-cover-style";
 
 export const runtime = "nodejs";
@@ -58,18 +59,20 @@ export async function POST(request: Request) {
         .select("id,status,user_id").eq("id", id).maybeSingle();
     if (readError) return NextResponse.json({ error: "Could not read the album." }, { status: 503 });
     if (existing && existing.user_id !== user.id) return NextResponse.json({ error: "Album not found." }, { status: 404 });
-    if (existing && existing.status !== "draft") return NextResponse.json({ error: "This order can no longer be edited." }, { status: 409 });
+    if (existing && !EDITABLE_STATUSES.includes(existing.status as OrderStatus)) return NextResponse.json({ error: "This order can no longer be edited." }, { status: 409 });
+    // An order sent back for changes stays in that status until the customer resubmits it.
+    const status = existing?.status === "changes_requested" ? "changes_requested" : "draft";
 
     const perPage = layout === "gallery" ? 1 : layout === "collage" ? 3 : 2;
     const values = {
         id, user_id: user.id, title, cover_template_id: destinationId, destination_id: destinationId,
         album_year: year, layout, cover_typeface: coverTypeface, cover_text_color: coverTextColor,
         page_count: Math.ceil(photos.length / perPage) + 3,
-        status: "draft", total_cost: ALBUM_PRICE_GHS, currency: "GHS", updated_at: new Date().toISOString(),
+        status, total_cost: ALBUM_PRICE_GHS, currency: "GHS", updated_at: new Date().toISOString(),
     };
     const { data: savedBook, error: bookError } = existing
         ? await admin.schema("itinero").from("photobooks").update(values)
-            .eq("id", id).eq("user_id", user.id).eq("status", "draft").select("id").maybeSingle()
+            .eq("id", id).eq("user_id", user.id).eq("status", status).select("id").maybeSingle()
         : await admin.schema("itinero").from("photobooks").insert(values).select("id").maybeSingle();
     if (bookError || !savedBook) return NextResponse.json({ error: "Could not save this draft. Refresh your albums and try again." }, { status: 409 });
 
@@ -88,5 +91,5 @@ export async function POST(request: Request) {
         await admin.storage.from(ALBUM_BUCKET).remove(removed.map(photo => photo.storage_path));
     }
 
-    return NextResponse.json({ id, status: "draft" });
+    return NextResponse.json({ id, status });
 }

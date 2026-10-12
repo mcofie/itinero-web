@@ -1,195 +1,79 @@
 "use client";
 
-import * as React from "react";
-import { useEffect, useState } from "react";
-import { useRouter } from "@/i18n/routing";
-import { Link } from "@/i18n/routing";
-import { useTranslations } from "next-intl";
+import { useEffect, useState, type FormEvent } from "react";
+import Image from "next/image";
+import { LoaderCircle } from "lucide-react";
+import { Link, useRouter } from "@/i18n/routing";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { Loader2, Plane, ArrowRight, CheckCircle2, Globe2, ShieldCheck, Lock } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+
+const field = "mt-1.5 block h-12 w-full rounded-xl border border-[#e2d6c7] bg-white px-4 text-sm text-[#2b1a07] outline-none transition placeholder:text-[#b3a594] focus:border-[#c16b36] focus:ring-2 focus:ring-[#c16b36]/15";
 
 export default function AdminLoginPage() {
     const sb = getSupabaseBrowser();
     const router = useRouter();
-    // const tAuth = useTranslations("Auth"); // Might not have specific "Auth" keys for admin, reuse generic ones.
-
     const [email, setEmail] = useState("");
     const [pwd, setPwd] = useState("");
     const [busy, setBusy] = useState(false);
+    const [error, setError] = useState("");
+    const [deniedEmail, setDeniedEmail] = useState<string | null>(null);
 
-    // If already signed-in, bounce to /admin/itinero
+    // Return to the admin page that sent us here; the orders admin by default.
+    const nextPath = () => {
+        const requested = new URLSearchParams(window.location.search).get("next") ?? "";
+        return requested.startsWith("/admin/") && !requested.startsWith("//") ? requested : "/admin";
+    };
+
+    // Already signed in: continue, unless that account was just refused admin access.
     useEffect(() => {
         (async () => {
             const { data } = await sb.auth.getSession();
-            if (data.session) {
-                // Ideally check if user is admin first, but layout will handle if not authorized.
-                router.replace("/admin/itinero");
-                router.refresh();
+            if (!data.session) return;
+            if (new URLSearchParams(window.location.search).has("denied")) {
+                setDeniedEmail(data.session.user.email ?? "this account");
+                return;
             }
+            router.replace(nextPath());
+            router.refresh();
         })();
-
-        const { data: sub } = sb.auth.onAuthStateChange((evt) => {
-            if (evt === "SIGNED_IN") {
-                router.replace("/admin/itinero");
-                router.refresh();
-            }
-        });
-        return () => sub.subscription.unsubscribe();
     }, [sb, router]);
 
-    async function handleEmail() {
-        setBusy(true);
-        try {
-            const result = await sb.auth.signInWithPassword({ email, password: pwd });
-
-            if (result.error) throw result.error;
-
-            toast.success("Signed in successfully");
-            router.replace("/admin/itinero");
-            router.refresh();
-        } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Authentication failed", { description: msg });
-        } finally {
-            setBusy(false);
-        }
+    async function signIn(event: FormEvent) {
+        event.preventDefault();
+        setBusy(true); setError("");
+        const { error: authError } = await sb.auth.signInWithPassword({ email, password: pwd });
+        if (authError) { setError(authError.message); setBusy(false); return; }
+        router.replace(nextPath());
+        router.refresh();
     }
 
-    async function handleGoogle() {
-        setBusy(true);
-        try {
-            const { error } = await sb.auth.signInWithOAuth({
-                provider: "google",
-                options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
-                    queryParams: { prompt: "consent", access_type: "offline" }
-                },
-            });
-            if (error) throw error;
-            // Redirect handled by OAuth; no-op here.
-        } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : String(e);
-            toast.error("Google sign-in failed", { description: msg });
-            setBusy(false);
-        }
-    }
-
-    return (
-        <div className="min-h-screen w-full flex bg-background font-sans text-foreground overflow-hidden">
-            {/* Left Side - Visual/Brand - Darker theme for Admin */}
-            <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1483366774580-c49d38f1acf1?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-overlay" />
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900/90" />
-
-                <div className="relative z-10 flex flex-col justify-between w-full p-12 text-slate-100">
-                    <div>
-                        <Link href="/" className="inline-flex items-center gap-3 font-bold text-3xl tracking-tight text-white">
-                            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 shadow-xl">
-                                <Lock className="h-6 w-6 text-white" />
-                            </span>
-                            Itinero Admin
-                        </Link>
-                    </div>
-
-                    <div className="space-y-8 max-w-lg">
-                        <motion.h1
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="text-5xl font-extrabold leading-tight tracking-tight"
-                        >
-                            Secure Dashboard Access
-                        </motion.h1>
-                        <motion.p
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="text-lg text-slate-300 leading-relaxed"
-                        >
-                            Restricted area for authorized personnel only. Manage users, itineraries, and system settings securely.
-                        </motion.p>
-                    </div>
-
-                    <div className="text-sm text-slate-400">
-                        © 2026 Itinero Inc. Admin Portal.
-                    </div>
-                </div>
+    return <main className="flex min-h-screen items-center justify-center bg-[#f6f2ec] px-5 py-16 text-[#2b1a07]">
+        <div className="w-full max-w-md rounded-[28px] border border-[#e7d9c8] bg-[#fdfbf8] p-8 shadow-[0_20px_60px_#2b1a0714] sm:p-12">
+            <Link href="/" aria-label="Itinero home" className="mx-auto mb-7 block w-fit">
+                <Image src="/brand/itinero-mark-animated.svg" width={70} height={52} alt="Itinero" />
+            </Link>
+            <div className="text-center">
+                <p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[#c36e36]">Orders admin</p>
+                <h1 className="mb-4 font-[Georgia] text-4xl leading-tight tracking-[-.02em]">Every album,<br />from print to door.</h1>
+                <p className="mx-auto mb-8 max-w-xs text-sm leading-6 text-[#766b5f]">Sign in to review, print and deliver customer albums.</p>
             </div>
 
-            {/* Right Side - Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative bg-slate-50 dark:bg-background">
-                {/* Mobile Logo */}
-                <div className="absolute top-6 left-6 lg:hidden">
-                    <Link href="/" className="inline-flex items-center gap-2 font-bold text-xl tracking-tight text-primary">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                            <Lock className="h-4 w-4" />
-                        </span>
-                        Itinero Admin
-                    </Link>
-                </div>
+            {deniedEmail && <p role="alert" className="mb-5 rounded-xl bg-[#fbecc2]/70 p-3 text-sm leading-5 text-[#6b4f05]">
+                You’re signed in as {deniedEmail}, which doesn’t have admin access. Sign in with the admin account.
+            </p>}
+            {error && <p role="alert" className="mb-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-                <div className="w-full max-w-[420px] space-y-8 bg-white dark:bg-slate-900/50 p-8 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
-                    <div className="text-center lg:text-left">
-                        <h2 className="text-3xl font-bold tracking-tight">
-                            Admin Sign In
-                        </h2>
-                        <p className="mt-2 text-muted-foreground">
-                            Enter your credentials to access the dashboard.
-                        </p>
-                    </div>
-
-                    <div className="space-y-6">
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    autoComplete="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="h-12 rounded-xl bg-muted/30 border-input focus-visible:ring-primary/30 transition-all"
-                                    placeholder="admin@itinero.app"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <Label htmlFor="pwd">Password</Label>
-                                </div>
-                                <Input
-                                    id="pwd"
-                                    type="password"
-                                    autoComplete="current-password"
-                                    value={pwd}
-                                    onChange={(e) => setPwd(e.target.value)}
-                                    className="h-12 rounded-xl bg-muted/30 border-input focus-visible:ring-primary/30 transition-all"
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-4">
-                            <Button
-                                onClick={handleEmail}
-                                disabled={busy}
-                                className="h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-base shadow-lg shadow-slate-900/20 transition-all hover:-translate-y-0.5 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
-                            >
-                                {busy ? (
-                                    <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Authenticating...</>
-                                ) : (
-                                    <>Sign In <ArrowRight className="ml-2 h-5 w-5" /></>
-                                )}
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <form onSubmit={event => void signIn(event)} className="space-y-4">
+                <label className="block text-xs font-semibold text-[#6d5c4b]">Email address
+                    <input type="email" required autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} className={field} />
+                </label>
+                <label className="block text-xs font-semibold text-[#6d5c4b]">Password
+                    <input type="password" required autoComplete="current-password" value={pwd} onChange={event => setPwd(event.target.value)} className={field} />
+                </label>
+                <button type="submit" disabled={busy} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2b1a07] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#53330e] disabled:opacity-60">
+                    {busy ? <><LoaderCircle size={17} className="animate-spin" /> Signing in…</> : "Sign in"}
+                </button>
+            </form>
+            <p className="mt-6 text-center text-xs text-[#8c8174]">Restricted to Itinero staff.</p>
         </div>
-    );
+    </main>;
 }

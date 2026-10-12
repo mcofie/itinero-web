@@ -8,7 +8,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const { id } = await context.params;
     if (!UUID_PATTERN.test(id)) return NextResponse.json({ error: "Album not found." }, { status: 404 });
     const { user, admin } = await albumServerContext();
-    if (!user || !(await isAlbumAdmin(user.id, user.email))) return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+    if (!user || !isAlbumAdmin(user.email)) return NextResponse.json({ error: "Forbidden." }, { status: 403 });
     if (!admin) return NextResponse.json({ error: "File storage is unavailable." }, { status: 503 });
     const { data: album } = await admin.schema("itinero").from("photobooks").select("pdf_path").eq("id", id).maybeSingle();
     if (!album?.pdf_path) return NextResponse.json({ error: "No album PDF has been submitted." }, { status: 404 });

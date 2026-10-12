@@ -10,7 +10,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     const { user, sessionClient } = await albumServerContext();
     if (!user) return NextResponse.json({ error: "Sign in to open this album." }, { status: 401 });
     const { data: album, error } = await sessionClient.schema("itinero").from("photobooks")
-        .select("id,title,destination_id,cover_template_id,album_year,layout,cover_typeface,cover_text_color,status,page_count,total_cost,currency,shipping_address,pdf_path,created_at,updated_at")
+        .select("id,title,destination_id,cover_template_id,album_year,layout,cover_typeface,cover_text_color,status,page_count,total_cost,currency,shipping_address,pdf_path,customer_message,order_number,subtotal,discount_code,discount_amount,created_at,updated_at")
         .eq("id", id).eq("user_id", user.id).maybeSingle();
     if (error || !album) return NextResponse.json({ error: "Album not found." }, { status: 404 });
     const { data: photos, error: photoError } = await sessionClient.schema("itinero").from("photobook_images")

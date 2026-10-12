@@ -10,11 +10,8 @@ export async function albumServerContext() {
     return { user, admin, sessionClient };
 }
 
-export async function isAlbumAdmin(userId: string, email: string | undefined) {
-    const allowed = (process.env.ADMIN_EMAIL ?? "").split(",").map(item => item.trim().toLowerCase());
-    if (!email || !allowed.includes(email.toLowerCase())) return false;
-    const admin = createAdminClient();
-    if (!admin) return false;
-    const { data } = await admin.schema("itinero").from("profiles").select("role").eq("id", userId).maybeSingle();
-    return data?.role === "admin";
+/** The admin portal's access rule: the signed-in email is listed in ADMIN_EMAIL. */
+export function isAlbumAdmin(email: string | undefined) {
+    const allowed = (process.env.ADMIN_EMAIL ?? "").split(",").map(item => item.trim().toLowerCase()).filter(Boolean);
+    return !!email && allowed.includes(email.toLowerCase());
 }

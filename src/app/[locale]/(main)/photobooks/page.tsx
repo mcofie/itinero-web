@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import localFont from "next/font/local";
 import { redirect } from "next/navigation";
 import { ArrowRight, BookOpen, Plus } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { ALBUM_FORMAT, ALBUM_PRICE_GHS } from "@/lib/album-order";
 import { createClientServerRSC } from "@/lib/supabase/server";
-import { coverImagePath, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
-import { normalizeCoverTextColor, normalizeCoverTypeface, resolveCoverTextColor } from "@/lib/album-cover-style";
+import { isOrderStatus, PLACED_STATUSES, STATUS_INFO } from "@/lib/album-fulfilment";
+import { albumFontVariables } from "@/components/album/album-fonts";
+import AlbumCoverThumb from "@/components/album/AlbumCoverThumb";
 import AlbumPaymentStatus from "./AlbumPaymentStatus";
-
-const albumSerif = localFont({ src: "../../../../../public/fonts/landing/gelica-regular.woff2", variable: "--font-album-serif", display: "swap", fallback: ["Georgia", "serif"] });
-const albumHand = localFont({ src: "../../../../../public/fonts/landing/handwritten.woff2", variable: "--font-album-hand", display: "swap", fallback: ["cursive"] });
-const albumRound = localFont({ src: "../../../../../public/fonts/landing/lilita-one.ttf", variable: "--font-album-round", display: "swap", fallback: ["Arial", "sans-serif"] });
 
 export const metadata: Metadata = { title: "My albums" };
 export const dynamic = "force-dynamic";
@@ -33,11 +28,6 @@ type AlbumRow = {
     images: { count: number }[];
 };
 
-const statusNames: Record<string, string> = {
-    draft: "Draft", quote_requested: "Review requested", pending_payment: "Payment pending",
-    paid: "Paid · preparing", processing: "Printing", shipped: "On its way",
-};
-
 export default async function PhotobooksPage() {
     const sb = await createClientServerRSC();
     const { data: { user } } = await sb.auth.getUser();
@@ -48,7 +38,7 @@ export default async function PhotobooksPage() {
         .eq("user_id", user.id).order("created_at", { ascending: false });
     const albums = (data ?? []) as AlbumRow[];
 
-    return <main className={`${albumSerif.variable} ${albumHand.variable} ${albumRound.variable} min-h-screen bg-[#f6f2ec] text-[#2b1a07]`}>
+    return <main className={`${albumFontVariables} min-h-screen bg-[#f6f2ec] text-[#2b1a07]`}>
         <div className="mx-auto max-w-6xl px-5 pb-24 pt-20 sm:px-8 sm:pt-28">
             <header className="flex flex-col gap-8 border-b border-[#dfd3c4] pb-11 md:flex-row md:items-end md:justify-between">
                 <div>
@@ -79,25 +69,16 @@ export default async function PhotobooksPage() {
 }
 
 function AlbumCard({ album }: { album: AlbumRow }) {
-    const coverId = Object.hasOwn(TRAVEL_COVERS_BY_ID, album.cover_template_id)
-        ? album.cover_template_id as TravelCoverId : "italy";
-    const cover = TRAVEL_COVERS_BY_ID[coverId];
-    const typeface = normalizeCoverTypeface(album.cover_typeface);
-    const textColor = normalizeCoverTextColor(album.cover_text_color);
-    const titleFont = typeface === "serif" ? "var(--font-album-serif), Georgia, serif"
-        : typeface === "handwritten" ? "var(--font-album-hand), cursive" : "var(--font-album-round), Arial, sans-serif";
     const photoCount = album.images?.[0]?.count ?? 0;
-    const action = album.status === "draft" ? "Continue album" : album.status === "pending_payment" ? "Continue payment" : "View album";
-    return <Link href={`/make-album?id=${album.id}`} className="group flex min-h-[390px] flex-col overflow-hidden rounded-[22px] border border-[#e4d9cb] bg-[#fdfbf8] shadow-[0_12px_32px_#2b1a070a] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_#2b1a071a]">
+    const status = isOrderStatus(album.status) ? album.status : null;
+    const action = album.status === "draft" ? "Continue album" : album.status === "pending_payment" ? "Continue payment"
+        : album.status === "changes_requested" ? "Update album" : "Follow order";
+    const href = status && PLACED_STATUSES.includes(status) ? `/photobooks/${album.id}` : `/make-album?id=${album.id}`;
+    return <Link href={href} className="group flex min-h-[390px] flex-col overflow-hidden rounded-[22px] border border-[#e4d9cb] bg-[#fdfbf8] shadow-[0_12px_32px_#2b1a070a] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_#2b1a071a]">
         <div className="relative flex min-h-[275px] items-center justify-center overflow-hidden bg-[#e9e0d3] p-5">
-            <div className="relative aspect-[4/5] h-[245px] overflow-hidden rounded-[3px_7px_7px_3px] shadow-[7px_10px_18px_#2b1a0730] transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-[1.03]" style={{ background: cover.color }}>
-                <Image src={coverImagePath(coverId)} fill sizes="(max-width: 640px) 200px, 245px" alt="" className="object-cover" />
-                <div className="absolute inset-x-0 top-0 flex h-[27%] flex-col justify-between px-3 py-2 leading-[.9] tracking-[-.05em]" style={{ background: "transparent", color: resolveCoverTextColor(textColor, cover.color) }}>
-                    <span className="flex justify-between gap-1 font-sans text-[6px] font-bold tracking-[.08em] opacity-80"><span>Itinero · travel album</span><span>{album.album_year}</span></span>
-                    <strong className="line-clamp-2 break-words" style={{ fontFamily: titleFont, fontWeight: 400, textTransform: typeface === "bold" ? "uppercase" : "none", lineHeight: typeface === "handwritten" ? 1.08 : .92, fontSize: album.title.length > 22 ? 15 : album.title.length > 9 ? 19 : 27 }}>{album.title}</strong>
-                </div>
-            </div>
-            <span className="absolute right-4 top-4 rounded-full bg-[#fdfbf8] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.08em] text-[#785236] shadow-sm">{statusNames[album.status] || album.status.replaceAll("_", " ")}</span>
+            <AlbumCoverThumb coverId={album.cover_template_id} title={album.title} year={album.album_year} typeface={album.cover_typeface} textColor={album.cover_text_color} height={245}
+                className="shadow-[7px_10px_18px_#2b1a0730] transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-[1.03]" />
+            <span className="absolute right-4 top-4 rounded-full bg-[#fdfbf8] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.08em] text-[#785236] shadow-sm">{status ? STATUS_INFO[status].customerLabel : album.status.replaceAll("_", " ")}</span>
         </div>
         <div className="flex flex-1 flex-col p-5">
             <h2 className="truncate font-[Georgia] text-2xl">{album.title}</h2>
