@@ -22,7 +22,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
 
     const start = (filters.page - 1) * PAGE_SIZE;
     const [{ data: statusRows }, { data, count, error }] = await Promise.all([
-        admin.schema("itinero").from("photobooks").select("status").not("status", "in", "(draft,quote_requested)"),
+        admin.schema("itinero").from("photobooks").select("status").neq("status", "draft"),
         orderQuery(admin, filters, ORDER_LIST_FIELDS, { count: "exact" }).range(start, start + PAGE_SIZE - 1),
     ]);
     const statusCounts = new Map<string, number>();

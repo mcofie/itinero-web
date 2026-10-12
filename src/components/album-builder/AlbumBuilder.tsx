@@ -13,6 +13,8 @@ import { createAlbumPdf, downloadAlbumPdf, groupAlbumPhotos } from "./album-pdf"
 import styles from "./AlbumBuilder.module.css";
 
 const YEAR = String(new Date().getFullYear());
+const DEFAULT_DESTINATION: TravelCoverId = "italy";
+const defaultTitle = (id: TravelCoverId) => TRAVEL_COVERS_BY_ID[id].country.toUpperCase();
 const MAX_PHOTOS = 40;
 const MAX_FILE_BYTES = 35 * 1024 * 1024;
 const layouts: { id: AlbumLayout; name: string; description: string; count: string }[] = [
@@ -74,8 +76,8 @@ export default function AlbumBuilder() {
     const photosRef = useRef<AlbumPhoto[]>([]);
     const [ready, setReady] = useState(false);
     const [step, setStep] = useState(0);
-    const [destinationId, setDestinationId] = useState<TravelCoverId>("italy");
-    const [title, setTitle] = useState("ITALY");
+    const [destinationId, setDestinationId] = useState<TravelCoverId>(DEFAULT_DESTINATION);
+    const [title, setTitle] = useState(() => defaultTitle(DEFAULT_DESTINATION));
     const [year, setYear] = useState(YEAR);
     const [coverTypeface, setCoverTypeface] = useState<CoverTypeface>(DEFAULT_COVER_TYPEFACE);
     const [coverTextColor, setCoverTextColor] = useState(DEFAULT_COVER_TEXT_COLOR);
@@ -105,7 +107,6 @@ export default function AlbumBuilder() {
     const [isOrdering, setIsOrdering] = useState(false);
     const [shipping, setShipping] = useState({ fullName: "", phone: "", street: "", area: "", landmark: "" });
     const [approved, setApproved] = useState(false);
-    const [confirmedAccra, setConfirmedAccra] = useState(false);
 
     photosRef.current = photos;
     const destination = TRAVEL_COVERS_BY_ID[destinationId];
@@ -263,14 +264,19 @@ export default function AlbumBuilder() {
         if (next > 1 && photos.length === 0) { setError("Add at least one photo to start your album."); showStep(1); return; }
         showStep(Math.max(0, Math.min(3, next)));
     };
+    /** Clears the browser draft and returns the builder to a blank album. */
+    const startOver = async () => {
+        await clearAlbumDraft().catch(() => setSaveState("unavailable"));
+        photos.forEach(photo => URL.revokeObjectURL(photo.url));
+        setPhotos([]); setStep(0); setDestinationId(DEFAULT_DESTINATION); setTitle(defaultTitle(DEFAULT_DESTINATION)); setYear(YEAR);
+        setCoverTypeface(DEFAULT_COVER_TYPEFACE); setCoverTextColor(DEFAULT_COVER_TEXT_COLOR); setLayout("editorial");
+        setAlbumId(null); setOrderStatus("draft"); setApproved(false); setDiscount(null); setDiscountInput(""); setError("");
+        window.history.replaceState({}, "", window.location.pathname);
+    };
     const resetDraft = async () => {
         if (isSavingCloud || isOrdering || isExporting) return;
         if (!window.confirm("Start a new album? This will remove the photos saved in this browser.")) return;
-        try { await clearAlbumDraft(); } catch { setSaveState("unavailable"); }
-        photos.forEach(photo => URL.revokeObjectURL(photo.url));
-        setPhotos([]); setStep(0); setDestinationId("italy"); setTitle("ITALY"); setYear(YEAR); setCoverTypeface(DEFAULT_COVER_TYPEFACE); setCoverTextColor(DEFAULT_COVER_TEXT_COLOR); setLayout("editorial"); setError("");
-        setAlbumId(null); setOrderStatus("draft"); setApproved(false); setConfirmedAccra(false);
-        window.history.replaceState({}, "", window.location.pathname);
+        await startOver();
     };
     const deleteSavedDraft = async () => {
         if (!albumId || orderStatus !== "draft" || isSavingCloud || isOrdering) return;
@@ -278,12 +284,7 @@ export default function AlbumBuilder() {
         const response = await fetch(`/api/albums/${albumId}`, { method: "DELETE" });
         const result = await response.json();
         if (!response.ok) { setError(result.error || "Could not delete this album."); return; }
-        await clearAlbumDraft().catch(() => setSaveState("unavailable"));
-        photos.forEach(photo => URL.revokeObjectURL(photo.url));
-        setPhotos([]); setStep(0); setDestinationId("italy"); setTitle("ITALY"); setYear(YEAR);
-        setCoverTypeface(DEFAULT_COVER_TYPEFACE); setCoverTextColor(DEFAULT_COVER_TEXT_COLOR);
-        setLayout("editorial"); setAlbumId(null); setApproved(false); setConfirmedAccra(false); setError("");
-        window.history.replaceState({}, "", window.location.pathname);
+        await startOver();
     };
     const exportPdf = async () => {
         if (!photos.length || isExporting) return;
@@ -402,8 +403,7 @@ export default function AlbumBuilder() {
 
     const orderAlbum = async () => {
         if (isOrdering || !["draft", "pending_payment"].includes(orderStatus)) return;
-        if (!approved) { setError("Please confirm that you reviewed your album before ordering."); return; }
-        if (!confirmedAccra) { setError("Please confirm that your delivery address is within Accra."); return; }
+        if (!approved) { setError("Please confirm that you reviewed your album and that the address is in Accra."); return; }
         if (!shipping.fullName.trim() || !shipping.phone.trim() || !shipping.street.trim() || !shipping.area.trim()) {
             setError("Add your name, phone number, street and Accra area before ordering."); return;
         }
@@ -413,7 +413,7 @@ export default function AlbumBuilder() {
             if (!id) return;
             if (orderStatus === "draft") await uploadProof(id);
             const response = await fetch(`/api/albums/${id}/checkout`, { method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ shippingAddress: shipping, confirmedAccra, discountCode: orderStatus === "draft" ? discount?.code : undefined }) });
+                body: JSON.stringify({ shippingAddress: shipping, confirmedAccra: approved, discountCode: orderStatus === "draft" ? discount?.code : undefined }) });
             const result = await response.json();
             if (response.ok && result.free) { window.location.assign(`/photobooks/${id}`); return; }
             if (!response.ok || !result.authorizationUrl) throw new Error(result.error || "Could not start payment.");
@@ -494,20 +494,19 @@ export default function AlbumBuilder() {
 
                         {step === 3 && <>
                             <div className={styles.sectionHead}><span className={styles.hand}>there it is</span><h2>A book of your trip.</h2><p>Take one last look, save your story, then order a printed hardcover.</p></div>
-                            <div className={styles.reviewSummary}><div><span>Destination</span><strong>{destination.country}</strong></div><div><span>Cover title</span><strong>{title}</strong></div><div><span>Photos</span><strong>{photos.length}</strong></div><div><span>Proof pages</span><strong>{pages.length + 3}</strong></div><div><span>Format</span><strong>{ALBUM_FORMAT}</strong></div><div><span>Price</span><strong>GHS {ALBUM_PRICE_GHS}</strong></div></div>
-                            <div className={styles.qualityNote}><Sparkles size={20} /><div><strong>Review your album</strong><p>Your 8 × 10 in PDF shows the cover, title page, photos and closing page. We’ll check the final print files before production.</p></div></div>
-                            {lowResolution.length > 0 && <p className={styles.qualityWarning}>{lowResolution.length} {lowResolution.length === 1 ? "photo is" : "photos are"} under 2400 px on the short side and may print softly. Consider replacing {lowResolution.length === 1 ? "it" : "them"} with the original full-size file.</p>}
-                            <button type="button" className={styles.exportButton} disabled={isExporting} onClick={() => void exportPdf()}>{isExporting ? <><LoaderCircle size={19} className={styles.spin} /> Making your PDF · {exportProgress}%</> : <><Download size={19} /> Download album PDF</>}</button>
-                            <p className={styles.fieldHint}>This is an 8 × 10 in proof. Our print preparation adds the printer’s required bleed and hardcover spine.</p>
-                            <div className={styles.accountBox}>
-                                <strong>{userEmail ? "Save to your account" : "Keep this album with Google"}</strong>
-                                <p>{userEmail ? `Signed in as ${userEmail}. Your saved album will appear in My Albums.` : "Sign in with Google to save your album across devices and place an order."}</p>
-                                <button type="button" onClick={() => void saveToAccount()} disabled={isSavingCloud || isOrdering || isResubmitting || !editable}>
-                                    {isSavingCloud ? <><LoaderCircle size={16} className={styles.spin} /> Uploading photos · {cloudProgress}%</> : userEmail ? "Save to my account" : "Continue with Google"}
-                                </button>
-                            </div>
-                            {["draft", "pending_payment"].includes(orderStatus) ? <div className={styles.shippingBox}>
-                                <h3>Deliver to Accra</h3><p>GHS {ALBUM_PRICE_GHS} includes delivery within Accra, Ghana.</p>
+                            <div className={styles.reviewSummary}><div><span>Destination</span><strong>{destination.country}</strong></div><div><span>Cover title</span><strong>{title}</strong></div><div><span>Photos</span><strong>{photos.length} · {pages.length + 3} pages</strong></div><div><span>Format</span><strong>{ALBUM_FORMAT}</strong></div></div>
+                            <div className={styles.qualityNote}><Sparkles size={20} /><div>
+                                <strong>Check every page</strong>
+                                <p>The PDF proof shows your cover, title page, photos and closing page. We check the files and add the printer’s bleed and spine before printing.</p>
+                                {lowResolution.length > 0 && <p className={styles.qualityWarning}>{lowResolution.length} {lowResolution.length === 1 ? "photo is" : "photos are"} under 2400 px on the short side and may print softly. Consider replacing {lowResolution.length === 1 ? "it" : "them"} with the original full-size file.</p>}
+                                <button type="button" className={styles.exportButton} disabled={isExporting} onClick={() => void exportPdf()}>{isExporting ? <><LoaderCircle size={15} className={styles.spin} /> Making your PDF · {exportProgress}%</> : <><Download size={15} /> Download PDF proof</>}</button>
+                            </div></div>
+                            {orderStatus === "draft" && !userEmail ? <div className={styles.shippingBox}>
+                                <h3>Ready to order?</h3>
+                                <p>Sign in with Google to save this album to your account, then add your Accra delivery details.</p>
+                                <button type="button" className={styles.orderButton} onClick={() => void saveToAccount()} disabled={isSavingCloud}>Continue with Google</button>
+                            </div> : ["draft", "pending_payment"].includes(orderStatus) ? <div className={styles.shippingBox}>
+                                <h3>Deliver to Accra</h3><p>Delivery anywhere in Accra is included.</p>
                                 <div className={styles.shippingFields}>
                                     <label>Full name<input autoComplete="name" value={shipping.fullName} onChange={event => setShipping({ ...shipping, fullName: event.target.value })} /></label>
                                     <label>Phone number<input autoComplete="tel" inputMode="tel" value={shipping.phone} onChange={event => setShipping({ ...shipping, phone: event.target.value })} placeholder="+233 …" /></label>
@@ -529,8 +528,7 @@ export default function AlbumBuilder() {
                                     {discount && <div className={styles.priceDiscount}><span>{discount.code}{discount.label !== discount.code && ` · ${discount.label}`}{orderStatus === "draft" && <button type="button" onClick={() => { setDiscount(null); setDiscountInput(""); }}>Remove</button>}</span><span>− GHS {discount.amount}</span></div>}
                                     <div className={styles.priceTotal}><span>Total</span><span>GHS {orderTotal}</span></div>
                                 </div>
-                                <label className={styles.approval}><input type="checkbox" checked={approved} onChange={event => setApproved(event.target.checked)} /> I’ve reviewed the photos, captions, and delivery details.</label>
-                                <label className={styles.approval}><input type="checkbox" checked={confirmedAccra} onChange={event => setConfirmedAccra(event.target.checked)} /> I confirm this delivery address is within Accra, Ghana.</label>
+                                <label className={styles.approval}><input type="checkbox" checked={approved} onChange={event => setApproved(event.target.checked)} /> I’ve reviewed my photos and captions, and the delivery address is in Accra, Ghana.</label>
                                 <button type="button" className={styles.orderButton} onClick={() => void orderAlbum()} disabled={isOrdering || isSavingCloud}>
                                     {isOrdering ? <><LoaderCircle size={18} className={styles.spin} /> {isExporting ? `Making PDF · ${exportProgress}%` : "Preparing your order…"}</> : orderStatus === "pending_payment" ? `Continue payment · GHS ${orderTotal}` : orderTotal <= 0 ? "Place free order" : `Order hardcover · GHS ${orderTotal}`}
                                 </button>
@@ -544,6 +542,7 @@ export default function AlbumBuilder() {
                                     {isResubmitting ? <><LoaderCircle size={18} className={styles.spin} /> {isExporting ? `Making PDF · ${exportProgress}%` : isSavingCloud ? `Uploading photos · ${cloudProgress}%` : "Sending…"}</> : "Send updated album"}
                                 </button>
                             </div> : <div className={styles.accountBox}><strong>Order status: {isOrderStatus(orderStatus) ? STATUS_INFO[orderStatus].customerLabel : orderStatus.replaceAll("_", " ")}</strong><p>Follow every step of your order, from printing to delivery.</p>{albumId ? <Link href={`/photobooks/${albumId}`}>Follow your order</Link> : <Link href="/photobooks">Go to My Albums</Link>}</div>}
+                            {orderStatus === "draft" && userEmail && <button type="button" className={styles.resetButton} style={{ marginRight: 18 }} onClick={() => void saveToAccount()} disabled={isSavingCloud || isOrdering}>{isSavingCloud ? `Saving to My Albums · ${cloudProgress}%` : "Not ready? Save to My Albums"}</button>}
                             <button type="button" className={styles.resetButton} onClick={() => void resetDraft()}>Start a new album</button>
                             {albumId && orderStatus === "draft" && <button type="button" className={styles.resetButton} style={{ marginLeft: 18 }} onClick={() => void deleteSavedDraft()}>Delete saved draft</button>}
                         </>}
@@ -556,7 +555,7 @@ export default function AlbumBuilder() {
                         {step === 3 && <div className={styles.previewMiniPages}><div className={styles.miniPage}><IntroPreview title={title} destination={destination.country} year={year} count={photos.length} /></div>{pages.slice(0, 2).map((page, index) => <div className={styles.miniPage} key={index}><AlbumPagePreview photos={page} layout={layout} pageNumber={index + 1} destination={destination.country} /></div>)}</div>}
                     </aside>
                 </div>}
-                <div className={`${styles.actionBar} ${step === 0 ? styles.actionBarFirst : ""}`}><div>{step > 0 && editable && <button type="button" className={styles.backButton} onClick={() => goToStep(step - 1)} disabled={isSavingCloud || isOrdering || isExporting}><ArrowLeft size={17} /> Back</button>}</div>{step < 3 ? <button type="button" className={styles.nextButton} onClick={() => goToStep(step + 1)} disabled={isSavingCloud || isOrdering || isExporting}>{step === 0 ? "Add your photos" : step === 1 ? "Shape the pages" : "Review your album"}<ArrowRight size={18} /></button> : <button type="button" className={styles.nextButton} onClick={() => document.querySelector(`.${styles.shippingBox}`)?.scrollIntoView({ behavior: "smooth" })} disabled={isSavingCloud || isOrdering || isExporting || !['draft', 'pending_payment', 'changes_requested'].includes(orderStatus)}>{orderStatus === "changes_requested" ? "Send updated album" : "Order this album"} <ArrowRight size={18} /></button>}</div>
+                <div className={`${styles.actionBar} ${step === 0 ? styles.actionBarFirst : ""}`}><div>{step > 0 && editable && <button type="button" className={styles.backButton} onClick={() => goToStep(step - 1)} disabled={isSavingCloud || isOrdering || isExporting}><ArrowLeft size={17} /> Back</button>}</div>{step < 3 ? <button type="button" className={styles.nextButton} onClick={() => goToStep(step + 1)} disabled={isSavingCloud || isOrdering || isExporting}>{step === 0 ? "Add your photos" : step === 1 ? "Shape the pages" : "Review your album"}<ArrowRight size={18} /></button> : null}</div>
             </main>
         </div>
     </div>;

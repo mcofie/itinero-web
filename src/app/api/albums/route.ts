@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { ALBUM_BUCKET, ALBUM_PRICE_GHS } from "@/lib/album-order";
+import { ALBUM_BUCKET } from "@/lib/album-order";
+import { priceBreakdown } from "@/lib/album-pricing";
+import { getAlbumSettings } from "@/lib/album-settings-server";
+import { ALERT_COLORS, sendOrderAlert } from "@/lib/order-alerts";
 import { albumServerContext, UUID_PATTERN } from "@/lib/album-server";
 import { TRAVEL_COVERS_BY_ID } from "@/lib/travel-covers";
 import { EDITABLE_STATUSES, type OrderStatus } from "@/lib/album-fulfilment";
@@ -64,11 +67,14 @@ export async function POST(request: Request) {
     const status = existing?.status === "changes_requested" ? "changes_requested" : "draft";
 
     const perPage = layout === "gallery" ? 1 : layout === "collage" ? 3 : 2;
+    // A draft shows the current price; checkout prices the order again.
+    const price = existing?.status === "changes_requested" ? null : priceBreakdown((await getAlbumSettings(admin)).pricing);
     const values = {
         id, user_id: user.id, title, cover_template_id: destinationId, destination_id: destinationId,
         album_year: year, layout, cover_typeface: coverTypeface, cover_text_color: coverTextColor,
         page_count: Math.ceil(photos.length / perPage) + 3,
-        status, total_cost: ALBUM_PRICE_GHS, currency: "GHS", updated_at: new Date().toISOString(),
+        status, currency: "GHS", updated_at: new Date().toISOString(),
+        ...(price && { subtotal: price.subtotal, total_cost: price.total }),
     };
     const { data: savedBook, error: bookError } = existing
         ? await admin.schema("itinero").from("photobooks").update(values)
@@ -91,5 +97,11 @@ export async function POST(request: Request) {
         await admin.storage.from(ALBUM_BUCKET).remove(removed.map(photo => photo.storage_path));
     }
 
+    if (!existing) {
+        await sendOrderAlert(admin, "new_album_saved", {
+            title: "📸 New album saved", color: ALERT_COLORS.neutral,
+            fields: [["Customer", user.email ?? "—"], ["Album", `${title} · ${TRAVEL_COVERS_BY_ID[destinationId as keyof typeof TRAVEL_COVERS_BY_ID].country}`], ["Photos", String(photos.length)]],
+        });
+    }
     return NextResponse.json({ id, status });
 }

@@ -1,5 +1,6 @@
 import { PLACED_STATUSES, type OrderStatus } from "@/lib/album-fulfilment";
-import { notifyCustomer, ORDER_FIELDS, recordOrderEvent, type OrderRow } from "@/lib/album-orders-server";
+import { announcePaidOrder, notifyCustomer, ORDER_FIELDS, recordOrderEvent, type OrderRow } from "@/lib/album-orders-server";
+import { ALERT_COLORS, sendOrderAlert } from "@/lib/order-alerts";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function reconcileAlbumPayment(reference: string): Promise<"paid" | "pending" | "invalid"> {
@@ -22,6 +23,12 @@ export async function reconcileAlbumPayment(reference: string): Promise<"paid" |
     const metadata = transaction.metadata ?? {};
     if (transaction.reference !== reference || transaction.amount !== Math.round(Number(album.total_cost) * 100) || transaction.currency !== "GHS" ||
         metadata.purpose !== "album_order" || metadata.album_id !== album.id || metadata.user_id !== album.user_id) {
+        await sendOrderAlert(admin, "payment_problem", {
+            title: "⚠️ Payment doesn’t match its order",
+            description: "Paystack reports a successful payment, but its amount, currency or details don’t match the order, so the order was not marked paid. Check it in Paystack.",
+            fields: [["Reference", reference], ["Paystack amount", `${transaction.currency} ${transaction.amount / 100}`], ["Order total", `GHS ${album.total_cost}`]],
+            orderId: album.id, color: ALERT_COLORS.problem,
+        });
         return "invalid";
     }
 
@@ -36,6 +43,7 @@ export async function reconcileAlbumPayment(reference: string): Promise<"paid" |
         try {
             await recordOrderEvent(admin, { photobookId: paid.id, kind: "status", fromStatus: "pending_payment", toStatus: "paid", actor: "Paystack", metadata: { reference } });
             await notifyCustomer(admin, paid, "paid");
+            await announcePaidOrder(admin, paid, "paystack");
         } catch (notifyError) {
             console.error("[album-payment] Order confirmation failed:", notifyError);
         }

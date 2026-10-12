@@ -2,7 +2,7 @@
  * the customer order page and the order routes. Safe to import in the browser.
  */
 export const ORDER_STATUSES = [
-    "draft", "quote_requested", "pending_payment", "paid", "in_review", "changes_requested",
+    "draft", "pending_payment", "paid", "in_review", "changes_requested",
     "printing", "ready", "out_for_delivery", "delivered", "on_hold", "cancelled",
 ] as const;
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
@@ -22,7 +22,6 @@ type StatusInfo = { label: string; customerLabel: string; customerDescription: s
 
 export const STATUS_INFO: Record<OrderStatus, StatusInfo> = {
     draft: { label: "Draft", customerLabel: "Draft", customerDescription: "", tone: "neutral" },
-    quote_requested: { label: "Review requested", customerLabel: "Review requested", customerDescription: "", tone: "neutral" },
     pending_payment: { label: "Awaiting payment", customerLabel: "Payment pending", customerDescription: "Finish payment to place your order.", tone: "neutral" },
     paid: { label: "New order", customerLabel: "Order placed", customerDescription: "We’ve received your order and payment.", tone: "action" },
     in_review: { label: "In review", customerLabel: "Checking your files", customerDescription: "We’re checking your photos and pages before printing.", tone: "action" },

@@ -1,12 +1,14 @@
-import { allowedMoves, isOrderStatus, moveRequirements, type OrderStatus } from "@/lib/album-fulfilment";
+import { allowedMoves, formatOrderNumber, isOrderStatus, moveRequirements, STATUS_INFO, type OrderStatus } from "@/lib/album-fulfilment";
 import { albumServerContext, isAlbumAdmin } from "@/lib/album-server";
 import { NOTIFY_STATUSES, orderMessage } from "@/lib/order-messages";
+import { ALERT_COLORS, orderFields, sendOrderAlert } from "@/lib/order-alerts";
+import { discountUses } from "@/lib/album-pricing-server";
 import { SITE_URL } from "@/lib/site-metadata";
 import type { createAdminClient } from "@/lib/supabase/admin";
 
 type AdminClient = NonNullable<ReturnType<typeof createAdminClient>>;
 
-export const ORDER_FIELDS = "id,user_id,order_number,title,status,held_from_status,destination_id,cover_template_id,album_year,layout,cover_typeface,cover_text_color,page_count,subtotal,discount_code,discount_amount,total_cost,currency,shipping_address,pdf_path,payment_reference,customer_email,customer_name,customer_message,courier_name,courier_phone,delivery_date,delivered_at,paid_at,submitted_at,status_changed_at,created_at,updated_at";
+export const ORDER_FIELDS = "id,user_id,order_number,title,status,held_from_status,destination_id,cover_template_id,album_year,layout,cover_typeface,cover_text_color,page_count,subtotal,discount_id,discount_code,discount_amount,delivery_fee,tax_rate,tax_amount,total_cost,currency,shipping_address,pdf_path,payment_reference,customer_email,customer_name,customer_message,courier_name,courier_phone,delivery_date,delivered_at,paid_at,submitted_at,status_changed_at,created_at,updated_at";
 
 export type OrderRow = {
     id: string;
@@ -23,8 +25,12 @@ export type OrderRow = {
     cover_text_color: string | null;
     page_count: number | null;
     subtotal: number | null;
+    discount_id: string | null;
     discount_code: string | null;
     discount_amount: number | null;
+    delivery_fee: number | null;
+    tax_rate: number | null;
+    tax_amount: number | null;
     total_cost: number | null;
     currency: string | null;
     shipping_address: { fullName?: string; phone?: string; street?: string; area?: string; landmark?: string } | null;
@@ -108,6 +114,30 @@ export async function notifyCustomer(admin: AdminClient, order: OrderRow, status
         photobookId: order.id, kind: "notification", toStatus: status, message: message.subject,
         actor: "system", metadata: { channel: "email", result, detail, to },
     });
+    if (result === "failed") {
+        await sendOrderAlert(admin, "email_failed", {
+            title: `Email to customer failed · ${message.subject}`, description: detail || undefined,
+            fields: orderFields(order), orderId: order.id, color: ALERT_COLORS.problem,
+        });
+    }
+}
+
+/** Announces a newly paid order, and warns when its discount code has just been used up. */
+export async function announcePaidOrder(admin: AdminClient, order: OrderRow, how: "paystack" | "free") {
+    await sendOrderAlert(admin, how === "free" ? "free_order" : "order_paid", {
+        title: how === "free" ? `🎁 Free order ${formatOrderNumber(order.order_number)}` : `💰 New order ${formatOrderNumber(order.order_number)}`,
+        fields: orderFields(order), orderId: order.id, color: ALERT_COLORS.money,
+    });
+    if (!order.discount_id) return;
+    const { data: discount } = await admin.schema("itinero").from("album_discounts").select("code,max_uses").eq("id", order.discount_id).maybeSingle();
+    if (!discount?.max_uses) return;
+    const uses = await discountUses(admin, order.discount_id);
+    if (uses !== null && uses >= discount.max_uses) {
+        await sendOrderAlert(admin, "discount_used_up", {
+            title: `🏷️ Discount code ${discount.code} is used up`, description: `All ${discount.max_uses} uses are taken. Pause it or raise the limit in Discounts.`,
+            color: ALERT_COLORS.warning,
+        });
+    }
 }
 
 export type TransitionInput = {
@@ -165,6 +195,15 @@ export async function transitionOrder(admin: AdminClient, id: string, input: Tra
     });
     if ((move.kind === "forward" || move.kind === "cancel") && NOTIFY_STATUSES.includes(move.to)) {
         await notifyCustomer(admin, updated, move.to);
+    }
+    const fields = orderFields(updated);
+    if (note) fields.push(["Note", note]);
+    if (move.to === "cancelled") {
+        await sendOrderAlert(admin, "order_cancelled", { title: `Order ${formatOrderNumber(updated.order_number)} cancelled`, fields, orderId: id, color: ALERT_COLORS.neutral });
+    } else if (from === "changes_requested" && move.to === "in_review" && input.actor === updated.customer_email) {
+        await sendOrderAlert(admin, "customer_resubmitted", { title: `✏️ ${formatOrderNumber(updated.order_number)} updated by the customer`, description: "The album is back in review.", fields, orderId: id, color: ALERT_COLORS.info });
+    } else {
+        await sendOrderAlert(admin, "status_changed", { title: `${formatOrderNumber(updated.order_number)}: ${STATUS_INFO[from].label} → ${STATUS_INFO[move.to].label}`, fields, orderId: id, color: ALERT_COLORS.neutral });
     }
     return { order: updated };
 }

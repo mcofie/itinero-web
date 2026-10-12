@@ -1,5 +1,4 @@
 export const ALBUM_PRICE_GHS = 800;
-export const ALBUM_PRICE_MINOR = 80_000;
 export const ALBUM_FORMAT = "8 × 10 in hardcover";
 export const ALBUM_BUCKET = "photobooks";
 

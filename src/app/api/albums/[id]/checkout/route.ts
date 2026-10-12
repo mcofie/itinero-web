@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ALBUM_BUCKET, parseAccraAddress } from "@/lib/album-order";
 import { albumServerContext, UUID_PATTERN } from "@/lib/album-server";
-import { notifyCustomer, ORDER_FIELDS, recordOrderEvent, type OrderRow } from "@/lib/album-orders-server";
+import { announcePaidOrder, notifyCustomer, ORDER_FIELDS, recordOrderEvent, type OrderRow } from "@/lib/album-orders-server";
+import { ALERT_COLORS, orderFields, sendOrderAlert } from "@/lib/order-alerts";
 import { quoteAlbumPrice } from "@/lib/album-pricing-server";
 
 export const runtime = "nodejs";
@@ -48,7 +49,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         shipping_address: address, pdf_path: proofPath, currency: "GHS",
         customer_email: user.email, customer_name: user.user_metadata?.full_name || user.user_metadata?.name || address.fullName,
         subtotal: quote.subtotal, total_cost: quote.total, discount_id: quote.discount?.id ?? null,
-        discount_code: quote.discount?.code ?? null, discount_amount: quote.discount?.amount ?? 0,
+        discount_code: quote.discount?.code ?? null, discount_amount: quote.discountAmount,
+        delivery_fee: quote.deliveryFee, tax_rate: quote.taxRate, tax_amount: quote.tax,
         submitted_at: now, status_changed_at: now, updated_at: now,
     };
 
@@ -60,6 +62,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         if (placeError || !placed) return NextResponse.json({ error: "Could not record your order. Please try again." }, { status: 503 });
         await recordOrderEvent(admin, { photobookId: id, kind: "status", fromStatus: "draft", toStatus: "paid", actor: `Discount ${quote.discount?.code}`, message: "Fully discounted; no payment needed." });
         await notifyCustomer(admin, placed, "paid");
+        await announcePaidOrder(admin, placed, "free");
         return NextResponse.json({ free: true, albumId: id });
     }
 
@@ -81,7 +84,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     const { data: saved, error: saveError } = await admin.schema("itinero").from("photobooks").update({
         ...order, status: "pending_payment", payment_reference: payment.data.reference, payment_url: payment.data.authorization_url,
-    }).eq("id", id).eq("user_id", user.id).eq("status", "draft").select("id").maybeSingle();
+    }).eq("id", id).eq("user_id", user.id).eq("status", "draft").select("id,title,destination_id").maybeSingle();
     if (saveError || !saved) return NextResponse.json({ error: "Could not record your order. Please try again." }, { status: 503 });
+    await sendOrderAlert(admin, "checkout_started", {
+        title: "🛒 Checkout started",
+        fields: orderFields({ id, title: saved.title, destination_id: saved.destination_id, customer_email: user.email, shipping_address: address, total_cost: quote.total, discount_code: quote.discount?.code, discount_amount: quote.discountAmount }),
+        orderId: id, color: ALERT_COLORS.info,
+    });
     return NextResponse.json({ authorizationUrl: payment.data.authorization_url, reference: payment.data.reference });
 }
