@@ -7,6 +7,7 @@ const LINKS = [
     { href: "/admin", label: "Overview" },
     { href: "/admin/orders", label: "Orders" },
     { href: "/admin/discounts", label: "Discounts" },
+    { href: "/admin/settings", label: "Settings" },
 ] as const;
 
 export default function PortalNav() {

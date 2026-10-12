@@ -1,13 +1,8 @@
 import { formatOrderNumber, isOrderStatus, STATUS_INFO } from "@/lib/album-fulfilment";
 import { formatGhs } from "@/lib/album-pricing";
-import { getAlbumSettings } from "@/lib/album-settings-server";
 import { sendDiscordNotification } from "@/lib/discord";
-import { alertEnabled, type AlertType } from "@/lib/order-alert-types";
 import { SITE_URL } from "@/lib/site-metadata";
-import type { createAdminClient } from "@/lib/supabase/admin";
 import { TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
-
-type AdminClient = NonNullable<ReturnType<typeof createAdminClient>>;
 
 export const ALERT_COLORS = { money: 0x22c55e, info: 0x3b82f6, warning: 0xf59e0b, problem: 0xef4444, neutral: 0x8a7d70 } as const;
 
@@ -34,18 +29,12 @@ export function orderFields(order: AlertOrder): [string, string][] {
 }
 
 /**
- * Posts an alert to the Discord webhook when that alert type is switched on.
+ * Posts an order alert to the Discord webhook. Every trigger point sends one.
  * Never throws: an alert must not break the order flow it reports on.
  */
-export async function sendOrderAlert(admin: AdminClient | null, type: AlertType, alert: {
-    title: string; description?: string; fields?: [string, string][]; orderId?: string; color?: number; force?: boolean;
-}) {
+export async function sendOrderAlert(alert: { title: string; description?: string; fields?: [string, string][]; orderId?: string; color?: number }) {
     try {
         if (!process.env.DISCORD_WEBHOOK_URL) return;
-        if (!alert.force) {
-            const { alerts } = await getAlbumSettings(admin);
-            if (!alertEnabled(type, alerts)) return;
-        }
         await sendDiscordNotification("", {
             title: alert.title,
             description: alert.description,

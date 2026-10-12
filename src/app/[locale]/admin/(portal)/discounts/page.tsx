@@ -1,4 +1,5 @@
 import { DISCOUNT_FIELDS, discountState, type AlbumDiscount } from "@/lib/album-discounts";
+import { getAlbumSettings } from "@/lib/album-settings-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import DiscountsManager, { type DiscountSummary } from "./DiscountsManager";
 
@@ -8,9 +9,10 @@ const HOLDING = new Set(["pending_payment", "paid", "in_review", "changes_reques
 export default async function DiscountsPage() {
     const admin = createAdminClient();
     if (!admin) return <p className="mx-auto max-w-7xl p-6 text-sm">Order storage is not configured.</p>;
-    const [{ data: discounts, error }, { data: orders }] = await Promise.all([
+    const [{ data: discounts, error }, { data: orders }, { pricing }] = await Promise.all([
         admin.schema("itinero").from("album_discounts").select(DISCOUNT_FIELDS).order("created_at", { ascending: false }),
         admin.schema("itinero").from("photobooks").select("discount_id,discount_amount,total_cost,status").not("discount_id", "is", null),
+        getAlbumSettings(admin),
     ]);
 
     const usage = new Map<string, { uses: number; sold: number; given: number; revenue: number; everUsed: boolean }>();
@@ -33,6 +35,6 @@ export default async function DiscountsPage() {
 
     return <main className="mx-auto max-w-7xl px-4 pb-20 pt-8 sm:px-6">
         {error ? <p className="rounded-xl bg-red-50 p-4 text-sm text-red-700">Could not load discounts: {error.message}</p>
-            : <DiscountsManager discounts={rows} />}
+            : <DiscountsManager discounts={rows} pricing={pricing} />}
     </main>;
 }

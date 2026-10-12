@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, Check, CircleAlert, PauseCircle, Truck } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { ALBUM_FORMAT } from "@/lib/album-order";
+import { formatGhs } from "@/lib/album-pricing";
 import { formatOrderNumber, FULFILMENT_PATH, isOrderStatus, PLACED_STATUSES, STATUS_INFO } from "@/lib/album-fulfilment";
 import { UUID_PATTERN } from "@/lib/album-server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -24,7 +25,7 @@ export default async function OrderStatusPage({ params }: { params: Promise<{ id
     if (!user) redirect(`/album-login?next=${encodeURIComponent(`/photobooks/${id}`)}`);
 
     const { data: order } = await sb.schema("itinero").from("photobooks")
-        .select("id,order_number,title,status,held_from_status,cover_template_id,album_year,cover_typeface,cover_text_color,page_count,subtotal,discount_code,discount_amount,total_cost,currency,shipping_address,customer_message,courier_name,courier_phone,delivery_date,paid_at,images:photobook_images(count)")
+        .select("id,order_number,title,status,held_from_status,cover_template_id,album_year,cover_typeface,cover_text_color,page_count,subtotal,discount_code,discount_amount,delivery_fee,tax_rate,tax_amount,total_cost,currency,shipping_address,customer_message,courier_name,courier_phone,delivery_date,paid_at,images:photobook_images(count)")
         .eq("id", id).eq("user_id", user.id).maybeSingle();
     if (!order) notFound();
     if (!isOrderStatus(order.status) || !PLACED_STATUSES.includes(order.status)) redirect(`/make-album?id=${id}`);
@@ -106,8 +107,10 @@ export default async function OrderStatusPage({ params }: { params: Promise<{ id
                             <div className="flex justify-between gap-4"><dt className="text-[#8a7d70]">Album</dt><dd className="truncate text-right">{order.title}</dd></div>
                             <div className="flex justify-between gap-4"><dt className="text-[#8a7d70]">Photos</dt><dd>{photoCount} · {order.page_count || "—"} pages</dd></div>
                             <div className="flex justify-between gap-4"><dt className="text-[#8a7d70]">Format</dt><dd>{ALBUM_FORMAT}</dd></div>
-                            {Number(order.discount_amount) > 0 && <div className="flex justify-between gap-4"><dt className="text-[#8a7d70]">Discount</dt><dd>{order.discount_code} · − {order.currency || "GHS"} {order.discount_amount}</dd></div>}
-                            <div className="flex justify-between gap-4"><dt className="text-[#8a7d70]">Paid</dt><dd>{order.currency || "GHS"} {order.total_cost}</dd></div>
+                            {Number(order.discount_amount) > 0 && <div className="flex justify-between gap-4"><dt className="text-[#8a7d70]">Discount</dt><dd>{order.discount_code} · − {formatGhs(Number(order.discount_amount))}</dd></div>}
+                            {Number(order.delivery_fee) > 0 && <div className="flex justify-between gap-4"><dt className="text-[#8a7d70]">Delivery</dt><dd>{formatGhs(Number(order.delivery_fee))}</dd></div>}
+                            {Number(order.tax_amount) > 0 && <div className="flex justify-between gap-4"><dt className="text-[#8a7d70]">Tax ({Number(order.tax_rate)}%)</dt><dd>{formatGhs(Number(order.tax_amount))}</dd></div>}
+                            <div className="flex justify-between gap-4"><dt className="text-[#8a7d70]">Paid</dt><dd>{formatGhs(Number(order.total_cost))}</dd></div>
                         </dl>
                         {address && <div className="mt-4 border-t border-[#eee4d8] pt-4 leading-6">
                             <p className="text-xs text-[#8a7d70]">Delivering to</p>

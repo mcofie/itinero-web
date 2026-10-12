@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ArrowRight, BookOpen, Plus } from "lucide-react";
 import { Link } from "@/i18n/routing";
-import { ALBUM_FORMAT, ALBUM_PRICE_GHS } from "@/lib/album-order";
+import { ALBUM_FORMAT } from "@/lib/album-order";
+import { formatGhs } from "@/lib/album-pricing";
 import { createClientServerRSC } from "@/lib/supabase/server";
 import { isOrderStatus, PLACED_STATUSES, STATUS_INFO } from "@/lib/album-fulfilment";
 import { albumFontVariables } from "@/components/album/album-fonts";
@@ -83,7 +84,7 @@ function AlbumCard({ album }: { album: AlbumRow }) {
         <div className="flex flex-1 flex-col p-5">
             <h2 className="truncate font-[Georgia] text-2xl">{album.title}</h2>
             <p className="mt-1 text-xs text-[#8a7d70]">{photoCount} photos · {album.page_count || "—"} proof pages · {ALBUM_FORMAT}</p>
-            <div className="mt-auto flex items-center justify-between pt-5 text-xs font-bold"><span>GHS {album.total_cost || ALBUM_PRICE_GHS}</span><span className="inline-flex items-center gap-1 text-[#ba6737]">{action} <ArrowRight size={15} /></span></div>
+            <div className="mt-auto flex items-center justify-between pt-5 text-xs font-bold"><span>{album.total_cost ? formatGhs(album.total_cost) : ""}</span><span className="inline-flex items-center gap-1 text-[#ba6737]">{action} <ArrowRight size={15} /></span></div>
         </div>
     </Link>;
 }

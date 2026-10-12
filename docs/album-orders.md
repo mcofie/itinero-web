@@ -1,6 +1,6 @@
 # Album ordering
 
-The customer flow uses a standard 8 × 10 inch portrait hardcover album. The price is a flat GHS 800, including delivery within Accra. Customers sign in with Google, save up to 40 original photos to their private album, review an 8 × 10 inch PDF, enter an Accra address, and pay through Paystack. Orders are run from the orders admin at `/admin/orders`, described below.
+The customer flow uses a standard 8 × 10 inch portrait hardcover album. The album price, Accra delivery fee and tax are set by the admin in Settings (GHS 800, delivery included, no tax by default). Customers sign in with Google, save up to 40 original photos to their private album, review an 8 × 10 inch PDF, enter an Accra address, and pay through Paystack. Orders are run from the orders admin at `/admin/orders`, described below.
 
 ## Production configuration
 
@@ -11,6 +11,7 @@ The customer flow uses a standard 8 × 10 inch portrait hardcover album. The pri
 - Storage policies allow a customer to write files only while the album is a draft. Submitted originals and the PDF proof remain fixed for print review.
 - `supabase/migrations/20261012120000_album_fulfilment.sql` adds order numbers, the fulfilment statuses, delivery fields and the order timeline, and renames existing `processing` orders to `printing` and `shipped` orders to `out_for_delivery`. It has not been applied to production yet. Apply it after the cover style migration and **before** deploying the orders admin: payment confirmation and checkout write the new columns.
 - `supabase/migrations/20261012130000_album_discounts.sql` adds discount codes and the order price breakdown (`subtotal`, `discount_code`, `discount_amount`; `total_cost` stays the amount charged). Apply it before deploying: checkout and the admin read these columns.
+- `supabase/migrations/20261012140000_album_settings.sql` adds the settings row (prices; its `discord_alerts` column is unused) and the delivery and tax amounts on each order. Applied to production on 2026-10-12, as were the fulfilment and discounts migrations.
 - The app needs `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `PAYSTACK_SECRET_KEY`, and `ADMIN_EMAIL` in its deployment environment. Do not expose the service-role or Paystack secret to the browser.
 - Set `NEXT_PUBLIC_SITE_URL=https://tryitinero.com` so customer emails and WhatsApp messages link to the right order page.
 - Paystack should deliver `charge.success` webhooks to `/api/paystack/webhook`. The existing points flow and the album flow share this endpoint.
@@ -27,6 +28,7 @@ The source cover illustrations are 1024 × 1536 pixels. They should be recreated
 The admin portal at `/admin` signs in with email and password at `/admin/login`, and is open to the accounts listed in `ADMIN_EMAIL`.
 
 - **Overview (`/admin`):** revenue, orders, discounts given and paid-to-delivered time for the last 7, 30 or 90 days against the previous period; orders and revenue per day; the current work queue with overdue orders and unpaid checkouts; top destinations, codes used and recent activity.
+- **Settings (`/admin/settings`):** album price, delivery fee in Accra and tax rate with its name, with a preview of what the customer pays. Discounts come off the album price; tax is charged on the album after discount plus delivery. New prices apply to checkouts from then on: each order stores its price, discount, delivery, tax and total, and a checkout already open in Paystack keeps its price.
 - **Discounts (`/admin/discounts`):** codes for a percentage or a fixed GHS amount off, with optional start and end dates, a usage limit and a once-per-customer rule. Codes can be paused, and deleted while unused. A code and its amount can't change after creation. A code that covers the full price places the order without Paystack, with a `free-` payment reference. Uses count orders waiting for payment, so an abandoned checkout holds a use until it is cleared. Two customers using the last use of a limited code at the same moment can both succeed.
 
 - **Orders (`/admin/orders`):** tabs by stage (To do, Waiting on customer, Printing, Out for delivery, Delivered, On hold, Cancelled, Awaiting payment, All), search by order number, name, email, phone or Paystack reference, paid-date filter, sorting, and an overdue flag when an order has sat in a stage too long (`STALE_AFTER_DAYS` in `src/lib/album-fulfilment.ts`). Selected orders can be moved forward together or exported as a print list CSV.
@@ -45,3 +47,14 @@ Customers follow their order at `/photobooks/{id}`. On payment, a change request
 Until then, each email is skipped and the timeline says so. Message text is in `src/lib/order-messages.ts`.
 
 WhatsApp updates are sent from the order page: **Send WhatsApp update** opens WhatsApp with the message for the current status, ready to send. Automatic WhatsApp messages need the WhatsApp Business Platform with approved message templates and are not set up.
+
+### Discord alerts
+
+Order alerts post to the existing `DISCORD_WEBHOOK_URL` webhook whenever their trigger happens, each linking to the order in the admin:
+
+- New paid order, free order placed, checkout started
+- Payment problem: Paystack reports a successful payment that doesn't match its order, so it isn't marked paid
+- Customer sent changes, order cancelled, and every other status change
+- Customer email failed, discount code used up, prices changed, and new album saved
+
+Alerts are sent by `sendOrderAlert()` in `src/lib/order-alerts.ts`, which never interrupts the order flow if Discord is unreachable. A daily digest of overdue orders would need a scheduled job and isn't set up.

@@ -98,7 +98,7 @@ export async function POST(request: Request) {
     }
 
     if (!existing) {
-        await sendOrderAlert(admin, "new_album_saved", {
+        await sendOrderAlert({
             title: "📸 New album saved", color: ALERT_COLORS.neutral,
             fields: [["Customer", user.email ?? "—"], ["Album", `${title} · ${TRAVEL_COVERS_BY_ID[destinationId as keyof typeof TRAVEL_COVERS_BY_ID].country}`], ["Photos", String(photos.length)]],
         });

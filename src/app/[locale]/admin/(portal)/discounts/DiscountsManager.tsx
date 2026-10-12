@@ -5,8 +5,8 @@ import { LoaderCircle, Plus, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/routing";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DISCOUNT_STATE_LABELS, discountLabel, type AlbumDiscount, type DiscountState } from "@/lib/album-discounts";
-import { ALBUM_PRICE_GHS } from "@/lib/album-order";
+import { DISCOUNT_STATE_LABELS, discountAmount, discountLabel, type AlbumDiscount, type DiscountState } from "@/lib/album-discounts";
+import { formatGhs, priceBreakdown, type AlbumPricing } from "@/lib/album-pricing";
 import { cn } from "@/lib/utils";
 
 export type DiscountSummary = AlbumDiscount & { uses: number; sold: number; given: number; revenue: number; everUsed: boolean; state: DiscountState };
@@ -37,7 +37,7 @@ async function send(url: string, method: string, body?: unknown) {
     return result;
 }
 
-export default function DiscountsManager({ discounts }: { discounts: DiscountSummary[] }) {
+export default function DiscountsManager({ discounts, pricing }: { discounts: DiscountSummary[]; pricing: AlbumPricing }) {
     const router = useRouter();
     const [editing, setEditing] = useState<DiscountSummary | "new" | null>(null);
     const [form, setForm] = useState<FormState>(emptyForm);
@@ -88,15 +88,13 @@ export default function DiscountsManager({ discounts }: { discounts: DiscountSum
         } finally { setBusy(null); }
     };
 
-    const preview = Number(form.value) > 0
-        ? Math.max(0, ALBUM_PRICE_GHS - (form.kind === "percent" ? ALBUM_PRICE_GHS * Math.min(100, Number(form.value)) / 100 : Number(form.value)))
-        : ALBUM_PRICE_GHS;
+    const preview = priceBreakdown(pricing, Number(form.value) > 0 ? discountAmount({ kind: form.kind, value: Math.min(form.kind === "percent" ? 100 : Infinity, Number(form.value)) }, pricing.albumPrice) : 0).total;
 
     return <>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <h1 className="font-[Georgia] text-3xl tracking-[-.02em]">Discounts</h1>
-                <p className="mt-1 text-sm text-[#776b60]">Codes customers enter at checkout. Each code takes a percentage or a fixed amount off the GHS {ALBUM_PRICE_GHS} album.</p>
+                <p className="mt-1 text-sm text-[#776b60]">Codes customers enter at checkout. Each code takes a percentage or a fixed amount off the {formatGhs(pricing.albumPrice)} album price. Delivery and tax are added after.</p>
             </div>
             <button type="button" className={primaryButton} onClick={openNew}><Plus size={16} /> New code</button>
         </div>
@@ -151,7 +149,7 @@ export default function DiscountsManager({ discounts }: { discounts: DiscountSum
                         <label className="block text-xs font-semibold text-[#6d5c4b]">{form.kind === "percent" ? "Percent" : "Amount (GHS)"}
                             <input required disabled={editing !== "new"} type="number" min={1} max={form.kind === "percent" ? 100 : undefined} step="0.01" value={form.value} onChange={event => setForm({ ...form, value: event.target.value })} className={cn(field, "disabled:bg-[#f3ede5]")} />
                         </label>
-                        <p className="-mt-2 text-xs text-[#8a7d70] sm:col-span-2">Customers pay <strong className="text-[#2b1a07]">GHS {Math.round(preview * 100) / 100}</strong>{preview <= 0 && " — a free album, placed without payment"}.</p>
+                        <p className="-mt-2 text-xs text-[#8a7d70] sm:col-span-2">Customers pay <strong className="text-[#2b1a07]">{formatGhs(preview)}</strong> with today’s prices{preview <= 0 && " — a free album, placed without payment"}.</p>
                         <label className="block text-xs font-semibold text-[#6d5c4b]">Starts<input type="date" value={form.startsOn} onChange={event => setForm({ ...form, startsOn: event.target.value })} className={field} /></label>
                         <label className="block text-xs font-semibold text-[#6d5c4b]">Ends<input type="date" value={form.endsOn} onChange={event => setForm({ ...form, endsOn: event.target.value })} className={field} /></label>
                         <label className="block text-xs font-semibold text-[#6d5c4b]">Usage limit<input type="number" min={1} step={1} placeholder="Unlimited" value={form.maxUses} onChange={event => setForm({ ...form, maxUses: event.target.value })} className={field} /></label>

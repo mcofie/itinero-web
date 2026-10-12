@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AlertTriangle, ArrowLeft, Bell, FileText, Mail, MapPin, MessageCircle, Phone, StickyNote, Truck } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { ALBUM_BUCKET, ALBUM_FORMAT } from "@/lib/album-order";
+import { formatGhs } from "@/lib/album-pricing";
 import { daysSince, formatOrderNumber, isOrderStatus, STALE_AFTER_DAYS, STATUS_INFO, whatsappNumber } from "@/lib/album-fulfilment";
 import { ORDER_FIELDS, type OrderRow } from "@/lib/album-orders-server";
 import { UUID_PATTERN } from "@/lib/album-server";
@@ -169,11 +170,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
                 <Card title="Payment">
                     <dl className="space-y-1.5 text-sm">
-                        {Number(order.discount_amount) > 0 && <>
-                            <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">Price</dt><dd>{order.currency || "GHS"} {order.subtotal}</dd></div>
-                            <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">Discount</dt><dd className="text-[#22603a]"><span className="font-mono text-xs">{order.discount_code}</span> − {order.discount_amount}</dd></div>
-                        </>}
-                        <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">{Number(order.discount_amount) > 0 ? "Charged" : "Amount"}</dt><dd className="font-semibold">{order.currency || "GHS"} {order.total_cost}</dd></div>
+                        <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">Album</dt><dd>{formatGhs(Number(order.subtotal ?? order.total_cost))}</dd></div>
+                        {Number(order.discount_amount) > 0 && <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">Discount</dt><dd className="text-[#22603a]"><span className="font-mono text-xs">{order.discount_code}</span> − {formatGhs(Number(order.discount_amount))}</dd></div>}
+                        {Number(order.delivery_fee) > 0 && <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">Delivery</dt><dd>{formatGhs(Number(order.delivery_fee))}</dd></div>}
+                        {Number(order.tax_amount) > 0 && <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">Tax ({Number(order.tax_rate)}%)</dt><dd>{formatGhs(Number(order.tax_amount))}</dd></div>}
+                        <div className="flex justify-between gap-3 border-t border-[#eee4d8] pt-1.5"><dt className="text-[#8a7d70]">Charged</dt><dd className="font-semibold">{formatGhs(Number(order.total_cost))}</dd></div>
                         <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">Paid</dt><dd>{dateTime(order.paid_at)}</dd></div>
                         <div className="flex justify-between gap-3"><dt className="shrink-0 text-[#8a7d70]">Reference</dt><dd className="truncate font-mono text-xs leading-5" title={order.payment_reference ?? undefined}>{order.payment_reference || "—"}</dd></div>
                     </dl>

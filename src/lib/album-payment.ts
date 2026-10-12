@@ -23,7 +23,7 @@ export async function reconcileAlbumPayment(reference: string): Promise<"paid" |
     const metadata = transaction.metadata ?? {};
     if (transaction.reference !== reference || transaction.amount !== Math.round(Number(album.total_cost) * 100) || transaction.currency !== "GHS" ||
         metadata.purpose !== "album_order" || metadata.album_id !== album.id || metadata.user_id !== album.user_id) {
-        await sendOrderAlert(admin, "payment_problem", {
+        await sendOrderAlert({
             title: "⚠️ Payment doesn’t match its order",
             description: "Paystack reports a successful payment, but its amount, currency or details don’t match the order, so the order was not marked paid. Check it in Paystack.",
             fields: [["Reference", reference], ["Paystack amount", `${transaction.currency} ${transaction.amount / 100}`], ["Order total", `GHS ${album.total_cost}`]],

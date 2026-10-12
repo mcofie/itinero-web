@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import AlbumBuilder from "@/components/album-builder/AlbumBuilder";
+import { getAlbumSettings } from "@/lib/album-settings-server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const albumSerif = localFont({ src: "../../../../public/fonts/landing/gelica-regular.woff2", variable: "--font-album-serif", display: "swap", fallback: ["Georgia", "serif"] });
 const albumHand = localFont({ src: "../../../../public/fonts/landing/handwritten.woff2", variable: "--font-album-hand", display: "swap", fallback: ["cursive"] });
@@ -12,6 +14,10 @@ export const metadata: Metadata = {
     robots: { index: false, follow: false },
 };
 
-export default function MakeAlbumPage() {
-    return <div className={`${albumSerif.variable} ${albumHand.variable} ${albumRound.variable}`}><AlbumBuilder /></div>;
+// Prices are set in the admin, so read them on every request.
+export const dynamic = "force-dynamic";
+
+export default async function MakeAlbumPage() {
+    const { pricing } = await getAlbumSettings(createAdminClient());
+    return <div className={`${albumSerif.variable} ${albumHand.variable} ${albumRound.variable}`}><AlbumBuilder pricing={pricing} /></div>;
 }

@@ -5,7 +5,8 @@ import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BookOpen, Check, ChevronLeft
 import { Link } from "@/i18n/routing";
 import { COVER_COLOR_SWATCHES, COVER_TYPEFACES, DEFAULT_COVER_TEXT_COLOR, DEFAULT_COVER_TYPEFACE, normalizeCoverTextColor, normalizeCoverTypeface, resolveCoverTextColor, type CoverTypeface } from "@/lib/album-cover-style";
 import { coverImagePath, coverThumbnailPath, TRAVEL_COVERS, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
-import { ALBUM_BUCKET, ALBUM_FORMAT, ALBUM_PRICE_GHS } from "@/lib/album-order";
+import { ALBUM_BUCKET, ALBUM_FORMAT } from "@/lib/album-order";
+import { formatGhs, priceBreakdown, type AlbumPricing, type PriceBreakdown } from "@/lib/album-pricing";
 import { EDITABLE_STATUSES, isOrderStatus, STATUS_INFO, type OrderStatus } from "@/lib/album-fulfilment";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 import { clearAlbumDraft, deleteAlbumPhoto, loadAlbumDraft, saveAlbumDraft, saveAlbumPhoto, type AlbumDraftMeta, type AlbumLayout, type AlbumPhoto } from "./album-draft";
@@ -71,7 +72,7 @@ function getImageDimensions(file: File): Promise<{ width: number; height: number
     });
 }
 
-export default function AlbumBuilder() {
+export default function AlbumBuilder({ pricing }: { pricing: AlbumPricing }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const photosRef = useRef<AlbumPhoto[]>([]);
     const [ready, setReady] = useState(false);
@@ -98,7 +99,9 @@ export default function AlbumBuilder() {
     const [changeRequest, setChangeRequest] = useState("");
     const [isResubmitting, setIsResubmitting] = useState(false);
     const [discountInput, setDiscountInput] = useState("");
-    const [discount, setDiscount] = useState<{ code: string; label: string; amount: number; total: number } | null>(null);
+    const [discount, setDiscount] = useState<{ code: string; label: string; amount: number } | null>(null);
+    // A placed or pending order keeps the prices it was checked out with.
+    const [orderPrice, setOrderPrice] = useState<PriceBreakdown | null>(null);
     const [discountError, setDiscountError] = useState("");
     const [isCheckingDiscount, setIsCheckingDiscount] = useState(false);
     const editable = EDITABLE_STATUSES.includes(orderStatus as OrderStatus);
@@ -163,7 +166,11 @@ export default function AlbumBuilder() {
                     if (["gallery", "editorial", "collage"].includes(book.layout)) setLayout(book.layout);
                     if (book.shipping_address) setShipping(previous => ({ ...previous, ...book.shipping_address }));
                     if (book.status !== "draft" && book.discount_code) {
-                        setDiscount({ code: book.discount_code, label: book.discount_code, amount: Number(book.discount_amount), total: Number(book.total_cost) });
+                        setDiscount({ code: book.discount_code, label: book.discount_code, amount: Number(book.discount_amount) });
+                    }
+                    if (book.status !== "draft" && book.subtotal !== null) {
+                        setOrderPrice({ subtotal: Number(book.subtotal), discountAmount: Number(book.discount_amount ?? 0), deliveryFee: Number(book.delivery_fee ?? 0),
+                            taxRate: Number(book.tax_rate ?? 0), taxLabel: pricing.taxLabel, tax: Number(book.tax_amount ?? 0), total: Number(book.total_cost) });
                     }
                     setStep(book.status === "draft" ? 2 : 3);
                 }
@@ -270,7 +277,7 @@ export default function AlbumBuilder() {
         photos.forEach(photo => URL.revokeObjectURL(photo.url));
         setPhotos([]); setStep(0); setDestinationId(DEFAULT_DESTINATION); setTitle(defaultTitle(DEFAULT_DESTINATION)); setYear(YEAR);
         setCoverTypeface(DEFAULT_COVER_TYPEFACE); setCoverTextColor(DEFAULT_COVER_TEXT_COLOR); setLayout("editorial");
-        setAlbumId(null); setOrderStatus("draft"); setApproved(false); setDiscount(null); setDiscountInput(""); setError("");
+        setAlbumId(null); setOrderStatus("draft"); setApproved(false); setDiscount(null); setDiscountInput(""); setOrderPrice(null); setError("");
         window.history.replaceState({}, "", window.location.pathname);
     };
     const resetDraft = async () => {
@@ -393,13 +400,14 @@ export default function AlbumBuilder() {
             const response = await fetch(`/api/albums/${albumId ?? crypto.randomUUID()}/discount`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) });
             const result = await response.json();
             if (!response.ok || !result.discount) throw new Error(result.error || "That discount code isn’t valid.");
-            setDiscount({ ...result.discount, total: result.total });
+            setDiscount({ code: result.discount.code, label: result.discount.label, amount: result.discount.amount });
         } catch (cause) {
             setDiscount(null);
             setDiscountError(cause instanceof Error ? cause.message : "Could not check that code.");
         } finally { setIsCheckingDiscount(false); }
     };
-    const orderTotal = discount ? discount.total : ALBUM_PRICE_GHS;
+    const price = orderPrice ?? priceBreakdown(pricing, discount?.amount ?? 0);
+    const orderTotal = price.total;
 
     const orderAlbum = async () => {
         if (isOrdering || !["draft", "pending_payment"].includes(orderStatus)) return;
@@ -506,7 +514,7 @@ export default function AlbumBuilder() {
                                 <p>Sign in with Google to save this album to your account, then add your Accra delivery details.</p>
                                 <button type="button" className={styles.orderButton} onClick={() => void saveToAccount()} disabled={isSavingCloud}>Continue with Google</button>
                             </div> : ["draft", "pending_payment"].includes(orderStatus) ? <div className={styles.shippingBox}>
-                                <h3>Deliver to Accra</h3><p>Delivery anywhere in Accra is included.</p>
+                                <h3>Deliver to Accra</h3><p>{price.deliveryFee > 0 ? `Delivery anywhere in Accra is ${formatGhs(price.deliveryFee)}.` : "Delivery anywhere in Accra is included."}</p>
                                 <div className={styles.shippingFields}>
                                     <label>Full name<input autoComplete="name" value={shipping.fullName} onChange={event => setShipping({ ...shipping, fullName: event.target.value })} /></label>
                                     <label>Phone number<input autoComplete="tel" inputMode="tel" value={shipping.phone} onChange={event => setShipping({ ...shipping, phone: event.target.value })} placeholder="+233 …" /></label>
@@ -524,13 +532,15 @@ export default function AlbumBuilder() {
                                     {discountError && <p className={styles.discountError} role="alert">{discountError}</p>}
                                 </>}
                                 <div className={styles.priceLines}>
-                                    <div><span>Hardcover album, delivered in Accra</span><span>GHS {ALBUM_PRICE_GHS}</span></div>
-                                    {discount && <div className={styles.priceDiscount}><span>{discount.code}{discount.label !== discount.code && ` · ${discount.label}`}{orderStatus === "draft" && <button type="button" onClick={() => { setDiscount(null); setDiscountInput(""); }}>Remove</button>}</span><span>− GHS {discount.amount}</span></div>}
-                                    <div className={styles.priceTotal}><span>Total</span><span>GHS {orderTotal}</span></div>
+                                    <div><span>Hardcover album · {ALBUM_FORMAT}</span><span>{formatGhs(price.subtotal)}</span></div>
+                                    {discount && <div className={styles.priceDiscount}><span>{discount.code}{discount.label !== discount.code && ` · ${discount.label}`}{orderStatus === "draft" && <button type="button" onClick={() => { setDiscount(null); setDiscountInput(""); }}>Remove</button>}</span><span>− {formatGhs(price.discountAmount)}</span></div>}
+                                    <div><span>Delivery in Accra</span><span>{price.deliveryFee > 0 ? formatGhs(price.deliveryFee) : "Included"}</span></div>
+                                    {price.tax > 0 && <div><span>{price.taxLabel} ({price.taxRate}%)</span><span>{formatGhs(price.tax)}</span></div>}
+                                    <div className={styles.priceTotal}><span>Total</span><span>{formatGhs(orderTotal)}</span></div>
                                 </div>
                                 <label className={styles.approval}><input type="checkbox" checked={approved} onChange={event => setApproved(event.target.checked)} /> I’ve reviewed my photos and captions, and the delivery address is in Accra, Ghana.</label>
                                 <button type="button" className={styles.orderButton} onClick={() => void orderAlbum()} disabled={isOrdering || isSavingCloud}>
-                                    {isOrdering ? <><LoaderCircle size={18} className={styles.spin} /> {isExporting ? `Making PDF · ${exportProgress}%` : "Preparing your order…"}</> : orderStatus === "pending_payment" ? `Continue payment · GHS ${orderTotal}` : orderTotal <= 0 ? "Place free order" : `Order hardcover · GHS ${orderTotal}`}
+                                    {isOrdering ? <><LoaderCircle size={18} className={styles.spin} /> {isExporting ? `Making PDF · ${exportProgress}%` : "Preparing your order…"}</> : orderStatus === "pending_payment" ? `Continue payment · ${formatGhs(orderTotal)}` : orderTotal <= 0 ? "Place free order" : `Order hardcover · ${formatGhs(orderTotal)}`}
                                 </button>
                                 <small>{orderTotal <= 0 ? "Your discount covers the full price. Printing begins after file review." : "Secure payment with Paystack. Printing begins after payment and file review."}</small>
                             </div> : orderStatus === "changes_requested" ? <div className={styles.shippingBox}>

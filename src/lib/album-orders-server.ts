@@ -115,7 +115,7 @@ export async function notifyCustomer(admin: AdminClient, order: OrderRow, status
         actor: "system", metadata: { channel: "email", result, detail, to },
     });
     if (result === "failed") {
-        await sendOrderAlert(admin, "email_failed", {
+        await sendOrderAlert({
             title: `Email to customer failed · ${message.subject}`, description: detail || undefined,
             fields: orderFields(order), orderId: order.id, color: ALERT_COLORS.problem,
         });
@@ -124,7 +124,7 @@ export async function notifyCustomer(admin: AdminClient, order: OrderRow, status
 
 /** Announces a newly paid order, and warns when its discount code has just been used up. */
 export async function announcePaidOrder(admin: AdminClient, order: OrderRow, how: "paystack" | "free") {
-    await sendOrderAlert(admin, how === "free" ? "free_order" : "order_paid", {
+    await sendOrderAlert({
         title: how === "free" ? `🎁 Free order ${formatOrderNumber(order.order_number)}` : `💰 New order ${formatOrderNumber(order.order_number)}`,
         fields: orderFields(order), orderId: order.id, color: ALERT_COLORS.money,
     });
@@ -133,7 +133,7 @@ export async function announcePaidOrder(admin: AdminClient, order: OrderRow, how
     if (!discount?.max_uses) return;
     const uses = await discountUses(admin, order.discount_id);
     if (uses !== null && uses >= discount.max_uses) {
-        await sendOrderAlert(admin, "discount_used_up", {
+        await sendOrderAlert({
             title: `🏷️ Discount code ${discount.code} is used up`, description: `All ${discount.max_uses} uses are taken. Pause it or raise the limit in Discounts.`,
             color: ALERT_COLORS.warning,
         });
@@ -199,11 +199,11 @@ export async function transitionOrder(admin: AdminClient, id: string, input: Tra
     const fields = orderFields(updated);
     if (note) fields.push(["Note", note]);
     if (move.to === "cancelled") {
-        await sendOrderAlert(admin, "order_cancelled", { title: `Order ${formatOrderNumber(updated.order_number)} cancelled`, fields, orderId: id, color: ALERT_COLORS.neutral });
+        await sendOrderAlert({ title: `Order ${formatOrderNumber(updated.order_number)} cancelled`, fields, orderId: id, color: ALERT_COLORS.neutral });
     } else if (from === "changes_requested" && move.to === "in_review" && input.actor === updated.customer_email) {
-        await sendOrderAlert(admin, "customer_resubmitted", { title: `✏️ ${formatOrderNumber(updated.order_number)} updated by the customer`, description: "The album is back in review.", fields, orderId: id, color: ALERT_COLORS.info });
+        await sendOrderAlert({ title: `✏️ ${formatOrderNumber(updated.order_number)} updated by the customer`, description: "The album is back in review.", fields, orderId: id, color: ALERT_COLORS.info });
     } else {
-        await sendOrderAlert(admin, "status_changed", { title: `${formatOrderNumber(updated.order_number)}: ${STATUS_INFO[from].label} → ${STATUS_INFO[move.to].label}`, fields, orderId: id, color: ALERT_COLORS.neutral });
+        await sendOrderAlert({ title: `${formatOrderNumber(updated.order_number)}: ${STATUS_INFO[from].label} → ${STATUS_INFO[move.to].label}`, fields, orderId: id, color: ALERT_COLORS.neutral });
     }
     return { order: updated };
 }

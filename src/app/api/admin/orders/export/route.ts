@@ -28,14 +28,14 @@ export async function GET(request: NextRequest) {
 
     const origin = request.nextUrl.origin;
     const header = ["Order", "Status", "Album title", "Destination", "Year", "Typeface", "Title colour", "Layout", "Pages", "Photos",
-        "Customer", "Phone", "Email", "Street", "Area", "Landmark", "Paid at", "Price", "Discount code", "Discount", "Charged", "Currency", "Rider", "Rider phone", "Delivery date", "Proof PDF"];
+        "Customer", "Phone", "Email", "Street", "Area", "Landmark", "Paid at", "Album price", "Discount code", "Discount", "Delivery", "Tax rate %", "Tax", "Charged", "Currency", "Rider", "Rider phone", "Delivery date", "Proof PDF"];
     const lines = ((data ?? []) as unknown as (OrderRow & { images: { count: number }[] })[]).map(order => {
         const address = order.shipping_address ?? {};
         const cover = order.destination_id && Object.hasOwn(TRAVEL_COVERS_BY_ID, order.destination_id) ? TRAVEL_COVERS_BY_ID[order.destination_id as TravelCoverId].country : order.destination_id;
         return [formatOrderNumber(order.order_number), isOrderStatus(order.status) ? STATUS_INFO[order.status].label : order.status,
             order.title, cover, order.album_year, order.cover_typeface, order.cover_text_color, order.layout, order.page_count, order.images?.[0]?.count ?? 0,
             address.fullName || order.customer_name, address.phone, order.customer_email, address.street, address.area, address.landmark,
-            order.paid_at ? new Date(order.paid_at).toISOString().slice(0, 16).replace("T", " ") : "", order.subtotal ?? order.total_cost, order.discount_code, order.discount_amount, order.total_cost, order.currency,
+            order.paid_at ? new Date(order.paid_at).toISOString().slice(0, 16).replace("T", " ") : "", order.subtotal ?? order.total_cost, order.discount_code, order.discount_amount, order.delivery_fee, order.tax_rate, order.tax_amount, order.total_cost, order.currency,
             order.courier_name, order.courier_phone, order.delivery_date, order.pdf_path ? `${origin}/api/admin/albums/${order.id}/file` : "",
         ].map(cell).join(",");
     });

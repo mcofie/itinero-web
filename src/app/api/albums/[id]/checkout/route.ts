@@ -86,7 +86,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         ...order, status: "pending_payment", payment_reference: payment.data.reference, payment_url: payment.data.authorization_url,
     }).eq("id", id).eq("user_id", user.id).eq("status", "draft").select("id,title,destination_id").maybeSingle();
     if (saveError || !saved) return NextResponse.json({ error: "Could not record your order. Please try again." }, { status: 503 });
-    await sendOrderAlert(admin, "checkout_started", {
+    await sendOrderAlert({
         title: "🛒 Checkout started",
         fields: orderFields({ id, title: saved.title, destination_id: saved.destination_id, customer_email: user.email, shipping_address: address, total_cost: quote.total, discount_code: quote.discount?.code, discount_amount: quote.discountAmount }),
         orderId: id, color: ALERT_COLORS.info,
