@@ -1,0 +1,37 @@
+.page{position:relative;min-height:100svh;overflow:hidden;background:#fdfbf9;color-scheme:light}
+.header{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:28px 3.4%}
+.header img{display:block;width:76px;height:46px}
+.bone{display:block;border-radius:12px;background:linear-gradient(100deg,#efe7dd 30%,#f8f3ed 50%,#efe7dd 70%);background-size:220% 100%;animation:shimmer 1.6s ease-in-out infinite}
+.button{width:150px;height:56px;border-radius:17px 15px 18px 16px}
+.copy{position:absolute;left:14%;top:10.5%;width:min(420px,34vw)}
+.greeting{width:42%;height:24px}
+.title{height:72px;margin-top:14px}
+.title + .title{width:78%}
+.line{height:24px;margin-top:46px;width:92%}
+.line + .line{margin-top:14px;width:62%}
+.action{position:absolute;left:14.4%;bottom:8.5%}
+.action .note{width:290px;height:14px;margin-top:38px}
+.books{position:absolute;inset:0;pointer-events:none}
+.book{position:absolute;top:27%;left:42%;width:44vw;max-width:760px;aspect-ratio:.69;border-radius:6px 14px 14px 6px;transform:rotate(-22deg);transform-origin:0 0;translate:0 26%}
+.side{display:none}
+@keyframes shimmer{from{background-position:120% 0}to{background-position:-120% 0}}
+@media(prefers-reduced-motion:reduce){.bone{animation:none}}
+@media(max-width:900px){
+  .header{position:relative;padding:20px 26px;border-bottom:1px solid #efe8df}
+  .header img{width:56px;height:34px}
+  .button{width:120px;height:46px}
+  .copy,.action{position:static;width:auto;display:flex;flex-direction:column;align-items:center;padding:0 26px}
+  .copy{padding-top:46px}
+  .greeting{width:150px}
+  .title{width:220px;height:60px}
+  .title + .title{width:240px}
+  .line{width:84%;margin-top:34px}
+  .line + .line{width:58%}
+  .action{margin-top:28px}
+  .action .note{width:220px;margin-top:22px}
+  .books{position:relative;isolation:isolate;height:330px;margin-top:34px}
+  .book{top:0;left:calc(50% - min(26vw,130px));width:52vw;max-width:260px;translate:none;transform:none;z-index:1}
+  .side{display:block;top:46px;width:44vw;max-width:220px;z-index:0;opacity:.75}
+  .side.left{left:-4vw;transform:rotate(-9deg)}
+  .side.right{left:auto;right:-4vw;transform:rotate(9deg)}
+}

@@ -33,6 +33,9 @@
 .error{padding:12px 15px;margin-top:18px;border-radius:10px;background:#fff0e9;border:1px solid #efb99f;color:#803d21;font:13px/1.5 var(--font-geist-sans),Arial,sans-serif}
 .spin{animation:spin 1s linear infinite}
 .bone{display:block;border-radius:9px;background:linear-gradient(100deg,#e9e0d4 30%,#f4eee6 50%,#e9e0d4 70%);background-size:220% 100%;animation:shimmer 1.6s ease-in-out infinite}.boneCover{aspect-ratio:4/5;width:100%;max-width:350px;margin:0 auto;border-radius:4px 8px 8px 4px}
+.savingDot{width:8px;height:8px;margin:0 3.5px;border-radius:50%;background:currentColor;animation:savingPulse 1s ease-in-out infinite}
+@keyframes savingPulse{50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){.savingDot{animation:none}}
 @keyframes shimmer{from{background-position:120% 0}to{background-position:-120% 0}}
 @media(prefers-reduced-motion:reduce){.bone{animation:none}}
 @keyframes spin{to{transform:rotate(360deg)}}

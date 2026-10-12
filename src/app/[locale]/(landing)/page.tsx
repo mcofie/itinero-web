@@ -1,14 +1,10 @@
 import PhotoAlbumLanding from "@/components/landing/PhotoAlbumLanding";
 import { connection } from "next/server";
 import { selectFeaturedTravelCovers, selectOverheadAlbum } from "@/lib/featured-travel-covers";
-import localFont from "next/font/local";
 import type { Metadata } from "next";
 import { SITE_TITLE, SITE_DESCRIPTION, SOCIAL_IMAGE } from "@/lib/site-metadata";
 import { routing } from "@/i18n/routing";
-
-const albumSerif = localFont({ src: "../../../public/fonts/landing/gelica-regular.woff2", variable: "--font-album-serif", display: "swap", fallback: ["Georgia", "serif"] });
-const albumHand = localFont({ src: "../../../public/fonts/landing/handwritten.woff2", variable: "--font-album-hand", display: "swap", fallback: ["cursive"] });
-const albumRound = localFont({ src: "../../../public/fonts/landing/lilita-one.ttf", variable: "--font-album-round", display: "swap", fallback: ["Arial", "sans-serif"] });
+import { albumFontVariables } from "@/components/album/album-fonts";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
     const { locale } = await params;
@@ -33,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function LandingPage() {
     await connection();
-    return <div className={`${albumSerif.variable} ${albumHand.variable} ${albumRound.variable}`}>
+    return <div className={albumFontVariables}>
         <PhotoAlbumLanding featuredCovers={selectFeaturedTravelCovers()} overheadAlbum={selectOverheadAlbum()} />
     </div>;
 }

@@ -435,7 +435,7 @@ export default function AlbumBuilder({ pricing }: { pricing: AlbumPricing }) {
     return <div className={styles.builder}>
         <header className={styles.header}>
             <Link href="/" className={styles.brand} aria-label="Itinero home"><img src="/brand/itinero-mark-animated.svg" alt="" /><span>itinero</span></Link>
-            <div className={styles.headerRight}><span className={styles.headerLabel}>{userEmail ? userEmail : "Your album studio"}</span><span className={styles.saveBadge}>{saveState === "saving" ? <LoaderCircle size={15} className={styles.spin} /> : saveState === "saved" ? <Check size={15} /> : null}{saveState === "saved" ? "Saved on this device" : saveState === "saving" ? "Saving" : "Device saving unavailable"}</span></div>
+            <div className={styles.headerRight}><span className={styles.headerLabel}>{userEmail ? userEmail : "Your album studio"}</span><span className={styles.saveBadge}>{saveState === "saving" ? <span className={styles.savingDot} aria-hidden /> : saveState === "saved" ? <Check size={15} /> : null}{saveState === "saved" ? "Saved on this device" : saveState === "saving" ? "Saving" : "Device saving unavailable"}</span></div>
         </header>
         <input ref={fileInputRef} className={styles.hiddenInput} type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple onChange={handleFileInput} />
         <div className={styles.shell}>

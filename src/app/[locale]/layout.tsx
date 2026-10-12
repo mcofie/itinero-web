@@ -10,7 +10,6 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { Toaster } from "@/components/ui/sonner";
-import GlobalLoading from "./loading";
 import { SITE_URL, SITE_TITLE, SITE_DESCRIPTION, SOCIAL_IMAGE } from "@/lib/site-metadata";
 
 const geistSans = Geist({
@@ -90,7 +89,8 @@ export default async function RootLayout({
                         <Suspense fallback={null}>
                             <AppProgressBar />
                         </Suspense>
-                        <Suspense fallback={<GlobalLoading />}>
+                        {/* No spinner fallback: routes show their own skeletons, and the progress bar covers navigation. */}
+                        <Suspense fallback={null}>
                             {children}
                         </Suspense>
                         <Toaster />
