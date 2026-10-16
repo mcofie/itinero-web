@@ -4,6 +4,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import AlbumMessage from "@/components/album/AlbumMessage";
 
 export default function AuthCallbackClient() {
     const params = useSearchParams();
@@ -53,13 +54,5 @@ export default function AuthCallbackClient() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Simple loading state while we exchange code & redirect
-    return (
-        <div className="mx-auto max-w-md p-8 text-center">
-            <div className="text-lg font-semibold">Signing you in…</div>
-            <p className="mt-2 text-sm text-muted-foreground">
-                Please wait while we complete your sign-in.
-            </p>
-        </div>
-    );
+    return <AlbumMessage note="one moment" title="Signing you in…">Taking you back to your albums.</AlbumMessage>;
 }
