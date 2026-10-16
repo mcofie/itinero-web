@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import LandingImage from "./LandingImage";
 import { LazyMotion, domAnimation, m, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { BookOpen, Camera, Check, Heart, ImagePlus, Layers, MapPin, PackageCheck, Pencil, Plus, ShieldCheck, Smile, Sun, Truck } from "lucide-react";
@@ -8,6 +8,7 @@ import { Link } from "@/i18n/routing";
 import styles from "./PhotoAlbumLanding.module.css";
 import TravelAlbumCover from "./TravelAlbumCover";
 import type { OverheadAlbum } from "@/lib/overhead-albums";
+import { formatGhs } from "@/lib/album-pricing";
 import { TRAVEL_COVERS_BY_ID, type FeaturedTravelCovers, type TravelCoverId } from "@/lib/travel-covers";
 
 const photos = ["/collage_image_1.png", "/collage_image_2.png", "/collage_image_3.png", "/collage_image_4.png", "/images/how-it-works.png"];
@@ -22,7 +23,7 @@ function Sticker({ kind = "flower", color = "#a9d96e", className = "" }: { kind?
     return <svg viewBox="0 0 100 100" className={`${styles.sticker} ${className}`} aria-hidden="true"><path d={paths[kind]} fill={color} stroke="#fffdf8" strokeWidth="10" strokeLinejoin="round" /><path d={paths[kind]} fill={color} stroke="#342719" strokeWidth="2.4" strokeLinejoin="round" /><ellipse cx="42" cy="46" rx="6" ry="8" fill="white" /><ellipse cx="59" cy="46" rx="6" ry="8" fill="white" /><circle cx="44" cy="47" r="2.7" fill="#241b10" /><circle cx="58" cy="47" r="2.7" fill="#241b10" /><path d="M43 62Q51 67 58 61" fill="none" stroke="#241b10" strokeWidth="2.5" strokeLinecap="round" /></svg>;
 }
 
-function Hero({ covers }: { covers: FeaturedTravelCovers }) {
+function Hero({ covers, price }: { covers: FeaturedTravelCovers; price: string }) {
     const ref = useRef<HTMLDivElement>(null);
     const stickyRef = useRef<HTMLDivElement>(null);
     const bookRef = useRef<HTMLDivElement>(null);
@@ -67,7 +68,7 @@ function Hero({ covers }: { covers: FeaturedTravelCovers }) {
             </div>
             <div className={styles.heroAction}>
                 <Link prefetch={false} href="/make-album" className={styles.outlineButton}>Make mine!</Link>
-                <p><strong>8 × 10 hardcover · GHS 800</strong><span>Delivery available across Accra</span></p>
+                <p><strong>8 × 10 hardcover · {price}</strong><span>Delivery available across Accra</span></p>
             </div>
             <div className={styles.mobileShowcase} aria-hidden="true">
                 <div className={styles.showcaseLeft}><TravelAlbumCover design={covers[1]} eager media="mobile" /></div>
@@ -83,7 +84,7 @@ function Hero({ covers }: { covers: FeaturedTravelCovers }) {
 }
 
 const features = [
-    { scene: "sky", intro: "Your photos,", accent: "in real life.", color: "#4183d9", items: ["Pick photos from your trip", "Choose a cover you love", "Put your story in order", "Add your own words", "Preview every page"] },
+    { scene: "sky", intro: "Your photos,", accent: "in real life.", color: "#d4692c", items: ["Pick photos from your trip", "Choose a cover you love", "Put your story in order", "Add your own words", "Preview every page"] },
 ];
 
 function OverheadPhoto({ album }: { album: OverheadAlbum }) {
@@ -153,13 +154,13 @@ function FeatureScene({ feature, index, album, covers }: { feature: typeof featu
     </section>;
 }
 
-function InsideBook() {
+function InsideBook({ price }: { price: string }) {
     return <section className={styles.insideBook} aria-labelledby="inside-book-heading">
         <div className={styles.insideBookCopy}>
             <span className={styles.handwriting}>open it up</span>
             <h2 id="inside-book-heading">The cover is only<br />the beginning.</h2>
             <p>Give the big views room to breathe, bring little moments together, and add the words that make the memory yours.</p>
-            <ul><li><Check size={17} />Full-page and editorial layouts</li><li><Check size={17} />Captions in your own words</li><li><Check size={17} />A PDF proof before ordering</li></ul>
+            <ul><li><Check size={17} />Full-page and editorial layouts</li><li><Check size={17} />Captions in your own words</li><li><Check size={17} />A preview of every page before you order</li></ul>
         </div>
         <div className={styles.openAlbum} aria-label="Examples of printed photo album pages">
             <div className={styles.spreadPage}>
@@ -173,7 +174,7 @@ function InsideBook() {
                 <p>small stops, good light, nowhere else to be</p>
             </div>
         </div>
-        <div className={styles.insideBookDetails}><span><strong>8 × 10 in</strong>hardcover format</span><span><strong>GHS 800</strong>album price</span><span><strong>Your proof</strong>review every page first</span></div>
+        <div className={styles.insideBookDetails}><span><strong>8 × 10 in</strong>hardcover format</span><span><strong>{price}</strong>album price</span><span><strong>Every page</strong>previewed before you order</span></div>
     </section>;
 }
 
@@ -243,41 +244,50 @@ function CoverGallery({ covers }: { covers: FeaturedTravelCovers }) {
 }
 
 const fulfilmentSteps = [
-    { icon: <BookOpen />, number: "01", title: "Build your album", copy: "Choose a cover, add your photos, arrange the pages and download your PDF proof." },
+    { icon: <BookOpen />, number: "01", title: "Build your album", copy: "Choose a cover, add your photos, arrange the pages and preview the whole book before you order." },
     { icon: <ShieldCheck />, number: "02", title: "We check the files", copy: "We review the print file and contact you if a photo or page needs attention." },
     { icon: <PackageCheck />, number: "03", title: "We print and bind", copy: "Printing begins after payment and file review. You can follow the order from My Albums." },
     { icon: <Truck />, number: "04", title: "Delivered in Accra", copy: "We currently deliver albums within Accra, Ghana. Your delivery fee is shown clearly in the builder." },
 ];
 
-function Fulfilment() {
+function Fulfilment({ price }: { price: string }) {
     return <section className={styles.fulfilment} aria-labelledby="fulfilment-heading">
         <div className={styles.fulfilmentHeading}><span className={styles.handwriting}>from camera roll to coffee table</span><h2 id="fulfilment-heading">What happens after<br />you make your book.</h2></div>
         <div className={styles.fulfilmentSteps}>{fulfilmentSteps.map(step => <article key={step.number}><div>{step.icon}</div><span>{step.number}</span><h3>{step.title}</h3><p>{step.copy}</p></article>)}</div>
-        <div className={styles.fulfilmentOffer}><span><strong>GHS 800</strong> for an 8 × 10 in hardcover</span><span>Delivery available across Accra</span><Link prefetch={false} href="/make-album" className={styles.outlineButton}>Start your album</Link></div>
+        <div className={styles.fulfilmentOffer}><span><strong>{price}</strong> for an 8 × 10 in hardcover</span><span>Delivery available across Accra</span><Link prefetch={false} href="/make-album" className={styles.outlineButton}>Start your album</Link></div>
     </section>;
 }
 
-const faqs = [
+const faqs = (price: string) => [
     ["What even IS Itinero?", "Itinero helps you turn photos from a trip into a printed photo album. Bring your pictures together, choose a cover, arrange your pages, and make a book of your memories."],
     ["Who is it for?", "Anyone with a trip they want to remember. A big adventure, a weekend away, your honeymoon, or that little holiday you still talk about."],
-    ["Can I use photos from my phone?", "Yes. You can upload photos from your phone or computer in the photo book studio. Use the original, full-resolution files for the clearest prints."],
-    ["Do I need to be good at design?", "No. Start with a cover template, add your photos, and make it your own using the layouts and design tools in the studio."],
+    ["Can I use photos from my phone?", "Yes. You can add photos from your phone or computer in the album builder. Use the original, full-resolution files for the clearest prints."],
+    ["Do I need to be good at design?", "No. Pick a destination cover and add your photos, and we lay out the pages for you. You can change any layout or move photos around."],
     ["Can I add my own words?", "Yes. Add a title and captions to help tell the story behind the photos."],
-    ["Can I change things before I order?", "Yes. You can rearrange photos, change your cover, and preview your book in the studio before placing an order."],
+    ["Can I change things before I order?", "Yes. You can rearrange photos, change your cover, and preview every page in the builder before placing an order."],
     ["Can I make one as a gift?", "Absolutely. A book of shared memories makes a lovely gift. You can create an album for someone using photos you have permission to print."],
-    ["How much does it cost?", "An 8 × 10 inch hardcover album is GHS 800. The current Accra delivery fee is shown clearly in the album builder before you order."],
+    ["How much does it cost?", `An 8 × 10 inch hardcover album is ${price}. The current Accra delivery fee is shown clearly in the album builder before you order.`],
     ["Where do you deliver?", "We currently deliver within Accra, Ghana. You can follow file review, printing and delivery from My Albums after ordering."],
     ["How do I get started?", "Choose a destination cover, add your photos, arrange the pages, preview every page, and order when you are happy with the book."],
 ];
 
-export default function PhotoAlbumLanding({ featuredCovers, overheadAlbum }: { featuredCovers: FeaturedTravelCovers; overheadAlbum: OverheadAlbum }) {
+export default function PhotoAlbumLanding({ featuredCovers, overheadAlbum, albumPrice }: { featuredCovers: FeaturedTravelCovers; overheadAlbum: OverheadAlbum; albumPrice: number }) {
     const reduced = useReducedMotion();
     const [openFaq, setOpenFaq] = useState<number | null>(null);
+    const [scrolled, setScrolled] = useState(false);
+    const price = formatGhs(albumPrice);
+    // Once the hero scrolls away, the header gets a paper backdrop so it doesn't sit on top of the sections.
+    useEffect(() => {
+        const update = () => setScrolled(window.scrollY > 40);
+        update();
+        window.addEventListener("scroll", update, { passive: true });
+        return () => window.removeEventListener("scroll", update);
+    }, []);
     return <LazyMotion features={domAnimation} strict><div className={`${styles.site} ${reduced ? styles.reducedMotion : ""}`}>
         <a className={styles.skipLink} href="#how-it-works">Skip to how it works</a>
-        <header className={styles.header}><Link prefetch={false} href="/" aria-label="Itinero home" className={styles.logo}><img src="/brand/itinero-mark-animated.svg" alt="" width={76} height={46} /></Link><Link prefetch={false} href="/make-album" className={styles.outlineButton}>Make mine!</Link></header>
-        <main><Hero covers={featuredCovers} /><Reassurance />{features.map((feature, i) => <FeatureScene key={feature.scene} feature={feature} index={i} album={overheadAlbum} covers={featuredCovers} />)}<InsideBook /><OtherThings /><CoverGallery covers={featuredCovers} /><Fulfilment />
-            <section className={styles.faq}><h2>Questions you might have</h2><div>{faqs.map(([question, answer], i) => <div className={styles.faqRow} key={question}><h3><button aria-expanded={openFaq === i} aria-controls={`album-faq-${i}`} onClick={() => setOpenFaq(openFaq === i ? null : i)}>{question}<Plus size={18} className={openFaq === i ? styles.expanded : ""} /></button></h3><div id={`album-faq-${i}`} hidden={openFaq !== i}><p>{answer}</p></div></div>)}</div></section>
+        <header className={`${styles.header} ${scrolled ? styles.headerScrolled : ""}`}><Link prefetch={false} href="/" aria-label="Itinero home" className={styles.logo}><img src="/brand/itinero-mark-animated.svg" alt="" width={76} height={46} /></Link><nav className={styles.headerNav} aria-label="Main"><Link prefetch={false} href="/photobooks" className={styles.headerLink}>My albums</Link><Link prefetch={false} href="/make-album" className={styles.outlineButton}>Make mine!</Link></nav></header>
+        <main><Hero covers={featuredCovers} price={price} /><Reassurance />{features.map((feature, i) => <FeatureScene key={feature.scene} feature={feature} index={i} album={overheadAlbum} covers={featuredCovers} />)}<InsideBook price={price} /><OtherThings /><CoverGallery covers={featuredCovers} /><Fulfilment price={price} />
+            <section className={styles.faq}><h2>Questions you might have</h2><div>{faqs(price).map(([question, answer], i) => <div className={styles.faqRow} key={question}><h3><button aria-expanded={openFaq === i} aria-controls={`album-faq-${i}`} onClick={() => setOpenFaq(openFaq === i ? null : i)}>{question}<Plus size={18} className={openFaq === i ? styles.expanded : ""} /></button></h3><div id={`album-faq-${i}`} hidden={openFaq !== i}><p>{answer}</p></div></div>)}</div></section>
             <section className={styles.story}><div className={styles.filmstrip}>{["/images/how-it-works.png", ...photos.slice(0, 3)].map((src, i) => <div key={`${src}-${i}`}><LandingImage src={src} alt="A moment from a trip" fill sizes="25vw" /></div>)}</div><div className={styles.storyText}><span className={styles.handwriting}>real<br />⌄</span><h2>Make a story<br />out of your camera roll</h2><Link prefetch={false} href="/make-album" className={styles.outlineButton}>Let’s make a book</Link></div></section>
         </main>
         <footer className={styles.footer}><div className={styles.footerTop}><h2>Making books that<br />bring trips back.</h2><nav aria-label="Footer"><div><a href="#how-it-works">How it works</a><a href="#your-way">Make it yours</a><Link prefetch={false} href="/photobooks">My albums</Link></div><div><Link prefetch={false} href="/make-album">Make a book</Link><Link prefetch={false} href="/terms">Terms</Link><Link prefetch={false} href="/privacy">Privacy</Link></div></nav></div><img className={styles.footerBrandMark} src="/brand/itinero-mark-white-animated.svg" alt="" width={132} height={66} /><Link prefetch={false} href="/" className={styles.footerWordmark} aria-label="Itinero home">itinero</Link><div className={styles.footerBottom}><span>© {new Date().getFullYear()} Itinero</span><span>For the trips that stay with you.</span></div></footer>

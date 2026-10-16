@@ -8,7 +8,12 @@
 .site ::selection{background:#ffe4a0;color:#2b1a07}
 .handwriting{font-family:var(--font-album-hand),'Comic Sans MS',cursive!important;color:var(--orange);font-size:28px;line-height:1.2}
 .header{position:fixed;top:0;left:0;z-index:40;width:100%;padding:28px 3.4%;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
-.header>a{pointer-events:auto}
+.header>a,.header>nav{pointer-events:auto}
+.header{transition:padding .25s,background .25s,box-shadow .25s}
+.headerScrolled{padding-top:14px;padding-bottom:14px;background:#fdfbf9ed;backdrop-filter:blur(16px);box-shadow:0 1px 0 #e9e3da}
+.headerNav{display:flex;align-items:center;gap:26px}
+.headerLink{font:17px var(--font-album-serif),Georgia,serif;color:var(--ink);text-decoration:underline;text-decoration-color:transparent;text-decoration-thickness:2px;text-underline-offset:6px;transition:text-decoration-color .2s}
+.headerLink:hover{text-decoration-color:#ed7936}
 .logo{width:76px;height:46px;display:block;filter:drop-shadow(0 2px 1px #2b1a071b);transition:transform .2s}
 .logo:hover{transform:rotate(-8deg)}
 .logo img{display:block;width:100%;height:100%;object-fit:contain}
@@ -333,3 +338,13 @@
  .fulfilmentOffer strong{font-size:20px}
  .fulfilmentOffer>.outlineButton{width:100%;min-height:50px;margin:5px 0 0;font-size:17px}
 }
+
+/* Album pages' card language: ink outline on paper, warm icon tiles. */
+.fulfilmentSteps article{border:2px solid #493b2a;border-radius:12px;background:#fffcf9;box-shadow:0 2px 20px #0000000f}
+.fulfilmentSteps article>div{background:#fff2d8;color:#2b1a07;border:1.5px solid #493b2a}
+.fulfilmentSteps article>span{color:#a2602f}
+.fulfilmentSteps p{color:#6d5c4b}
+.fulfilmentOffer{border:2px dashed #c9bba9;border-radius:12px;background:#fffcf9}
+.insideBookDetails{border:2px solid #493b2a;border-radius:12px;background:#493b2a;gap:2px}
+.insideBookDetails span{background:#fffcf9}
+@media(max-width:900px){.headerNav{gap:16px}.headerLink{font-size:15px}.fulfilmentSteps article,.fulfilmentOffer{border-radius:12px}}

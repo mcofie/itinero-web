@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { SITE_TITLE, SITE_DESCRIPTION, SOCIAL_IMAGE } from "@/lib/site-metadata";
 import { routing } from "@/i18n/routing";
 import { albumFontVariables } from "@/components/album/album-fonts";
+import { getAlbumSettings } from "@/lib/album-settings-server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
     const { locale } = await params;
@@ -29,7 +31,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function LandingPage() {
     await connection();
+    // Show the price customers will actually pay, as set in the admin.
+    const { pricing } = await getAlbumSettings(createAdminClient());
     return <div className={albumFontVariables}>
-        <PhotoAlbumLanding featuredCovers={selectFeaturedTravelCovers()} overheadAlbum={selectOverheadAlbum()} />
+        <PhotoAlbumLanding featuredCovers={selectFeaturedTravelCovers()} overheadAlbum={selectOverheadAlbum()} albumPrice={pricing.albumPrice} />
     </div>;
 }
