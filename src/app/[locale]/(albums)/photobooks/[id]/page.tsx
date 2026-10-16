@@ -21,6 +21,8 @@ export default async function OrderStatusPage({ params, searchParams }: { params
     const { id } = await params;
     const query = await searchParams;
     const fromPayment = query.payment === "return";
+    // The old album studio lived at /photobooks/create; old links go to the album builder.
+    if (id === "create") redirect("/make-album");
     if (!UUID_PATTERN.test(id)) notFound();
     const sb = await createClientServerRSC();
     const { data: { user } } = await sb.auth.getUser();
