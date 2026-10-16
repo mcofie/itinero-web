@@ -68,7 +68,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
             email: user.email, amount: Math.round(quote.total * 100), currency: "GHS",
-            callback_url: `${origin}/photobooks?payment=return`,
+            // Paystack returns straight to the order, which confirms the payment before it renders.
+            callback_url: `${origin}/photobooks/${id}?payment=return`,
             metadata: { purpose: "album_order", album_id: id, user_id: user.id, discount_code: quote.discount?.code ?? null },
         }),
         cache: "no-store",

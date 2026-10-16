@@ -6,9 +6,9 @@ import { ALBUM_FORMAT } from "@/lib/album-order";
 import { formatGhs } from "@/lib/album-pricing";
 import { formatOrderNumber, FULFILMENT_PATH, isOrderStatus, PLACED_STATUSES, STATUS_INFO } from "@/lib/album-fulfilment";
 import { UUID_PATTERN } from "@/lib/album-server";
+import { reconcileAlbumPayment } from "@/lib/album-payment";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClientServerRSC } from "@/lib/supabase/server";
-import { albumFontVariables } from "@/components/album/album-fonts";
 import AlbumCoverThumb from "@/components/album/AlbumCoverThumb";
 import { cn } from "@/lib/utils";
 
@@ -19,18 +19,28 @@ const dateTime = (value: string) => new Date(value).toLocaleString("en-GB", { da
 
 export default async function OrderStatusPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
     const { id } = await params;
-    // Set when the customer arrives straight from payment (or a fully discounted order).
-    const justConfirmed = (await searchParams).confirmed === "1";
+    const query = await searchParams;
+    const fromPayment = query.payment === "return";
     if (!UUID_PATTERN.test(id)) notFound();
     const sb = await createClientServerRSC();
     const { data: { user } } = await sb.auth.getUser();
     if (!user) redirect(`/album-login?next=${encodeURIComponent(`/photobooks/${id}`)}`);
 
-    const { data: order } = await sb.schema("itinero").from("photobooks")
-        .select("id,order_number,title,status,held_from_status,cover_template_id,album_year,cover_typeface,cover_text_color,cover_color,page_count,subtotal,discount_code,discount_amount,delivery_fee,tax_rate,tax_amount,total_cost,currency,shipping_address,customer_message,courier_name,courier_phone,delivery_date,paid_at,images:photobook_images(count)")
+    const select = () => sb.schema("itinero").from("photobooks")
+        .select("id,payment_reference,order_number,title,status,held_from_status,cover_template_id,album_year,cover_typeface,cover_text_color,cover_color,page_count,subtotal,discount_code,discount_amount,delivery_fee,tax_rate,tax_amount,total_cost,currency,shipping_address,customer_message,courier_name,courier_phone,delivery_date,paid_at,images:photobook_images(count)")
         .eq("id", id).eq("user_id", user.id).maybeSingle();
+    let { data: order } = await select();
     if (!order) notFound();
+    // Back from Paystack: confirm the payment here, so the customer lands on a paid order.
+    if (fromPayment && order.status === "pending_payment" && order.payment_reference) {
+        const result = await reconcileAlbumPayment(order.payment_reference).catch(() => "pending");
+        if (result === "paid") ({ data: order } = await select());
+        if (!order) notFound();
+    }
+    if (order.status === "pending_payment" && fromPayment) return <PaymentProcessing order={order} />;
     if (!isOrderStatus(order.status) || !PLACED_STATUSES.includes(order.status)) redirect(`/make-album?id=${id}`);
+    // Arriving straight from payment (or a fully discounted order) shows the thank-you note.
+    const justConfirmed = fromPayment || query.confirmed === "1";
     const status = order.status;
 
     // Ownership is checked above; the timeline table is only readable with the service role.
@@ -48,8 +58,8 @@ export default async function OrderStatusPage({ params, searchParams }: { params
     const address = order.shipping_address as { fullName?: string; phone?: string; street?: string; area?: string; landmark?: string } | null;
     const photoCount = (order.images as { count: number }[] | null)?.[0]?.count ?? 0;
 
-    return <main className={`${albumFontVariables} min-h-screen bg-[#f6f2ec] text-[#2b1a07]`}>
-        <div className="mx-auto max-w-5xl px-5 pb-24 pt-20 sm:px-8 sm:pt-28">
+    return <main>
+        <div className="mx-auto max-w-5xl px-5 pb-8 pt-10 sm:px-8 sm:pt-14">
             <Link href="/photobooks" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[#a2602f]"><ArrowLeft size={15} /> My albums</Link>
             {justConfirmed && status !== "cancelled" && <section role="status" className="mt-8 flex gap-4 rounded-[22px] border border-[#cfe0c8] bg-[#eef5ea] p-6 sm:p-7">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#2f7a4a] text-white"><Check size={20} strokeWidth={3} /></span>
@@ -128,6 +138,23 @@ export default async function OrderStatusPage({ params, searchParams }: { params
                     </section>
                 </div>
             </div>
+        </div>
+    </main>;
+}
+
+/** Back from Paystack before the payment has settled (common with mobile money). */
+function PaymentProcessing({ order }: { order: { id: string; title: string; cover_template_id: string; album_year: string | null; cover_typeface: string | null; cover_text_color: string | null; cover_color: string | null; total_cost: number | null; payment_reference: string | null } }) {
+    return <main>
+        <div className="mx-auto flex max-w-3xl flex-col items-center px-5 pb-8 pt-14 text-center sm:px-8 sm:pt-20">
+            <AlbumCoverThumb coverId={order.cover_template_id} title={order.title} year={order.album_year} typeface={order.cover_typeface} textColor={order.cover_text_color} background={order.cover_color} height={190} className="shadow-[7px_10px_18px_#2b1a0730]" />
+            <p className="mt-10 text-[11px] font-bold uppercase tracking-[.23em] text-[#c16b36]">Almost there</p>
+            <h1 className="mt-3 font-[Georgia] text-4xl leading-tight tracking-[-.03em] sm:text-5xl">Your payment is still processing</h1>
+            <p className="mt-4 max-w-md text-sm leading-6 text-[#776b60]">Mobile money can take a minute or two to confirm. You don’t need to pay again: your order updates as soon as {formatGhs(Number(order.total_cost ?? 0))} arrives.</p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <a href={`/photobooks/${order.id}?payment=return`} className="rounded-xl bg-[#2b1a07] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#53330e]">Check again</a>
+                <Link href="/photobooks" className="rounded-xl border border-[#d9c8b5] px-5 py-3 text-sm font-bold text-[#5e4a38] transition hover:bg-[#efe4d6]">My albums</Link>
+            </div>
+            {order.payment_reference && <p className="mt-6 text-xs text-[#a89a8a]">Payment reference {order.payment_reference}</p>}
         </div>
     </main>;
 }
