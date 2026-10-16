@@ -16,9 +16,8 @@ export default function AuthCallbackClient() {
         window.sessionStorage.removeItem("itinero-auth-next");
         window.localStorage.removeItem("itinero-auth-next");
         const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/photobooks";
-        const errorDestination = next.startsWith("/make-album") || next.startsWith("/photobooks")
-            ? "/album-login" : "/login";
-        const errorNext = errorDestination === "/album-login" ? `&next=${encodeURIComponent(next)}` : "";
+        const errorDestination = "/album-login";
+        const errorNext = `&next=${encodeURIComponent(next)}`;
 
         const run = async () => {
             const sb = getSupabaseBrowser();
