@@ -543,7 +543,7 @@ export default function AlbumBuilder({ pricing }: { pricing: AlbumPricing }) {
             const response = await fetch(`/api/albums/${id}/checkout`, { method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ shippingAddress: shipping, confirmedAccra: approved, discountCode: orderStatus === "draft" ? discount?.code : undefined }) });
             const result = await response.json();
-            if (response.ok && result.free) { window.location.assign(`/photobooks/${id}`); return; }
+            if (response.ok && result.free) { window.location.assign(`/photobooks/${id}?confirmed=1`); return; }
             if (!response.ok || !result.authorizationUrl) throw new Error(result.error || "Could not start payment.");
             window.location.assign(result.authorizationUrl);
         } catch (cause) {

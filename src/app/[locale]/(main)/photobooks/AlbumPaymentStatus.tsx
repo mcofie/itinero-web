@@ -1,28 +1,55 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { CircleAlert, Clock } from "lucide-react";
+import { useRouter } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 
+type PaymentState = { tone: "checking" | "pending" | "problem"; title: string; detail: string } | null;
+
+/**
+ * Paystack returns customers to /photobooks?payment=return&reference=…. A confirmed payment goes
+ * straight to that order's page; anything else stays here with a clear message.
+ */
 export default function AlbumPaymentStatus() {
     const router = useRouter();
-    const [message, setMessage] = useState("");
+    const [state, setState] = useState<PaymentState>(null);
+    const [reference, setReference] = useState<string | null>(null);
+
+    const check = useCallback(async (paymentReference: string) => {
+        setState({ tone: "checking", title: "Confirming your payment…", detail: "This takes a moment." });
+        try {
+            const response = await fetch(`/api/albums/verify?reference=${encodeURIComponent(paymentReference)}`, { cache: "no-store" });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || "We couldn’t confirm your payment just now.");
+            if (result.status === "paid" && result.albumId) { router.replace(`/photobooks/${result.albumId}?confirmed=1`); return; }
+            if (result.status === "pending") setState({ tone: "pending", title: "Your payment is still processing", detail: "Mobile money can take a few minutes. We’ll update your order as soon as it’s confirmed; you don’t need to pay again." });
+            else setState({ tone: "problem", title: "We couldn’t match this payment to your album", detail: "Please contact us before paying again, and include your payment reference: " + paymentReference });
+        } catch (error) {
+            setState({ tone: "problem", title: "We couldn’t confirm your payment just now", detail: `${error instanceof Error ? error.message : "Please try again."} Don’t pay again. Your payment reference is ${paymentReference}.` });
+        }
+    }, [router]);
+
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         if (params.get("payment") !== "return") return;
-        const reference = params.get("reference");
-        if (!reference) { setMessage("We could not find a payment reference. Your albums are below."); return; }
-        setMessage("Confirming your payment…");
-        void fetch(`/api/albums/verify?reference=${encodeURIComponent(reference)}`, { cache: "no-store" })
-            .then(async response => {
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.error || "Could not verify payment.");
-                if (result.status === "paid") {
-                    setMessage("Payment confirmed. Your album is now in production review.");
-                    router.refresh();
-                } else if (result.status === "pending") setMessage("Payment has not been confirmed yet. You can check this page again shortly.");
-                else setMessage("This payment could not be matched to your album. Please contact us before paying again.");
-            })
-            .catch((error: unknown) => setMessage(error instanceof Error ? error.message : "Could not verify payment."));
-    }, [router]);
-    return message ? <div className="mx-auto max-w-7xl px-6 pb-4"><div role="status" className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">{message}</div></div> : null;
+        const found = params.get("reference") || params.get("trxref");
+        if (!found) { setState({ tone: "problem", title: "We couldn’t find a payment reference", detail: "If you’ve paid, your order will update shortly. Your albums are below." }); return; }
+        setReference(found);
+        void check(found);
+    }, [check]);
+
+    if (!state) return null;
+    const Icon = state.tone === "problem" ? CircleAlert : Clock;
+    return <div className="mx-auto max-w-6xl px-5 pb-6 sm:px-8">
+        <div role={state.tone === "problem" ? "alert" : "status"} className={cn("flex gap-3 rounded-2xl border px-5 py-4 text-sm leading-6",
+            state.tone === "problem" ? "border-red-200 bg-red-50 text-red-900" : "border-[#e2d6c7] bg-[#fdfbf8] text-[#5e4a38]")}>
+            {state.tone === "checking" ? <span className="mt-1.5 h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[#c16b36]" aria-hidden /> : <Icon size={18} className="mt-0.5 shrink-0" />}
+            <div className="min-w-0">
+                <strong className="block text-[#2b1a07]">{state.title}</strong>
+                <p>{state.detail}</p>
+                {state.tone !== "checking" && reference && <button type="button" onClick={() => void check(reference)} className="mt-2 text-xs font-bold underline underline-offset-2">Check again</button>}
+            </div>
+        </div>
+    </div>;
 }

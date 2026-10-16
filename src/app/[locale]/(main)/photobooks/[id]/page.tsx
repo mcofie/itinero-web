@@ -17,8 +17,10 @@ export const dynamic = "force-dynamic";
 
 const dateTime = (value: string) => new Date(value).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
-export default async function OrderStatusPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function OrderStatusPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
     const { id } = await params;
+    // Set when the customer arrives straight from payment (or a fully discounted order).
+    const justConfirmed = (await searchParams).confirmed === "1";
     if (!UUID_PATTERN.test(id)) notFound();
     const sb = await createClientServerRSC();
     const { data: { user } } = await sb.auth.getUser();
@@ -49,6 +51,13 @@ export default async function OrderStatusPage({ params }: { params: Promise<{ id
     return <main className={`${albumFontVariables} min-h-screen bg-[#f6f2ec] text-[#2b1a07]`}>
         <div className="mx-auto max-w-5xl px-5 pb-24 pt-20 sm:px-8 sm:pt-28">
             <Link href="/photobooks" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[#a2602f]"><ArrowLeft size={15} /> My albums</Link>
+            {justConfirmed && status !== "cancelled" && <section role="status" className="mt-8 flex gap-4 rounded-[22px] border border-[#cfe0c8] bg-[#eef5ea] p-6 sm:p-7">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#2f7a4a] text-white"><Check size={20} strokeWidth={3} /></span>
+                <div>
+                    <h2 className="font-[Georgia] text-2xl leading-tight text-[#1f3d29]">Thank you. Order {formatOrderNumber(order.order_number)} is confirmed.</h2>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-[#3f5a45]">{Number(order.total_cost) > 0 ? `We’ve received your payment of ${formatGhs(Number(order.total_cost))}.` : "Your discount covered the full price."} Next, we check your photos and pages before printing. You can follow every step on this page, and we’ll get in touch if we need anything.</p>
+                </div>
+            </section>}
             <header className="mt-8 flex flex-col gap-8 border-b border-[#dfd3c4] pb-10 sm:flex-row sm:items-end">
                 <AlbumCoverThumb coverId={order.cover_template_id} title={order.title} year={order.album_year} typeface={order.cover_typeface} textColor={order.cover_text_color} background={order.cover_color} height={200} className="shadow-[7px_10px_18px_#2b1a0730]" />
                 <div className="min-w-0">
