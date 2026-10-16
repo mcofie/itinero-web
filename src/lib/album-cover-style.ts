@@ -23,12 +23,10 @@ const COVER_PALETTE_INKS: Record<string, string> = {
     "#c2d8d1": "#244b45", // sea glass / deep teal
     "#e8c3be": "#673b42", // soft rose / wine
     "#f1e7d6": "#583b2b", // warm ivory / walnut
-    "#e5d0ad": "#66432a", // warm sand / umber
     "#bdd1db": "#29465a", // misty blue / navy
     "#cedcc4": "#31513f", // pale sage / forest
     "#526f89": "#fff8e6", // deep slate blue / warm ivory
     "#75a19b": "#0d302d", // muted teal / deep teal
-    "#daaaa7": "#542d39", // dusty rose / wine
     "#708da3": "#071b2b", // slate blue / deep navy
     "#4e716d": "#fff8e6", // deep teal / warm ivory
     "#ebcbb5": "#653c2b", // soft peach / walnut
@@ -39,20 +37,26 @@ const COVER_PALETTE_INKS: Record<string, string> = {
     "#a5bfda": "#284665", // cornflower / navy
     "#f2e6cd": "#8a302c", // warm cream / national red
     "#d9e3ce": "#285339", // pale leaf / forest
-    "#ead9a6": "#2e523d", // muted gold / forest
     "#e7c6c3": "#7e3035", // pale coral / burgundy
     "#d3dfc7": "#5b3030", // pale sage / deep wine
-    "#e8cfb5": "#28465d", // apricot / navy
     "#4b6b55": "#fff7df", // deep forest / warm ivory
     "#e4bcb2": "#28523e", // soft terracotta / forest
     "#e6ccd3": "#6e2e43", // pale maroon / maroon
-    "#cce0e9": "#25506b", // sky blue / deep blue
-    "#e9d69e": "#263f67", // soft gold / navy
     "#e4cfad": "#31563e", // golden sand / forest
     "#d8b4b4": "#522f34", // dusty red / deep wine
     "#eee1cb": "#342d2a", // warm paper / near black
     "#a94c4f": "#fff7df", // Albanian red / warm ivory
     "#c9dbe6": "#8b3439", // soft flag blue / deep red
+    "#f3d98d": "#85312c", // sun gold / deep red
+    "#bcd8ad": "#285339", // fresh leaf / forest
+    "#f0c28d": "#63402a", // warm apricot / umber
+    "#f2bd8f": "#28465d", // clear apricot / navy
+    "#add3e7": "#1e4965", // bright sky / navy
+    "#d89a91": "#502936", // warm coral / wine
+    "#b7d8b7": "#285339", // clear mint / forest
+    "#eecb6d": "#2e523d", // bright gold / forest
+    "#efd079": "#263f67", // sun yellow / navy
+    "#9bcac4": "#0d302d", // bright sea glass / deep teal
 };
 
 export function isCoverTypeface(value: unknown): value is CoverTypeface {

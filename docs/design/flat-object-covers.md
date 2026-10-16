@@ -10,9 +10,9 @@ The album builder and printed PDF use dedicated 4:5 artwork with space above the
 
 Each cover is one solid, carefully paired background colour with a single painted object associated with the country: a food, animal, craft, vehicle or building. The look is soft gouache/watercolour realism, as on the Armenia (pomegranates), Kazakhstan (yurt), Egypt (Bastet cat and moon), Maldives (manta rays) and Thailand (mango sticky rice) reference books.
 
-The backgrounds use a restrained palette of powder blues, sea glass, rose, sage, warm paper and muted national-colour cues. Each cue is chosen against the painted subject rather than copied as a literal flag: Japan's muted red lets the white koi stand forward, Ireland's green sets off the gold harp, and Barbados's gold and blue pick up the flying fish. The artwork has no lettering. The app renders a large, near full-width country name with the year directly below it. The builder preserves the customer's chosen typeface and colour in its preview and printed PDF. Keep each background hex in this table and `src/lib/travel-covers.ts` in sync.
+The backgrounds mix soft powder blues, sea glass, rose, sage and warm paper with a controlled set of brighter sun gold, sky blue, fresh green, apricot, coral and mint accents. The more vibrant colours are distributed through the collection so the covers feel lively without losing their shared style. Each national-colour cue is chosen against the painted subject rather than copied as a literal flag: Japan's muted red lets the white koi stand forward, Ireland's fresh green sets off the gold harp, and Barbados's sun yellow and blue pick up the flying fish. The artwork has no lettering. The app renders a large, near full-width country name with the year directly below it. The builder preserves the customer's chosen typeface and colour in its preview and printed PDF. Keep each background hex in this table and `src/lib/travel-covers.ts` in sync.
 
-The default font colour is matched to each background in `src/lib/album-cover-style.ts`: navy for blues, deep teal for sea glass, forest for sage and gold, red or wine for warm paper and rose, aubergine for lilac, and warm ivory for the darkest covers. The 34 background and ink pairs retain at least 4.95:1 contrast. [Review the font colour palette on finished covers](./cover-ink-palette.webp). Customers can still choose a different font colour.
+The default font colour is matched to each background in `src/lib/album-cover-style.ts`: navy for blues, deep teal for sea glass, forest for sage and gold, red or wine for warm paper and rose, aubergine for lilac, and warm ivory for the darkest covers. The 38 background and ink pairs retain at least 4.95:1 contrast. [Review the font colour palette on finished covers](./cover-ink-palette.webp). Customers can still choose a different font colour.
 
 The national-colour pass updated 44 covers whose former backgrounds felt generic for their destination. The remaining covers already carried a useful colour cue in the background or the illustrated object, or their original background kept the object clearer. The same softened colour treatment and typography apply to every destination.
 
@@ -33,23 +33,23 @@ Do not include any text, letters, numbers, logos, flags, watermarks, borders, fr
 | # | Country | Main object | Alternate | Background | Default title ink |
 |---|---|---|---|---|---|
 | 1 | France | Eiffel Tower | Butter croissant | Powder Blue `#C7D9E6` | Auto |
-| 2 | Spain | Open red flamenco fan | Paella pan | Warm Cream `#F2E6CD` | Auto |
+| 2 | Spain | Open red flamenco fan | Paella pan | Sun Gold `#F3D98D` | Auto |
 | 3 | United States | Statue of Liberty torch and crown | Golden Gate tower | Soft Rose `#E8C3BE` | Auto |
 | 4 | Türkiye | Tulip glass of tea on a saucer | Cappadocia hot-air balloon | Warm Cream `#F2E6CD` | Auto |
-| 5 | Italy | Sliced lemons with leaves | Vespa scooter | Pale Leaf `#D9E3CE` | Auto |
-| 6 | Mexico | Prickly-pear cactus in bloom | Sugar skull | Warm Sand `#E5D0AD` | Auto |
+| 5 | Italy | Sliced lemons with leaves | Vespa scooter | Fresh Leaf `#BCD8AD` | Auto |
+| 6 | Mexico | Prickly-pear cactus in bloom | Sugar skull | Warm Apricot `#F0C28D` | Auto |
 | 7 | United Kingdom | Red telephone box | Royal Guard bearskin hat | Misty Blue `#BDD1DB` | Auto |
 | 8 | Germany | Pretzel | Cuckoo clock | Pale Sage `#D3DFC7` | Auto |
 | 9 | Japan | Pair of koi fish | Torii gate | Deep Red `#A94C4F` | Auto |
-| 10 | China | Red paper lantern | Giant panda | Warm Cream `#F2E6CD` | Auto |
-| 11 | Greece | Black-figure amphora | Blue-domed chapel | Powder Blue `#C7D9E6` | Auto |
-| 12 | Thailand | Mango sticky rice with a frangipani flower | Tuk-tuk | Dusty Rose `#DAAAA7` | Auto |
+| 10 | China | Red paper lantern | Giant panda | Sun Gold `#F3D98D` | Auto |
+| 11 | Greece | Black-figure amphora | Blue-domed chapel | Bright Sky `#ADD3E7` | Auto |
+| 12 | Thailand | Mango sticky rice with a frangipani flower | Tuk-tuk | Warm Coral `#D89A91` | Auto |
 | 13 | Austria | Slice of Sachertorte | Lipizzaner horse | Misty Blue `#BDD1DB` | Auto |
-| 14 | UAE | Brass dallah (coffee pot) | Falcon | Pale Leaf `#D9E3CE` | Auto |
+| 14 | UAE | Brass dallah (coffee pot) | Falcon | Fresh Leaf `#BCD8AD` | Auto |
 | 15 | Saudi Arabia | Bowl of Medjool dates | Arabian horse | Sea Glass `#C2D8D1` | Auto |
-| 16 | Portugal | Pastéis de nata | Barcelos rooster | Pale Leaf `#D9E3CE` | Auto |
-| 17 | Malaysia | Red hibiscus flower | Rhinoceros hornbill | Warm Sand `#E5D0AD` | Auto |
-| 18 | Netherlands | Bunch of tulips | Windmill | Soft Apricot `#E8CFB5` | Auto |
+| 16 | Portugal | Pastéis de nata | Barcelos rooster | Clear Mint `#B7D8B7` | Auto |
+| 17 | Malaysia | Red hibiscus flower | Rhinoceros hornbill | Bright Sea Glass `#9BCAC4` | Auto |
+| 18 | Netherlands | Bunch of tulips | Windmill | Clear Apricot `#F2BD8F` | Auto |
 | 19 | India | Taj Mahal | Brass chai set | Deep Forest `#4B6B55` | Auto |
 | 20 | Canada | Moose | Jar of maple syrup | Pale Coral `#E7C6C3` | Auto |
 | 21 | Poland | Plate of pierogi | Wawel dragon | Soft Rose `#E8C3BE` | Auto |
@@ -62,34 +62,34 @@ Do not include any text, letters, numbers, logos, flags, watermarks, borders, fr
 | 28 | Egypt | Bastet cat in front of a moon | Pyramid | Warm Paper `#EEE1CB` | Auto |
 | 29 | Czechia | Prague astronomical clock | Glass of pilsner | Powder Blue `#C7D9E6` | Auto |
 | 30 | Indonesia | Komodo dragon | Balinese offering basket | Pale Coral `#E7C6C3` | Auto |
-| 31 | Ghana | Folded kente cloth | Talking drum | Muted Gold `#EAD9A6` | Auto |
+| 31 | Ghana | Folded kente cloth | Talking drum | Bright Gold `#EECB6D` | Auto |
 | 32 | South Africa | King protea flower | African penguin | Misty Blue `#BDD1DB` | Auto |
 | 33 | Kenya | Elephant | Maasai beaded collar | Soft Rose `#E8C3BE` | Auto |
 | 34 | Nigeria | Talking drum (dùndún) | Jollof rice with plantain | Sea Glass `#C2D8D1` | Auto |
-| 35 | Tanzania | Zebra | Kilimanjaro | Dusty Rose `#DAAAA7` | Auto |
+| 35 | Tanzania | Zebra | Kilimanjaro | Warm Coral `#D89A91` | Auto |
 | 36 | Switzerland | Cowbell on a flowered strap | Matterhorn | Dusty Red `#D8B4B4` | Auto |
 | 37 | Australia | Kangaroo | Koala | Pale Sage `#CEDCC4` | Auto |
-| 38 | Brazil | Toucan | Christ the Redeemer | Muted Gold `#EAD9A6` | Auto |
-| 39 | Ireland | Celtic harp | Connemara sheep | Pale Leaf `#D9E3CE` | Auto |
+| 38 | Brazil | Toucan | Christ the Redeemer | Bright Gold `#EECB6D` | Auto |
+| 39 | Ireland | Celtic harp | Connemara sheep | Clear Mint `#B7D8B7` | Auto |
 | 40 | Norway | Viking longship | Stave church | Powder Blue `#C7D9E6` | Auto |
 | 41 | Singapore | Merlion | Orchid | Deep Slate Blue `#526F89` | Auto |
 | 42 | Philippines | Jeepney | Mango | Soft Linen `#E8D9C7` | Auto |
 | 43 | Cambodia | Angkor Wat towers | Lotus | Misty Blue `#BDD1DB` | Auto |
-| 44 | New Zealand | Kiwi bird | Pavlova | Sky Blue `#CCE0E9` | Auto |
-| 45 | Argentina | Mate gourd with metal straw | Tango shoes | Sky Blue `#CCE0E9` | Auto |
+| 44 | New Zealand | Kiwi bird | Pavlova | Bright Sky `#ADD3E7` | Auto |
+| 45 | Argentina | Mate gourd with metal straw | Tango shoes | Bright Sky `#ADD3E7` | Auto |
 | 46 | Chile | Moai head | Copihue flower | Soft Peach `#EBCBB5` | Auto |
 | 47 | Peru | Llama | Machu Picchu | Deep Teal `#4E716D` | Auto |
-| 48 | Colombia | Coffee cherries and cup | Sombrero vueltiao (woven hat) | Soft Gold `#E9D69E` | Auto |
+| 48 | Colombia | Coffee cherries and cup | Sombrero vueltiao (woven hat) | Sun Yellow `#EFD079` | Auto |
 | 49 | Rwanda | Mountain gorilla | Agaseke basket | Golden Sand `#E4CFAD` | Auto |
-| 50 | Senegal | Baobab tree | Painted pirogue (boat) | Muted Gold `#EAD9A6` | Auto |
+| 50 | Senegal | Baobab tree | Painted pirogue (boat) | Bright Gold `#EECB6D` | Auto |
 | 51 | Côte d'Ivoire | Split cocoa pod | Baoulé mask | Pale Leaf `#D9E3CE` | Auto |
 | 52 | Togo | Tamberma mud tower-house | Pineapple | Pale Sage `#CEDCC4` | Auto |
 | 53 | Benin | Ganvié stilt house with canoe | Fon appliqué banner | Powder Blue `#C7D9E6` | Auto |
 | 54 | Uganda | Grey crowned crane | Matooke bananas | Soft Peach `#EBCBB5` | Auto |
 | 55 | Namibia | Gemsbok (oryx) | Deadvlei camel-thorn tree | Pale Sage `#CEDCC4` | Auto |
 | 56 | Mauritius | Dodo | Sugarcane | Soft Rose `#E8C3BE` | Auto |
-| 57 | Tunisia | Blue Sidi Bou Said door | Wire birdcage | Warm Cream `#F2E6CD` | Auto |
-| 58 | Sweden | Dala horse | Cinnamon bun | Soft Gold `#E9D69E` | Auto |
+| 57 | Tunisia | Blue Sidi Bou Said door | Wire birdcage | Sun Gold `#F3D98D` | Auto |
+| 58 | Sweden | Dala horse | Cinnamon bun | Sun Yellow `#EFD079` | Auto |
 | 59 | Finland | Reindeer | Sauna bucket and ladle | Pale Aqua `#D0E1DC` | Auto |
 | 60 | Iceland | Puffin | Icelandic horse | Cornflower `#A5BFDA` | Auto |
 | 61 | Belgium | Waffle with strawberries | Cone of frites | Pale Sage `#CEDCC4` | Auto |
@@ -107,13 +107,13 @@ Do not include any text, letters, numbers, logos, flags, watermarks, borders, fr
 | 73 | Belarus | Bison | Straw-woven doll | Sea Glass `#C2D8D1` | Auto |
 | 74 | Maldives | Spotted eagle rays | Dhoni boat | Soft Linen `#E8D9C7` | Auto |
 | 75 | Cuba | 1950s convertible car | Maracas | Soft Rose `#E8C3BE` | Auto |
-| 76 | Jamaica | Doctor bird hummingbird | Ackee fruit | Muted Gold `#EAD9A6` | Auto |
+| 76 | Jamaica | Doctor bird hummingbird | Ackee fruit | Bright Gold `#EECB6D` | Auto |
 | 77 | Bahamas | Queen conch shell | Flamingo | Sea Glass `#C2D8D1` | Auto |
-| 78 | Guatemala | Resplendent quetzal | Woven huipil textile | Sky Blue `#CCE0E9` | Auto |
+| 78 | Guatemala | Resplendent quetzal | Woven huipil textile | Bright Sky `#ADD3E7` | Auto |
 | 79 | Bolivia | Cholita bowler hat on an aguayo weaving | Andean flamingo | Powder Blue `#C7D9E6` | Auto |
 | 80 | Uruguay | Candombe tamboril drum | Chivito sandwich | Pale Sage `#CEDCC4` | Auto |
 | 81 | Panama | Panamanian golden frog | Mola textile panel | Cornflower `#A5BFDA` | Auto |
-| 82 | Ethiopia | Jebena coffee pot with cups | Lalibela rock church | Muted Gold `#EAD9A6` | Auto |
+| 82 | Ethiopia | Jebena coffee pot with cups | Lalibela rock church | Bright Gold `#EECB6D` | Auto |
 | 83 | Madagascar | Ring-tailed lemur | Panther chameleon | Deep Teal `#4E716D` | Auto |
 | 84 | Botswana | Lilac-breasted roller | Mokoro canoe | Soft Butter `#EEDFB9` | Auto |
 | 85 | Zimbabwe | Great Zimbabwe soapstone bird | Victoria Falls | Soft Rose `#E8C3BE` | Auto |
@@ -134,10 +134,10 @@ Do not include any text, letters, numbers, logos, flags, watermarks, borders, fr
 | 100 | Bhutan | Tiger's Nest monastery | Takin | Pale Lilac `#D9CCE3` | Auto |
 | 101 | Oman | Frankincense burner | Khanjar dagger | Sea Glass `#C2D8D1` | Auto |
 | 102 | Lebanon | Cedar tree | Manakish flatbread | Soft Rose `#E8C3BE` | Auto |
-| 103 | Fiji | Carved tanoa kava bowl | Drua canoe | Sky Blue `#CCE0E9` | Auto |
+| 103 | Fiji | Carved tanoa kava bowl | Drua canoe | Bright Sky `#ADD3E7` | Auto |
 | 104 | Pakistan | Decorated truck | Cup of chai | Pale Leaf `#D9E3CE` | Auto |
 | 105 | Bulgaria | Bulgarian Damask roses and a rose-oil vial | Rila Monastery | Pale Sage `#CEDCC4` | Auto |
-| 106 | Ukraine | Three patterned pysanky eggs | Sunflower bouquet | Soft Gold `#E9D69E` | Auto |
+| 106 | Ukraine | Three patterned pysanky eggs | Sunflower bouquet | Sun Yellow `#EFD079` | Auto |
 | 107 | Serbia | Pair of opanak leather shoes | Šajkača cap | Soft Flag Blue `#C9DBE6` | Auto |
 | 108 | Slovakia | Tatra chamois | Čičmany house | Soft Rose `#E8C3BE` | Auto |
 | 109 | Lithuania | Baltic amber jewelry | Gediminas Tower | Pale Lilac `#D9CCE3` | Auto |
@@ -160,7 +160,7 @@ Do not include any text, letters, numbers, logos, flags, watermarks, borders, fr
 | 126 | Angola | Giant sable antelope | Kissama baobab | Pale Sage `#CEDCC4` | Auto |
 | 127 | The Gambia | Kora harp | Painted fishing pirogue | Sea Glass `#C2D8D1` | Auto |
 | 128 | Malawi | Lake Malawi cichlids | Mulanje tea leaves | Soft Linen `#E8D9C7` | Auto |
-| 129 | Gabon | Mandrill | Forest elephant | Soft Gold `#E9D69E` | Auto |
+| 129 | Gabon | Mandrill | Forest elephant | Bright Gold `#EECB6D` | Auto |
 | 130 | Andorra | Sant Joan de Caselles church | Pyrenean wildflower | Powder Blue `#C7D9E6` | Auto |
 | 131 | Monaco | Grand Prix racing car | Monte Carlo casino | Sea Glass `#C2D8D1` | Auto |
 | 132 | San Marino | Guaita fortress tower | Three Towers | Soft Rose `#E8C3BE` | Auto |
@@ -172,7 +172,7 @@ Do not include any text, letters, numbers, logos, flags, watermarks, borders, fr
 | 138 | Palestine | Tatreez embroidered textile | Olive branch | Soft Linen `#E8D9C7` | Auto |
 | 139 | Belize | Maya jade mask | Keel-billed toucan | Soft Rose `#E8C3BE` | Auto |
 | 140 | Nicaragua | Momotombo volcano | Painted ceramic bowl | Powder Blue `#C7D9E6` | Auto |
-| 141 | Barbados | Flying fish | Coral shell | Soft Gold `#E9D69E` | Auto |
+| 141 | Barbados | Flying fish | Coral shell | Sun Yellow `#EFD079` | Auto |
 | 142 | Trinidad and Tobago | Steelpan drum | Scarlet ibis | Soft Rose `#E8C3BE` | Auto |
 | 143 | Samoa | Traditional fale house | Siapo barkcloth | Misty Blue `#BDD1DB` | Auto |
 | 144 | Palau | Golden jellyfish | Rock Islands | Deep Slate Blue `#526F89` | Auto |

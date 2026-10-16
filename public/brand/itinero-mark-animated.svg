@@ -2,18 +2,15 @@
   <style>
     svg { --logo-interval: 7s; }
     @media (prefers-reduced-motion: no-preference) {
-      .stroke { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw var(--logo-interval) linear infinite; }
-      .brow-right { animation-delay: .12s; }
-      .eye-left { animation-delay: .24s; }
-      .eye-right { animation-delay: .36s; }
+      .face { transform-origin: 93px 73px; animation: hello var(--logo-interval) ease-in-out infinite; }
       .brows { animation: brow-lift var(--logo-interval) ease-in-out infinite; }
       .eyes { transform-origin: 93px 80px; animation: blink var(--logo-interval) ease-in-out infinite; }
     }
-    @keyframes draw { 0%, 2%, 100% { stroke-dashoffset: 100; } 12%, 92% { stroke-dashoffset: 0; } }
+    @keyframes hello { 0%, 5%, 11%, 100% { transform: rotate(0); } 7% { transform: rotate(-2deg); } 9% { transform: rotate(2deg); } }
     @keyframes blink { 0%, 69%, 75%, 100% { transform: scaleY(1); } 71%, 73% { transform: scaleY(.12); } }
     @keyframes brow-lift { 0%, 69%, 75%, 100% { transform: translateY(0); } 71%, 73% { transform: translateY(-2px); } }
   </style>
-  <g stroke="#2b1a07" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+  <g class="face" stroke="#2b1a07" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
     <g class="brows">
       <path class="stroke brow-left" pathLength="100" d="M40 62C45 53 52 48 61 46"/>
       <path class="stroke brow-right" pathLength="100" d="M125 46C134 49 141 55 145 63"/>

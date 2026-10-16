@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEvent, type DragEvent } from "react";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BookOpen, Check, ChevronLeft, ChevronRight, Download, ImagePlus, LoaderCircle, Plus, Search, Sparkles, Trash2, UploadCloud } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BookOpen, Check, ChevronLeft, ChevronRight, Download, ImagePlus, LoaderCircle, Maximize2, Plus, Search, Sparkles, Trash2, UploadCloud } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { COVER_COLOR_SWATCHES, COVER_TYPEFACES, DEFAULT_COVER_TEXT_COLOR, DEFAULT_COVER_TYPEFACE, normalizeCoverTextColor, normalizeCoverTypeface, resolveCoverTextColor, type CoverTypeface } from "@/lib/album-cover-style";
 import { coverPrintImagePath, coverThumbnailPath, TRAVEL_COVERS, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
@@ -462,7 +462,7 @@ export default function AlbumBuilder({ pricing }: { pricing: AlbumPricing }) {
             </aside>
 
             <main className={styles.workspace}>
-                <div className={styles.workspaceTop}><span>STEP {String(step + 1).padStart(2, "0")} / 04</span><span>{photos.length ? `${photos.length} photos · ${pages.length + 3} pages` : "Your story starts here"}</span></div>
+                <div className={styles.workspaceTop}><span>STEP {String(step + 1).padStart(2, "0")} / 04</span><span className={styles.workspaceSummary}>{photos.length ? `${photos.length} photos · ${pages.length + 3} pages` : "Your story starts here"}</span><strong className={styles.workspaceOffer}>{formatGhs(price.subtotal)} · {ALBUM_FORMAT} · {price.deliveryFee > 0 ? `Accra delivery ${formatGhs(price.deliveryFee)}` : "Accra delivery included"}</strong></div>
                 {error && <div className={styles.error} role="alert">{error}</div>}
                 {!ready ? <AlbumWorkspaceSkeleton /> : <div className={styles.workGrid} aria-busy={isSavingCloud || isOrdering || isExporting}>
                     <section className={styles.controls}>
@@ -503,6 +503,7 @@ export default function AlbumBuilder({ pricing }: { pricing: AlbumPricing }) {
                                 <div className={styles.uploadIcon}><UploadCloud size={27} /></div><strong>Drop photos here</strong><span>or choose them from your device</span><button type="button" onClick={() => fileInputRef.current?.click()} disabled={isAdding}>{isAdding ? <><LoaderCircle size={17} className={styles.spin} /> Adding photos…</> : <><Plus size={17} /> Choose photos</>}</button><small>JPG, PNG, WebP, AVIF · up to {MAX_PHOTOS} photos</small>
                             </div>
                             {photos.length > 0 && <><div className={styles.photoSectionTitle}><h3>{photos.length} moments added</h3><button type="button" onClick={() => fileInputRef.current?.click()}><ImagePlus size={16} /> Add more</button></div><div className={styles.photoGrid}>{photos.map((photo, index) => <div key={photo.id} className={styles.photoTile}><img src={photo.url} alt={photo.name} loading="lazy" /><span>{String(index + 1).padStart(2, "0")}</span><button type="button" onClick={() => removePhoto(photo.id)} aria-label={`Remove ${photo.name}`}><Trash2 size={15} /></button></div>)}</div></>}
+                            {lowResolution.length > 0 && <p className={styles.uploadQualityWarning}><Sparkles size={16} /> {lowResolution.length} {lowResolution.length === 1 ? "photo may" : "photos may"} print softly. For the sharpest pages, replace {lowResolution.length === 1 ? "it" : "them"} with the original full-resolution file.</p>}
                             <p className={styles.fieldHint}>Your photos stay on this device while you build. Save to your Google account when you are ready to continue on another device.</p>
                         </>}
 
@@ -573,7 +574,10 @@ export default function AlbumBuilder({ pricing }: { pricing: AlbumPricing }) {
 
                     <aside className={`${styles.previewColumn} ${previewExpanded ? styles.previewExpanded : ""}`} aria-label="Album preview">
                         <div className={styles.previewHeading}><span>LIVE PREVIEW</span><span className={styles.previewDescriptor}>{step === 2 && pages.length ? `PAGE ${pageIndex + 1} / ${pages.length}` : "YOUR KEEPSAKE"}</span><button type="button" className={styles.previewExpandButton} aria-expanded={previewExpanded} onClick={() => setPreviewExpanded(expanded => !expanded)}>{previewExpanded ? "Close preview" : "View larger"}</button></div>
-                        {step === 2 && pages.length ? <AlbumPagePreview photos={pages[pageIndex]} layout={layout} pageNumber={pageIndex + 1} destination={destination.country} /> : <CoverPreview destinationId={destinationId} title={title} year={year} typeface={coverTypeface} textColor={coverTextColor} />}
+                        <div className={styles.previewCanvas} role={previewExpanded ? undefined : "button"} tabIndex={previewExpanded ? -1 : 0} aria-label={previewExpanded ? undefined : "Open a larger album preview"} onClick={() => { if (!previewExpanded) setPreviewExpanded(true); }} onKeyDown={event => { if (!previewExpanded && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); setPreviewExpanded(true); } }}>
+                            {step === 2 && pages.length ? <AlbumPagePreview photos={pages[pageIndex]} layout={layout} pageNumber={pageIndex + 1} destination={destination.country} /> : <CoverPreview destinationId={destinationId} title={title} year={year} typeface={coverTypeface} textColor={coverTextColor} />}
+                            {!previewExpanded && <span className={styles.previewTapHint}><Maximize2 size={14} /> Tap to enlarge</span>}
+                        </div>
                         {step === 2 && pages.length > 1 ? <div className={styles.previewPager}><button type="button" disabled={pageIndex === 0} onClick={() => setPageIndex(pageIndex - 1)} aria-label="Previous page"><ChevronLeft size={18} /></button><span>{pageIndex + 1} of {pages.length}</span><button type="button" disabled={pageIndex === pages.length - 1} onClick={() => setPageIndex(pageIndex + 1)} aria-label="Next page"><ChevronRight size={18} /></button></div> : <p className={styles.previewCaption}>{step === 3 ? "Your cover, ready to print." : step === 2 ? "A page from your story." : "Your cover, as you make it."}</p>}
                         {step === 3 && <div className={styles.previewMiniPages}><div className={styles.miniPage}><IntroPreview title={title} destination={destination.country} year={year} count={photos.length} /></div>{pages.slice(0, 2).map((page, index) => <div className={styles.miniPage} key={index}><AlbumPagePreview photos={page} layout={layout} pageNumber={index + 1} destination={destination.country} /></div>)}</div>}
                     </aside>
