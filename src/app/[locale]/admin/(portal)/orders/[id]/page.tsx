@@ -11,6 +11,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
 import AlbumCoverThumb from "@/components/album/AlbumCoverThumb";
 import { cn } from "@/lib/utils";
+import { card, link, primaryButton, sectionLabel, serifHeading } from "../../admin-ui";
 import StatusBadge from "../../StatusBadge";
 import PrintFileButton from "./PrintFileButton";
 import { DeliveryForm, NoteForm, PaymentCheck, StatusActions, WhatsAppUpdate } from "./OrderWorkspace";
@@ -23,8 +24,8 @@ const dateTime = (value: string | null) => value ? new Date(value).toLocaleStrin
 const statusLabel = (status: string | null) => status && isOrderStatus(status) ? STATUS_INFO[status].label : status ?? "";
 
 function Card({ title, icon, children, className }: { title: string; icon?: React.ReactNode; children: React.ReactNode; className?: string }) {
-    return <section className={cn("rounded-2xl border border-[#e4d9cb] bg-[#fdfbf8] p-5", className)}>
-        <h2 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.14em] text-[#8a7d70]">{icon}{title}</h2>
+    return <section className={cn(card, className)}>
+        <h2 className={cn(sectionLabel, "mb-4 flex items-center gap-2")}>{icon}{title}</h2>
         {children}
     </section>;
 }
@@ -63,14 +64,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
     };
 
     return <main className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6">
-        <Link href="/admin/orders" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[.14em] text-[#a2602f]"><ArrowLeft size={14} /> All orders</Link>
-        <header className="mt-4 flex flex-col gap-4 border-b border-[#e2d6c7] pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <Link href="/admin/orders" className={cn(link, "font-[family-name:var(--font-album-serif)] text-[15px]")}><ArrowLeft size={15} /> All orders</Link>
+        <header className="mt-5 flex flex-col gap-4 border-b-2 border-dashed border-[#dfd6ce] pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="font-mono text-3xl font-bold tracking-[-.02em]">{formatOrderNumber(order.order_number)}</h1>
+                    <h1 className={cn(serifHeading, "text-[40px] leading-tight")}>{formatOrderNumber(order.order_number)}</h1>
                     <StatusBadge status={status} className="text-xs" />
                 </div>
-                <p className="mt-1.5 truncate text-sm text-[#776b60]">{order.title} · {name}</p>
+                <p className="mt-1 truncate font-[family-name:var(--font-album-serif)] text-[17px] text-[#6d5c4b]">{order.title} · {name}</p>
             </div>
             <p className={cn("text-sm", stale ? "font-bold text-[#b4441c]" : "text-[#8a7d70]")}>
                 {stale && <AlertTriangle size={15} className="mr-1 inline -translate-y-px" />}
@@ -82,27 +83,27 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <div className="min-w-0 space-y-6">
                 <Card title="Next step">
                     {status === "on_hold" && order.held_from_status && <p className="mb-3 text-sm text-[#776b60]">Paused while {statusLabel(order.held_from_status).toLowerCase()}.</p>}
-                    {status === "changes_requested" && order.customer_message && <div className="mb-4 rounded-xl bg-[#fbecc2]/60 p-3 text-sm"><strong className="block text-xs text-[#7a5a06]">Asked the customer</strong><p className="mt-1 whitespace-pre-line">{order.customer_message}</p></div>}
+                    {status === "changes_requested" && order.customer_message && <div className="mb-4 rounded-[10px] border-2 border-[#e0c066] bg-[#fff8e6] p-3 text-sm"><strong className="block text-xs text-[#7a5a06]">Asked the customer</strong><p className="mt-1 whitespace-pre-line">{order.customer_message}</p></div>}
                     <StatusActions order={{ id: order.id, status, heldFrom: order.held_from_status, courierName: order.courier_name, courierPhone: order.courier_phone, deliveryDate: order.delivery_date }} hasEmail={!!order.customer_email} />
-                    <div className="mt-4 border-t border-[#eee4d8] pt-4">
+                    <div className="mt-4 border-t-2 border-dashed border-[#efe6dc] pt-4">
                         <WhatsAppUpdate phone={whatsapp} status={status} message={messageInput} />
                     </div>
                 </Card>
 
                 <Card title="Print files" icon={<FileText size={14} />}>
                     <div className="flex flex-wrap items-center gap-3">
-                        {order.pdf_path && <a href={`/api/admin/albums/${order.id}/file`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#2b1a07] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#53330e]"><FileText size={16} /> Interior PDF</a>}
-                        {order.cover_pdf_path && <a href={`/api/admin/albums/${order.id}/file?file=cover`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-[#2b1a07] px-4 py-2.5 text-sm font-bold text-[#2b1a07] transition hover:bg-[#f3ebe0]"><FileText size={16} /> Cover spread PDF</a>}
+                        {order.pdf_path && <a href={`/api/admin/albums/${order.id}/file`} target="_blank" rel="noreferrer" className={primaryButton}><FileText size={16} /> Interior PDF</a>}
+                        {order.cover_pdf_path && <a href={`/api/admin/albums/${order.id}/file?file=cover`} target="_blank" rel="noreferrer" className={primaryButton}><FileText size={16} /> Cover spread PDF</a>}
                         {!["draft", "pending_payment"].includes(status) && <PrintFileButton orderId={order.id} rebuild={!!order.pdf_path} />}
                         <span className="text-xs text-[#8a7d70]">{photos.length} photos · {order.page_count || "—"} proof pages · {ALBUM_FORMAT}</span>
                     </div>
-                    {lowRes.length > 0 && <p className="mt-4 flex gap-2 rounded-xl bg-[#fbecc2]/60 p-3 text-sm text-[#6b4f05]"><AlertTriangle size={16} className="mt-0.5 shrink-0" />{lowRes.length} {lowRes.length === 1 ? "photo is" : "photos are"} under {LOW_RES_PX} px on the short side and may print softly.</p>}
+                    {lowRes.length > 0 && <p className="mt-4 flex gap-2 rounded-[10px] border-2 border-[#e0c066] bg-[#fff8e6] p-3 text-sm text-[#6b4f05]"><AlertTriangle size={16} className="mt-0.5 shrink-0" />{lowRes.length} {lowRes.length === 1 ? "photo is" : "photos are"} under {LOW_RES_PX} px on the short side and may print softly.</p>}
                     {photos.length > 0 && <ol className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 xl:grid-cols-6">
                         {photos.map((photo, index) => {
                             const url = photoUrls.get(photo.storage_path);
                             const low = Math.min(photo.width ?? 0, photo.height ?? 0) < LOW_RES_PX;
                             return <li key={photo.id} className="min-w-0">
-                                <a href={url ?? `/api/admin/albums/${order.id}/file?photo=${photo.id}`} target="_blank" rel="noreferrer" className={cn("relative block aspect-square overflow-hidden rounded-lg bg-[#ece2d5]", low && "ring-2 ring-[#e0a81c]")}>
+                                <a href={url ?? `/api/admin/albums/${order.id}/file?photo=${photo.id}`} target="_blank" rel="noreferrer" className={cn("relative block aspect-square overflow-hidden rounded-[8px] border-2 border-[#493b2a]/80 bg-[#ece2d5]", low && "ring-2 ring-[#e0a81c]")}>
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     {url && <img src={url} alt={photo.original_name ?? `Photo ${index + 1}`} loading="lazy" className="h-full w-full object-cover" />}
                                     <span className="absolute left-1.5 top-1.5 rounded bg-black/55 px-1.5 text-[10px] font-bold text-white">{index + 1}</span>
@@ -154,14 +155,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 </Card>
 
                 <Card title="Customer">
-                    <p className="font-semibold">{name}</p>
+                    <p className="font-[family-name:var(--font-album-serif)] text-[19px]">{name}</p>
                     <div className="mt-3 space-y-2 text-sm">
                         {address.phone && <p className="flex flex-wrap items-center gap-x-3 gap-y-1"><a href={`tel:${address.phone}`} className="inline-flex items-center gap-1.5 text-[#a2602f]"><Phone size={14} />{address.phone}</a>{whatsapp && <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-[#1f7a4a]"><MessageCircle size={13} />WhatsApp</a>}</p>}
                         {order.customer_email && <p><a href={`mailto:${order.customer_email}`} className="inline-flex items-center gap-1.5 break-all text-[#a2602f]"><Mail size={14} className="shrink-0" />{order.customer_email}</a></p>}
                     </div>
-                    {address.street && <div className="mt-4 border-t border-[#eee4d8] pt-4 text-sm leading-6">
+                    {address.street && <div className="mt-4 border-t-2 border-dashed border-[#efe6dc] pt-4 text-sm leading-6">
                         <p>{address.street}, {address.area}{address.landmark && <><br /><span className="text-[#776b60]">Near {address.landmark}</span></>}<br />Accra, Ghana</p>
-                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#a2602f]"><MapPin size={13} />Open in Google Maps</a>
+                        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`} target="_blank" rel="noreferrer" className={cn(link, "mt-1 text-xs")}><MapPin size={13} />Open in Google Maps</a>
                     </div>}
                 </Card>
 
@@ -176,7 +177,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                         {Number(order.discount_amount) > 0 && <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">Discount</dt><dd className="text-[#22603a]"><span className="font-mono text-xs">{order.discount_code}</span> − {formatGhs(Number(order.discount_amount))}</dd></div>}
                         {Number(order.delivery_fee) > 0 && <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">Delivery</dt><dd>{formatGhs(Number(order.delivery_fee))}</dd></div>}
                         {Number(order.tax_amount) > 0 && <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">Tax ({Number(order.tax_rate)}%)</dt><dd>{formatGhs(Number(order.tax_amount))}</dd></div>}
-                        <div className="flex justify-between gap-3 border-t border-[#eee4d8] pt-1.5"><dt className="text-[#8a7d70]">Charged</dt><dd className="font-semibold">{formatGhs(Number(order.total_cost))}</dd></div>
+                        <div className="flex justify-between gap-3 border-t-2 border-dashed border-[#efe6dc] pt-1.5"><dt className="text-[#8a7d70]">Charged</dt><dd className="font-semibold">{formatGhs(Number(order.total_cost))}</dd></div>
                         <div className="flex justify-between gap-3"><dt className="text-[#8a7d70]">Paid</dt><dd>{dateTime(order.paid_at)}</dd></div>
                         <div className="flex justify-between gap-3"><dt className="shrink-0 text-[#8a7d70]">Reference</dt><dd className="truncate font-mono text-xs leading-5" title={order.payment_reference ?? undefined}>{order.payment_reference || "—"}</dd></div>
                     </dl>

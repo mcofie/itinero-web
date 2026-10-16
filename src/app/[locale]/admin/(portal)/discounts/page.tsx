@@ -1,6 +1,7 @@
 import { DISCOUNT_FIELDS, discountState, type AlbumDiscount } from "@/lib/album-discounts";
 import { getAlbumSettings } from "@/lib/album-settings-server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { errorBox } from "../admin-ui";
 import DiscountsManager, { type DiscountSummary } from "./DiscountsManager";
 
 /** Orders that count against a code's limit, and those that count as completed sales. */
@@ -34,7 +35,7 @@ export default async function DiscountsPage() {
     });
 
     return <main className="mx-auto max-w-7xl px-4 pb-20 pt-8 sm:px-6">
-        {error ? <p className="rounded-xl bg-red-50 p-4 text-sm text-red-700">Could not load discounts: {error.message}</p>
+        {error ? <p className={errorBox}>Could not load discounts: {error.message}</p>
             : <DiscountsManager discounts={rows} pricing={pricing} />}
     </main>;
 }

@@ -8,10 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { allowedMoves, formatOrderNumber, isOrderStatus, moveLabel, moveRequirements, STATUS_INFO, type OrderMove } from "@/lib/album-fulfilment";
 import { NOTIFY_STATUSES, orderMessage, orderTrackingUrl, type OrderMessageInput } from "@/lib/order-messages";
 import { cn } from "@/lib/utils";
+import { dangerButton, dialog, field, fieldLabel, primaryButton, quietButton, serifHeading } from "../../admin-ui";
 
-const field = "mt-1 block w-full rounded-xl border border-[#e2d6c7] bg-white px-3 py-2 text-sm text-[#2b1a07] outline-none focus:border-[#c16b36]";
-const primaryButton = "inline-flex items-center justify-center gap-2 rounded-xl bg-[#2b1a07] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#53330e] disabled:opacity-60";
-const quietButton = "inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#e2d6c7] bg-white px-3 py-2 text-sm font-semibold text-[#5e4a38] transition hover:bg-[#f6efe6] disabled:opacity-60";
 
 async function patchOrder(id: string, body: Record<string, unknown>) {
     const response = await fetch(`/api/admin/orders/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -60,36 +58,36 @@ export function StatusActions({ order, hasEmail }: { order: StatusOrder; hasEmai
         </div>
         {other.length > 0 && <div className={cn("flex flex-wrap gap-2", main.length > 0 && "mt-3")}>
             {other.map(move => <button key={`${move.kind}-${move.to}`} type="button" onClick={() => open(move)}
-                className={cn(quietButton, move.kind === "cancel" && "text-[#a33a1a]")}>{moveLabel(move)}</button>)}
+                className={cn(quietButton, move.kind === "cancel" && dangerButton)}>{moveLabel(move)}</button>)}
         </div>}
 
         <Dialog open={!!active} onOpenChange={value => { if (!value && !busy) setActive(null); }}>
-            <DialogContent className="border-[#e4d9cb] bg-[#fdfbf8] text-[#2b1a07] sm:max-w-md">
+            <DialogContent className={cn(dialog, "sm:max-w-md")}>
                 {active && required && <form onSubmit={event => { event.preventDefault(); void submit(); }}>
                     <DialogHeader>
-                        <DialogTitle className="font-[Georgia] text-2xl font-normal">{moveLabel(active)}</DialogTitle>
+                        <DialogTitle className={cn(serifHeading, "text-[28px] font-normal")}>{moveLabel(active)}</DialogTitle>
                         <DialogDescription className="text-[#776b60]">
                             Moves the order to <strong>{formatStatus(active.to)}</strong>.{emails ? hasEmail ? " The customer gets an email update." : " The order has no email, so no update is sent." : " The customer isn’t notified."}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="my-5 space-y-4">
-                        {required.customerMessage && <label className="block text-xs font-semibold text-[#6d5c4b]">Message to the customer
+                        {required.customerMessage && <label className={fieldLabel}>Message to the customer
                             <textarea required rows={4} maxLength={1000} value={customerMessage} onChange={event => setCustomerMessage(event.target.value)} className={field}
                                 placeholder="Photo 12 is very low resolution and would print blurry. Could you replace it with the original file?" />
                         </label>}
                         {required.delivery && <div className="grid gap-3 sm:grid-cols-2">
-                            <label className="block text-xs font-semibold text-[#6d5c4b]">Rider name<input value={delivery.courierName} maxLength={80} onChange={event => setDelivery({ ...delivery, courierName: event.target.value })} className={field} /></label>
-                            <label className="block text-xs font-semibold text-[#6d5c4b]">Rider phone<input value={delivery.courierPhone} inputMode="tel" maxLength={20} onChange={event => setDelivery({ ...delivery, courierPhone: event.target.value })} className={field} /></label>
-                            <label className="block text-xs font-semibold text-[#6d5c4b] sm:col-span-2">Expected delivery date<input type="date" value={delivery.deliveryDate} onChange={event => setDelivery({ ...delivery, deliveryDate: event.target.value })} className={field} /></label>
+                            <label className={fieldLabel}>Rider name<input value={delivery.courierName} maxLength={80} onChange={event => setDelivery({ ...delivery, courierName: event.target.value })} className={field} /></label>
+                            <label className={fieldLabel}>Rider phone<input value={delivery.courierPhone} inputMode="tel" maxLength={20} onChange={event => setDelivery({ ...delivery, courierPhone: event.target.value })} className={field} /></label>
+                            <label className={cn(fieldLabel, "sm:col-span-2")}>Expected delivery date<input type="date" value={delivery.deliveryDate} onChange={event => setDelivery({ ...delivery, deliveryDate: event.target.value })} className={field} /></label>
                         </div>}
-                        <label className="block text-xs font-semibold text-[#6d5c4b]">{required.note ? "Reason (internal)" : "Internal note (optional)"}
+                        <label className={fieldLabel}>{required.note ? "Reason (internal)" : "Internal note (optional)"}
                             <textarea required={required.note} rows={2} maxLength={1000} value={note} onChange={event => setNote(event.target.value)} className={field}
                                 placeholder={active.kind === "cancel" ? "Customer asked to cancel. Refunded in Paystack on …" : active.kind === "hold" ? "Waiting for the printer to restock covers" : ""} />
                         </label>
                     </div>
                     <DialogFooter className="gap-2">
                         <button type="button" className={quietButton} onClick={() => setActive(null)} disabled={busy}>Back</button>
-                        <button type="submit" className={cn(primaryButton, active.kind === "cancel" && "bg-[#a33a1a] hover:bg-[#82290f]")} disabled={busy}>{busy && <LoaderCircle size={15} className="animate-spin" />}{moveLabel(active)}</button>
+                        <button type="submit" className={cn(primaryButton, active.kind === "cancel" && dangerButton)} disabled={busy}>{busy && <LoaderCircle size={15} className="animate-spin" />}{moveLabel(active)}</button>
                     </DialogFooter>
                 </form>}
             </DialogContent>
@@ -108,12 +106,12 @@ export function WhatsAppUpdate({ phone, status, message }: { phone: string | nul
     if (!phone) return <p className="text-xs text-[#8a7d70]">No phone number for a WhatsApp update.</p>;
     return <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
         <a href={`https://wa.me/${phone}?text=${encodeURIComponent(text)}`} target="_blank" rel="noreferrer"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#1f7a4a] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#17603a]">
-            <MessageCircle size={16} /> Send WhatsApp update
+            className={cn(primaryButton, "shrink-0")}>
+            <MessageCircle size={16} className="text-[#1f7a4a]" /> Send WhatsApp update
         </a>
         <details className="min-w-0 text-xs text-[#776b60]">
             <summary className="cursor-pointer py-2.5 font-semibold">Preview message</summary>
-            <p className="whitespace-pre-line rounded-xl bg-[#f6f0e8] p-3 leading-5">{text}</p>
+            <p className="whitespace-pre-line rounded-[10px] border-2 border-dashed border-[#dfd6ce] bg-[#fffcf9] p-3 leading-5">{text}</p>
         </details>
     </div>;
 }
@@ -163,9 +161,9 @@ export function DeliveryForm({ orderId, courierName, courierPhone, deliveryDate 
         <button type="button" className={cn(quietButton, "mt-3")} onClick={() => setEditing(true)}>Edit delivery</button>
     </div>;
     return <form className="space-y-3" onSubmit={event => { event.preventDefault(); void save(); }}>
-        <label className="block text-xs font-semibold text-[#6d5c4b]">Rider name<input value={values.courierName} maxLength={80} onChange={event => setValues({ ...values, courierName: event.target.value })} className={field} /></label>
-        <label className="block text-xs font-semibold text-[#6d5c4b]">Rider phone<input value={values.courierPhone} inputMode="tel" maxLength={20} onChange={event => setValues({ ...values, courierPhone: event.target.value })} className={field} /></label>
-        <label className="block text-xs font-semibold text-[#6d5c4b]">Expected delivery<input type="date" value={values.deliveryDate} onChange={event => setValues({ ...values, deliveryDate: event.target.value })} className={field} /></label>
+        <label className={fieldLabel}>Rider name<input value={values.courierName} maxLength={80} onChange={event => setValues({ ...values, courierName: event.target.value })} className={field} /></label>
+        <label className={fieldLabel}>Rider phone<input value={values.courierPhone} inputMode="tel" maxLength={20} onChange={event => setValues({ ...values, courierPhone: event.target.value })} className={field} /></label>
+        <label className={fieldLabel}>Expected delivery<input type="date" value={values.deliveryDate} onChange={event => setValues({ ...values, deliveryDate: event.target.value })} className={field} /></label>
         <div className="flex gap-2">
             <button type="submit" className={primaryButton} disabled={busy}>{busy && <LoaderCircle size={14} className="animate-spin" />}Save</button>
             <button type="button" className={quietButton} onClick={() => setEditing(false)} disabled={busy}>Cancel</button>
@@ -193,7 +191,7 @@ export function PaymentCheck({ orderId }: { orderId: string }) {
     };
     return <div className="mt-3">
         <button type="button" className={quietButton} onClick={() => void check()} disabled={busy}>{busy ? <LoaderCircle size={14} className="animate-spin" /> : <RefreshCw size={14} />}Check with Paystack</button>
-        {result && <p className={cn("mt-2 rounded-lg p-2 text-xs", result.status === "success" ? "bg-[#dcefdf] text-[#22603a]" : "bg-[#f6f0e8] text-[#6d5c4b]")}>
+        {result && <p className={cn("mt-2 rounded-lg p-2 text-xs", result.status === "success" ? "border-2 border-[#22603a]/40 bg-[#eef7ef] text-[#22603a]" : "border-2 border-dashed border-[#dfd6ce] text-[#6d5c4b]")}>
             Paystack: <strong>{result.status}</strong> · {result.currency} {result.amount}{result.channel && ` · ${result.channel}`}{result.paidAt && ` · ${new Date(result.paidAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`}
         </p>}
     </div>;

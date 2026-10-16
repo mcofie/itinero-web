@@ -11,6 +11,7 @@ import type { TravelCoverId } from "@/lib/travel-covers";
 import type { AlbumLayout, AlbumPhoto } from "@/components/album-builder/album-draft";
 import type { AlbumPageText } from "@/lib/album-page-text";
 import type { PrintSpec } from "@/components/album-builder/album-pdf";
+import { primaryButton, quietButton } from "../../admin-ui";
 
 /**
  * Resolves a CSS font stack to the loaded family names canvas needs. The probe goes inside `host`,
@@ -99,8 +100,7 @@ export default function PrintFileButton({ orderId, rebuild }: { orderId: string;
     };
 
     return <button ref={buttonRef} type="button" onClick={() => void build()} disabled={!!stage}
-        className={rebuild ? "inline-flex items-center gap-1.5 rounded-xl border border-[#e2d6c7] bg-white px-3 py-2.5 text-sm font-semibold text-[#5e4a38] transition hover:bg-[#f6efe6] disabled:opacity-70"
-            : "inline-flex items-center gap-2 rounded-xl bg-[#2b1a07] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#53330e] disabled:opacity-70"}>
+        className={rebuild ? quietButton : primaryButton}>
         {stage ? <><LoaderCircle size={15} className="animate-spin" />{stage}</> : <><FileText size={15} />{rebuild ? "Rebuild print files" : "Build print files"}</>}
     </button>;
 }

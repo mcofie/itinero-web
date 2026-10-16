@@ -8,12 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DISCOUNT_STATE_LABELS, discountAmount, discountLabel, type AlbumDiscount, type DiscountState } from "@/lib/album-discounts";
 import { formatGhs, priceBreakdown, type AlbumPricing } from "@/lib/album-pricing";
 import { cn } from "@/lib/utils";
+import ui from "@/components/album/album-ui.module.css";
+import { dangerButton, dialog, emptyState, field, fieldLabel, PageHeading, primaryButton, quietButton, serifHeading } from "../admin-ui";
 
 export type DiscountSummary = AlbumDiscount & { uses: number; sold: number; given: number; revenue: number; everUsed: boolean; state: DiscountState };
 
-const field = "mt-1 block w-full rounded-xl border border-[#e2d6c7] bg-white px-3 py-2 text-sm text-[#2b1a07] outline-none focus:border-[#c16b36]";
-const primaryButton = "inline-flex items-center justify-center gap-2 rounded-xl bg-[#2b1a07] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#53330e] disabled:opacity-60";
-const quietButton = "inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e2d6c7] bg-white px-2.5 py-1.5 text-xs font-semibold text-[#5e4a38] transition hover:bg-[#f6efe6] disabled:opacity-60";
 const stateTone: Record<DiscountState, string> = {
     active: "bg-[#dcefdf] text-[#22603a]", paused: "bg-[#efe8de] text-[#6d5c4b]", scheduled: "bg-[#dcebf5] text-[#215479]",
     expired: "bg-[#ece6e3] text-[#7d6f69]", used_up: "bg-[#fbecc2] text-[#7a5a06]",
@@ -91,21 +90,17 @@ export default function DiscountsManager({ discounts, pricing }: { discounts: Di
     const preview = priceBreakdown(pricing, Number(form.value) > 0 ? discountAmount({ kind: form.kind, value: Math.min(form.kind === "percent" ? 100 : Infinity, Number(form.value)) }, pricing.albumPrice) : 0).total;
 
     return <>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-                <h1 className="font-[Georgia] text-3xl tracking-[-.02em]">Discounts</h1>
-                <p className="mt-1 text-sm text-[#776b60]">Codes customers enter at checkout. Each code takes a percentage or a fixed amount off the {formatGhs(pricing.albumPrice)} album price. Delivery and tax are added after.</p>
-            </div>
-            <button type="button" className={primaryButton} onClick={openNew}><Plus size={16} /> New code</button>
-        </div>
+        <PageHeading note="a little something off" title="Discounts" action={<button type="button" className={cn(primaryButton, "self-start sm:self-auto")} onClick={openNew}><Plus size={16} /> New code</button>}>
+            Codes customers enter at checkout. Each code takes a percentage or a fixed amount off the {formatGhs(pricing.albumPrice)} album price. Delivery and tax are added after.
+        </PageHeading>
 
-        {discounts.length === 0 ? <div className="mt-6 rounded-2xl border border-dashed border-[#d9c8b5] bg-[#fbf8f3] px-6 py-16 text-center text-sm text-[#8a7d70]">No discount codes yet.</div>
-            : <div className="mt-6 overflow-x-auto rounded-2xl border border-[#e4d9cb] bg-[#fdfbf8]">
+        {discounts.length === 0 ? <div className={cn(emptyState, "mt-6")}>No discount codes yet.</div>
+            : <div className={cn(ui.card, "mt-6 overflow-x-auto")}>
                 <table className="w-full min-w-[760px] text-left text-sm">
-                    <thead className="border-b border-[#eee4d8] text-[11px] font-bold uppercase tracking-[.08em] text-[#8a7d70]">
+                    <thead className="border-b-2 border-[#493b2a]/15 text-[11px] font-bold uppercase tracking-[.08em] text-[#8a7d70]">
                         <tr><th className="px-4 py-3">Code</th><th className="px-3 py-3">Discount</th><th className="px-3 py-3">Status</th><th className="px-3 py-3">Uses</th><th className="px-3 py-3">Valid</th><th className="px-3 py-3 text-right">Given</th><th className="px-3 py-3 text-right">Revenue</th><th className="px-4 py-3" /></tr>
                     </thead>
-                    <tbody className="divide-y divide-[#f0e8dd]">
+                    <tbody className="divide-y-2 divide-dashed divide-[#efe6dc]">
                         {discounts.map(discount => <tr key={discount.id} className="align-top">
                             <td className="px-4 py-3"><strong className="font-mono text-[13px]">{discount.code}</strong>{discount.description && <span className="mt-0.5 block max-w-56 text-xs text-[#8a7d70]">{discount.description}</span>}</td>
                             <td className="px-3 py-3">{discountLabel(discount)}<span className="block text-xs text-[#8a7d70]">{discount.once_per_customer ? "Once per customer" : "Reusable"}</span></td>
@@ -118,7 +113,7 @@ export default function DiscountsManager({ discounts, pricing }: { discounts: Di
                                 <div className="flex justify-end gap-1.5">
                                     <button type="button" className={quietButton} disabled={busy === discount.id} onClick={() => void toggle(discount)}>{discount.active ? "Pause" : "Resume"}</button>
                                     <button type="button" className={quietButton} onClick={() => openEdit(discount)}>Edit</button>
-                                    {!discount.everUsed && <button type="button" className={cn(quietButton, "text-[#a33a1a]")} disabled={busy === discount.id} onClick={() => void remove(discount)}>Delete</button>}
+                                    {!discount.everUsed && <button type="button" className={cn(quietButton, dangerButton)} disabled={busy === discount.id} onClick={() => void remove(discount)}>Delete</button>}
                                 </div>
                             </td>
                         </tr>)}
@@ -128,36 +123,36 @@ export default function DiscountsManager({ discounts, pricing }: { discounts: Di
         <p className="mt-3 text-xs text-[#8a7d70]">Uses include orders waiting for payment. Given and revenue count paid orders that weren’t cancelled.</p>
 
         <Dialog open={!!editing} onOpenChange={open => { if (!open && !busy) setEditing(null); }}>
-            <DialogContent className="border-[#e4d9cb] bg-[#fdfbf8] text-[#2b1a07] sm:max-w-lg">
+            <DialogContent className={cn(dialog, "sm:max-w-lg")}>
                 <form onSubmit={event => { event.preventDefault(); void save(); }}>
                     <DialogHeader>
-                        <DialogTitle className="font-[Georgia] text-2xl font-normal">{editing === "new" ? "New discount code" : `Edit ${form.code}`}</DialogTitle>
+                        <DialogTitle className={cn(serifHeading, "text-[28px] font-normal")}>{editing === "new" ? "New discount code" : `Edit ${form.code}`}</DialogTitle>
                         <DialogDescription className="text-[#776b60]">{editing === "new" ? "The code and amount can’t be changed after you create it." : "The code and amount are fixed. You can change the dates, limits and note."}</DialogDescription>
                     </DialogHeader>
                     <div className="my-5 grid gap-4 sm:grid-cols-2">
-                        <label className="block text-xs font-semibold text-[#6d5c4b] sm:col-span-2">Code
-                            <span className="mt-1 flex gap-2">
-                                <input required disabled={editing !== "new"} value={form.code} maxLength={24} onChange={event => setForm({ ...form, code: event.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "") })} className={cn(field, "mt-0 font-mono uppercase disabled:bg-[#f3ede5]")} />
+                        <label className={cn(fieldLabel, "sm:col-span-2")}>Code
+                            <span className="mt-1.5 flex gap-2">
+                                <input required disabled={editing !== "new"} value={form.code} maxLength={24} onChange={event => setForm({ ...form, code: event.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "") })} className={cn(field, "mt-0 font-mono !uppercase")} />
                                 {editing === "new" && <button type="button" className={cn(quietButton, "shrink-0 px-3")} onClick={() => setForm({ ...form, code: randomCode() })} aria-label="Generate a random code"><Shuffle size={14} /></button>}
                             </span>
                         </label>
-                        <label className="block text-xs font-semibold text-[#6d5c4b]">Type
-                            <select disabled={editing !== "new"} value={form.kind} onChange={event => setForm({ ...form, kind: event.target.value as FormState["kind"] })} className={cn(field, "disabled:bg-[#f3ede5]")}>
+                        <label className={fieldLabel}>Type
+                            <select disabled={editing !== "new"} value={form.kind} onChange={event => setForm({ ...form, kind: event.target.value as FormState["kind"] })} className={field}>
                                 <option value="percent">Percentage off</option><option value="fixed">Amount off (GHS)</option>
                             </select>
                         </label>
-                        <label className="block text-xs font-semibold text-[#6d5c4b]">{form.kind === "percent" ? "Percent" : "Amount (GHS)"}
-                            <input required disabled={editing !== "new"} type="number" min={1} max={form.kind === "percent" ? 100 : undefined} step="0.01" value={form.value} onChange={event => setForm({ ...form, value: event.target.value })} className={cn(field, "disabled:bg-[#f3ede5]")} />
+                        <label className={fieldLabel}>{form.kind === "percent" ? "Percent" : "Amount (GHS)"}
+                            <input required disabled={editing !== "new"} type="number" min={1} max={form.kind === "percent" ? 100 : undefined} step="0.01" value={form.value} onChange={event => setForm({ ...form, value: event.target.value })} className={field} />
                         </label>
                         <p className="-mt-2 text-xs text-[#8a7d70] sm:col-span-2">Customers pay <strong className="text-[#2b1a07]">{formatGhs(preview)}</strong> with today’s prices{preview <= 0 && " — a free album, placed without payment"}.</p>
-                        <label className="block text-xs font-semibold text-[#6d5c4b]">Starts<input type="date" value={form.startsOn} onChange={event => setForm({ ...form, startsOn: event.target.value })} className={field} /></label>
-                        <label className="block text-xs font-semibold text-[#6d5c4b]">Ends<input type="date" value={form.endsOn} onChange={event => setForm({ ...form, endsOn: event.target.value })} className={field} /></label>
-                        <label className="block text-xs font-semibold text-[#6d5c4b]">Usage limit<input type="number" min={1} step={1} placeholder="Unlimited" value={form.maxUses} onChange={event => setForm({ ...form, maxUses: event.target.value })} className={field} /></label>
+                        <label className={fieldLabel}>Starts<input type="date" value={form.startsOn} onChange={event => setForm({ ...form, startsOn: event.target.value })} className={field} /></label>
+                        <label className={fieldLabel}>Ends<input type="date" value={form.endsOn} onChange={event => setForm({ ...form, endsOn: event.target.value })} className={field} /></label>
+                        <label className={fieldLabel}>Usage limit<input type="number" min={1} step={1} placeholder="Unlimited" value={form.maxUses} onChange={event => setForm({ ...form, maxUses: event.target.value })} className={field} /></label>
                         <label className="flex items-center gap-2 self-end pb-2.5 text-sm text-[#5e4a38]"><input type="checkbox" checked={form.oncePerCustomer} onChange={event => setForm({ ...form, oncePerCustomer: event.target.checked })} className="h-4 w-4 accent-[#2b1a07]" />Once per customer</label>
-                        <label className="block text-xs font-semibold text-[#6d5c4b] sm:col-span-2">Note (internal)<input value={form.description} maxLength={140} placeholder="Instagram giveaway, October" onChange={event => setForm({ ...form, description: event.target.value })} className={field} /></label>
+                        <label className={cn(fieldLabel, "sm:col-span-2")}>Note (internal)<input value={form.description} maxLength={140} placeholder="Instagram giveaway, October" onChange={event => setForm({ ...form, description: event.target.value })} className={field} /></label>
                     </div>
                     <DialogFooter className="gap-2">
-                        <button type="button" className={cn(quietButton, "px-4 py-2.5 text-sm")} onClick={() => setEditing(null)} disabled={!!busy}>Cancel</button>
+                        <button type="button" className={quietButton} onClick={() => setEditing(null)} disabled={!!busy}>Cancel</button>
                         <button type="submit" className={primaryButton} disabled={!!busy}>{busy === "save" && <LoaderCircle size={15} className="animate-spin" />}{editing === "new" ? "Create code" : "Save changes"}</button>
                     </DialogFooter>
                 </form>

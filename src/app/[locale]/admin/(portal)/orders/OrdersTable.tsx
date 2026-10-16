@@ -7,6 +7,8 @@ import { Link, useRouter } from "@/i18n/routing";
 import { daysSince, formatOrderNumber, isOrderStatus, STALE_AFTER_DAYS } from "@/lib/album-fulfilment";
 import AlbumCoverThumb from "@/components/album/AlbumCoverThumb";
 import { cn } from "@/lib/utils";
+import ui from "@/components/album/album-ui.module.css";
+import { emptyState, primaryButton, quietButton } from "../admin-ui";
 import StatusBadge from "../StatusBadge";
 
 export type OrderListRow = {
@@ -67,40 +69,40 @@ export default function OrdersTable({ rows, exportAllHref, emptyLabel }: { rows:
         } finally { setBusy(null); }
     };
 
-    if (!rows.length) return <div className="mt-6 rounded-2xl border border-dashed border-[#d9c8b5] bg-[#fbf8f3] px-6 py-16 text-center text-sm text-[#8a7d70]">{emptyLabel}</div>;
+    if (!rows.length) return <div className={cn(emptyState, "mt-6")}>{emptyLabel}</div>;
 
     return <section className="mt-6">
         <div className="mb-3 flex min-h-10 flex-wrap items-center gap-2 text-sm">
             {chosen.length > 0 ? <>
-                <span className="mr-1 font-semibold">{chosen.length} selected</span>
+                <span className="mr-1 font-[family-name:var(--font-album-serif)] text-[16px]">{chosen.length} selected</span>
                 {BULK_MOVES.map(move => {
                     const eligible = chosen.filter(row => row.status === move.from).length;
                     return eligible > 0 && <button key={move.to} type="button" disabled={!!busy} onClick={() => void bulkMove(move.from, move.to, move.label)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#2b1a07] px-3 py-2 font-semibold text-white transition hover:bg-[#53330e] disabled:opacity-60">
+                        className={primaryButton}>
                         {busy === move.to && <LoaderCircle size={14} className="animate-spin" />}{move.label} ({eligible})
                     </button>;
                 })}
-                <a href={`/api/admin/orders/export?ids=${chosen.map(row => row.id).join(",")}`} className="inline-flex items-center gap-1.5 rounded-lg border border-[#e2d6c7] bg-[#fdfbf8] px-3 py-2 font-semibold"><Download size={14} /> Print list (CSV)</a>
+                <a href={`/api/admin/orders/export?ids=${chosen.map(row => row.id).join(",")}`} className={quietButton}><Download size={14} /> Print list (CSV)</a>
                 <button type="button" onClick={() => setSelected(new Set())} className="px-2 py-2 text-[#8a7d70] underline-offset-2 hover:underline">Clear</button>
-            </> : <a href={exportAllHref} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-[#e2d6c7] bg-[#fdfbf8] px-3 py-2 font-semibold"><Download size={14} /> Export these orders (CSV)</a>}
+            </> : <a href={exportAllHref} className={cn(quietButton, "ml-auto")}><Download size={14} /> Export these orders (CSV)</a>}
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-[#e4d9cb] bg-[#fdfbf8]">
+        <div className={cn(ui.card, "overflow-hidden")}>
             <table className="w-full text-left text-sm">
-                <thead className="hidden border-b border-[#eee4d8] text-[11px] font-bold uppercase tracking-[.08em] text-[#8a7d70] md:table-header-group">
+                <thead className="hidden border-b-2 border-[#493b2a]/15 text-[11px] font-bold uppercase tracking-[.08em] text-[#8a7d70] md:table-header-group">
                     <tr>
                         <th className="w-10 px-4 py-3"><input type="checkbox" aria-label="Select all orders" checked={allChosen} onChange={() => setSelected(allChosen ? new Set() : new Set(rows.map(row => row.id)))} className="accent-[#2b1a07]" /></th>
                         <th className="px-2 py-3">Order</th><th className="px-3 py-3">Customer</th><th className="px-3 py-3">Status</th>
                         <th className="px-3 py-3">Waiting</th><th className="px-3 py-3">Paid</th><th className="px-4 py-3 text-right">Amount</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-[#f0e8dd]">
+                <tbody className="divide-y-2 divide-dashed divide-[#efe6dc]">
                     {rows.map(row => {
                         const waited = daysSince(row.status_changed_at ?? row.paid_at ?? row.created_at);
                         const staleAfter = isOrderStatus(row.status) ? STALE_AFTER_DAYS[row.status] : undefined;
                         const stale = staleAfter !== undefined && waited >= staleAfter;
                         const name = row.shipping_address?.fullName || row.customer_name || row.customer_email || "Customer";
-                        return <tr key={row.id} className={cn("flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 transition md:table-row md:p-0", selected.has(row.id) ? "bg-[#fbf1e6]" : "hover:bg-[#faf6f0]")}>
+                        return <tr key={row.id} className={cn("flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 transition md:table-row md:p-0", selected.has(row.id) ? "bg-[#fff2d8]" : "hover:bg-[#fbf6ef]")}>
                             <td className="md:px-4 md:py-3"><input type="checkbox" aria-label={`Select order ${formatOrderNumber(row.order_number)}`} checked={selected.has(row.id)} onChange={() => toggle(row.id)} className="accent-[#2b1a07]" /></td>
                             <td className="min-w-0 flex-1 md:px-2 md:py-3">
                                 <Link href={`/admin/orders/${row.id}`} className="flex items-center gap-3">
