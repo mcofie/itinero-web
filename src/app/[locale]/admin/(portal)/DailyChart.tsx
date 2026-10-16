@@ -34,9 +34,9 @@ export default function DailyChart({ points }: { points: DailyPoint[] }) {
     return <div>
         <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-[11px] font-bold uppercase tracking-[.14em] text-[#8a7d70]">{METRICS[metric].label} per day</h2>
-            <div className="flex rounded-lg border border-[#e2d6c7] bg-white p-0.5 text-xs font-semibold" role="group" aria-label="Chart measure">
+            <div className="flex gap-0.5 rounded-[12px] border-2 border-[#493b2a] bg-[#fffcf9] p-0.5 font-[family-name:var(--font-album-serif)] text-[13px]" role="group" aria-label="Chart measure">
                 {(Object.keys(METRICS) as Metric[]).map(key => <button key={key} type="button" aria-pressed={metric === key} onClick={() => setMetric(key)}
-                    className={cn("rounded-md px-2.5 py-1 transition", metric === key ? "bg-[#2b1a07] text-white" : "text-[#6d5c4b] hover:bg-[#f6efe6]")}>{METRICS[key].label}</button>)}
+                    className={cn("rounded-[9px] px-2.5 py-0.5 transition", metric === key ? "bg-[#fff2d8] text-[#2b1a07] shadow-[inset_0_0_0_1.5px_#493b2a]" : "text-[#6d5c4b] hover:bg-[#f6efe6]")}>{METRICS[key].label}</button>)}
             </div>
         </div>
 
@@ -52,7 +52,7 @@ export default function DailyChart({ points }: { points: DailyPoint[] }) {
                     {points.map((point, index) => {
                         const value = point[metric];
                         return <div key={point.date} className="relative flex h-full min-w-0 flex-1 cursor-default items-end justify-center" onMouseEnter={() => setHovered(index)}>
-                            {value > 0 && <div className={cn("w-full max-w-6 rounded-t-[4px] transition-colors", hovered === index ? "bg-[#9c5528]" : "bg-[#c16b36]")} style={{ height: `${Math.max(2, value / max * 100)}%` }} />}
+                            {value > 0 && <div className={cn("w-full max-w-6 rounded-t-[4px] transition-colors", hovered === index ? "bg-[#b9541c]" : "bg-[#ed7936]")} style={{ height: `${Math.max(2, value / max * 100)}%` }} />}
                             {hovered === index && <div className={cn("pointer-events-none absolute bottom-full z-10 mb-2 whitespace-nowrap rounded-lg bg-[#2b1a07] px-2.5 py-1.5 text-xs text-white shadow-lg",
                                 index < points.length / 3 ? "left-0" : index > points.length * 2 / 3 ? "right-0" : "left-1/2 -translate-x-1/2")}>
                                 <span className="block text-[10px] text-white/70">{dayLabel(point.date, true)}</span>

@@ -12,11 +12,12 @@ const LINKS = [
 
 export default function PortalNav() {
     const pathname = usePathname();
-    return <nav className="flex items-center gap-1" aria-label="Admin">
+    return <nav className="flex items-center gap-3 overflow-x-auto sm:gap-6" aria-label="Admin">
         {LINKS.map(link => {
             const active = link.href === "/admin" ? pathname === "/admin" : pathname.startsWith(link.href);
             return <Link key={link.href} href={link.href} aria-current={active ? "page" : undefined}
-                className={cn("rounded-lg px-3 py-2 text-sm font-semibold transition", active ? "bg-[#f0e5d7] text-[#2b1a07]" : "text-[#7a6b5c] hover:text-[#2b1a07]")}>
+                className={cn("whitespace-nowrap py-1 font-[family-name:var(--font-album-serif)] text-[15px] underline decoration-2 underline-offset-[7px] transition sm:text-[17px]",
+                    active ? "text-[#2b1a07] decoration-[#ed7936]" : "text-[#7a6b5c] decoration-transparent hover:text-[#2b1a07] hover:decoration-[#ed7936]/50")}>
                 {link.label}
             </Link>;
         })}

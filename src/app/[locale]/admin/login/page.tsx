@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import Image from "next/image";
-import { LoaderCircle } from "lucide-react";
 import { Link, useRouter } from "@/i18n/routing";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
+import { albumFontVariables } from "@/components/album/album-fonts";
+import ui from "@/components/album/album-ui.module.css";
+import { cn } from "@/lib/utils";
 
-const field = "mt-1.5 block h-12 w-full rounded-xl border border-[#e2d6c7] bg-white px-4 text-sm text-[#2b1a07] outline-none transition placeholder:text-[#b3a594] focus:border-[#c16b36] focus:ring-2 focus:ring-[#c16b36]/15";
+const labelClass = "block font-sans text-xs font-semibold uppercase tracking-[.12em] text-[#6d5c4b]";
+const field = "mt-2 block h-12 w-full rounded-[12px] border-2 border-[#d9cbbb] bg-white px-4 font-[family-name:var(--font-album-serif)] text-[16px] normal-case tracking-normal text-[#2b1a07] outline-none placeholder:text-[#b3a594] focus:border-[#423824]";
 
 export default function AdminLoginPage() {
     const sb = getSupabaseBrowser();
@@ -46,34 +48,31 @@ export default function AdminLoginPage() {
         router.refresh();
     }
 
-    return <main className="flex min-h-screen items-center justify-center bg-[#f6f2ec] px-5 py-16 text-[#2b1a07]">
-        <div className="w-full max-w-md rounded-[28px] border border-[#e7d9c8] bg-[#fdfbf8] p-8 shadow-[0_20px_60px_#2b1a0714] sm:p-12">
-            <Link href="/" aria-label="Itinero home" className="mx-auto mb-7 block w-fit">
-                <Image src="/brand/itinero-mark-animated.svg" width={70} height={52} alt="Itinero" />
-            </Link>
-            <div className="text-center">
-                <p className="mb-3 text-xs font-bold uppercase tracking-[.2em] text-[#c36e36]">Orders admin</p>
-                <h1 className="mb-4 font-[Georgia] text-4xl leading-tight tracking-[-.02em]">Every album,<br />from print to door.</h1>
-                <p className="mx-auto mb-8 max-w-xs text-sm leading-6 text-[#766b5f]">Sign in to review, print and deliver customer albums.</p>
-            </div>
+    return <main className={cn(albumFontVariables, ui.page, "flex min-h-screen flex-col items-center justify-center px-5 py-14")}>
+        <Link href="/" aria-label="Itinero home" className="mb-9 transition hover:-rotate-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/itinero-mark-animated.svg" alt="" width={76} height={46} className="drop-shadow-[0_2px_1px_#2b1a071b]" />
+        </Link>
+        <div className={cn(ui.card, "w-full max-w-md px-7 py-10 text-center sm:px-11 sm:py-12")}>
+            <p className={cn(ui.hand, "-rotate-2")}>staff only<br />⌄</p>
+            <h1 className="mt-2 text-[36px] leading-[1.15] tracking-[-.025em] sm:text-[40px]">Every album, from print to door</h1>
+            <p className="mx-auto mt-4 max-w-xs font-sans text-[15px] leading-6 text-[#6d5c4b]">Sign in to review, print and deliver customer albums.</p>
 
-            {deniedEmail && <p role="alert" className="mb-5 rounded-xl bg-[#fbecc2]/70 p-3 text-sm leading-5 text-[#6b4f05]">
+            {deniedEmail && <p role="alert" className="mt-6 rounded-[10px] border-2 border-[#c99a2e] bg-[#fff8e6] p-3 text-left font-sans text-sm leading-5 text-[#6b4f05]">
                 You’re signed in as {deniedEmail}, which doesn’t have admin access. Sign in with the admin account.
             </p>}
-            {error && <p role="alert" className="mb-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+            {error && <p role="alert" className="mt-6 rounded-[10px] border-2 border-[#b4441c] bg-[#fff4ef] p-3 text-left font-sans text-sm text-[#7a2e12]">{error}</p>}
 
-            <form onSubmit={event => void signIn(event)} className="space-y-4">
-                <label className="block text-xs font-semibold text-[#6d5c4b]">Email address
+            <form onSubmit={event => void signIn(event)} className={cn(ui.rule, "mt-8 space-y-4 pt-7 text-left")}>
+                <label className={labelClass}>Email address
                     <input type="email" required autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} className={field} />
                 </label>
-                <label className="block text-xs font-semibold text-[#6d5c4b]">Password
+                <label className={labelClass}>Password
                     <input type="password" required autoComplete="current-password" value={pwd} onChange={event => setPwd(event.target.value)} className={field} />
                 </label>
-                <button type="submit" disabled={busy} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2b1a07] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#53330e] disabled:opacity-60">
-                    {busy ? <><LoaderCircle size={17} className="animate-spin" /> Signing in…</> : "Sign in"}
-                </button>
+                <button type="submit" disabled={busy} className={cn(ui.button, "!mt-7 w-full disabled:opacity-60")}>{busy ? "Signing in…" : "Sign in"}</button>
             </form>
-            <p className="mt-6 text-center text-xs text-[#8c8174]">Restricted to Itinero staff.</p>
+            <p className="mt-7 font-sans text-xs text-[#8c8174]">Restricted to Itinero staff.</p>
         </div>
     </main>;
 }

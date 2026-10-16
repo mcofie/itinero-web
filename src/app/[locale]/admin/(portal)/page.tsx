@@ -4,6 +4,7 @@ import { daysSince, formatOrderNumber, isOrderStatus, STALE_AFTER_DAYS, STATUS_I
 import { createAdminClient } from "@/lib/supabase/admin";
 import { TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
 import { cn } from "@/lib/utils";
+import ui from "@/components/album/album-ui.module.css";
 import DailyChart, { type DailyPoint } from "./DailyChart";
 
 const PERIODS = [7, 30, 90] as const;
@@ -35,9 +36,9 @@ function Change({ current, previous, days, invert = false }: { current: number; 
 }
 
 function Stat({ title, value, children }: { title: string; value: string; children?: React.ReactNode }) {
-    return <div className="rounded-2xl border border-[#e4d9cb] bg-[#fdfbf8] p-5">
+    return <div className={cn(ui.card, "p-5")}>
         <p className="text-[11px] font-bold uppercase tracking-[.14em] text-[#8a7d70]">{title}</p>
-        <p className="mt-2 font-[Georgia] text-3xl tracking-[-.02em] tabular-nums">{value}</p>
+        <p className="mt-2 font-[family-name:var(--font-album-serif)] text-[32px] leading-tight tracking-[-.02em] tabular-nums">{value}</p>
         <p className="mt-1.5 text-xs">{children}</p>
     </div>;
 }
@@ -115,12 +116,13 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
     return <main className="mx-auto max-w-7xl px-4 pb-20 pt-8 sm:px-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-                <h1 className="font-[Georgia] text-3xl tracking-[-.02em]">Overview</h1>
+                <p className={cn(ui.hand, "-rotate-2 !text-[22px]")}>here’s how it’s going ⌄</p>
+                <h1 className="mt-1 font-[family-name:var(--font-album-serif)] text-[40px] leading-tight tracking-[-.025em]">Overview</h1>
                 <p className="mt-1 text-sm text-[#776b60]">Sales from paid orders, excluding cancellations. Days are in Accra time.</p>
             </div>
-            <nav className="flex w-fit rounded-xl border border-[#e2d6c7] bg-white p-1 text-sm font-semibold" aria-label="Period">
+            <nav className="flex w-fit gap-1 rounded-[14px] border-2 border-[#493b2a] bg-[#fffcf9] p-1 font-[family-name:var(--font-album-serif)] text-[15px]" aria-label="Period">
                 {PERIODS.map(period => <Link key={period} href={period === 30 ? "/admin" : `/admin?days=${period}`} aria-current={period === days ? "page" : undefined}
-                    className={cn("rounded-lg px-3 py-1.5 transition", period === days ? "bg-[#2b1a07] text-white" : "text-[#6d5c4b] hover:bg-[#f6efe6]")}>{period} days</Link>)}
+                    className={cn("rounded-[10px] px-3 py-1 transition", period === days ? "bg-[#fff2d8] text-[#2b1a07] shadow-[inset_0_0_0_1.5px_#493b2a]" : "text-[#6d5c4b] hover:bg-[#f6efe6]")}>{period} days</Link>)}
             </nav>
         </div>
 
@@ -136,16 +138,16 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
         </section>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-            <section className="rounded-2xl border border-[#e4d9cb] bg-[#fdfbf8] p-5">
+            <section className={cn(ui.card, "p-5")}>
                 <DailyChart points={points} />
             </section>
 
-            <section className="rounded-2xl border border-[#e4d9cb] bg-[#fdfbf8] p-5">
+            <section className={cn(ui.card, "p-5")}>
                 <h2 className="mb-3 text-[11px] font-bold uppercase tracking-[.14em] text-[#8a7d70]">Needs attention</h2>
-                {overdue > 0 && <Link href="/admin/orders?tab=all&sort=waiting" className="mb-3 flex items-center gap-2 rounded-xl bg-[#fde3cf]/70 px-3 py-2.5 text-sm font-semibold text-[#9a4a17]">
+                {overdue > 0 && <Link href="/admin/orders?tab=all&sort=waiting" className="mb-3 flex items-center gap-2 rounded-[10px] border-2 border-[#d4692c] bg-[#fff4ec] px-3 py-2.5 text-sm font-semibold text-[#9a4a17]">
                     <AlertTriangle size={16} /> {overdue} {overdue === 1 ? "order is" : "orders are"} overdue <ArrowRight size={14} className="ml-auto" />
                 </Link>}
-                <ul className="divide-y divide-[#f0e8dd]">
+                <ul className="divide-y-2 divide-dashed divide-[#efe6dc]">
                     {queue.map(item => <li key={item.tab}>
                         <Link href={`/admin/orders?tab=${item.tab}`} className="flex items-center justify-between gap-3 py-2.5 text-sm transition hover:text-[#a2602f]">
                             <span><span className="block font-semibold">{item.label}</span><span className="block text-xs text-[#8a7d70]">{item.detail}</span></span>
@@ -157,25 +159,25 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-3">
-            <section className="rounded-2xl border border-[#e4d9cb] bg-[#fdfbf8] p-5">
+            <section className={cn(ui.card, "p-5")}>
                 <h2 className="mb-4 text-[11px] font-bold uppercase tracking-[.14em] text-[#8a7d70]">Top destinations</h2>
                 {destinations.length ? <ol className="space-y-3">
                     {destinations.map(([id, count]) => <li key={id} className="text-sm">
                         <div className="flex justify-between gap-3"><span>{Object.hasOwn(TRAVEL_COVERS_BY_ID, id) ? TRAVEL_COVERS_BY_ID[id as TravelCoverId].country : id}</span><span className="tabular-nums text-[#6d5c4b]">{count}</span></div>
-                        <div className="mt-1 h-1.5 rounded-full bg-[#f0e8dd]"><div className="h-full rounded-full bg-[#c16b36]" style={{ width: `${count / destinations[0][1] * 100}%` }} /></div>
+                        <div className="mt-1 h-1.5 rounded-full bg-[#f0e8dd]"><div className="h-full rounded-full bg-[#ed7936]" style={{ width: `${count / destinations[0][1] * 100}%` }} /></div>
                     </li>)}
                 </ol> : <p className="text-sm text-[#8a7d70]">No orders in this period.</p>}
             </section>
 
-            <section className="rounded-2xl border border-[#e4d9cb] bg-[#fdfbf8] p-5">
-                <div className="mb-4 flex items-center justify-between"><h2 className="text-[11px] font-bold uppercase tracking-[.14em] text-[#8a7d70]">Discount codes used</h2><Link href="/admin/discounts" className="text-xs font-semibold text-[#a2602f]">Manage</Link></div>
+            <section className={cn(ui.card, "p-5")}>
+                <div className="mb-4 flex items-center justify-between"><h2 className="text-[11px] font-bold uppercase tracking-[.14em] text-[#8a7d70]">Discount codes used</h2><Link href="/admin/discounts" className={cn(ui.link, "font-[family-name:var(--font-album-serif)] text-sm")}>Manage</Link></div>
                 {codes.length ? <ul className="space-y-2 text-sm">
                     {codes.map(([code, count]) => <li key={code} className="flex justify-between gap-3"><span className="font-mono text-[13px]">{code}</span><span className="tabular-nums text-[#6d5c4b]">{count} {count === 1 ? "order" : "orders"}</span></li>)}
                 </ul> : <p className="text-sm text-[#8a7d70]">No codes used in this period.</p>}
-                <p className="mt-4 border-t border-[#f0e8dd] pt-3 text-xs text-[#8a7d70]">Average order: <strong className="text-[#2b1a07]">{now$.orders ? money(now$.average) : "—"}</strong></p>
+                <p className="mt-4 border-t-2 border-dashed border-[#efe6dc] pt-3 text-xs text-[#8a7d70]">Average order: <strong className="text-[#2b1a07]">{now$.orders ? money(now$.average) : "—"}</strong></p>
             </section>
 
-            <section className="rounded-2xl border border-[#e4d9cb] bg-[#fdfbf8] p-5">
+            <section className={cn(ui.card, "p-5")}>
                 <h2 className="mb-4 text-[11px] font-bold uppercase tracking-[.14em] text-[#8a7d70]">Recent activity</h2>
                 {events.length ? <ul className="space-y-3 text-sm">
                     {events.map(event => <li key={event.id} className="min-w-0">
