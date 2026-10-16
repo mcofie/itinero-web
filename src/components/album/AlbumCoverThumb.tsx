@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { coverImagePath, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
+import { coverPrintImagePath, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
 import { normalizeCoverTextColor, normalizeCoverTypeface, resolveCoverTextColor } from "@/lib/album-cover-style";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +25,7 @@ export default function AlbumCoverThumb({ coverId, title, year, typeface: rawTyp
         : typeface === "handwritten" ? "var(--font-album-hand), cursive" : "var(--font-album-round), Arial, sans-serif";
     const titleSize = title.length > 22 ? 15 : title.length > 9 ? 19 : 27;
     return <div className={cn("relative aspect-[4/5] shrink-0 overflow-hidden rounded-[3px_7px_7px_3px]", className)} style={{ background: cover.color, height }}>
-        <Image src={coverImagePath(id)} fill sizes={`${Math.ceil(height * 0.8)}px`} alt="" className="object-cover" />
+        <Image src={coverPrintImagePath(id)} fill sizes={`${Math.ceil(height * 0.8)}px`} alt="" className="object-cover" />
         <div className="absolute inset-x-0 top-0 flex h-[27%] flex-col justify-between leading-[.9] tracking-[-.05em]" style={{ color: resolveCoverTextColor(textColor, cover.color), padding: `${8 * scale}px ${12 * scale}px` }}>
             <span className="flex justify-between gap-1 font-sans font-bold tracking-[.08em] opacity-80" style={{ fontSize: Math.max(6 * scale, 3) }}><span>Itinero · travel album</span><span>{year}</span></span>
             <strong className="line-clamp-2 break-words" style={{ fontFamily: titleFont, fontWeight: 400, textTransform: typeface === "bold" ? "uppercase" : "none", lineHeight: typeface === "handwritten" ? 1.08 : .92, fontSize: titleSize * scale }}>{title}</strong>

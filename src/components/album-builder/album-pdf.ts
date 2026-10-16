@@ -1,6 +1,6 @@
 import type { AlbumLayout, AlbumPhoto } from "./album-draft";
 import { resolveCoverTextColor, type CoverTypeface } from "@/lib/album-cover-style";
-import { coverImagePath, type TravelCoverId } from "@/lib/travel-covers";
+import { coverPrintImagePath, type TravelCoverId } from "@/lib/travel-covers";
 
 // A standard 8 × 10 inch portrait proof at 300 pixels per inch.
 export const PRINT_WIDTH = 2400;
@@ -229,7 +229,7 @@ export async function createAlbumPdf(options: ExportOptions): Promise<Blob> {
         await new Promise<void>(resolve => setTimeout(resolve, 0));
     };
 
-    const coverResponse = await fetch(coverImagePath(options.coverId));
+    const coverResponse = await fetch(coverPrintImagePath(options.coverId));
     if (!coverResponse.ok) throw new Error("The selected cover could not be loaded.");
     const coverBitmap = await createImageBitmap(await coverResponse.blob());
     try {

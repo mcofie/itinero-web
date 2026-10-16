@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BookOpen, Check, ChevronLeft, ChevronRight, Download, ImagePlus, LoaderCircle, Plus, Search, Sparkles, Trash2, UploadCloud } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { COVER_COLOR_SWATCHES, COVER_TYPEFACES, DEFAULT_COVER_TEXT_COLOR, DEFAULT_COVER_TYPEFACE, normalizeCoverTextColor, normalizeCoverTypeface, resolveCoverTextColor, type CoverTypeface } from "@/lib/album-cover-style";
-import { coverImagePath, coverThumbnailPath, TRAVEL_COVERS, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
+import { coverPrintImagePath, coverThumbnailPath, TRAVEL_COVERS, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
 import { ALBUM_BUCKET, ALBUM_FORMAT } from "@/lib/album-order";
 import { formatGhs, priceBreakdown, type AlbumPricing, type PriceBreakdown } from "@/lib/album-pricing";
 import { EDITABLE_STATUSES, isOrderStatus, STATUS_INFO, type OrderStatus } from "@/lib/album-fulfilment";
@@ -34,7 +34,7 @@ function CoverPreview({ destinationId, title, year, typeface, textColor, classNa
     const heading = title.trim() || cover.country;
     return <div className={`${styles.coverPreview} ${typefaceClasses[typeface]} ${className}`} style={{ "--cover-color": cover.color, "--cover-ink": resolveCoverTextColor(textColor, cover.color) } as CSSProperties}>
         {/* The illustration remains from the country set; the title area is personalized. */}
-        <img src={coverImagePath(destinationId)} alt="" draggable={false} />
+        <img src={coverPrintImagePath(destinationId)} alt="" draggable={false} />
         <div className={styles.coverTitleArea}>
             <div className={styles.coverMeta}><span>Itinero · travel album</span><span>{year}</span></div>
             <strong data-album-cover-title className={heading.length > 22 ? styles.extraLongTitle : heading.length > 9 ? styles.longTitle : undefined}>{heading}</strong>

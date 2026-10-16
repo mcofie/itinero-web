@@ -1,207 +1,867 @@
 {
-  "/images/landing/covers/amsterdam.png": {
+  "/images/landing/covers/albania.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/amsterdam-1024-d4d5cab69cdd.webp",
-    "srcSet": "/images/landing/optimized/amsterdam-360-335a55c41b88.webp 360w, /images/landing/optimized/amsterdam-640-fbd20664847c.webp 640w, /images/landing/optimized/amsterdam-1024-d4d5cab69cdd.webp 1024w"
+    "src": "/images/landing/optimized/albania-1024-0336cdaa0d1a.webp",
+    "srcSet": "/images/landing/optimized/albania-360-3e518ca27ce3.webp 360w, /images/landing/optimized/albania-640-b8a4500f1868.webp 640w, /images/landing/optimized/albania-1024-0336cdaa0d1a.webp 1024w"
   },
-  "/images/landing/covers/austria.png": {
+  "/images/landing/covers/algeria.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/austria-1024-3a66b8acd73c.webp",
-    "srcSet": "/images/landing/optimized/austria-360-715c794247e7.webp 360w, /images/landing/optimized/austria-640-d169ede141ad.webp 640w, /images/landing/optimized/austria-1024-3a66b8acd73c.webp 1024w"
+    "src": "/images/landing/optimized/algeria-1024-d6ebe6288282.webp",
+    "srcSet": "/images/landing/optimized/algeria-360-5c14ff9f489c.webp 360w, /images/landing/optimized/algeria-640-dd582694b6e5.webp 640w, /images/landing/optimized/algeria-1024-d6ebe6288282.webp 1024w"
   },
-  "/images/landing/covers/canada.png": {
+  "/images/landing/covers/andorra.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/canada-1024-d82207ff3c44.webp",
-    "srcSet": "/images/landing/optimized/canada-360-e032ea0bfd0b.webp 360w, /images/landing/optimized/canada-640-0012db3361e3.webp 640w, /images/landing/optimized/canada-1024-d82207ff3c44.webp 1024w"
+    "src": "/images/landing/optimized/andorra-1024-f466e8adcb0c.webp",
+    "srcSet": "/images/landing/optimized/andorra-360-151338a22700.webp 360w, /images/landing/optimized/andorra-640-f3d13b98a5e0.webp 640w, /images/landing/optimized/andorra-1024-f466e8adcb0c.webp 1024w"
   },
-  "/images/landing/covers/china.png": {
+  "/images/landing/covers/angola.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/china-1024-1a633ef7b875.webp",
-    "srcSet": "/images/landing/optimized/china-360-00eb41aa9da5.webp 360w, /images/landing/optimized/china-640-b407764e619d.webp 640w, /images/landing/optimized/china-1024-1a633ef7b875.webp 1024w"
+    "src": "/images/landing/optimized/angola-1024-f8a9988a32c1.webp",
+    "srcSet": "/images/landing/optimized/angola-360-758e606d5273.webp 360w, /images/landing/optimized/angola-640-eaeb5da61652.webp 640w, /images/landing/optimized/angola-1024-f8a9988a32c1.webp 1024w"
   },
-  "/images/landing/covers/croatia.png": {
+  "/images/landing/covers/argentina.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/croatia-1024-9722856a3ed8.webp",
-    "srcSet": "/images/landing/optimized/croatia-360-45a558e4de38.webp 360w, /images/landing/optimized/croatia-640-d84d57e19921.webp 640w, /images/landing/optimized/croatia-1024-9722856a3ed8.webp 1024w"
+    "src": "/images/landing/optimized/argentina-1024-23ccad01ce87.webp",
+    "srcSet": "/images/landing/optimized/argentina-360-33f67cbc6166.webp 360w, /images/landing/optimized/argentina-640-22c808ebdf15.webp 640w, /images/landing/optimized/argentina-1024-23ccad01ce87.webp 1024w"
   },
-  "/images/landing/covers/czechia.png": {
+  "/images/landing/covers/armenia.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/czechia-1024-64aacc0faa64.webp",
-    "srcSet": "/images/landing/optimized/czechia-360-42d3adf85e6f.webp 360w, /images/landing/optimized/czechia-640-12eac139eeae.webp 640w, /images/landing/optimized/czechia-1024-64aacc0faa64.webp 1024w"
+    "src": "/images/landing/optimized/armenia-1024-b651a186a1f1.webp",
+    "srcSet": "/images/landing/optimized/armenia-360-a63f1c33e8da.webp 360w, /images/landing/optimized/armenia-640-4428bf5b3996.webp 640w, /images/landing/optimized/armenia-1024-b651a186a1f1.webp 1024w"
   },
-  "/images/landing/covers/denmark.png": {
+  "/images/landing/covers/australia.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/denmark-1024-8f83cff0c923.webp",
-    "srcSet": "/images/landing/optimized/denmark-360-0402497a81e0.webp 360w, /images/landing/optimized/denmark-640-227c18f73d04.webp 640w, /images/landing/optimized/denmark-1024-8f83cff0c923.webp 1024w"
+    "src": "/images/landing/optimized/australia-1024-7a8a504906ab.webp",
+    "srcSet": "/images/landing/optimized/australia-360-83ab00a35d7a.webp 360w, /images/landing/optimized/australia-640-ead13ef117d9.webp 640w, /images/landing/optimized/australia-1024-7a8a504906ab.webp 1024w"
   },
-  "/images/landing/covers/egypt.png": {
+  "/images/landing/covers/austria.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/egypt-1024-369e8900833e.webp",
-    "srcSet": "/images/landing/optimized/egypt-360-4a8c2a1a15be.webp 360w, /images/landing/optimized/egypt-640-3e009359c31c.webp 640w, /images/landing/optimized/egypt-1024-369e8900833e.webp 1024w"
+    "src": "/images/landing/optimized/austria-1024-0415fa710ba7.webp",
+    "srcSet": "/images/landing/optimized/austria-360-29bf26f030f9.webp 360w, /images/landing/optimized/austria-640-7920ce79c25b.webp 640w, /images/landing/optimized/austria-1024-0415fa710ba7.webp 1024w"
   },
-  "/images/landing/covers/france.png": {
+  "/images/landing/covers/azerbaijan.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/france-1024-daf89c0e2f55.webp",
-    "srcSet": "/images/landing/optimized/france-360-19053c87aaa1.webp 360w, /images/landing/optimized/france-640-1dc6c7a97ffa.webp 640w, /images/landing/optimized/france-1024-daf89c0e2f55.webp 1024w"
+    "src": "/images/landing/optimized/azerbaijan-1024-7a32553200fe.webp",
+    "srcSet": "/images/landing/optimized/azerbaijan-360-95c15bc2d43e.webp 360w, /images/landing/optimized/azerbaijan-640-4bf526214568.webp 640w, /images/landing/optimized/azerbaijan-1024-7a32553200fe.webp 1024w"
   },
-  "/images/landing/covers/germany.png": {
+  "/images/landing/covers/bahamas.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/germany-1024-73d5ec05cd1f.webp",
-    "srcSet": "/images/landing/optimized/germany-360-6d6f18050dbe.webp 360w, /images/landing/optimized/germany-640-6f4f23405e6d.webp 640w, /images/landing/optimized/germany-1024-73d5ec05cd1f.webp 1024w"
+    "src": "/images/landing/optimized/bahamas-1024-751eafc04baa.webp",
+    "srcSet": "/images/landing/optimized/bahamas-360-b488cfed6b18.webp 360w, /images/landing/optimized/bahamas-640-ee41a6ebd0f4.webp 640w, /images/landing/optimized/bahamas-1024-751eafc04baa.webp 1024w"
   },
-  "/images/landing/covers/greece.png": {
+  "/images/landing/covers/bangladesh.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/greece-1024-d9a08bf51e94.webp",
-    "srcSet": "/images/landing/optimized/greece-360-2338aea5ba5d.webp 360w, /images/landing/optimized/greece-640-10545f58e5f6.webp 640w, /images/landing/optimized/greece-1024-d9a08bf51e94.webp 1024w"
+    "src": "/images/landing/optimized/bangladesh-1024-1fb0ba4b7973.webp",
+    "srcSet": "/images/landing/optimized/bangladesh-360-544dca7d847d.webp 360w, /images/landing/optimized/bangladesh-640-3c18ff6fe749.webp 640w, /images/landing/optimized/bangladesh-1024-1fb0ba4b7973.webp 1024w"
   },
-  "/images/landing/covers/india.png": {
+  "/images/landing/covers/barbados.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/india-1024-4f771c449d6a.webp",
-    "srcSet": "/images/landing/optimized/india-360-1619343e8d76.webp 360w, /images/landing/optimized/india-640-58b7c4223583.webp 640w, /images/landing/optimized/india-1024-4f771c449d6a.webp 1024w"
+    "src": "/images/landing/optimized/barbados-1024-877531b114ef.webp",
+    "srcSet": "/images/landing/optimized/barbados-360-1743f5f2d7b1.webp 360w, /images/landing/optimized/barbados-640-7b68170d0b8d.webp 640w, /images/landing/optimized/barbados-1024-877531b114ef.webp 1024w"
   },
-  "/images/landing/covers/indonesia.png": {
+  "/images/landing/covers/belarus.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/indonesia-1024-33ae98241450.webp",
-    "srcSet": "/images/landing/optimized/indonesia-360-ebac7a8a6b5f.webp 360w, /images/landing/optimized/indonesia-640-ef6de6d83e71.webp 640w, /images/landing/optimized/indonesia-1024-33ae98241450.webp 1024w"
+    "src": "/images/landing/optimized/belarus-1024-15e1ce9ce730.webp",
+    "srcSet": "/images/landing/optimized/belarus-360-f4c42a9b0a84.webp 360w, /images/landing/optimized/belarus-640-cc02f88e5842.webp 640w, /images/landing/optimized/belarus-1024-15e1ce9ce730.webp 1024w"
   },
-  "/images/landing/covers/istanbul.png": {
+  "/images/landing/covers/belgium.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/istanbul-1024-64a9b689c412.webp",
-    "srcSet": "/images/landing/optimized/istanbul-360-5fb7a47e406e.webp 360w, /images/landing/optimized/istanbul-640-81b459650143.webp 640w, /images/landing/optimized/istanbul-1024-64a9b689c412.webp 1024w"
+    "src": "/images/landing/optimized/belgium-1024-edda641b4d8a.webp",
+    "srcSet": "/images/landing/optimized/belgium-360-3650e15755cb.webp 360w, /images/landing/optimized/belgium-640-c23ffeb22d24.webp 640w, /images/landing/optimized/belgium-1024-edda641b4d8a.webp 1024w"
   },
-  "/images/landing/covers/italy.png": {
+  "/images/landing/covers/belize.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/italy-1024-f48803cfbcb7.webp",
-    "srcSet": "/images/landing/optimized/italy-360-55a1475ff386.webp 360w, /images/landing/optimized/italy-640-f0a7c751df70.webp 640w, /images/landing/optimized/italy-1024-f48803cfbcb7.webp 1024w"
+    "src": "/images/landing/optimized/belize-1024-28afe88444b3.webp",
+    "srcSet": "/images/landing/optimized/belize-360-a8e0ee4d8800.webp 360w, /images/landing/optimized/belize-640-ed62a5cae3a3.webp 640w, /images/landing/optimized/belize-1024-28afe88444b3.webp 1024w"
   },
-  "/images/landing/covers/japan.png": {
+  "/images/landing/covers/benin.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/japan-1024-8ef6ac9a607c.webp",
-    "srcSet": "/images/landing/optimized/japan-360-4a6e86cb8dbc.webp 360w, /images/landing/optimized/japan-640-489a34b23ae0.webp 640w, /images/landing/optimized/japan-1024-8ef6ac9a607c.webp 1024w"
+    "src": "/images/landing/optimized/benin-1024-497443c20644.webp",
+    "srcSet": "/images/landing/optimized/benin-360-19c8eb911380.webp 360w, /images/landing/optimized/benin-640-603bbae7595b.webp 640w, /images/landing/optimized/benin-1024-497443c20644.webp 1024w"
   },
-  "/images/landing/covers/malaysia.png": {
+  "/images/landing/covers/bhutan.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/malaysia-1024-e05a0d519a0b.webp",
-    "srcSet": "/images/landing/optimized/malaysia-360-0c82ac8c2a8f.webp 360w, /images/landing/optimized/malaysia-640-22d3e7341f31.webp 640w, /images/landing/optimized/malaysia-1024-e05a0d519a0b.webp 1024w"
+    "src": "/images/landing/optimized/bhutan-1024-bc81d721edcc.webp",
+    "srcSet": "/images/landing/optimized/bhutan-360-84d865437b03.webp 360w, /images/landing/optimized/bhutan-640-40ba10be792a.webp 640w, /images/landing/optimized/bhutan-1024-bc81d721edcc.webp 1024w"
   },
-  "/images/landing/covers/mexico.png": {
+  "/images/landing/covers/bolivia.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/mexico-1024-e53fef116192.webp",
-    "srcSet": "/images/landing/optimized/mexico-360-6c4ec7a62485.webp 360w, /images/landing/optimized/mexico-640-3473cfa66499.webp 640w, /images/landing/optimized/mexico-1024-e53fef116192.webp 1024w"
+    "src": "/images/landing/optimized/bolivia-1024-38d826ea5a54.webp",
+    "srcSet": "/images/landing/optimized/bolivia-360-127c7ccc03e0.webp 360w, /images/landing/optimized/bolivia-640-38313d433601.webp 640w, /images/landing/optimized/bolivia-1024-38d826ea5a54.webp 1024w"
   },
-  "/images/landing/covers/morocco.png": {
+  "/images/landing/covers/bosnia-and-herzegovina.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/morocco-1024-d49ccd4d1dc4.webp",
-    "srcSet": "/images/landing/optimized/morocco-360-40a704e03dc7.webp 360w, /images/landing/optimized/morocco-640-d7e990e3aa2e.webp 640w, /images/landing/optimized/morocco-1024-d49ccd4d1dc4.webp 1024w"
+    "src": "/images/landing/optimized/bosnia-and-herzegovina-1024-4d95aa663c59.webp",
+    "srcSet": "/images/landing/optimized/bosnia-and-herzegovina-360-bec8ed0c4a2d.webp 360w, /images/landing/optimized/bosnia-and-herzegovina-640-a325c7102612.webp 640w, /images/landing/optimized/bosnia-and-herzegovina-1024-4d95aa663c59.webp 1024w"
   },
-  "/images/landing/covers/netherlands.png": {
+  "/images/landing/covers/botswana.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/netherlands-1024-b0a5d8560275.webp",
-    "srcSet": "/images/landing/optimized/netherlands-360-d55a5e027efc.webp 360w, /images/landing/optimized/netherlands-640-fb50a9b2f125.webp 640w, /images/landing/optimized/netherlands-1024-b0a5d8560275.webp 1024w"
+    "src": "/images/landing/optimized/botswana-1024-866dba0f7f60.webp",
+    "srcSet": "/images/landing/optimized/botswana-360-316a0dcc6488.webp 360w, /images/landing/optimized/botswana-640-83c458b8b01e.webp 640w, /images/landing/optimized/botswana-1024-866dba0f7f60.webp 1024w"
   },
-  "/images/landing/covers/poland.png": {
+  "/images/landing/covers/brazil.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/poland-1024-2e27e02431da.webp",
-    "srcSet": "/images/landing/optimized/poland-360-32bdba87a2c4.webp 360w, /images/landing/optimized/poland-640-28c5822f89d9.webp 640w, /images/landing/optimized/poland-1024-2e27e02431da.webp 1024w"
+    "src": "/images/landing/optimized/brazil-1024-5de47a4919d3.webp",
+    "srcSet": "/images/landing/optimized/brazil-360-b69b05075450.webp 360w, /images/landing/optimized/brazil-640-bb516f9cbb0a.webp 640w, /images/landing/optimized/brazil-1024-5de47a4919d3.webp 1024w"
   },
-  "/images/landing/covers/portugal.png": {
+  "/images/landing/covers/brunei.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/portugal-1024-a5262edc11ad.webp",
-    "srcSet": "/images/landing/optimized/portugal-360-9dad17e0021a.webp 360w, /images/landing/optimized/portugal-640-e5bf0eba7e29.webp 640w, /images/landing/optimized/portugal-1024-a5262edc11ad.webp 1024w"
+    "src": "/images/landing/optimized/brunei-1024-d011533dfe15.webp",
+    "srcSet": "/images/landing/optimized/brunei-360-5ca399f0929e.webp 360w, /images/landing/optimized/brunei-640-938e0e0174da.webp 640w, /images/landing/optimized/brunei-1024-d011533dfe15.webp 1024w"
   },
-  "/images/landing/covers/rome.png": {
+  "/images/landing/covers/bulgaria.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/rome-1024-d4f01a6edfd3.webp",
-    "srcSet": "/images/landing/optimized/rome-360-c7e7135ea610.webp 360w, /images/landing/optimized/rome-640-0ad731d907c7.webp 640w, /images/landing/optimized/rome-1024-d4f01a6edfd3.webp 1024w"
+    "src": "/images/landing/optimized/bulgaria-1024-4693070d8cce.webp",
+    "srcSet": "/images/landing/optimized/bulgaria-360-17282083a92b.webp 360w, /images/landing/optimized/bulgaria-640-bb515efd84d8.webp 640w, /images/landing/optimized/bulgaria-1024-4693070d8cce.webp 1024w"
   },
-  "/images/landing/covers/russia.png": {
+  "/images/landing/covers/cambodia.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/russia-1024-fc6acb4ce275.webp",
-    "srcSet": "/images/landing/optimized/russia-360-7f96ce44128d.webp 360w, /images/landing/optimized/russia-640-2d9a9ff9793d.webp 640w, /images/landing/optimized/russia-1024-fc6acb4ce275.webp 1024w"
+    "src": "/images/landing/optimized/cambodia-1024-413e10365705.webp",
+    "srcSet": "/images/landing/optimized/cambodia-360-1920befc439e.webp 360w, /images/landing/optimized/cambodia-640-ef1200c1e787.webp 640w, /images/landing/optimized/cambodia-1024-413e10365705.webp 1024w"
   },
-  "/images/landing/covers/saudi-arabia.png": {
+  "/images/landing/covers/cameroon.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/saudi-arabia-1024-f4bc8abafc41.webp",
-    "srcSet": "/images/landing/optimized/saudi-arabia-360-a9df177591c5.webp 360w, /images/landing/optimized/saudi-arabia-640-ac422a158262.webp 640w, /images/landing/optimized/saudi-arabia-1024-f4bc8abafc41.webp 1024w"
+    "src": "/images/landing/optimized/cameroon-1024-2770e1d9eefb.webp",
+    "srcSet": "/images/landing/optimized/cameroon-360-e2630a127b6a.webp 360w, /images/landing/optimized/cameroon-640-b6adea696a25.webp 640w, /images/landing/optimized/cameroon-1024-2770e1d9eefb.webp 1024w"
   },
-  "/images/landing/covers/south-korea.png": {
+  "/images/landing/covers/canada.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/south-korea-1024-e83f073dcf7d.webp",
-    "srcSet": "/images/landing/optimized/south-korea-360-a4f405db6fa2.webp 360w, /images/landing/optimized/south-korea-640-b050bce76968.webp 640w, /images/landing/optimized/south-korea-1024-e83f073dcf7d.webp 1024w"
+    "src": "/images/landing/optimized/canada-1024-210a9fbb6eb6.webp",
+    "srcSet": "/images/landing/optimized/canada-360-9b02bb3a7f2c.webp 360w, /images/landing/optimized/canada-640-7163a3708435.webp 640w, /images/landing/optimized/canada-1024-210a9fbb6eb6.webp 1024w"
   },
-  "/images/landing/covers/spain.png": {
+  "/images/landing/covers/cape-verde.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/spain-1024-171b72a874ad.webp",
-    "srcSet": "/images/landing/optimized/spain-360-0e54d28dda9c.webp 360w, /images/landing/optimized/spain-640-755e8309a6fd.webp 640w, /images/landing/optimized/spain-1024-171b72a874ad.webp 1024w"
+    "src": "/images/landing/optimized/cape-verde-1024-42217e1e78d0.webp",
+    "srcSet": "/images/landing/optimized/cape-verde-360-58ba57e00294.webp 360w, /images/landing/optimized/cape-verde-640-d4b8c78bf948.webp 640w, /images/landing/optimized/cape-verde-1024-42217e1e78d0.webp 1024w"
   },
-  "/images/landing/covers/thailand.png": {
+  "/images/landing/covers/chile.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/thailand-1024-215fd8e2203e.webp",
-    "srcSet": "/images/landing/optimized/thailand-360-555d4238ee3f.webp 360w, /images/landing/optimized/thailand-640-cf311d05d072.webp 640w, /images/landing/optimized/thailand-1024-215fd8e2203e.webp 1024w"
+    "src": "/images/landing/optimized/chile-1024-dcb796f2a874.webp",
+    "srcSet": "/images/landing/optimized/chile-360-cc6cdae10055.webp 360w, /images/landing/optimized/chile-640-409e774bcc52.webp 640w, /images/landing/optimized/chile-1024-dcb796f2a874.webp 1024w"
   },
-  "/images/landing/covers/tokyo.png": {
+  "/images/landing/covers/china.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/tokyo-1024-54e2ccb9f9ef.webp",
-    "srcSet": "/images/landing/optimized/tokyo-360-fdb4b452fe34.webp 360w, /images/landing/optimized/tokyo-640-a22a3cdb2eec.webp 640w, /images/landing/optimized/tokyo-1024-54e2ccb9f9ef.webp 1024w"
+    "src": "/images/landing/optimized/china-1024-3c4c722e7606.webp",
+    "srcSet": "/images/landing/optimized/china-360-4c63a20a4638.webp 360w, /images/landing/optimized/china-640-8fec00950102.webp 640w, /images/landing/optimized/china-1024-3c4c722e7606.webp 1024w"
   },
-  "/images/landing/covers/turkey.png": {
+  "/images/landing/covers/colombia.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/turkey-1024-3bc052668d1d.webp",
-    "srcSet": "/images/landing/optimized/turkey-360-1383ee7425fa.webp 360w, /images/landing/optimized/turkey-640-bb834da97e12.webp 640w, /images/landing/optimized/turkey-1024-3bc052668d1d.webp 1024w"
+    "src": "/images/landing/optimized/colombia-1024-ad01059b2a8f.webp",
+    "srcSet": "/images/landing/optimized/colombia-360-5774d1a7bc00.webp 360w, /images/landing/optimized/colombia-640-6d0eef10066c.webp 640w, /images/landing/optimized/colombia-1024-ad01059b2a8f.webp 1024w"
   },
-  "/images/landing/covers/uae.png": {
+  "/images/landing/covers/costa-rica.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/uae-1024-620c23e3899f.webp",
-    "srcSet": "/images/landing/optimized/uae-360-adabb318f17f.webp 360w, /images/landing/optimized/uae-640-d10e847f9764.webp 640w, /images/landing/optimized/uae-1024-620c23e3899f.webp 1024w"
+    "src": "/images/landing/optimized/costa-rica-1024-f07c16b23922.webp",
+    "srcSet": "/images/landing/optimized/costa-rica-360-a53e397225f7.webp 360w, /images/landing/optimized/costa-rica-640-647bb8d1228f.webp 640w, /images/landing/optimized/costa-rica-1024-f07c16b23922.webp 1024w"
   },
-  "/images/landing/covers/uk.png": {
+  "/images/landing/covers/cote-divoire.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/uk-1024-d0eee6ffa159.webp",
-    "srcSet": "/images/landing/optimized/uk-360-7f4c7bcc7018.webp 360w, /images/landing/optimized/uk-640-d7f047f11a81.webp 640w, /images/landing/optimized/uk-1024-d0eee6ffa159.webp 1024w"
+    "src": "/images/landing/optimized/cote-divoire-1024-3979cc8f2b64.webp",
+    "srcSet": "/images/landing/optimized/cote-divoire-360-76e28ec5476d.webp 360w, /images/landing/optimized/cote-divoire-640-9b4426169dce.webp 640w, /images/landing/optimized/cote-divoire-1024-3979cc8f2b64.webp 1024w"
   },
-  "/images/landing/covers/usa.png": {
+  "/images/landing/covers/croatia.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/usa-1024-89862648fe32.webp",
-    "srcSet": "/images/landing/optimized/usa-360-7c6fdf2c9e55.webp 360w, /images/landing/optimized/usa-640-f068e1e02523.webp 640w, /images/landing/optimized/usa-1024-89862648fe32.webp 1024w"
+    "src": "/images/landing/optimized/croatia-1024-40534f6c4385.webp",
+    "srcSet": "/images/landing/optimized/croatia-360-6f5471a8f299.webp 360w, /images/landing/optimized/croatia-640-01167736d107.webp 640w, /images/landing/optimized/croatia-1024-40534f6c4385.webp 1024w"
   },
-  "/images/landing/covers/vietnam.png": {
+  "/images/landing/covers/cuba.webp": {
     "width": 1024,
     "height": 1536,
-    "src": "/images/landing/optimized/vietnam-1024-4e0609f7be80.webp",
-    "srcSet": "/images/landing/optimized/vietnam-360-9789d918b874.webp 360w, /images/landing/optimized/vietnam-640-80bfa69d88a4.webp 640w, /images/landing/optimized/vietnam-1024-4e0609f7be80.webp 1024w"
+    "src": "/images/landing/optimized/cuba-1024-727703b2eb4a.webp",
+    "srcSet": "/images/landing/optimized/cuba-360-8e3751e2c899.webp 360w, /images/landing/optimized/cuba-640-f2f948b48e88.webp 640w, /images/landing/optimized/cuba-1024-727703b2eb4a.webp 1024w"
+  },
+  "/images/landing/covers/cyprus.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/cyprus-1024-8de76cee81e4.webp",
+    "srcSet": "/images/landing/optimized/cyprus-360-71642e94be9d.webp 360w, /images/landing/optimized/cyprus-640-e26423afd3f2.webp 640w, /images/landing/optimized/cyprus-1024-8de76cee81e4.webp 1024w"
+  },
+  "/images/landing/covers/czechia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/czechia-1024-e1a7f77cd421.webp",
+    "srcSet": "/images/landing/optimized/czechia-360-ff9d7dfdbe3f.webp 360w, /images/landing/optimized/czechia-640-e1bc5bdb49a4.webp 640w, /images/landing/optimized/czechia-1024-e1a7f77cd421.webp 1024w"
+  },
+  "/images/landing/covers/denmark.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/denmark-1024-b591ce95a5c0.webp",
+    "srcSet": "/images/landing/optimized/denmark-360-53e16f32cee4.webp 360w, /images/landing/optimized/denmark-640-54e9646f4623.webp 640w, /images/landing/optimized/denmark-1024-b591ce95a5c0.webp 1024w"
+  },
+  "/images/landing/covers/dominican-republic.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/dominican-republic-1024-697d7129b904.webp",
+    "srcSet": "/images/landing/optimized/dominican-republic-360-bd5918b8308d.webp 360w, /images/landing/optimized/dominican-republic-640-d117b8b9578e.webp 640w, /images/landing/optimized/dominican-republic-1024-697d7129b904.webp 1024w"
+  },
+  "/images/landing/covers/ecuador.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/ecuador-1024-c6294aafaac7.webp",
+    "srcSet": "/images/landing/optimized/ecuador-360-de2ce6fd8aaf.webp 360w, /images/landing/optimized/ecuador-640-0d7b2794a6b5.webp 640w, /images/landing/optimized/ecuador-1024-c6294aafaac7.webp 1024w"
+  },
+  "/images/landing/covers/egypt.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/egypt-1024-3792c9ce4879.webp",
+    "srcSet": "/images/landing/optimized/egypt-360-fcfbd1f53d34.webp 360w, /images/landing/optimized/egypt-640-84039ca57682.webp 640w, /images/landing/optimized/egypt-1024-3792c9ce4879.webp 1024w"
+  },
+  "/images/landing/covers/estonia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/estonia-1024-05f6e99dd3ac.webp",
+    "srcSet": "/images/landing/optimized/estonia-360-f613a7fc5346.webp 360w, /images/landing/optimized/estonia-640-535739954556.webp 640w, /images/landing/optimized/estonia-1024-05f6e99dd3ac.webp 1024w"
+  },
+  "/images/landing/covers/ethiopia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/ethiopia-1024-62e89cfa5a68.webp",
+    "srcSet": "/images/landing/optimized/ethiopia-360-fd7e000a0ba6.webp 360w, /images/landing/optimized/ethiopia-640-4de9bd923000.webp 640w, /images/landing/optimized/ethiopia-1024-62e89cfa5a68.webp 1024w"
+  },
+  "/images/landing/covers/fiji.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/fiji-1024-70723d33384e.webp",
+    "srcSet": "/images/landing/optimized/fiji-360-46d268a2a5d7.webp 360w, /images/landing/optimized/fiji-640-0fbbbab9f17b.webp 640w, /images/landing/optimized/fiji-1024-70723d33384e.webp 1024w"
+  },
+  "/images/landing/covers/finland.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/finland-1024-426473007f96.webp",
+    "srcSet": "/images/landing/optimized/finland-360-f75858bcdb42.webp 360w, /images/landing/optimized/finland-640-20c86424418d.webp 640w, /images/landing/optimized/finland-1024-426473007f96.webp 1024w"
+  },
+  "/images/landing/covers/france.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/france-1024-53b6c877f4b2.webp",
+    "srcSet": "/images/landing/optimized/france-360-8787327ec688.webp 360w, /images/landing/optimized/france-640-262f96fe8e05.webp 640w, /images/landing/optimized/france-1024-53b6c877f4b2.webp 1024w"
+  },
+  "/images/landing/covers/gabon.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/gabon-1024-0a9f7ecbb402.webp",
+    "srcSet": "/images/landing/optimized/gabon-360-601bc11ef002.webp 360w, /images/landing/optimized/gabon-640-5de893c49a08.webp 640w, /images/landing/optimized/gabon-1024-0a9f7ecbb402.webp 1024w"
+  },
+  "/images/landing/covers/gambia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/gambia-1024-8a654cafed5b.webp",
+    "srcSet": "/images/landing/optimized/gambia-360-0a9907a0f6c3.webp 360w, /images/landing/optimized/gambia-640-8237a0877e44.webp 640w, /images/landing/optimized/gambia-1024-8a654cafed5b.webp 1024w"
+  },
+  "/images/landing/covers/georgia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/georgia-1024-243c7211fbc5.webp",
+    "srcSet": "/images/landing/optimized/georgia-360-3a27c67f6d52.webp 360w, /images/landing/optimized/georgia-640-95581c4cc7ce.webp 640w, /images/landing/optimized/georgia-1024-243c7211fbc5.webp 1024w"
+  },
+  "/images/landing/covers/germany.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/germany-1024-c1254f37cc54.webp",
+    "srcSet": "/images/landing/optimized/germany-360-4acd70525d7c.webp 360w, /images/landing/optimized/germany-640-adef29ecf7e5.webp 640w, /images/landing/optimized/germany-1024-c1254f37cc54.webp 1024w"
+  },
+  "/images/landing/covers/ghana.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/ghana-1024-92e123e82c2b.webp",
+    "srcSet": "/images/landing/optimized/ghana-360-fcb1da86101b.webp 360w, /images/landing/optimized/ghana-640-2cdb17127981.webp 640w, /images/landing/optimized/ghana-1024-92e123e82c2b.webp 1024w"
+  },
+  "/images/landing/covers/greece.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/greece-1024-f27e42548315.webp",
+    "srcSet": "/images/landing/optimized/greece-360-ddb5bc29f2d0.webp 360w, /images/landing/optimized/greece-640-d9fde36942ff.webp 640w, /images/landing/optimized/greece-1024-f27e42548315.webp 1024w"
+  },
+  "/images/landing/covers/guatemala.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/guatemala-1024-fcf70fd920e8.webp",
+    "srcSet": "/images/landing/optimized/guatemala-360-2a1b214c144a.webp 360w, /images/landing/optimized/guatemala-640-bcc31cfa171b.webp 640w, /images/landing/optimized/guatemala-1024-fcf70fd920e8.webp 1024w"
+  },
+  "/images/landing/covers/hungary.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/hungary-1024-b3f00bed997a.webp",
+    "srcSet": "/images/landing/optimized/hungary-360-8350b52b8f71.webp 360w, /images/landing/optimized/hungary-640-93d87ef5bd1e.webp 640w, /images/landing/optimized/hungary-1024-b3f00bed997a.webp 1024w"
+  },
+  "/images/landing/covers/iceland.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/iceland-1024-6c0f4f10ae4a.webp",
+    "srcSet": "/images/landing/optimized/iceland-360-da6e38f36b55.webp 360w, /images/landing/optimized/iceland-640-4993d94a5742.webp 640w, /images/landing/optimized/iceland-1024-6c0f4f10ae4a.webp 1024w"
+  },
+  "/images/landing/covers/india.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/india-1024-ec1fc49ac77f.webp",
+    "srcSet": "/images/landing/optimized/india-360-08bd50bca43c.webp 360w, /images/landing/optimized/india-640-961416b37ed8.webp 640w, /images/landing/optimized/india-1024-ec1fc49ac77f.webp 1024w"
+  },
+  "/images/landing/covers/indonesia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/indonesia-1024-c1092803fff3.webp",
+    "srcSet": "/images/landing/optimized/indonesia-360-30b95623c6dc.webp 360w, /images/landing/optimized/indonesia-640-9faf56fe4e8c.webp 640w, /images/landing/optimized/indonesia-1024-c1092803fff3.webp 1024w"
+  },
+  "/images/landing/covers/iran.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/iran-1024-801a3fc52ff3.webp",
+    "srcSet": "/images/landing/optimized/iran-360-f8a55b26d13f.webp 360w, /images/landing/optimized/iran-640-233f08113d8e.webp 640w, /images/landing/optimized/iran-1024-801a3fc52ff3.webp 1024w"
+  },
+  "/images/landing/covers/ireland.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/ireland-1024-af6bca5d9663.webp",
+    "srcSet": "/images/landing/optimized/ireland-360-d33ef2f04890.webp 360w, /images/landing/optimized/ireland-640-97b2b693a55d.webp 640w, /images/landing/optimized/ireland-1024-af6bca5d9663.webp 1024w"
+  },
+  "/images/landing/covers/italy.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/italy-1024-9daa73a77f8b.webp",
+    "srcSet": "/images/landing/optimized/italy-360-438bba5d9684.webp 360w, /images/landing/optimized/italy-640-19af59cebbec.webp 640w, /images/landing/optimized/italy-1024-9daa73a77f8b.webp 1024w"
+  },
+  "/images/landing/covers/jamaica.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/jamaica-1024-3121f87e680c.webp",
+    "srcSet": "/images/landing/optimized/jamaica-360-cdd7ec1df635.webp 360w, /images/landing/optimized/jamaica-640-3cf535a2d68a.webp 640w, /images/landing/optimized/jamaica-1024-3121f87e680c.webp 1024w"
+  },
+  "/images/landing/covers/japan.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/japan-1024-43b6ab4d91b1.webp",
+    "srcSet": "/images/landing/optimized/japan-360-3a56412821e5.webp 360w, /images/landing/optimized/japan-640-38b0a0557c98.webp 640w, /images/landing/optimized/japan-1024-43b6ab4d91b1.webp 1024w"
+  },
+  "/images/landing/covers/jordan.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/jordan-1024-e06ab4e726ea.webp",
+    "srcSet": "/images/landing/optimized/jordan-360-497c49f15e53.webp 360w, /images/landing/optimized/jordan-640-c5abf0aaa60b.webp 640w, /images/landing/optimized/jordan-1024-e06ab4e726ea.webp 1024w"
+  },
+  "/images/landing/covers/kazakhstan.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/kazakhstan-1024-14f105ff54b1.webp",
+    "srcSet": "/images/landing/optimized/kazakhstan-360-dd21b4aacde2.webp 360w, /images/landing/optimized/kazakhstan-640-8b59db35e01f.webp 640w, /images/landing/optimized/kazakhstan-1024-14f105ff54b1.webp 1024w"
+  },
+  "/images/landing/covers/kenya.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/kenya-1024-e60cdbbba916.webp",
+    "srcSet": "/images/landing/optimized/kenya-360-ddf37a0d36c6.webp 360w, /images/landing/optimized/kenya-640-198936cf637e.webp 640w, /images/landing/optimized/kenya-1024-e60cdbbba916.webp 1024w"
+  },
+  "/images/landing/covers/kyrgyzstan.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/kyrgyzstan-1024-8800ecc09e5e.webp",
+    "srcSet": "/images/landing/optimized/kyrgyzstan-360-e877ad78ae82.webp 360w, /images/landing/optimized/kyrgyzstan-640-0195d527514d.webp 640w, /images/landing/optimized/kyrgyzstan-1024-8800ecc09e5e.webp 1024w"
+  },
+  "/images/landing/covers/laos.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/laos-1024-4023a42518e0.webp",
+    "srcSet": "/images/landing/optimized/laos-360-9578c7b49e77.webp 360w, /images/landing/optimized/laos-640-605cbe97e823.webp 640w, /images/landing/optimized/laos-1024-4023a42518e0.webp 1024w"
+  },
+  "/images/landing/covers/latvia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/latvia-1024-764abd70e8e4.webp",
+    "srcSet": "/images/landing/optimized/latvia-360-509d2806d495.webp 360w, /images/landing/optimized/latvia-640-6d66b9715733.webp 640w, /images/landing/optimized/latvia-1024-764abd70e8e4.webp 1024w"
+  },
+  "/images/landing/covers/lebanon.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/lebanon-1024-b0a1757d8f64.webp",
+    "srcSet": "/images/landing/optimized/lebanon-360-7d711201809d.webp 360w, /images/landing/optimized/lebanon-640-7113e8a5deb4.webp 640w, /images/landing/optimized/lebanon-1024-b0a1757d8f64.webp 1024w"
+  },
+  "/images/landing/covers/liechtenstein.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/liechtenstein-1024-e673e1752ab5.webp",
+    "srcSet": "/images/landing/optimized/liechtenstein-360-136fd8218565.webp 360w, /images/landing/optimized/liechtenstein-640-6605ac9e6a76.webp 640w, /images/landing/optimized/liechtenstein-1024-e673e1752ab5.webp 1024w"
+  },
+  "/images/landing/covers/lithuania.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/lithuania-1024-8bd18fcec216.webp",
+    "srcSet": "/images/landing/optimized/lithuania-360-5b5a20e8a023.webp 360w, /images/landing/optimized/lithuania-640-12e0dc9cc66a.webp 640w, /images/landing/optimized/lithuania-1024-8bd18fcec216.webp 1024w"
+  },
+  "/images/landing/covers/luxembourg.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/luxembourg-1024-df462df59939.webp",
+    "srcSet": "/images/landing/optimized/luxembourg-360-0581bed2d5f7.webp 360w, /images/landing/optimized/luxembourg-640-5e4ae483a198.webp 640w, /images/landing/optimized/luxembourg-1024-df462df59939.webp 1024w"
+  },
+  "/images/landing/covers/madagascar.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/madagascar-1024-11645b3cdbce.webp",
+    "srcSet": "/images/landing/optimized/madagascar-360-48280cffd2a1.webp 360w, /images/landing/optimized/madagascar-640-24090a47f7b3.webp 640w, /images/landing/optimized/madagascar-1024-11645b3cdbce.webp 1024w"
+  },
+  "/images/landing/covers/malawi.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/malawi-1024-64470530eb92.webp",
+    "srcSet": "/images/landing/optimized/malawi-360-941715ddeb71.webp 360w, /images/landing/optimized/malawi-640-ab4d9b5ca1b4.webp 640w, /images/landing/optimized/malawi-1024-64470530eb92.webp 1024w"
+  },
+  "/images/landing/covers/malaysia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/malaysia-1024-44bb57f9ddcd.webp",
+    "srcSet": "/images/landing/optimized/malaysia-360-896ff18bf6e8.webp 360w, /images/landing/optimized/malaysia-640-8a4a6d62c07a.webp 640w, /images/landing/optimized/malaysia-1024-44bb57f9ddcd.webp 1024w"
+  },
+  "/images/landing/covers/maldives.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/maldives-1024-8f82280c8c64.webp",
+    "srcSet": "/images/landing/optimized/maldives-360-8886a78e3fb9.webp 360w, /images/landing/optimized/maldives-640-b5064c5b8cbc.webp 640w, /images/landing/optimized/maldives-1024-8f82280c8c64.webp 1024w"
+  },
+  "/images/landing/covers/malta.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/malta-1024-7df3ab422dcd.webp",
+    "srcSet": "/images/landing/optimized/malta-360-6e5a3f0ff409.webp 360w, /images/landing/optimized/malta-640-32b7de04829f.webp 640w, /images/landing/optimized/malta-1024-7df3ab422dcd.webp 1024w"
+  },
+  "/images/landing/covers/mauritius.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/mauritius-1024-ef6574ceac18.webp",
+    "srcSet": "/images/landing/optimized/mauritius-360-78b4fd29b43d.webp 360w, /images/landing/optimized/mauritius-640-6d280ca369e5.webp 640w, /images/landing/optimized/mauritius-1024-ef6574ceac18.webp 1024w"
+  },
+  "/images/landing/covers/mexico.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/mexico-1024-c0ac1d40efb9.webp",
+    "srcSet": "/images/landing/optimized/mexico-360-3a5f7f76fae3.webp 360w, /images/landing/optimized/mexico-640-ee0eb7c4783a.webp 640w, /images/landing/optimized/mexico-1024-c0ac1d40efb9.webp 1024w"
+  },
+  "/images/landing/covers/moldova.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/moldova-1024-59f1e65739e1.webp",
+    "srcSet": "/images/landing/optimized/moldova-360-336dce584384.webp 360w, /images/landing/optimized/moldova-640-3b016bfb590d.webp 640w, /images/landing/optimized/moldova-1024-59f1e65739e1.webp 1024w"
+  },
+  "/images/landing/covers/monaco.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/monaco-1024-129bdc54c0cd.webp",
+    "srcSet": "/images/landing/optimized/monaco-360-22dd9fb73224.webp 360w, /images/landing/optimized/monaco-640-2133dfa02883.webp 640w, /images/landing/optimized/monaco-1024-129bdc54c0cd.webp 1024w"
+  },
+  "/images/landing/covers/mongolia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/mongolia-1024-2187b160094f.webp",
+    "srcSet": "/images/landing/optimized/mongolia-360-aaedb6ac3f5a.webp 360w, /images/landing/optimized/mongolia-640-104855678bec.webp 640w, /images/landing/optimized/mongolia-1024-2187b160094f.webp 1024w"
+  },
+  "/images/landing/covers/montenegro.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/montenegro-1024-c907020a2038.webp",
+    "srcSet": "/images/landing/optimized/montenegro-360-1b3bc55ec189.webp 360w, /images/landing/optimized/montenegro-640-602a61d3a87a.webp 640w, /images/landing/optimized/montenegro-1024-c907020a2038.webp 1024w"
+  },
+  "/images/landing/covers/morocco.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/morocco-1024-18a8cd237718.webp",
+    "srcSet": "/images/landing/optimized/morocco-360-eb8ba58fc0f7.webp 360w, /images/landing/optimized/morocco-640-cc03016be195.webp 640w, /images/landing/optimized/morocco-1024-18a8cd237718.webp 1024w"
+  },
+  "/images/landing/covers/mozambique.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/mozambique-1024-77660efcbaf9.webp",
+    "srcSet": "/images/landing/optimized/mozambique-360-1c9fef2f4998.webp 360w, /images/landing/optimized/mozambique-640-6c4f94629a74.webp 640w, /images/landing/optimized/mozambique-1024-77660efcbaf9.webp 1024w"
+  },
+  "/images/landing/covers/myanmar.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/myanmar-1024-f52bca433e37.webp",
+    "srcSet": "/images/landing/optimized/myanmar-360-04aa98121ad0.webp 360w, /images/landing/optimized/myanmar-640-a9424512e05b.webp 640w, /images/landing/optimized/myanmar-1024-f52bca433e37.webp 1024w"
+  },
+  "/images/landing/covers/namibia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/namibia-1024-8cef9b9b126b.webp",
+    "srcSet": "/images/landing/optimized/namibia-360-4aa97e0ab498.webp 360w, /images/landing/optimized/namibia-640-851afd063c38.webp 640w, /images/landing/optimized/namibia-1024-8cef9b9b126b.webp 1024w"
+  },
+  "/images/landing/covers/nepal.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/nepal-1024-52b396d25aca.webp",
+    "srcSet": "/images/landing/optimized/nepal-360-a1bbc4f4f3cf.webp 360w, /images/landing/optimized/nepal-640-2ff893320693.webp 640w, /images/landing/optimized/nepal-1024-52b396d25aca.webp 1024w"
+  },
+  "/images/landing/covers/netherlands.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/netherlands-1024-3475ef03811c.webp",
+    "srcSet": "/images/landing/optimized/netherlands-360-8b072626ea33.webp 360w, /images/landing/optimized/netherlands-640-5352d2cc796f.webp 640w, /images/landing/optimized/netherlands-1024-3475ef03811c.webp 1024w"
+  },
+  "/images/landing/covers/new-zealand.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/new-zealand-1024-6158b4fcc7ed.webp",
+    "srcSet": "/images/landing/optimized/new-zealand-360-3b40633cb4f5.webp 360w, /images/landing/optimized/new-zealand-640-2d1bfbb70804.webp 640w, /images/landing/optimized/new-zealand-1024-6158b4fcc7ed.webp 1024w"
+  },
+  "/images/landing/covers/nicaragua.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/nicaragua-1024-200d1809073a.webp",
+    "srcSet": "/images/landing/optimized/nicaragua-360-8fe265fd5765.webp 360w, /images/landing/optimized/nicaragua-640-4c8a57a56a58.webp 640w, /images/landing/optimized/nicaragua-1024-200d1809073a.webp 1024w"
+  },
+  "/images/landing/covers/nigeria.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/nigeria-1024-42d16e00fdb9.webp",
+    "srcSet": "/images/landing/optimized/nigeria-360-4f409e773eac.webp 360w, /images/landing/optimized/nigeria-640-a00d836bf8d6.webp 640w, /images/landing/optimized/nigeria-1024-42d16e00fdb9.webp 1024w"
+  },
+  "/images/landing/covers/north-macedonia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/north-macedonia-1024-a8d68326844d.webp",
+    "srcSet": "/images/landing/optimized/north-macedonia-360-3924669e5f31.webp 360w, /images/landing/optimized/north-macedonia-640-c76e61070ed6.webp 640w, /images/landing/optimized/north-macedonia-1024-a8d68326844d.webp 1024w"
+  },
+  "/images/landing/covers/norway.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/norway-1024-4072db98198a.webp",
+    "srcSet": "/images/landing/optimized/norway-360-43a000a3c646.webp 360w, /images/landing/optimized/norway-640-18dfd4b880f6.webp 640w, /images/landing/optimized/norway-1024-4072db98198a.webp 1024w"
+  },
+  "/images/landing/covers/oman.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/oman-1024-3ecb1e1b8645.webp",
+    "srcSet": "/images/landing/optimized/oman-360-1dc556477b17.webp 360w, /images/landing/optimized/oman-640-4ecfa602c4f6.webp 640w, /images/landing/optimized/oman-1024-3ecb1e1b8645.webp 1024w"
+  },
+  "/images/landing/covers/pakistan.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/pakistan-1024-807d5c917d7d.webp",
+    "srcSet": "/images/landing/optimized/pakistan-360-a0a2960c24c9.webp 360w, /images/landing/optimized/pakistan-640-773d01d4ac27.webp 640w, /images/landing/optimized/pakistan-1024-807d5c917d7d.webp 1024w"
+  },
+  "/images/landing/covers/palau.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/palau-1024-d626f47f3dfc.webp",
+    "srcSet": "/images/landing/optimized/palau-360-d3302d5b892d.webp 360w, /images/landing/optimized/palau-640-4f452ae09e90.webp 640w, /images/landing/optimized/palau-1024-d626f47f3dfc.webp 1024w"
+  },
+  "/images/landing/covers/palestine.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/palestine-1024-1813ad36c7ca.webp",
+    "srcSet": "/images/landing/optimized/palestine-360-f7c277b184a8.webp 360w, /images/landing/optimized/palestine-640-65ead40ed9d1.webp 640w, /images/landing/optimized/palestine-1024-1813ad36c7ca.webp 1024w"
+  },
+  "/images/landing/covers/panama.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/panama-1024-31e12765ba64.webp",
+    "srcSet": "/images/landing/optimized/panama-360-2231428f11cc.webp 360w, /images/landing/optimized/panama-640-1be85c8ded4f.webp 640w, /images/landing/optimized/panama-1024-31e12765ba64.webp 1024w"
+  },
+  "/images/landing/covers/papua-new-guinea.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/papua-new-guinea-1024-f47c8761c228.webp",
+    "srcSet": "/images/landing/optimized/papua-new-guinea-360-fc15be37fc8b.webp 360w, /images/landing/optimized/papua-new-guinea-640-5632d30762b1.webp 640w, /images/landing/optimized/papua-new-guinea-1024-f47c8761c228.webp 1024w"
+  },
+  "/images/landing/covers/paraguay.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/paraguay-1024-59c77e4363a7.webp",
+    "srcSet": "/images/landing/optimized/paraguay-360-956499549c06.webp 360w, /images/landing/optimized/paraguay-640-4d5e22bc3622.webp 640w, /images/landing/optimized/paraguay-1024-59c77e4363a7.webp 1024w"
+  },
+  "/images/landing/covers/peru.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/peru-1024-74152c4de72f.webp",
+    "srcSet": "/images/landing/optimized/peru-360-7e240b386e19.webp 360w, /images/landing/optimized/peru-640-560f46680a5c.webp 640w, /images/landing/optimized/peru-1024-74152c4de72f.webp 1024w"
+  },
+  "/images/landing/covers/philippines.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/philippines-1024-be6c5401e6cf.webp",
+    "srcSet": "/images/landing/optimized/philippines-360-88844db48bd0.webp 360w, /images/landing/optimized/philippines-640-7bc78af48b67.webp 640w, /images/landing/optimized/philippines-1024-be6c5401e6cf.webp 1024w"
+  },
+  "/images/landing/covers/poland.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/poland-1024-91bbd48999a3.webp",
+    "srcSet": "/images/landing/optimized/poland-360-0f8fda6ab301.webp 360w, /images/landing/optimized/poland-640-533a5bb94261.webp 640w, /images/landing/optimized/poland-1024-91bbd48999a3.webp 1024w"
+  },
+  "/images/landing/covers/portugal.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/portugal-1024-396ea0352ed0.webp",
+    "srcSet": "/images/landing/optimized/portugal-360-0cb5bb8edb9c.webp 360w, /images/landing/optimized/portugal-640-3f7bbd6b5b36.webp 640w, /images/landing/optimized/portugal-1024-396ea0352ed0.webp 1024w"
+  },
+  "/images/landing/covers/qatar.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/qatar-1024-4d99f613eccb.webp",
+    "srcSet": "/images/landing/optimized/qatar-360-7c7fb97f85ce.webp 360w, /images/landing/optimized/qatar-640-3719ad5b3a76.webp 640w, /images/landing/optimized/qatar-1024-4d99f613eccb.webp 1024w"
+  },
+  "/images/landing/covers/romania.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/romania-1024-dfab7861defa.webp",
+    "srcSet": "/images/landing/optimized/romania-360-4a3dd6b3de30.webp 360w, /images/landing/optimized/romania-640-aa9ffbf11ea0.webp 640w, /images/landing/optimized/romania-1024-dfab7861defa.webp 1024w"
+  },
+  "/images/landing/covers/russia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/russia-1024-e24c8d941c91.webp",
+    "srcSet": "/images/landing/optimized/russia-360-9fa77d190a94.webp 360w, /images/landing/optimized/russia-640-43b8d469d7d4.webp 640w, /images/landing/optimized/russia-1024-e24c8d941c91.webp 1024w"
+  },
+  "/images/landing/covers/rwanda.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/rwanda-1024-c00014a6319f.webp",
+    "srcSet": "/images/landing/optimized/rwanda-360-644017a91ea5.webp 360w, /images/landing/optimized/rwanda-640-3b004340e030.webp 640w, /images/landing/optimized/rwanda-1024-c00014a6319f.webp 1024w"
+  },
+  "/images/landing/covers/samoa.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/samoa-1024-b3336ce7aaff.webp",
+    "srcSet": "/images/landing/optimized/samoa-360-fe3208491dcc.webp 360w, /images/landing/optimized/samoa-640-013171e259eb.webp 640w, /images/landing/optimized/samoa-1024-b3336ce7aaff.webp 1024w"
+  },
+  "/images/landing/covers/san-marino.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/san-marino-1024-8bce9e201002.webp",
+    "srcSet": "/images/landing/optimized/san-marino-360-e7576ce354f1.webp 360w, /images/landing/optimized/san-marino-640-c01adfadc5c1.webp 640w, /images/landing/optimized/san-marino-1024-8bce9e201002.webp 1024w"
+  },
+  "/images/landing/covers/saudi-arabia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/saudi-arabia-1024-ba40246eb98c.webp",
+    "srcSet": "/images/landing/optimized/saudi-arabia-360-3afd3a3c6260.webp 360w, /images/landing/optimized/saudi-arabia-640-7a75eaeff8f4.webp 640w, /images/landing/optimized/saudi-arabia-1024-ba40246eb98c.webp 1024w"
+  },
+  "/images/landing/covers/senegal.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/senegal-1024-42c91c2e1b99.webp",
+    "srcSet": "/images/landing/optimized/senegal-360-b4c601486e31.webp 360w, /images/landing/optimized/senegal-640-7118072b4c2e.webp 640w, /images/landing/optimized/senegal-1024-42c91c2e1b99.webp 1024w"
+  },
+  "/images/landing/covers/serbia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/serbia-1024-f25a367043f5.webp",
+    "srcSet": "/images/landing/optimized/serbia-360-868c14441bf4.webp 360w, /images/landing/optimized/serbia-640-eaf71d408990.webp 640w, /images/landing/optimized/serbia-1024-f25a367043f5.webp 1024w"
+  },
+  "/images/landing/covers/seychelles.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/seychelles-1024-6d94b0f491ff.webp",
+    "srcSet": "/images/landing/optimized/seychelles-360-c30531d7340d.webp 360w, /images/landing/optimized/seychelles-640-2e72bba37e1d.webp 640w, /images/landing/optimized/seychelles-1024-6d94b0f491ff.webp 1024w"
+  },
+  "/images/landing/covers/singapore.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/singapore-1024-ac72dbb0444e.webp",
+    "srcSet": "/images/landing/optimized/singapore-360-c46adbaec64e.webp 360w, /images/landing/optimized/singapore-640-e9a4bcbc608f.webp 640w, /images/landing/optimized/singapore-1024-ac72dbb0444e.webp 1024w"
+  },
+  "/images/landing/covers/slovakia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/slovakia-1024-afa5a1201440.webp",
+    "srcSet": "/images/landing/optimized/slovakia-360-9f75e4dd4044.webp 360w, /images/landing/optimized/slovakia-640-f0c44987398b.webp 640w, /images/landing/optimized/slovakia-1024-afa5a1201440.webp 1024w"
+  },
+  "/images/landing/covers/slovenia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/slovenia-1024-890ecfbd5952.webp",
+    "srcSet": "/images/landing/optimized/slovenia-360-eb304265f80f.webp 360w, /images/landing/optimized/slovenia-640-73ffc43f8833.webp 640w, /images/landing/optimized/slovenia-1024-890ecfbd5952.webp 1024w"
+  },
+  "/images/landing/covers/south-africa.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/south-africa-1024-27ebdf14a45d.webp",
+    "srcSet": "/images/landing/optimized/south-africa-360-c1b695d733d7.webp 360w, /images/landing/optimized/south-africa-640-2b88db597289.webp 640w, /images/landing/optimized/south-africa-1024-27ebdf14a45d.webp 1024w"
+  },
+  "/images/landing/covers/south-korea.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/south-korea-1024-ed7dc6213eed.webp",
+    "srcSet": "/images/landing/optimized/south-korea-360-b0252bd63b2d.webp 360w, /images/landing/optimized/south-korea-640-3d492d63c6c4.webp 640w, /images/landing/optimized/south-korea-1024-ed7dc6213eed.webp 1024w"
+  },
+  "/images/landing/covers/spain.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/spain-1024-f82802f860bc.webp",
+    "srcSet": "/images/landing/optimized/spain-360-cfa3e3c97cd0.webp 360w, /images/landing/optimized/spain-640-cb9b76bc83a3.webp 640w, /images/landing/optimized/spain-1024-f82802f860bc.webp 1024w"
+  },
+  "/images/landing/covers/sri-lanka.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/sri-lanka-1024-ca425a40afd9.webp",
+    "srcSet": "/images/landing/optimized/sri-lanka-360-fe3b7b0da182.webp 360w, /images/landing/optimized/sri-lanka-640-0d1cd2f05210.webp 640w, /images/landing/optimized/sri-lanka-1024-ca425a40afd9.webp 1024w"
+  },
+  "/images/landing/covers/sweden.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/sweden-1024-ce154e70f3cb.webp",
+    "srcSet": "/images/landing/optimized/sweden-360-a174eb9d8067.webp 360w, /images/landing/optimized/sweden-640-4e11587e0d5f.webp 640w, /images/landing/optimized/sweden-1024-ce154e70f3cb.webp 1024w"
+  },
+  "/images/landing/covers/switzerland.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/switzerland-1024-09140e6e09e9.webp",
+    "srcSet": "/images/landing/optimized/switzerland-360-7d6ecf560d0e.webp 360w, /images/landing/optimized/switzerland-640-83dd0fd0fb41.webp 640w, /images/landing/optimized/switzerland-1024-09140e6e09e9.webp 1024w"
+  },
+  "/images/landing/covers/taiwan.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/taiwan-1024-d23c17390e46.webp",
+    "srcSet": "/images/landing/optimized/taiwan-360-5f766b0a64d9.webp 360w, /images/landing/optimized/taiwan-640-ee02c4731586.webp 640w, /images/landing/optimized/taiwan-1024-d23c17390e46.webp 1024w"
+  },
+  "/images/landing/covers/tajikistan.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/tajikistan-1024-36ff00cf12e0.webp",
+    "srcSet": "/images/landing/optimized/tajikistan-360-f63c7bb61c02.webp 360w, /images/landing/optimized/tajikistan-640-c32fdc477514.webp 640w, /images/landing/optimized/tajikistan-1024-36ff00cf12e0.webp 1024w"
+  },
+  "/images/landing/covers/tanzania.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/tanzania-1024-643dcca94736.webp",
+    "srcSet": "/images/landing/optimized/tanzania-360-3390294a05d5.webp 360w, /images/landing/optimized/tanzania-640-44c7f7dbea60.webp 640w, /images/landing/optimized/tanzania-1024-643dcca94736.webp 1024w"
+  },
+  "/images/landing/covers/thailand.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/thailand-1024-39642522fa92.webp",
+    "srcSet": "/images/landing/optimized/thailand-360-bd79e053d38c.webp 360w, /images/landing/optimized/thailand-640-4576bc1103e8.webp 640w, /images/landing/optimized/thailand-1024-39642522fa92.webp 1024w"
+  },
+  "/images/landing/covers/timor-leste.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/timor-leste-1024-5ec1db38f0c5.webp",
+    "srcSet": "/images/landing/optimized/timor-leste-360-dcb706f0d0d0.webp 360w, /images/landing/optimized/timor-leste-640-2c0f2da08b2d.webp 640w, /images/landing/optimized/timor-leste-1024-5ec1db38f0c5.webp 1024w"
+  },
+  "/images/landing/covers/togo.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/togo-1024-7be5d4585eb5.webp",
+    "srcSet": "/images/landing/optimized/togo-360-6494728ce084.webp 360w, /images/landing/optimized/togo-640-28b3e3edb287.webp 640w, /images/landing/optimized/togo-1024-7be5d4585eb5.webp 1024w"
+  },
+  "/images/landing/covers/trinidad-and-tobago.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/trinidad-and-tobago-1024-5108044f4fce.webp",
+    "srcSet": "/images/landing/optimized/trinidad-and-tobago-360-492ba0aebe78.webp 360w, /images/landing/optimized/trinidad-and-tobago-640-f986bd6af9b1.webp 640w, /images/landing/optimized/trinidad-and-tobago-1024-5108044f4fce.webp 1024w"
+  },
+  "/images/landing/covers/tunisia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/tunisia-1024-9b974849acd3.webp",
+    "srcSet": "/images/landing/optimized/tunisia-360-3cc6d02d7e75.webp 360w, /images/landing/optimized/tunisia-640-c124bec68faa.webp 640w, /images/landing/optimized/tunisia-1024-9b974849acd3.webp 1024w"
+  },
+  "/images/landing/covers/turkey.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/turkey-1024-14a897d17836.webp",
+    "srcSet": "/images/landing/optimized/turkey-360-815a3c019ae7.webp 360w, /images/landing/optimized/turkey-640-6e22b2177b1a.webp 640w, /images/landing/optimized/turkey-1024-14a897d17836.webp 1024w"
+  },
+  "/images/landing/covers/uae.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/uae-1024-595cfe8fc05d.webp",
+    "srcSet": "/images/landing/optimized/uae-360-5ef6c617b8b6.webp 360w, /images/landing/optimized/uae-640-99ab44f45212.webp 640w, /images/landing/optimized/uae-1024-595cfe8fc05d.webp 1024w"
+  },
+  "/images/landing/covers/uganda.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/uganda-1024-0686868aac30.webp",
+    "srcSet": "/images/landing/optimized/uganda-360-f025f257d155.webp 360w, /images/landing/optimized/uganda-640-11b7863c0a39.webp 640w, /images/landing/optimized/uganda-1024-0686868aac30.webp 1024w"
+  },
+  "/images/landing/covers/uk.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/uk-1024-007daee3e77c.webp",
+    "srcSet": "/images/landing/optimized/uk-360-e3bee7011097.webp 360w, /images/landing/optimized/uk-640-c49a2993455c.webp 640w, /images/landing/optimized/uk-1024-007daee3e77c.webp 1024w"
+  },
+  "/images/landing/covers/ukraine.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/ukraine-1024-d3b9418ee41f.webp",
+    "srcSet": "/images/landing/optimized/ukraine-360-eba3fdefa75c.webp 360w, /images/landing/optimized/ukraine-640-3fb2c5264dec.webp 640w, /images/landing/optimized/ukraine-1024-d3b9418ee41f.webp 1024w"
+  },
+  "/images/landing/covers/uruguay.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/uruguay-1024-fda00006926c.webp",
+    "srcSet": "/images/landing/optimized/uruguay-360-22287d37739a.webp 360w, /images/landing/optimized/uruguay-640-275dd5425b51.webp 640w, /images/landing/optimized/uruguay-1024-fda00006926c.webp 1024w"
+  },
+  "/images/landing/covers/usa.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/usa-1024-cc89ed2d2174.webp",
+    "srcSet": "/images/landing/optimized/usa-360-1e5f294746fb.webp 360w, /images/landing/optimized/usa-640-69d837bdebce.webp 640w, /images/landing/optimized/usa-1024-cc89ed2d2174.webp 1024w"
+  },
+  "/images/landing/covers/uzbekistan.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/uzbekistan-1024-1e0d53264120.webp",
+    "srcSet": "/images/landing/optimized/uzbekistan-360-29d318a6b963.webp 360w, /images/landing/optimized/uzbekistan-640-14b1b365c23b.webp 640w, /images/landing/optimized/uzbekistan-1024-1e0d53264120.webp 1024w"
+  },
+  "/images/landing/covers/vanuatu.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/vanuatu-1024-7a5233d612fc.webp",
+    "srcSet": "/images/landing/optimized/vanuatu-360-00f5cd9cd9e2.webp 360w, /images/landing/optimized/vanuatu-640-e29d3eb2479c.webp 640w, /images/landing/optimized/vanuatu-1024-7a5233d612fc.webp 1024w"
+  },
+  "/images/landing/covers/venezuela.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/venezuela-1024-e75374b695e4.webp",
+    "srcSet": "/images/landing/optimized/venezuela-360-bb809e28d810.webp 360w, /images/landing/optimized/venezuela-640-b817ed398f6e.webp 640w, /images/landing/optimized/venezuela-1024-e75374b695e4.webp 1024w"
+  },
+  "/images/landing/covers/vietnam.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/vietnam-1024-db62588ee1d2.webp",
+    "srcSet": "/images/landing/optimized/vietnam-360-854379db3256.webp 360w, /images/landing/optimized/vietnam-640-c21d58beef02.webp 640w, /images/landing/optimized/vietnam-1024-db62588ee1d2.webp 1024w"
+  },
+  "/images/landing/covers/zambia.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/zambia-1024-8c6b42187cac.webp",
+    "srcSet": "/images/landing/optimized/zambia-360-b8131bdff6e1.webp 360w, /images/landing/optimized/zambia-640-c31c0247a528.webp 640w, /images/landing/optimized/zambia-1024-8c6b42187cac.webp 1024w"
+  },
+  "/images/landing/covers/zimbabwe.webp": {
+    "width": 1024,
+    "height": 1536,
+    "src": "/images/landing/optimized/zimbabwe-1024-f09c4547865b.webp",
+    "srcSet": "/images/landing/optimized/zimbabwe-360-6381fa85858a.webp 360w, /images/landing/optimized/zimbabwe-640-90e401b3e24c.webp 640w, /images/landing/optimized/zimbabwe-1024-f09c4547865b.webp 1024w"
   },
   "/images/landing/hand-held-italy-album-v3.png": {
     "width": 1536,

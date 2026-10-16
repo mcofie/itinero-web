@@ -8,8 +8,8 @@ export const dynamic = "force-static";
 export async function GET() {
     const [font, italy, japan, mark] = await Promise.all([
         readFile(path.join(process.cwd(), "public/fonts/landing/lilita-one.ttf")),
-        readFile(path.join(process.cwd(), "public/images/landing/covers/italy.png")),
-        readFile(path.join(process.cwd(), "public/images/landing/covers/japan.png")),
+        readFile(path.join(process.cwd(), "public/images/landing/og-covers/italy.png")),
+        readFile(path.join(process.cwd(), "public/images/landing/og-covers/japan.png")),
         readFile(path.join(process.cwd(), "public/brand/itinero-mark.svg")),
     ]);
     return new ImageResponse(
@@ -28,10 +28,12 @@ export async function GET() {
             <div style={{ position: "absolute", display: "flex", right: 190, top: 65, transform: "rotate(-12deg)", boxShadow: "8px 14px 24px #2b1a0726" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={`data:image/png;base64,${japan.toString("base64")}`} width={290} height={435} alt="Japan photo album" />
+                <span style={{ position: "absolute", left: 20, top: 22, color: "#fff8dc", fontFamily: "AlbumRound", fontSize: 48, lineHeight: 1 }}>JAPAN</span>
             </div>
             <div style={{ position: "absolute", display: "flex", right: 20, top: 165, transform: "rotate(9deg)", boxShadow: "8px 14px 24px #2b1a0733" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={`data:image/png;base64,${italy.toString("base64")}`} width={290} height={435} alt="Italy photo album" />
+                <span style={{ position: "absolute", left: 20, top: 22, color: "#2b1a07", fontFamily: "AlbumRound", fontSize: 48, lineHeight: 1 }}>ITALY</span>
             </div>
         </div>,
         { width: 1200, height: 630, fonts: [{ name: "AlbumRound", data: new Uint8Array(font).buffer, weight: 400, style: "normal" }] },

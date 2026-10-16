@@ -1,9 +1,9 @@
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-// Run after changing source artwork. Originals stay available for future edits.
+// Run after changing source artwork; old generated variants are removed below.
 const root = process.cwd();
 const output = path.join(root, 'public/images/landing/optimized');
 await mkdir(output, { recursive: true });
@@ -16,6 +16,7 @@ const sources = [
     '/images/how-it-works.png',
 ];
 const manifest = {};
+const currentVariants = new Set();
 let originalBytes = 0;
 let fullSizeBytes = 0;
 for (const source of sources) {
@@ -28,6 +29,7 @@ for (const source of sources) {
         const hash = createHash('sha256').update(buffer).digest('hex').slice(0, 12);
         const name = `${path.parse(source).name}-${width}-${hash}.webp`;
         await writeFile(path.join(output, name), buffer);
+        currentVariants.add(name);
         variants.push({ width, src: `/images/landing/optimized/${name}` });
         if (width === metadata.width) fullSizeBytes += buffer.length;
     }
@@ -35,4 +37,7 @@ for (const source of sources) {
     manifest[source] = { width: metadata.width, height: metadata.height, src: variants.at(-1).src, srcSet: variants.map(item => `${item.src} ${item.width}w`).join(', ') };
 }
 await writeFile('src/lib/landing-images.json', JSON.stringify(manifest, null, 2) + '\n');
+for (const name of await readdir(output)) {
+    if (name.endsWith('.webp') && !currentVariants.has(name)) await unlink(path.join(output, name));
+}
 console.log(JSON.stringify({ images: sources.length, originalBytes, fullSizeBytes, reductionPercent: +(100 * (1 - fullSizeBytes / originalBytes)).toFixed(1) }));
