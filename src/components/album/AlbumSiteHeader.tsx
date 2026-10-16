@@ -26,8 +26,8 @@ export default function AlbumSiteHeader({ email, name }: { email: string | null;
     const initial = (name || email || "?").trim().charAt(0).toUpperCase();
     const onAlbums = pathname === "/photobooks";
 
-    return <header className="sticky top-0 z-40 border-b border-[#e7dccd] bg-[#fdfbf8]/92 backdrop-blur">
-        <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
+    return <header className="sticky top-0 z-40 border-b border-[#e9e1d7] bg-[#fffefa]/95 backdrop-blur">
+        <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between gap-3 px-4 sm:h-[82px] sm:px-8">
             <Link href="/" aria-label="Itinero home" className="flex shrink-0 items-center gap-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/brand/itinero-mark-animated.svg" alt="" width={44} height={27} />
@@ -35,11 +35,11 @@ export default function AlbumSiteHeader({ email, name }: { email: string | null;
             </Link>
             <nav className="flex items-center gap-1.5 sm:gap-3" aria-label="Albums">
                 {email && <Link href="/photobooks" aria-current={onAlbums ? "page" : undefined}
-                    className={cn("rounded-full px-3 py-2 text-sm font-semibold transition", onAlbums ? "bg-[#efe4d6] text-[#2b1a07]" : "text-[#6d5c4b] hover:text-[#2b1a07]")}>My albums</Link>}
-                <Link href="/make-album" className="inline-flex items-center gap-1.5 rounded-full bg-[#2b1a07] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#53330e]"><Plus size={15} strokeWidth={2.5} />Make an album</Link>
+                    className={cn("px-2 py-2 text-sm font-semibold transition sm:px-3", onAlbums ? "text-[#2b1a07] underline decoration-[#e87836] decoration-2 underline-offset-4" : "text-[#6d5c4b] hover:text-[#2b1a07]")}>My albums</Link>}
+                <Link href="/make-album" className="inline-flex items-center gap-1.5 rounded-xl bg-[#2b1a07] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#53330e] sm:px-4 sm:text-sm"><Plus size={15} strokeWidth={2.5} /><span className="hidden sm:inline">Make an album</span><span className="sm:hidden">Make one</span></Link>
                 {email ? <div ref={menuRef} className="relative">
                     <button type="button" onClick={() => setOpen(value => !value)} aria-expanded={open} aria-label="Account"
-                        className="grid h-9 w-9 place-items-center rounded-full bg-[#e87836] text-sm font-bold text-white transition hover:bg-[#d4692b]">{initial}</button>
+                        className="grid h-9 w-9 place-items-center rounded-full bg-[#e87836] text-sm font-bold text-white ring-2 ring-[#fffefa] transition hover:bg-[#d4692b]">{initial}</button>
                     {open && <div className="absolute right-0 top-11 w-60 overflow-hidden rounded-2xl border border-[#e7dccd] bg-[#fdfbf8] text-sm shadow-[0_14px_40px_#2b1a0726]">
                         <div className="border-b border-[#efe6da] px-4 py-3">
                             {name && <p className="truncate font-semibold">{name}</p>}

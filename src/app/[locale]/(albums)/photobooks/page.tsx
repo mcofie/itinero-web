@@ -17,9 +17,9 @@ export default async function PhotobooksPage() {
         .eq("user_id", user.id).order("updated_at", { ascending: false, nullsFirst: false });
     const name = user.user_metadata?.full_name || user.user_metadata?.name || "";
 
-    return <main>
+    return <>
         {/* Orders started before payment returned to the order page come back here. */}
         <AlbumPaymentStatus />
         <AlbumsOverview albums={(data ?? []) as AlbumSummary[]} firstName={String(name).trim().split(/\s+/)[0] || null} />
-    </main>;
+    </>;
 }
