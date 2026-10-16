@@ -6,7 +6,7 @@ Schema changes live in `supabase/migrations/` as `<14-digit timestamp>_<name>.sq
 
 The Supabase project ("Cosco") is shared with another app, so its migration history also contains that app's migrations, which aren't in this repo. Plain `supabase db push` from this repo refuses to run against that history, so don't use it here.
 
-When a push to `main` changes `supabase/migrations/`, the **Database migrations** GitHub workflow (`.github/workflows/migrate.yml`) instead fetches the remote history into a scratch folder, adds only this repo's migrations whose timestamp is **newer than the latest migration recorded remotely**, dry-runs, then pushes. Give new migrations the current date and time so they sort after everything already applied. Vercel deploys the app from the same push; the migration job usually finishes first. For a change the app can't run without, push the migration on its own first, then the code.
+When a push to `main` changes `supabase/migrations/`, the **Database migrations** GitHub workflow (`.github/workflows/migrate.yml`) instead fetches the remote history into a scratch folder, adds only this repo's migrations whose timestamp is **newer than the latest migration recorded remotely**, dry-runs, then pushes. Give new migrations the current date and time so they sort after everything already applied. Netlify deploys the app from the same push; the migration job usually finishes first. For a change the app can't run without, push the migration on its own first, then the code.
 
 Run it by hand from the Actions tab (**Run workflow**).
 
@@ -23,7 +23,7 @@ supabase db push --workdir "$work" --dry-run   # check it lists only your migrat
 supabase db push --workdir "$work"
 ```
 
-Migrations up to `20261016140000_album_print_ready.sql` are applied in production (the last three on 2026-10-16 this way). Earlier ones were run in the SQL editor and aren't in the remote history; that's fine, because only newer files are ever pushed.
+Migrations up to `20261016184000_order_number_permissions.sql` are applied in production (the last four on 2026-10-16 this way). Objects created in the SQL editor belong to the database owner; when a migration creates a sequence or function the app uses, grant the app roles access in the same migration (see `20261016184000_order_number_permissions.sql`). Earlier ones were run in the SQL editor and aren't in the remote history; that's fine, because only newer files are ever pushed.
 
 ## Repository secrets
 

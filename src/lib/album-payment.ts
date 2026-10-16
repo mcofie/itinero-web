@@ -44,7 +44,15 @@ export async function reconcileAlbumPayment(reference: string): Promise<"paid" |
         .update({ status: "paid", paid_at: now, status_changed_at: now, updated_at: now })
         .eq("id", album.id).eq("status", "pending_payment").eq("payment_reference", reference)
         .select(ORDER_FIELDS).maybeSingle<OrderRow>();
-    if (error) throw error;
+    if (error) {
+        // The customer has paid but the order didn't update, so say so loudly with the database's reason.
+        await sendOrderAlert({
+            title: "⚠️ Paid order couldn’t be marked paid",
+            description: `Paystack confirmed the payment, but updating the order failed: ${error.message}. Paystack retries the webhook; once fixed, use Check with Paystack on the order.`,
+            fields: [["Reference", reference], ["Amount", `GHS ${album.total_cost}`]], orderId: album.id, color: ALERT_COLORS.problem,
+        });
+        throw error;
+    }
     // Only the request that made the change announces it; a concurrent webhook finds no row.
     if (paid) {
         try {

@@ -26,7 +26,10 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     let reconciled: string | null = null;
     if (order.status === "pending_payment" && transaction.status === "success") {
         try { reconciled = await reconcileAlbumPayment(order.payment_reference); }
-        catch { return NextResponse.json({ error: "Paystack shows a payment, but the order could not be updated." }, { status: 503 }); }
+        catch (error) {
+            const reason = error instanceof Error ? error.message : (error as { message?: string })?.message;
+            return NextResponse.json({ error: `Paystack shows a payment, but the order could not be updated${reason ? `: ${reason}` : "."}` }, { status: 503 });
+        }
     }
     return NextResponse.json({
         status: transaction.status, amount: transaction.amount / 100, currency: transaction.currency,
