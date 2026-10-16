@@ -1,6 +1,7 @@
 import type { AlbumLayout, AlbumPhoto } from "./album-draft";
 import { resolveCoverTextColor, type CoverTypeface } from "@/lib/album-cover-style";
 import { coverPrintImagePath, type TravelCoverId } from "@/lib/travel-covers";
+import { coverTitleLayout } from "@/lib/cover-title-layout";
 
 // A standard 8 × 10 inch portrait proof at 300 pixels per inch.
 export const PRINT_WIDTH = 2400;
@@ -43,29 +44,32 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: n
 function paintCoverTitle(ctx: CanvasRenderingContext2D, title: string, year: string, color: string, fontFamily: string, typeface: CoverTypeface, textColor: string) {
     ctx.fillStyle = resolveCoverTextColor(textColor, color);
     const headline = (typeface === "bold" ? title.trim().toUpperCase() : title.trim()) || "My trip";
-    ctx.font = "700 34px Arial, sans-serif";
-    ctx.textBaseline = "top";
-    ctx.fillText("ITINERO · TRAVEL ALBUM", 125, 83);
-    ctx.font = "700 52px Arial, sans-serif";
-    ctx.textAlign = "right";
-    ctx.fillText(year, DESIGN_WIDTH - 125, 75);
-    ctx.textAlign = "left";
-    let fontSize = headline.length > 22 ? 145 : headline.length > 9 ? 175 : 250;
-    let lines: string[] = [];
-    for (; fontSize >= 100; fontSize -= 5) {
+    const layout = coverTitleLayout(headline);
+    const availableWidth = DESIGN_WIDTH * .86;
+    const top = DESIGN_WIDTH * .05;
+    const oneLine = layout.lines.length === 1;
+    const sizeCap = oneLine ? (typeface === "handwritten" ? 22 : typeface === "serif" ? 24 : 25.5)
+        : typeface === "handwritten" ? 11.5 : 12.5;
+    let fontSize = DESIGN_WIDTH * Math.min(layout.size, sizeCap) / 100;
+    ctx.font = `400 ${fontSize}px ${fontFamily}`;
+    const widestLine = () => Math.max(...layout.lines.map(line => ctx.measureText(line).width));
+    if (widestLine() > availableWidth) {
+        fontSize *= availableWidth / widestLine();
         ctx.font = `400 ${fontSize}px ${fontFamily}`;
-        lines = [];
-        for (const word of headline.split(/\s+/)) {
-            const last = lines.length - 1;
-            const candidate = last < 0 ? word : `${lines[last]} ${word}`;
-            if (last < 0 || ctx.measureText(candidate).width > DESIGN_WIDTH - 250) lines.push(word);
-            else lines[last] = candidate;
-        }
-        if (lines.length <= 2 && lines.every(line => ctx.measureText(line).width <= DESIGN_WIDTH - 250)) break;
     }
-    const lineHeight = fontSize * (typeface === "handwritten" ? 1.05 : typeface === "serif" ? .97 : .88);
-    const firstY = lines.length === 1 ? 315 : 205;
-    lines.slice(0, 2).forEach((line, index) => ctx.fillText(line, 125, firstY + index * lineHeight));
+    const stretch = Math.min(1.35, availableWidth / widestLine());
+    ctx.textBaseline = "top";
+    ctx.textAlign = "left";
+    const lineHeight = fontSize * (typeface === "handwritten" ? 1.08 : typeface === "serif" ? 1 : .94);
+    ctx.save();
+    ctx.translate(DESIGN_WIDTH * .07, top);
+    ctx.scale(stretch, 1);
+    layout.lines.forEach((line, index) => ctx.fillText(line, 0, index * lineHeight));
+    ctx.restore();
+    ctx.font = `400 ${DESIGN_WIDTH * (oneLine ? .07 : .06)}px ${fontFamily}`;
+    ctx.textAlign = "right";
+    ctx.fillText(year, DESIGN_WIDTH * .93, top + layout.lines.length * lineHeight + DESIGN_WIDTH * .01);
+    ctx.textAlign = "left";
 }
 
 async function paintPhoto(ctx: CanvasRenderingContext2D, photo: AlbumPhoto, x: number, y: number, width: number, height: number) {

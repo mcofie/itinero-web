@@ -85,12 +85,9 @@
 .previewExpandButton{display:none}
 .coverPreview{position:relative;aspect-ratio:4/5;width:100%;max-width:350px;margin:0 auto;background:var(--cover-color);overflow:hidden;border-radius:4px 8px 8px 4px;box-shadow:7px 16px 24px #4e382838,1px 0 0 #fff8 inset;container-type:inline-size}
 .coverPreview>img{display:block;width:100%;height:100%;object-fit:cover}
-.coverTitleArea{position:absolute;top:0;left:0;right:0;height:27%;padding:6% 7% 4%;display:flex;flex-direction:column;justify-content:space-between;gap:8px;background:transparent;color:var(--cover-ink);font-family:var(--font-album-round),'Arial Rounded MT Bold',sans-serif}
-.coverMeta{display:flex;align-items:center;justify-content:space-between;gap:8px;font:700 clamp(7px,2.6cqw,10px)/1 var(--font-geist-sans),Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;opacity:.82}
-.coverMeta span:last-child{font-size:1.15em;letter-spacing:.02em}
-.coverTitleArea strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:clamp(27px,15cqw,54px);font-weight:400;line-height:.88;letter-spacing:-.055em;overflow-wrap:anywhere;text-transform:uppercase}
-.coverTitleArea strong.longTitle{font-size:clamp(22px,9.5cqw,34px);line-height:.9}
-.coverTitleArea strong.extraLongTitle{font-size:clamp(19px,8cqw,29px);line-height:.94}
+.coverTitleArea{position:absolute;inset:0 0 auto;padding:5% 7% 0;display:flex;flex-direction:column;align-items:stretch;background:transparent;color:var(--cover-ink);font-family:var(--font-album-round),'Arial Rounded MT Bold',sans-serif}
+.coverTitleArea strong{display:block;overflow:hidden;width:100%;font-size:var(--cover-title-size);font-weight:400;line-height:.94;letter-spacing:-.045em;white-space:nowrap;text-transform:uppercase;transform:scaleX(var(--cover-title-stretch));transform-origin:left top}
+.coverYear{align-self:flex-end;margin-top:1cqw;font-size:var(--cover-year-size);line-height:1}
 .typefaceSerif .coverTitleArea strong{font-family:var(--font-album-serif),Georgia,serif;text-transform:none;letter-spacing:-.045em;line-height:1}
 .typefaceHandwritten .coverTitleArea strong{font-family:var(--font-album-hand),cursive;text-transform:none;letter-spacing:-.015em;line-height:1.1}
 .previewCaption{margin:22px 0 4px;text-align:center;color:#aa8066;font:19px var(--font-album-hand),cursive}
@@ -148,11 +145,7 @@
   .previewDescriptor{color:#aa9888;font-size:9px}
   .previewExpandButton{display:inline-flex;margin-top:9px;padding:0;color:#854923;text-decoration:underline;text-underline-offset:3px;font:700 12px var(--font-geist-sans),Arial,sans-serif}
   .coverPreview,.albumPage,.introPage{grid-column:1;grid-row:1/3;max-width:138px}
-  .previewColumn:not(.previewExpanded) .coverTitleArea{height:31%;padding:5% 6% 3%;gap:2px}
-  .previewColumn:not(.previewExpanded) .coverMeta{font-size:clamp(6px,2cqw,8px)}
-  .previewColumn:not(.previewExpanded) .coverTitleArea strong{font-size:clamp(18px,14cqw,25px)}
-  .previewColumn:not(.previewExpanded) .coverTitleArea strong.longTitle{font-size:clamp(15px,10cqw,19px)}
-  .previewColumn:not(.previewExpanded) .coverTitleArea strong.extraLongTitle{font-size:clamp(13px,8cqw,16px)}
+  .previewColumn:not(.previewExpanded) .coverTitleArea{padding:5% 7% 0}
   .previewCaption{grid-column:2;grid-row:2;align-self:start;margin:13px 0 0;text-align:left;font-size:18px;line-height:1.1}
   .previewPager{grid-column:2;grid-row:2;justify-content:flex-start;gap:9px;margin:10px 0 0}
   .previewExpanded{display:flex;flex-direction:column;padding:16px}

@@ -11,9 +11,16 @@ export function selectOverheadAlbum(): OverheadAlbum {
 /** Sample without replacement once per page request, before server rendering. */
 export function selectFeaturedTravelCovers(): FeaturedTravelCovers {
     const pool = TRAVEL_COVERS.map(cover => cover.id);
-    for (let i = 0; i < 6; i++) {
-        const j = randomInt(i, pool.length);
-        [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    return [pool[0], pool[1], pool[2], pool[3], pool[4], pool[5]];
+    const take = (options: typeof pool) => {
+        const id = options[randomInt(options.length)];
+        pool.splice(pool.indexOf(id), 1);
+        return id;
+    };
+    const front = take(pool);
+    // The two partly covered books need short names to keep their titles legible.
+    const sideOptions = TRAVEL_COVERS.filter(cover => cover.country.length <= 7 && cover.id !== front).map(cover => cover.id);
+    const left = take(sideOptions);
+    sideOptions.splice(sideOptions.indexOf(left), 1);
+    const right = take(sideOptions);
+    return [front, left, right, take(pool), take(pool), take(pool)];
 }

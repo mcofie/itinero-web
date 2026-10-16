@@ -2,11 +2,21 @@ import LandingImage from "./LandingImage";
 import type { CSSProperties } from "react";
 import { coverImagePath, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
 import { coverInk } from "@/lib/album-cover-style";
+import { coverTitleLayout } from "@/lib/cover-title-layout";
 import styles from "./PhotoAlbumLanding.module.css";
 
 export default function TravelAlbumCover({ design = "italy", eager = false, media, prominent = false }: { design?: TravelCoverId; eager?: boolean; media?: "mobile" | "desktop"; prominent?: boolean }) {
     const cover = TRAVEL_COVERS_BY_ID[design];
-    return <div className={styles.albumCover} style={{ "--cover-color": cover.color, "--cover-ink": coverInk(cover.color) } as CSSProperties}>
+    const title = coverTitleLayout(cover.country);
+    const oneLine = title.lines.length === 1;
+    return <div className={styles.albumCover} style={{
+        "--cover-color": cover.color,
+        "--cover-ink": coverInk(cover.color),
+        "--cover-title-size": `${oneLine ? title.size / .8 : title.size}cqw`,
+        "--cover-title-width": oneLine ? "125%" : "100%",
+        "--cover-title-squeeze": oneLine ? "scaleX(.8)" : "none",
+        "--cover-year-size": oneLine ? "8.5cqw" : "7cqw",
+    } as CSSProperties}>
         <LandingImage
             src={coverImagePath(design)}
             alt=""
@@ -19,7 +29,7 @@ export default function TravelAlbumCover({ design = "italy", eager = false, medi
             prominent={prominent}
         />
         <div className={styles.coverLettering} aria-hidden="true">
-            <strong className={cover.country.length > 14 ? styles.coverLetteringLong : undefined}>{cover.country}</strong>
+            <strong>{title.lines.map((line, index) => <span key={line} className={styles.coverTitleLine}>{index > 0 && <br />}{line}</span>)}</strong>
             <span>{new Date().getFullYear()}</span>
         </div>
     </div>;

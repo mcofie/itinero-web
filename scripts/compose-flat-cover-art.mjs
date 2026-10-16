@@ -40,9 +40,9 @@ for (const id of selected) {
     if (right < left) throw new Error(`${id} has no visible artwork.`);
     const bounds = { left, top, width: right - left + 1, height: bottom - top + 1 };
     for (const format of [
-        { directory: outputDirectory, height: 1536, artWidth: 716, artHeight: 860, artTop: 520 },
-        // Album previews and the 8×10 print PDF are 4:5. Leave room for the title and a visible bottom margin.
-        { directory: printDirectory, height: 1280, artWidth: 820, artHeight: 840, artTop: 380 },
+        { directory: outputDirectory, height: 1536, artWidth: 860, artHeight: 940, artTop: 540 },
+        // The 4:5 print proof keeps the subject large beneath the title without cropping its edges.
+        { directory: printDirectory, height: 1280, artWidth: 900, artHeight: 850, artTop: 390 },
     ]) {
         const artwork = await sharp(source)
             .extract(bounds)

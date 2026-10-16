@@ -5,6 +5,7 @@ import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BookOpen, Check, ChevronLeft
 import { Link } from "@/i18n/routing";
 import { COVER_COLOR_SWATCHES, COVER_TYPEFACES, DEFAULT_COVER_TEXT_COLOR, DEFAULT_COVER_TYPEFACE, normalizeCoverTextColor, normalizeCoverTypeface, resolveCoverTextColor, type CoverTypeface } from "@/lib/album-cover-style";
 import { coverPrintImagePath, coverThumbnailPath, TRAVEL_COVERS, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
+import { coverTitleLayout } from "@/lib/cover-title-layout";
 import { ALBUM_BUCKET, ALBUM_FORMAT } from "@/lib/album-order";
 import { formatGhs, priceBreakdown, type AlbumPricing, type PriceBreakdown } from "@/lib/album-pricing";
 import { EDITABLE_STATUSES, isOrderStatus, STATUS_INFO, type OrderStatus } from "@/lib/album-fulfilment";
@@ -32,12 +33,23 @@ const searchKey = (value: string) => value.normalize("NFKD").replace(/[\u0300-\u
 function CoverPreview({ destinationId, title, year, typeface, textColor, className = "" }: { destinationId: TravelCoverId; title: string; year: string; typeface: CoverTypeface; textColor: string; className?: string }) {
     const cover = TRAVEL_COVERS_BY_ID[destinationId];
     const heading = title.trim() || cover.country;
-    return <div className={`${styles.coverPreview} ${typefaceClasses[typeface]} ${className}`} style={{ "--cover-color": cover.color, "--cover-ink": resolveCoverTextColor(textColor, cover.color) } as CSSProperties}>
+    const titleLayout = coverTitleLayout(heading);
+    const oneLine = titleLayout.lines.length === 1;
+    const sizeCap = oneLine ? (typeface === "handwritten" ? 22 : typeface === "serif" ? 24 : 25.5)
+        : typeface === "handwritten" ? 11.5 : 12.5;
+    const displaySize = Math.min(titleLayout.size, sizeCap);
+    return <div className={`${styles.coverPreview} ${typefaceClasses[typeface]} ${className}`} style={{
+        "--cover-color": cover.color,
+        "--cover-ink": resolveCoverTextColor(textColor, cover.color),
+        "--cover-title-size": `${displaySize}cqw`,
+        "--cover-title-stretch": Math.min(1.35, titleLayout.size / displaySize),
+        "--cover-year-size": oneLine ? "7cqw" : "6cqw",
+    } as CSSProperties}>
         {/* The illustration remains from the country set; the title area is personalized. */}
         <img src={coverPrintImagePath(destinationId)} alt="" draggable={false} />
         <div className={styles.coverTitleArea}>
-            <div className={styles.coverMeta}><span>Itinero · travel album</span><span>{year}</span></div>
-            <strong data-album-cover-title className={heading.length > 22 ? styles.extraLongTitle : heading.length > 9 ? styles.longTitle : undefined}>{heading}</strong>
+            <strong data-album-cover-title>{titleLayout.lines.map((line, index) => <span key={index}>{index > 0 && <br />}{line}</span>)}</strong>
+            <span className={styles.coverYear}>{year}</span>
         </div>
     </div>;
 }
@@ -475,7 +487,7 @@ export default function AlbumBuilder({ pricing }: { pricing: AlbumPricing }) {
                                 <div className={styles.styleHeading}><strong>Font color</strong><span>For the cover title and year</span></div>
                                 <div className={styles.colorOptions} role="group" aria-label="Cover font color">
                                     {COVER_COLOR_SWATCHES.map(swatch => <button key={swatch.value} type="button" className={`${styles.colorOption} ${coverTextColor === swatch.value ? styles.colorSelected : ""}`} aria-label={swatch.label} aria-pressed={coverTextColor === swatch.value} onClick={() => setCoverTextColor(swatch.value)}>
-                                        <span className={styles.colorDot} style={{ backgroundColor: swatch.value === "auto" ? resolveCoverTextColor("auto", destination.color) : swatch.value }}>{swatch.value === "auto" ? "A" : null}</span><small>{swatch.value === "auto" ? "Auto" : swatch.label.replace("Warm ", "")}</small>
+                                        <span className={styles.colorDot} style={{ backgroundColor: swatch.value === "auto" ? resolveCoverTextColor("auto", destination.color) : swatch.value }}>{swatch.value === "auto" ? "A" : null}</span><small>{swatch.value === "auto" ? "Matched" : swatch.label.replace("Warm ", "")}</small>
                                     </button>)}
                                     <label className={`${styles.customColor} ${coverTextColor !== "auto" && !COVER_COLOR_SWATCHES.some(swatch => swatch.value === coverTextColor) ? styles.colorSelected : ""}`}>
                                         <input type="color" aria-label="Custom cover font color" value={coverTextColor === "auto" ? resolveCoverTextColor("auto", destination.color) : coverTextColor} onChange={event => setCoverTextColor(event.target.value)} />

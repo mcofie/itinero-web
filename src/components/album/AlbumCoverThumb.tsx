@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { coverPrintImagePath, TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
 import { normalizeCoverTextColor, normalizeCoverTypeface, resolveCoverTextColor } from "@/lib/album-cover-style";
+import { coverTitleLayout } from "@/lib/cover-title-layout";
 import { cn } from "@/lib/utils";
 
 type AlbumCoverThumbProps = {
@@ -20,15 +21,19 @@ export default function AlbumCoverThumb({ coverId, title, year, typeface: rawTyp
     const cover = TRAVEL_COVERS_BY_ID[id];
     const typeface = normalizeCoverTypeface(rawTypeface);
     const textColor = normalizeCoverTextColor(rawTextColor);
-    const scale = height / 245;
+    const coverWidth = height * .8;
     const titleFont = typeface === "serif" ? "var(--font-album-serif), Georgia, serif"
         : typeface === "handwritten" ? "var(--font-album-hand), cursive" : "var(--font-album-round), Arial, sans-serif";
-    const titleSize = title.length > 22 ? 15 : title.length > 9 ? 19 : 27;
+    const titleLayout = coverTitleLayout(title);
+    const oneLine = titleLayout.lines.length === 1;
+    const sizeCap = oneLine ? (typeface === "handwritten" ? 22 : typeface === "serif" ? 24 : 25.5)
+        : typeface === "handwritten" ? 11.5 : 12.5;
+    const displaySize = Math.min(titleLayout.size, sizeCap);
     return <div className={cn("relative aspect-[4/5] shrink-0 overflow-hidden rounded-[3px_7px_7px_3px]", className)} style={{ background: cover.color, height }}>
         <Image src={coverPrintImagePath(id)} fill sizes={`${Math.ceil(height * 0.8)}px`} alt="" className="object-cover" />
-        <div className="absolute inset-x-0 top-0 flex h-[27%] flex-col justify-between leading-[.9] tracking-[-.05em]" style={{ color: resolveCoverTextColor(textColor, cover.color), padding: `${8 * scale}px ${12 * scale}px` }}>
-            <span className="flex justify-between gap-1 font-sans font-bold tracking-[.08em] opacity-80" style={{ fontSize: Math.max(6 * scale, 3) }}><span>Itinero · travel album</span><span>{year}</span></span>
-            <strong className="line-clamp-2 break-words" style={{ fontFamily: titleFont, fontWeight: 400, textTransform: typeface === "bold" ? "uppercase" : "none", lineHeight: typeface === "handwritten" ? 1.08 : .92, fontSize: titleSize * scale }}>{title}</strong>
+        <div className="absolute inset-x-0 top-0 flex flex-col" style={{ color: resolveCoverTextColor(textColor, cover.color), padding: `${coverWidth * .05}px ${coverWidth * .07}px 0` }}>
+            <strong className="block w-full whitespace-nowrap" style={{ fontFamily: titleFont, fontWeight: 400, textTransform: typeface === "bold" ? "uppercase" : "none", lineHeight: typeface === "handwritten" ? 1.08 : .94, letterSpacing: "-.045em", fontSize: displaySize * coverWidth / 100, transform: `scaleX(${Math.min(1.35, titleLayout.size / displaySize)})`, transformOrigin: "left top" }}>{titleLayout.lines.map((line, index) => <span key={index}>{index > 0 && <br />}{line}</span>)}</strong>
+            <span className="self-end" style={{ fontFamily: titleFont, fontSize: coverWidth * (oneLine ? .07 : .06), lineHeight: 1, marginTop: coverWidth * .01 }}>{year}</span>
         </div>
     </div>;
 }
