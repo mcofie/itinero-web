@@ -5,6 +5,7 @@ import { LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "@/i18n/routing";
 import { formatGhs, priceBreakdown, type AlbumPricing } from "@/lib/album-pricing";
+import type { PrintSpec } from "@/components/album-builder/album-pdf";
 import { cn } from "@/lib/utils";
 
 const field = "mt-1 block w-full rounded-xl border border-[#e2d6c7] bg-white px-3 py-2 text-sm text-[#2b1a07] outline-none focus:border-[#c16b36]";
@@ -56,6 +57,50 @@ export function PricingSettings({ pricing }: { pricing: AlbumPricing }) {
                     <div className="flex justify-between gap-3 border-t border-[#e2d6c7] pt-1.5 font-bold"><dt>Total</dt><dd>{formatGhs(preview.total)}</dd></div>
                 </dl>
                 <button type="submit" className={cn(primaryButton, "mt-4 w-full")} disabled={busy || !changed}>{busy && <LoaderCircle size={15} className="animate-spin" />}Save prices</button>
+            </div>
+        </form>
+    </section>;
+}
+
+export function PrintSpecSettings({ spec }: { spec: PrintSpec }) {
+    const router = useRouter();
+    const [busy, setBusy] = useState(false);
+    const [form, setForm] = useState({ interiorBleedMm: String(spec.interiorBleedMm), coverWrapMm: String(spec.coverWrapMm), spineBaseMm: String(spec.spineBaseMm), spinePerPageMm: String(spec.spinePerPageMm) });
+    const draft: PrintSpec = { interiorBleedMm: Number(form.interiorBleedMm) || 0, coverWrapMm: Number(form.coverWrapMm) || 0, spineBaseMm: Number(form.spineBaseMm) || 0, spinePerPageMm: Number(form.spinePerPageMm) || 0 };
+    const changed = (Object.keys(spec) as (keyof PrintSpec)[]).some(key => draft[key] !== spec[key]);
+    const example = (pages: number) => Math.round((draft.spineBaseMm + pages * draft.spinePerPageMm) * 10) / 10;
+    const submit = async () => {
+        setBusy(true);
+        try {
+            await save({ printSpec: draft });
+            toast.success("Print settings saved");
+            router.refresh();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Could not save the print settings.");
+        } finally { setBusy(false); }
+    };
+    const fields: { key: keyof PrintSpec; label: string; hint: string; step: string }[] = [
+        { key: "interiorBleedMm", label: "Interior bleed (mm)", hint: "Added on every edge of each inside page.", step: "0.5" },
+        { key: "coverWrapMm", label: "Cover wrap (mm)", hint: "Extra around the cover spread that folds over the boards.", step: "0.5" },
+        { key: "spineBaseMm", label: "Spine allowance (mm)", hint: "Boards and binding, before any pages.", step: "0.5" },
+        { key: "spinePerPageMm", label: "Spine per page (mm)", hint: "Paper thickness for each printed page.", step: "0.01" },
+    ];
+    return <section className={card}>
+        <h2 className="font-[Georgia] text-2xl">Print specification</h2>
+        <p className="mt-1 text-sm text-[#776b60]">Used when you build print files: an interior PDF with bleed, and a cover spread (back, spine, front) with a wrap. Match these to your printer’s template.</p>
+        <form className="mt-5 grid gap-6 md:grid-cols-[1fr_260px]" onSubmit={event => { event.preventDefault(); void submit(); }}>
+            <div className="grid gap-4 sm:grid-cols-2">
+                {fields.map(item => <label key={item.key} className="block text-xs font-semibold text-[#6d5c4b]">{item.label}
+                    <input required type="number" min={0} step={item.step} value={form[item.key]} onChange={event => setForm({ ...form, [item.key]: event.target.value })} className={field} />
+                    <span className="mt-1 block font-normal text-[#a89a8a]">{item.hint}</span>
+                </label>)}
+            </div>
+            <div className="rounded-xl bg-[#f6f0e8] p-4 text-sm">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-[.14em] text-[#8a7d70]">Spine width</p>
+                <dl className="space-y-1.5 tabular-nums">
+                    {[12, 24, 42].map(pages => <div key={pages} className="flex justify-between gap-3"><dt className="text-[#6d5c4b]">{pages} pages</dt><dd>{example(pages)} mm</dd></div>)}
+                </dl>
+                <button type="submit" className={cn(primaryButton, "mt-4 w-full")} disabled={busy || !changed}>{busy && <LoaderCircle size={15} className="animate-spin" />}Save print settings</button>
             </div>
         </form>
     </section>;

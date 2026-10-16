@@ -10,10 +10,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const { user, admin } = await albumServerContext();
     if (!user || !isAlbumAdmin(user.email)) return NextResponse.json({ error: "Forbidden." }, { status: 403 });
     if (!admin) return NextResponse.json({ error: "File storage is unavailable." }, { status: 503 });
-    const { data: album } = await admin.schema("itinero").from("photobooks").select("pdf_path").eq("id", id).maybeSingle();
+    const { data: album } = await admin.schema("itinero").from("photobooks").select("pdf_path,cover_pdf_path").eq("id", id).maybeSingle();
     if (!album?.pdf_path) return NextResponse.json({ error: "No album PDF has been submitted." }, { status: 404 });
     const photoId = request.nextUrl.searchParams.get("photo");
-    let path = album.pdf_path;
+    let path = request.nextUrl.searchParams.get("file") === "cover" ? album.cover_pdf_path : album.pdf_path;
+    if (!path) return NextResponse.json({ error: "That print file hasn’t been built." }, { status: 404 });
     if (photoId) {
         if (!UUID_PATTERN.test(photoId)) return NextResponse.json({ error: "Photo not found." }, { status: 404 });
         const { data: photo } = await admin.schema("itinero").from("photobook_images")

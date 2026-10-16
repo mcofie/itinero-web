@@ -1,4 +1,5 @@
 import type { CoverTypeface } from "@/lib/album-cover-style";
+import type { AlbumPageText } from "@/lib/album-page-text";
 
 export type AlbumLayout = "editorial" | "gallery" | "collage";
 
@@ -11,6 +12,9 @@ export type AlbumPhoto = {
     height: number;
     caption: string;
     storagePath?: string;
+    /** Crop anchor inside the photo's frame, 0–1 (0.5 = centre). */
+    focusX?: number;
+    focusY?: number;
 };
 
 export type AlbumDraftMeta = {
@@ -19,10 +23,15 @@ export type AlbumDraftMeta = {
     year: string;
     coverTypeface?: CoverTypeface;
     coverTextColor?: string;
+    coverBackground?: string;
     layout: AlbumLayout;
     step: number;
     photoIds: string[];
     captions: Record<string, string>;
+    pageText?: AlbumPageText;
+    focus?: Record<string, [number, number]>;
+    /** Storage folder for photos uploaded before the album's first save. */
+    cloudId?: string;
     updatedAt: number;
 };
 
@@ -75,7 +84,8 @@ export async function loadAlbumDraft(): Promise<{ meta: AlbumDraftMeta | null; p
             .filter((photo): photo is StoredPhoto => Boolean(photo));
         return {
             meta,
-            photos: ordered.map(photo => ({ ...photo, url: URL.createObjectURL(photo.blob), caption: meta?.captions[photo.id] ?? "" })),
+            photos: ordered.map(photo => ({ ...photo, url: URL.createObjectURL(photo.blob), caption: meta?.captions[photo.id] ?? "",
+                focusX: meta?.focus?.[photo.id]?.[0] ?? 0.5, focusY: meta?.focus?.[photo.id]?.[1] ?? 0.5 })),
         };
     } finally {
         db.close();

@@ -20,6 +20,7 @@ type AlbumRow = {
     album_year: string | null;
     cover_typeface: string | null;
     cover_text_color: string | null;
+    cover_color: string | null;
     status: string;
     page_count: number | null;
     total_cost: number | null;
@@ -35,7 +36,7 @@ export default async function PhotobooksPage() {
     if (!user) redirect("/album-login");
 
     const { data } = await sb.schema("itinero").from("photobooks")
-        .select("id,title,cover_template_id,album_year,cover_typeface,cover_text_color,status,page_count,total_cost,currency,updated_at,created_at,images:photobook_images(count)")
+        .select("id,title,cover_template_id,album_year,cover_typeface,cover_text_color,cover_color,status,page_count,total_cost,currency,updated_at,created_at,images:photobook_images(count)")
         .eq("user_id", user.id).order("created_at", { ascending: false });
     const albums = (data ?? []) as AlbumRow[];
 
@@ -77,7 +78,7 @@ function AlbumCard({ album }: { album: AlbumRow }) {
     const href = status && PLACED_STATUSES.includes(status) ? `/photobooks/${album.id}` : `/make-album?id=${album.id}`;
     return <Link href={href} className="group flex min-h-[390px] flex-col overflow-hidden rounded-[22px] border border-[#e4d9cb] bg-[#fdfbf8] shadow-[0_12px_32px_#2b1a070a] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_#2b1a071a]">
         <div className="relative flex min-h-[275px] items-center justify-center overflow-hidden bg-[#e9e0d3] p-5">
-            <AlbumCoverThumb coverId={album.cover_template_id} title={album.title} year={album.album_year} typeface={album.cover_typeface} textColor={album.cover_text_color} height={245}
+            <AlbumCoverThumb coverId={album.cover_template_id} title={album.title} year={album.album_year} typeface={album.cover_typeface} textColor={album.cover_text_color} background={album.cover_color} height={245}
                 className="shadow-[7px_10px_18px_#2b1a0730] transition duration-300 group-hover:rotate-[-2deg] group-hover:scale-[1.03]" />
             <span className="absolute right-4 top-4 rounded-full bg-[#fdfbf8] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.08em] text-[#785236] shadow-sm">{status ? STATUS_INFO[status].customerLabel : album.status.replaceAll("_", " ")}</span>
         </div>

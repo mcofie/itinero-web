@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { ALBUM_BUCKET } from "@/lib/album-order";
+import { EXTRA_PAGES, normalizePageText } from "@/lib/album-page-text";
 import { priceBreakdown } from "@/lib/album-pricing";
 import { getAlbumSettings } from "@/lib/album-settings-server";
 import { ALERT_COLORS, sendOrderAlert } from "@/lib/order-alerts";
 import { albumServerContext, UUID_PATTERN } from "@/lib/album-server";
 import { TRAVEL_COVERS_BY_ID } from "@/lib/travel-covers";
 import { EDITABLE_STATUSES, type OrderStatus } from "@/lib/album-fulfilment";
-import { DEFAULT_COVER_TEXT_COLOR, DEFAULT_COVER_TYPEFACE, isCoverTextColor, isCoverTypeface } from "@/lib/album-cover-style";
+import { DEFAULT_COVER_BACKGROUND, DEFAULT_COVER_TEXT_COLOR, DEFAULT_COVER_TYPEFACE, isCoverTextColor, isCoverTypeface } from "@/lib/album-cover-style";
 
 export const runtime = "nodejs";
 
-type PhotoInput = { id: string; name: string; storagePath: string; width: number; height: number; caption: string };
+type PhotoInput = { id: string; name: string; storagePath: string; width: number; height: number; caption: string; focusX?: number; focusY?: number };
 
 export async function POST(request: Request) {
     const { user, admin } = await albumServerContext();
@@ -25,10 +26,12 @@ export async function POST(request: Request) {
     const layout = body?.layout;
     const coverTypeface = body?.coverTypeface ?? DEFAULT_COVER_TYPEFACE;
     const coverTextColor = body?.coverTextColor ?? DEFAULT_COVER_TEXT_COLOR;
+    const coverBackground = body?.coverBackground ?? DEFAULT_COVER_BACKGROUND;
     const photos: PhotoInput[] = body?.photos;
+    const pageText = normalizePageText(body?.pageText);
     if (!UUID_PATTERN.test(id) || !title || title.length > 30 || !/^\d{4}$/.test(year) ||
         typeof destinationId !== "string" || !Object.hasOwn(TRAVEL_COVERS_BY_ID, destinationId) || !["gallery", "editorial", "collage"].includes(layout) ||
-        !isCoverTypeface(coverTypeface) || !isCoverTextColor(coverTextColor) ||
+        !isCoverTypeface(coverTypeface) || !isCoverTextColor(coverTextColor) || !isCoverTextColor(coverBackground) ||
         !Array.isArray(photos) || photos.length < 1 || photos.length > 40) {
         return NextResponse.json({ error: "Check the album details and photos." }, { status: 400 });
     }
@@ -40,7 +43,8 @@ export async function POST(request: Request) {
             typeof photo.name !== "string" || photo.name.length > 200 ||
             typeof photo.storagePath !== "string" || !new RegExp(`^${folder}/${photo.id}\\.(jpe?g|png|webp|avif)$`, "i").test(photo.storagePath) ||
             !Number.isInteger(photo.width) || !Number.isInteger(photo.height) || photo.width < 1 || photo.height < 1 ||
-            typeof photo.caption !== "string" || photo.caption.length > 90) {
+            typeof photo.caption !== "string" || photo.caption.length > 90 ||
+            [photo.focusX, photo.focusY].some(value => value !== undefined && (typeof value !== "number" || !(value >= 0 && value <= 1)))) {
             return NextResponse.json({ error: "One of the photos is invalid." }, { status: 400 });
         }
         ids.add(photo.id);
@@ -71,8 +75,8 @@ export async function POST(request: Request) {
     const price = existing?.status === "changes_requested" ? null : priceBreakdown((await getAlbumSettings(admin)).pricing);
     const values = {
         id, user_id: user.id, title, cover_template_id: destinationId, destination_id: destinationId,
-        album_year: year, layout, cover_typeface: coverTypeface, cover_text_color: coverTextColor,
-        page_count: Math.ceil(photos.length / perPage) + 3,
+        album_year: year, layout, cover_typeface: coverTypeface, cover_text_color: coverTextColor, cover_color: coverBackground.toLowerCase(),
+        page_count: Math.ceil(photos.length / perPage) + EXTRA_PAGES, page_text: pageText,
         status, currency: "GHS", updated_at: new Date().toISOString(),
         ...(price && { subtotal: price.subtotal, total_cost: price.total }),
     };
@@ -87,7 +91,8 @@ export async function POST(request: Request) {
     if (previousError) return NextResponse.json({ error: "Could not save the photo order." }, { status: 503 });
     const { error: imagesError } = await admin.schema("itinero").from("photobook_images").upsert(
         photos.map((photo, index) => ({ id: photo.id, photobook_id: id, storage_path: photo.storagePath,
-            original_name: photo.name, width: photo.width, height: photo.height, order_index: index, caption: photo.caption })),
+            original_name: photo.name, width: photo.width, height: photo.height, order_index: index, caption: photo.caption,
+            focus_x: Math.round((photo.focusX ?? 0.5) * 1000) / 1000, focus_y: Math.round((photo.focusY ?? 0.5) * 1000) / 1000 })),
         { onConflict: "id" }
     );
     if (imagesError) return NextResponse.json({ error: "Could not save the photo order." }, { status: 503 });

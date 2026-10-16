@@ -16,6 +16,28 @@ export const COVER_COLOR_SWATCHES = [
     { value: "#e87836", label: "Terracotta" },
 ] as const;
 
+export const DEFAULT_COVER_BACKGROUND = "auto";
+
+/** Cover colours customers can pick. All come from the country-cover palette, so automatic text keeps a matched ink. */
+export const COVER_BACKGROUND_SWATCHES = [
+    { value: "auto", label: "Original" },
+    { value: "#f1e7d6", label: "Ivory" },
+    { value: "#eecb6d", label: "Gold" },
+    { value: "#f0c28d", label: "Apricot" },
+    { value: "#e8c3be", label: "Rose" },
+    { value: "#d9cce3", label: "Lilac" },
+    { value: "#c7d9e6", label: "Powder blue" },
+    { value: "#cedcc4", label: "Sage" },
+    { value: "#526f89", label: "Slate" },
+    { value: "#4b6b55", label: "Forest" },
+    { value: "#a94c4f", label: "Red" },
+] as const;
+
+/** The cover's background: the customer's colour, or the illustration's own when "auto". */
+export function resolveCoverBackground(value: string, originalColor: string) {
+    return value === "auto" ? originalColor : value;
+}
+
 // One ink for each background in the country-cover palette. These keep the
 // lettering in the same colour family as the art while retaining clear contrast.
 const COVER_PALETTE_INKS: Record<string, string> = {
@@ -69,6 +91,11 @@ export function isCoverTextColor(value: unknown): value is string {
 
 export function normalizeCoverTypeface(value: unknown): CoverTypeface {
     return isCoverTypeface(value) ? value : DEFAULT_COVER_TYPEFACE;
+}
+
+/** Cover background uses the same format as text colour: "auto" or a six-digit hex colour. */
+export function normalizeCoverBackground(value: unknown): string {
+    return isCoverTextColor(value) ? value.toLowerCase() : DEFAULT_COVER_BACKGROUND;
 }
 
 export function normalizeCoverTextColor(value: unknown): string {

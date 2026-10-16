@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ALBUM_BUCKET, parseAccraAddress } from "@/lib/album-order";
+import { parseAccraAddress } from "@/lib/album-order";
 import { albumServerContext, UUID_PATTERN } from "@/lib/album-server";
 import { announcePaidOrder, notifyCustomer, ORDER_FIELDS, recordOrderEvent, type OrderRow } from "@/lib/album-orders-server";
 import { ALERT_COLORS, orderFields, sendOrderAlert } from "@/lib/order-alerts";
@@ -36,17 +36,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const { count, error: countError } = await admin.schema("itinero").from("photobook_images")
         .select("id", { count: "exact", head: true }).eq("photobook_id", id);
     if (countError || !count) return NextResponse.json({ error: "Save at least one photo before ordering." }, { status: 400 });
-    const proofPath = `${user.id}/${id}/proof.pdf`;
-    const { data: files, error: listError } = await admin.storage.from(ALBUM_BUCKET).list(`${user.id}/${id}`, { limit: 100 });
-    if (listError || !(files ?? []).some(file => file.name === "proof.pdf")) {
-        return NextResponse.json({ error: "Your album PDF is still uploading." }, { status: 400 });
-    }
 
     const quote = await quoteAlbumPrice(admin, { code: body?.discountCode, userId: user.id, albumId: id });
     if ("error" in quote) return NextResponse.json({ error: quote.error }, { status: 400 });
     const now = new Date().toISOString();
     const order = {
-        shipping_address: address, pdf_path: proofPath, currency: "GHS",
+        // The print file is built in the admin after payment, never uploaded by the customer.
+        shipping_address: address, pdf_path: null, currency: "GHS",
         customer_email: user.email, customer_name: user.user_metadata?.full_name || user.user_metadata?.name || address.fullName,
         subtotal: quote.subtotal, total_cost: quote.total, discount_id: quote.discount?.id ?? null,
         discount_code: quote.discount?.code ?? null, discount_amount: quote.discountAmount,

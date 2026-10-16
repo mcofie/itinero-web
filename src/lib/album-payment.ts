@@ -3,6 +3,15 @@ import { announcePaidOrder, notifyCustomer, ORDER_FIELDS, recordOrderEvent, type
 import { ALERT_COLORS, sendOrderAlert } from "@/lib/order-alerts";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+type PaystackTransaction = { reference?: string; amount?: number; currency?: string; metadata?: Record<string, unknown> | null };
+
+/** A successful Paystack charge counts for an order only if reference, amount (in pesewas), currency and order details all match. */
+export function paymentMatchesOrder(transaction: PaystackTransaction, order: { reference: string; id: string; userId: string; totalCost: number }) {
+    const metadata = transaction.metadata ?? {};
+    return transaction.reference === order.reference && transaction.amount === Math.round(order.totalCost * 100) && transaction.currency === "GHS"
+        && metadata.purpose === "album_order" && metadata.album_id === order.id && metadata.user_id === order.userId;
+}
+
 export async function reconcileAlbumPayment(reference: string): Promise<"paid" | "pending" | "invalid"> {
     if (!process.env.PAYSTACK_SECRET_KEY || !reference) return "invalid";
     const admin = createAdminClient();
@@ -20,9 +29,7 @@ export async function reconcileAlbumPayment(reference: string): Promise<"paid" |
     const result = await response.json().catch(() => null);
     const transaction = result?.data;
     if (!result?.status || transaction?.status !== "success") return "pending";
-    const metadata = transaction.metadata ?? {};
-    if (transaction.reference !== reference || transaction.amount !== Math.round(Number(album.total_cost) * 100) || transaction.currency !== "GHS" ||
-        metadata.purpose !== "album_order" || metadata.album_id !== album.id || metadata.user_id !== album.user_id) {
+    if (!paymentMatchesOrder(transaction, { reference, id: album.id, userId: album.user_id, totalCost: Number(album.total_cost) })) {
         await sendOrderAlert({
             title: "⚠️ Payment doesn’t match its order",
             description: "Paystack reports a successful payment, but its amount, currency or details don’t match the order, so the order was not marked paid. Check it in Paystack.",

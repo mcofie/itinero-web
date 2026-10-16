@@ -25,7 +25,7 @@ export default async function OrderStatusPage({ params }: { params: Promise<{ id
     if (!user) redirect(`/album-login?next=${encodeURIComponent(`/photobooks/${id}`)}`);
 
     const { data: order } = await sb.schema("itinero").from("photobooks")
-        .select("id,order_number,title,status,held_from_status,cover_template_id,album_year,cover_typeface,cover_text_color,page_count,subtotal,discount_code,discount_amount,delivery_fee,tax_rate,tax_amount,total_cost,currency,shipping_address,customer_message,courier_name,courier_phone,delivery_date,paid_at,images:photobook_images(count)")
+        .select("id,order_number,title,status,held_from_status,cover_template_id,album_year,cover_typeface,cover_text_color,cover_color,page_count,subtotal,discount_code,discount_amount,delivery_fee,tax_rate,tax_amount,total_cost,currency,shipping_address,customer_message,courier_name,courier_phone,delivery_date,paid_at,images:photobook_images(count)")
         .eq("id", id).eq("user_id", user.id).maybeSingle();
     if (!order) notFound();
     if (!isOrderStatus(order.status) || !PLACED_STATUSES.includes(order.status)) redirect(`/make-album?id=${id}`);
@@ -50,7 +50,7 @@ export default async function OrderStatusPage({ params }: { params: Promise<{ id
         <div className="mx-auto max-w-5xl px-5 pb-24 pt-20 sm:px-8 sm:pt-28">
             <Link href="/photobooks" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-[#a2602f]"><ArrowLeft size={15} /> My albums</Link>
             <header className="mt-8 flex flex-col gap-8 border-b border-[#dfd3c4] pb-10 sm:flex-row sm:items-end">
-                <AlbumCoverThumb coverId={order.cover_template_id} title={order.title} year={order.album_year} typeface={order.cover_typeface} textColor={order.cover_text_color} height={200} className="shadow-[7px_10px_18px_#2b1a0730]" />
+                <AlbumCoverThumb coverId={order.cover_template_id} title={order.title} year={order.album_year} typeface={order.cover_typeface} textColor={order.cover_text_color} background={order.cover_color} height={200} className="shadow-[7px_10px_18px_#2b1a0730]" />
                 <div className="min-w-0">
                     <p className="mb-3 text-[11px] font-bold uppercase tracking-[.23em] text-[#c16b36]">Order {formatOrderNumber(order.order_number)}</p>
                     <h1 className="font-[Georgia] text-4xl leading-[1.05] tracking-[-.04em] sm:text-5xl">{info.customerLabel}</h1>

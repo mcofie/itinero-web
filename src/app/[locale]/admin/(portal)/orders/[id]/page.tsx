@@ -12,6 +12,7 @@ import { TRAVEL_COVERS_BY_ID, type TravelCoverId } from "@/lib/travel-covers";
 import AlbumCoverThumb from "@/components/album/AlbumCoverThumb";
 import { cn } from "@/lib/utils";
 import StatusBadge from "../../StatusBadge";
+import PrintFileButton from "./PrintFileButton";
 import { DeliveryForm, NoteForm, PaymentCheck, StatusActions, WhatsAppUpdate } from "./OrderWorkspace";
 
 type EventRow = { id: string; kind: "status" | "note" | "notification" | "delivery"; from_status: string | null; to_status: string | null; message: string | null; actor: string; metadata: Record<string, string>; created_at: string };
@@ -90,8 +91,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
                 <Card title="Print files" icon={<FileText size={14} />}>
                     <div className="flex flex-wrap items-center gap-3">
-                        {order.pdf_path ? <a href={`/api/admin/albums/${order.id}/file`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#2b1a07] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#53330e]"><FileText size={16} /> Open proof PDF</a>
-                            : <span className="text-sm text-[#8a7d70]">No proof PDF yet.</span>}
+                        {order.pdf_path && <a href={`/api/admin/albums/${order.id}/file`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#2b1a07] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#53330e]"><FileText size={16} /> Interior PDF</a>}
+                        {order.cover_pdf_path && <a href={`/api/admin/albums/${order.id}/file?file=cover`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-[#2b1a07] px-4 py-2.5 text-sm font-bold text-[#2b1a07] transition hover:bg-[#f3ebe0]"><FileText size={16} /> Cover spread PDF</a>}
+                        {!["draft", "pending_payment"].includes(status) && <PrintFileButton orderId={order.id} rebuild={!!order.pdf_path} />}
                         <span className="text-xs text-[#8a7d70]">{photos.length} photos · {order.page_count || "—"} proof pages · {ALBUM_FORMAT}</span>
                     </div>
                     {lowRes.length > 0 && <p className="mt-4 flex gap-2 rounded-xl bg-[#fbecc2]/60 p-3 text-sm text-[#6b4f05]"><AlertTriangle size={16} className="mt-0.5 shrink-0" />{lowRes.length} {lowRes.length === 1 ? "photo is" : "photos are"} under {LOW_RES_PX} px on the short side and may print softly.</p>}
@@ -141,7 +143,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <aside className="space-y-6">
                 <Card title="Album">
                     <div className="flex gap-4">
-                        <AlbumCoverThumb coverId={order.cover_template_id} title={order.title} year={order.album_year} typeface={order.cover_typeface} textColor={order.cover_text_color} height={130} className="shadow-[4px_6px_12px_#2b1a0730]" />
+                        <AlbumCoverThumb coverId={order.cover_template_id} title={order.title} year={order.album_year} typeface={order.cover_typeface} textColor={order.cover_text_color} background={order.cover_color} height={130} className="shadow-[4px_6px_12px_#2b1a0730]" />
                         <dl className="min-w-0 space-y-1.5 text-xs">
                             <div><dt className="text-[#8a7d70]">Title</dt><dd className="truncate font-semibold">{order.title}</dd></div>
                             <div><dt className="text-[#8a7d70]">Cover</dt><dd>{destination} · {order.album_year}</dd></div>

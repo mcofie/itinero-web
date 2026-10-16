@@ -18,7 +18,7 @@ export const ORDER_TABS = [
 export type OrderTab = (typeof ORDER_TABS)[number];
 export type OrderSort = "waiting" | "newest" | "oldest";
 
-export const ORDER_LIST_FIELDS = "id,order_number,title,status,cover_template_id,album_year,cover_typeface,cover_text_color,customer_name,customer_email,shipping_address,paid_at,submitted_at,status_changed_at,created_at,total_cost,currency";
+export const ORDER_LIST_FIELDS = "id,order_number,title,status,cover_template_id,album_year,cover_typeface,cover_text_color,cover_color,customer_name,customer_email,shipping_address,paid_at,submitted_at,status_changed_at,created_at,total_cost,currency";
 
 export type OrderFilters = { tab: OrderTab; q: string; from: string; to: string; sort: OrderSort; page: number };
 

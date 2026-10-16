@@ -36,3 +36,5 @@ Thumbs.db
 
 # Optional Next.js cache
 .next/cache
+# Print-resolution cover art, kept in private storage
+/print-assets

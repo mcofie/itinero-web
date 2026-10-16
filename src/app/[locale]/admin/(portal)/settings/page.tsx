@@ -1,6 +1,6 @@
 import { getAlbumSettings } from "@/lib/album-settings-server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { PricingSettings } from "./SettingsForms";
+import { PricingSettings, PrintSpecSettings } from "./SettingsForms";
 
 export default async function SettingsPage() {
     const settings = await getAlbumSettings(createAdminClient());
@@ -10,8 +10,9 @@ export default async function SettingsPage() {
             Prices apply to checkouts from now on; orders already placed keep the prices they were charged.
             {settings.updatedAt && <> Last changed {new Date(settings.updatedAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}{settings.updatedBy && ` by ${settings.updatedBy}`}.</>}
         </p>
-        <div className="mt-6">
+        <div className="mt-6 space-y-6">
             <PricingSettings pricing={settings.pricing} />
+            <PrintSpecSettings spec={settings.printSpec} />
         </div>
     </main>;
 }

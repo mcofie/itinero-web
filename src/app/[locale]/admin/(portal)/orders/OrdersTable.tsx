@@ -18,6 +18,7 @@ export type OrderListRow = {
     album_year: string | null;
     cover_typeface: string | null;
     cover_text_color: string | null;
+    cover_color: string | null;
     customer_name: string | null;
     customer_email: string | null;
     shipping_address: { fullName?: string; phone?: string; area?: string } | null;
@@ -103,7 +104,7 @@ export default function OrdersTable({ rows, exportAllHref, emptyLabel }: { rows:
                             <td className="md:px-4 md:py-3"><input type="checkbox" aria-label={`Select order ${formatOrderNumber(row.order_number)}`} checked={selected.has(row.id)} onChange={() => toggle(row.id)} className="accent-[#2b1a07]" /></td>
                             <td className="min-w-0 flex-1 md:px-2 md:py-3">
                                 <Link href={`/admin/orders/${row.id}`} className="flex items-center gap-3">
-                                    <AlbumCoverThumb coverId={row.cover_template_id} title={row.title} year={row.album_year} typeface={row.cover_typeface} textColor={row.cover_text_color} height={56} className="shadow-[2px_3px_6px_#2b1a0726]" />
+                                    <AlbumCoverThumb coverId={row.cover_template_id} title={row.title} year={row.album_year} typeface={row.cover_typeface} textColor={row.cover_text_color} background={row.cover_color} height={56} className="shadow-[2px_3px_6px_#2b1a0726]" />
                                     <span className="min-w-0"><strong className="block font-mono text-[13px]">{formatOrderNumber(row.order_number)}</strong><span className="block truncate text-xs text-[#8a7d70]">{row.title}</span></span>
                                 </Link>
                             </td>

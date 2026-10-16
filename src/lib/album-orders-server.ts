@@ -8,7 +8,7 @@ import type { createAdminClient } from "@/lib/supabase/admin";
 
 type AdminClient = NonNullable<ReturnType<typeof createAdminClient>>;
 
-export const ORDER_FIELDS = "id,user_id,order_number,title,status,held_from_status,destination_id,cover_template_id,album_year,layout,cover_typeface,cover_text_color,page_count,subtotal,discount_id,discount_code,discount_amount,delivery_fee,tax_rate,tax_amount,total_cost,currency,shipping_address,pdf_path,payment_reference,customer_email,customer_name,customer_message,courier_name,courier_phone,delivery_date,delivered_at,paid_at,submitted_at,status_changed_at,created_at,updated_at";
+export const ORDER_FIELDS = "id,user_id,order_number,title,status,held_from_status,destination_id,cover_template_id,album_year,layout,cover_typeface,cover_text_color,cover_color,page_count,subtotal,discount_id,discount_code,discount_amount,delivery_fee,tax_rate,tax_amount,total_cost,currency,shipping_address,pdf_path,cover_pdf_path,payment_reference,customer_email,customer_name,customer_message,courier_name,courier_phone,delivery_date,delivered_at,paid_at,submitted_at,status_changed_at,created_at,updated_at";
 
 export type OrderRow = {
     id: string;
@@ -23,6 +23,7 @@ export type OrderRow = {
     layout: string | null;
     cover_typeface: string | null;
     cover_text_color: string | null;
+    cover_color: string | null;
     page_count: number | null;
     subtotal: number | null;
     discount_id: string | null;
@@ -35,6 +36,7 @@ export type OrderRow = {
     currency: string | null;
     shipping_address: { fullName?: string; phone?: string; street?: string; area?: string; landmark?: string } | null;
     pdf_path: string | null;
+    cover_pdf_path: string | null;
     payment_reference: string | null;
     customer_email: string | null;
     customer_name: string | null;
@@ -178,7 +180,8 @@ export async function transitionOrder(admin: AdminClient, id: string, input: Tra
     const update: Record<string, unknown> = { status: move.to, status_changed_at: now, updated_at: now };
     if (move.kind === "hold") update.held_from_status = from;
     if (from === "on_hold") update.held_from_status = null;
-    if (move.to === "changes_requested") update.customer_message = customerMessage;
+    // An album sent back for changes needs a new print file once the customer resubmits.
+    if (move.to === "changes_requested") Object.assign(update, { customer_message: customerMessage, pdf_path: null, cover_pdf_path: null });
     if (from === "changes_requested") update.customer_message = null;
     if (required.delivery) Object.assign(update, { courier_name: courierName || null, courier_phone: courierPhone || null, delivery_date: deliveryDate || null });
     if (move.to === "delivered") update.delivered_at = now;

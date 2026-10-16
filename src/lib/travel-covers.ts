@@ -164,6 +164,16 @@ export function coverPrintImagePath(id: TravelCoverId) {
     return `/images/landing/print-covers/${id}.webp`;
 }
 
+/** The cover illustration on a transparent background (scripts/make-cover-cutouts.mjs), for custom cover colours. */
+export function coverObjectImagePath(id: TravelCoverId) {
+    return `/images/landing/cover-objects/${id}.webp`;
+}
+
+/** The illustration to draw for a cover: the original, or the cut-out when the customer picked their own colour. */
+export function coverArtPath(id: TravelCoverId, background: string) {
+    return background === "auto" ? coverPrintImagePath(id) : coverObjectImagePath(id);
+}
+
 export function coverThumbnailPath(id: TravelCoverId) {
     return `/images/landing/covers/thumbs/${id}.webp`;
 }

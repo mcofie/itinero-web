@@ -12,8 +12,10 @@ export default function AuthCallbackClient() {
     useEffect(() => {
         const code = params.get("code");
         const error = params.get("error");
-        const requestedNext = params.get("next") || window.sessionStorage.getItem("itinero-auth-next") || "/photobooks";
+        // Email links can open in a new tab, so the destination is also kept in localStorage.
+        const requestedNext = params.get("next") || window.sessionStorage.getItem("itinero-auth-next") || window.localStorage.getItem("itinero-auth-next") || "/photobooks";
         window.sessionStorage.removeItem("itinero-auth-next");
+        window.localStorage.removeItem("itinero-auth-next");
         const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : "/photobooks";
         const errorDestination = next.startsWith("/make-album") || next.startsWith("/photobooks")
             ? "/album-login" : "/login";

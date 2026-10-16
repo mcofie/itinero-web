@@ -11,7 +11,7 @@ const money = (value: unknown, min: number, max: number) => {
     return Number.isFinite(number) && number >= min && number <= max ? number : null;
 };
 
-/** Saves album pricing. Prices apply to checkouts from now on. */
+/** Saves album pricing (`pricing`) or the printer specification (`printSpec`). Prices apply to checkouts from now on. */
 export async function PATCH(request: Request) {
     const auth = await ordersAdminContext();
     if (!auth) return NextResponse.json({ error: "Forbidden." }, { status: 403 });
@@ -40,6 +40,19 @@ export async function PATCH(request: Request) {
         if (changes.length) {
             await sendOrderAlert({ title: "Prices changed", fields: [...changes, ["By", auth.actor]], color: ALERT_COLORS.warning });
         }
+        return NextResponse.json({ ok: true });
+    }
+
+    if (body?.printSpec) {
+        const spec = {
+            interiorBleedMm: money(body.printSpec.interiorBleedMm, 0, 20),
+            coverWrapMm: money(body.printSpec.coverWrapMm, 0, 40),
+            spineBaseMm: money(body.printSpec.spineBaseMm, 0, 30),
+            spinePerPageMm: money(body.printSpec.spinePerPageMm, 0, 2),
+        };
+        if (Object.values(spec).some(value => value === null)) return NextResponse.json({ error: "Check the print measurements." }, { status: 400 });
+        const { error } = await auth.admin.schema("itinero").from("album_settings").upsert({ id: 1, print_spec: spec, ...stamp });
+        if (error) return NextResponse.json({ error: "Could not save the print settings." }, { status: 503 });
         return NextResponse.json({ ok: true });
     }
 

@@ -36,6 +36,45 @@
 .spin{animation:spin 1s linear infinite}
 .bone{display:block;border-radius:9px;background:linear-gradient(100deg,#e9e0d4 30%,#f4eee6 50%,#e9e0d4 70%);background-size:220% 100%;animation:shimmer 1.6s ease-in-out infinite}.boneCover{aspect-ratio:4/5;width:100%;max-width:350px;margin:0 auto;border-radius:4px 8px 8px 4px}
 .savingDot{width:8px;height:8px;margin:0 3.5px;border-radius:50%;background:currentColor;animation:savingPulse 1s ease-in-out infinite}
+.albumPage{container-type:inline-size}.pagePhotos{position:relative;overflow:hidden}.previewMark{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;user-select:none;color:#fff;opacity:.4;font:700 max(5px,3.6cqw) var(--font-geist-sans),Arial,sans-serif;letter-spacing:.3em;text-transform:uppercase;text-shadow:0 1px 3px #2b1a0766;transform:rotate(-24deg);white-space:nowrap}
+/* Opening page, closing page and back cover. Sizes are cqw of the page width, matching the print file's 1800-unit design grid. */
+.printPage{position:relative;aspect-ratio:4/5;width:100%;max-width:350px;margin:0 auto;container-type:inline-size;overflow:hidden;border-radius:3px 7px 7px 3px;box-shadow:7px 16px 24px #4e38282c;background:#fdfbf8;color:var(--ink)}
+.miniPage .printPage{box-shadow:none}
+.printFrame{position:absolute;inset:8.61cqw;border:max(1px,.17cqw) solid #d6c6ae;pointer-events:none}
+.printClamp{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line;overflow-wrap:anywhere}
+.openingGreeting{position:absolute;left:12.78cqw;top:16.67cqw;color:#e87836;font:400 4cqw/1 var(--font-album-hand),cursive}
+.openingBody{position:absolute;left:12.78cqw;right:12.78cqw;top:38.89cqw}
+.openingHeading{-webkit-line-clamp:2;font:400 var(--heading-size)/1.02 var(--font-album-serif),Georgia,serif}
+.openingSubtitle{display:block;margin-top:2.22cqw;color:#6d5c4b;font:400 3cqw/1 var(--font-album-serif),Georgia,serif}
+.openingRule{display:block;width:6.67cqw;height:.28cqw;margin-top:5cqw;background:#e87836}
+.openingNote{-webkit-line-clamp:6;margin-top:4.17cqw;color:#3f2f1d;font:italic 400 2.78cqw/1.44 var(--font-album-serif),Georgia,serif}
+.openingCount{position:absolute;left:12.78cqw;top:110.56cqw;color:#8e7d67;font:1.78cqw Arial,sans-serif}
+.closingCopy{position:absolute;left:10cqw;right:10cqw;top:31.1cqw;text-align:center}
+.closingHand{display:block;color:#e87836;font:400 4.33cqw/1 var(--font-album-hand),cursive}
+.closingEnd{display:block;margin-top:3.4cqw;font:400 11.1cqw/1 var(--font-album-serif),Georgia,serif}
+.closingNow{display:block;margin-top:1.67cqw;color:#6d5c4b;font:italic 400 5.56cqw/1 var(--font-album-serif),Georgia,serif}
+.closingNote{-webkit-line-clamp:5;max-width:66.7cqw;margin:6.67cqw auto 0;color:#3f2f1d;font:italic 400 2.78cqw/1.44 var(--font-album-serif),Georgia,serif}
+.closingStamp{position:absolute;left:50%;top:100cqw;width:16.67cqw;aspect-ratio:1;translate:-50% -50%;border:max(1px,.28cqw) solid #c08a5a;border-radius:50%;display:grid;place-content:center;gap:.6cqw;text-align:center;color:#a2602f}
+.closingStamp::after{content:"";position:absolute;inset:.89cqw;border:max(1px,.11cqw) solid #c08a5a;border-radius:50%}
+.closingStamp span{max-width:12.8cqw;font:700 1.67cqw/1.1 Arial,sans-serif;letter-spacing:.28cqw;text-transform:uppercase;overflow-wrap:anywhere}
+.closingStamp strong{font:400 2.56cqw/1 var(--font-album-serif),Georgia,serif}
+.closingMade{position:absolute;inset:110.56cqw 0 auto;text-align:center;color:#a89a8a;font:1.56cqw Arial,sans-serif}
+.backCover{background:var(--cover-color);color:var(--back-ink)}
+.backArt{position:absolute;left:50%;top:47.78cqw;width:40cqw;aspect-ratio:1;translate:-50% -50%;border-radius:50%;overflow:hidden;outline:max(1px,.28cqw) solid color-mix(in srgb,var(--back-ink) 55%,transparent);outline-offset:1.39cqw}
+.backArt img{width:100%;height:100%;object-fit:cover}
+.backPlace,.backYear,.backNote,.backMark,.backTagline{position:absolute;left:8cqw;right:8cqw;text-align:center}
+.backPlace{top:72.78cqw;font:700 2.11cqw/1 Arial,sans-serif;letter-spacing:.56cqw;text-transform:uppercase}
+.backYear{top:76.4cqw;font:400 2.56cqw/1 var(--font-album-serif),Georgia,serif}
+.backNote{top:84.4cqw;left:13.9cqw;right:13.9cqw;-webkit-line-clamp:3;font:italic 400 3cqw/1.41 var(--font-album-serif),Georgia,serif}
+.backMark{top:107.2cqw;font:400 5.33cqw/1 var(--font-album-round),Arial,sans-serif}
+.backTagline{top:114.4cqw;font:1.67cqw/1 Arial,sans-serif;opacity:.8}
+.pageTextFields{display:grid;gap:14px;margin-top:30px}.pageTextFields label{display:flex;flex-direction:column;gap:6px;color:#685b4e;font:700 11px var(--font-geist-sans),Arial,sans-serif}.pageTextFields input,.pageTextFields textarea{min-width:0;padding:11px 12px;border:1px solid #dcd1c2;border-radius:9px;background:#fffdfa;color:#2b1a07;font:15px/1.45 var(--font-album-serif),Georgia,serif;resize:vertical}.pageTextFields small{color:#9a8b7b;font:400 11px var(--font-geist-sans),Arial,sans-serif}
+.dragHandle{flex:none;display:grid;place-items:center;width:28px;height:44px;margin:-4px -6px -4px -4px;border-radius:8px;color:#a6927d;cursor:grab;touch-action:none}.dragHandle:hover{background:#f3ebe0;color:#6c4f37}.dragHandle:active{cursor:grabbing}
+.storyRowDragging{position:relative;z-index:5;box-shadow:0 12px 26px #2b1a0726;border-color:#d9c3a8}
+.storyRow>img{cursor:pointer}
+.repositionable{cursor:grab;touch-action:none}.repositionable:active{cursor:grabbing}
+.lowResBadge{position:absolute;left:5px;top:5px;padding:3px 6px;border-radius:5px;background:#fff0dfef;color:#825120;font:700 9px/1 Arial,sans-serif;font-style:normal}
+.emailSignIn{display:block;margin-top:12px;text-align:center;color:#8b6c56;font:600 12px var(--font-geist-sans),Arial,sans-serif;text-decoration:underline;text-underline-offset:3px}
 @keyframes savingPulse{50%{opacity:.25}}
 @media(prefers-reduced-motion:reduce){.savingDot{animation:none}}
 @keyframes shimmer{from{background-position:120% 0}to{background-position:-120% 0}}
@@ -152,7 +191,7 @@
   .previewDescriptor{color:#aa9888;font-size:9px}
   .previewExpandButton{display:inline-flex;margin-top:9px;padding:0;color:#854923;text-decoration:underline;text-underline-offset:3px;font:700 12px var(--font-geist-sans),Arial,sans-serif}
   .previewCanvas{grid-column:1;grid-row:1/3;width:138px;align-self:center}
-  .previewCanvas .coverPreview,.previewCanvas .albumPage,.previewCanvas .introPage{max-width:138px}
+  .previewCanvas .coverPreview,.previewCanvas .albumPage,.previewCanvas .introPage,.previewCanvas .printPage{max-width:138px}
   .previewColumn:not(.previewExpanded) .coverTitleArea{padding:5% 7% 0}
   .previewTapHint{position:absolute;left:50%;bottom:7px;z-index:5;display:inline-flex;align-items:center;gap:5px;transform:translateX(-50%);width:max-content;max-width:92%;padding:5px 7px;border-radius:999px;background:#2b1a07df;color:#fff;font:700 8px var(--font-geist-sans),Arial,sans-serif;letter-spacing:0;text-transform:none;box-shadow:0 3px 9px #2b1a0730}
   .previewCaption{grid-column:2;grid-row:2;align-self:start;margin:13px 0 0;text-align:left;font-size:18px;line-height:1.1}
@@ -162,7 +201,7 @@
   .previewExpanded .previewDescriptor{display:none}
   .previewExpanded .previewExpandButton{margin:0}
   .previewExpanded .previewCanvas{width:100%;display:flex;justify-content:center}
-  .previewExpanded .coverPreview,.previewExpanded .albumPage,.previewExpanded .introPage{width:100%;max-width:290px}
+  .previewExpanded .coverPreview,.previewExpanded .albumPage,.previewExpanded .introPage,.previewExpanded .printPage{width:100%;max-width:290px}
   .previewExpanded .previewCaption{text-align:center;margin:16px 0 2px}
   .previewExpanded .previewPager{justify-content:center;margin-top:16px}
   .previewMiniPages{display:none}
@@ -182,7 +221,7 @@
   .headerRight{gap:0}.saveBadge{font-size:9px}
   .step{padding:6px}.step strong{font-size:11px}
   .previewColumn{grid-template-columns:120px minmax(0,1fr);column-gap:14px}
-  .previewCanvas{width:120px}.previewCanvas .coverPreview,.previewCanvas .albumPage,.previewCanvas .introPage{max-width:120px}
+  .previewCanvas{width:120px}.previewCanvas .coverPreview,.previewCanvas .albumPage,.previewCanvas .introPage,.previewCanvas .printPage{max-width:120px}
   .destinationCard>span:nth-child(2){font-size:10px}.formPair{grid-template-columns:1fr 88px}
   .layoutOption small{font-size:10px}
   .typefaceOption{min-height:72px}.typefaceBold>span{font-size:20px}.typefaceSerif>span{font-size:20px}.typefaceHandwritten>span{font-size:23px}

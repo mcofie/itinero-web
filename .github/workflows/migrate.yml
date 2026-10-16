@@ -1,0 +1,42 @@
+name: Database migrations
+
+# Applies new files in supabase/migrations to the production database when they land on main.
+# The Supabase project is shared with another app, so its migration history includes migrations that
+# aren't in this repo. The job fetches that history into a scratch folder, adds only this repo's
+# migrations that are newer than the latest one recorded, and pushes those.
+# Needs repository secrets SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD and SUPABASE_PROJECT_REF.
+on:
+  push:
+    branches: [main]
+    paths: ["supabase/migrations/**"]
+  workflow_dispatch:
+
+concurrency: database-migrations
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.75.0
+      - name: Prepare a workdir with the remote history plus new migrations
+        run: |
+          work="$RUNNER_TEMP/db"
+          mkdir -p "$work/supabase/migrations"
+          cp supabase/config.toml "$work/supabase/"
+          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}" --workdir "$work"
+          supabase migration fetch --workdir "$work"
+          latest=$(ls "$work/supabase/migrations" | sed 's/_.*//' | sort | tail -1)
+          echo "Latest applied migration: $latest"
+          for file in supabase/migrations/*.sql; do
+            version=$(basename "$file" | sed 's/_.*//')
+            if [ "$version" \> "$latest" ]; then cp "$file" "$work/supabase/migrations/"; echo "New: $(basename "$file")"; fi
+          done
+          echo "WORKDIR=$work" >> "$GITHUB_ENV"
+      - run: supabase db push --workdir "$WORKDIR" --dry-run
+      - run: supabase db push --workdir "$WORKDIR" --yes
