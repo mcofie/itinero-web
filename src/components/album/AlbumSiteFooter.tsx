@@ -9,7 +9,7 @@ export default function AlbumSiteFooter() {
                 <img src="/brand/itinero-mark-white-animated.svg" alt="" width={72} height={36} />
                 <p className="mt-5 max-w-xs font-[Georgia] text-3xl leading-tight">Making books that bring trips back.</p>
             </div>
-            <nav aria-label="Footer" className="grid grid-cols-2 gap-x-12 gap-y-3 text-sm font-semibold">
+            <nav aria-label="Footer" className="grid grid-cols-2 gap-x-12 gap-y-3 text-[16px]">
                 <Link href="/make-album" className="hover:underline">Make an album</Link>
                 <Link href="/photobooks" className="hover:underline">My albums</Link>
                 <Link href="/#how-it-works" className="hover:underline">How it works</Link>

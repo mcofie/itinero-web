@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CircleAlert, Clock } from "lucide-react";
 import { useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
+import ui from "@/components/album/album-ui.module.css";
 
 type PaymentState = { tone: "checking" | "pending" | "problem"; title: string; detail: string } | null;
 
@@ -41,12 +42,12 @@ export default function AlbumPaymentStatus() {
 
     if (!state) return null;
     const Icon = state.tone === "problem" ? CircleAlert : Clock;
-    return <div className="mx-auto max-w-6xl px-5 pb-6 sm:px-8">
-        <div role={state.tone === "problem" ? "alert" : "status"} className={cn("flex gap-3 rounded-2xl border px-5 py-4 text-sm leading-6",
-            state.tone === "problem" ? "border-red-200 bg-red-50 text-red-900" : "border-[#e2d6c7] bg-[#fdfbf8] text-[#5e4a38]")}>
-            {state.tone === "checking" ? <span className="mt-1.5 h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[#c16b36]" aria-hidden /> : <Icon size={18} className="mt-0.5 shrink-0" />}
+    return <div className="mx-auto max-w-6xl px-5 pt-6 sm:px-8">
+        <div role={state.tone === "problem" ? "alert" : "status"} className={cn(ui.card, "flex gap-3 px-5 py-4 font-sans text-sm leading-6",
+            state.tone === "problem" ? "border-[#b4441c] text-[#7a2e12]" : "text-[#5e4a38]")}>
+            {state.tone === "checking" ? <span className="mt-1.5 h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-[#ed7936]" aria-hidden /> : <Icon size={18} className="mt-0.5 shrink-0" />}
             <div className="min-w-0">
-                <strong className="block text-[#2b1a07]">{state.title}</strong>
+                <strong className="block font-[family-name:var(--font-album-serif)] text-base font-normal text-[#2b1a07]">{state.title}</strong>
                 <p>{state.detail}</p>
                 {state.tone !== "checking" && reference && <button type="button" onClick={() => void check(reference)} className="mt-2 text-xs font-bold underline underline-offset-2">Check again</button>}
             </div>

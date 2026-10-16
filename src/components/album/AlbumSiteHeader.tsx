@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LogOut, Plus } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Link, usePathname } from "@/i18n/routing";
 import { getSupabaseBrowser } from "@/lib/supabase/browser-singleton";
 import { cn } from "@/lib/utils";
+import ui from "./album-ui.module.css";
 
 /** Slim header for the album pages, matching the landing page: logo, My albums, Make an album, account. */
 export default function AlbumSiteHeader({ email, name }: { email: string | null; name: string | null }) {
@@ -26,28 +27,27 @@ export default function AlbumSiteHeader({ email, name }: { email: string | null;
     const initial = (name || email || "?").trim().charAt(0).toUpperCase();
     const onAlbums = pathname === "/photobooks";
 
-    return <header className="sticky top-0 z-40 border-b border-[#e9e1d7] bg-[#fffefa]/95 backdrop-blur">
-        <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between gap-3 px-4 sm:h-[82px] sm:px-8">
-            <Link href="/" aria-label="Itinero home" className="flex shrink-0 items-center gap-2">
+    return <header className="sticky top-0 z-40 bg-[#fdfbf9]/95 backdrop-blur">
+        <div className="mx-auto flex h-[80px] max-w-6xl items-center justify-between gap-3 px-4 sm:h-[96px] sm:px-8">
+            <Link href="/" aria-label="Itinero home" className="shrink-0 transition hover:-rotate-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/brand/itinero-mark-animated.svg" alt="" width={44} height={27} />
-                <span className="hidden font-[family-name:var(--font-album-round)] text-[26px] leading-none tracking-[-.03em] sm:inline">itinero</span>
+                <img src="/brand/itinero-mark-animated.svg" alt="" width={64} height={39} className="drop-shadow-[0_2px_1px_#2b1a071b]" />
             </Link>
-            <nav className="flex items-center gap-1.5 sm:gap-3" aria-label="Albums">
+            <nav className="flex items-center gap-3 sm:gap-5" aria-label="Albums">
                 {email && <Link href="/photobooks" aria-current={onAlbums ? "page" : undefined}
-                    className={cn("px-2 py-2 text-sm font-semibold transition sm:px-3", onAlbums ? "text-[#2b1a07] underline decoration-[#e87836] decoration-2 underline-offset-4" : "text-[#6d5c4b] hover:text-[#2b1a07]")}>My albums</Link>}
-                <Link href="/make-album" className="inline-flex items-center gap-1.5 rounded-xl bg-[#2b1a07] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#53330e] sm:px-4 sm:text-sm"><Plus size={15} strokeWidth={2.5} /><span className="hidden sm:inline">Make an album</span><span className="sm:hidden">Make one</span></Link>
+                    className={cn("text-[16px] transition", onAlbums ? "underline decoration-[#ed7936] decoration-2 underline-offset-[6px]" : "text-[#5e4a38] hover:text-[#2b1a07]")}>My albums</Link>}
+                <Link href="/make-album" className={cn(ui.button, ui.buttonSmall)}><span className="hidden sm:inline">Make an album</span><span className="sm:hidden">Make one</span></Link>
                 {email ? <div ref={menuRef} className="relative">
                     <button type="button" onClick={() => setOpen(value => !value)} aria-expanded={open} aria-label="Account"
-                        className="grid h-9 w-9 place-items-center rounded-full bg-[#e87836] text-sm font-bold text-white ring-2 ring-[#fffefa] transition hover:bg-[#d4692b]">{initial}</button>
-                    {open && <div className="absolute right-0 top-11 w-60 overflow-hidden rounded-2xl border border-[#e7dccd] bg-[#fdfbf8] text-sm shadow-[0_14px_40px_#2b1a0726]">
-                        <div className="border-b border-[#efe6da] px-4 py-3">
-                            {name && <p className="truncate font-semibold">{name}</p>}
-                            <p className="truncate text-xs text-[#8a7d70]">{email}</p>
+                        className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#423824] bg-[#fff2d8] font-[family-name:var(--font-album-round)] text-base text-[#2b1a07] transition hover:-rotate-6">{initial}</button>
+                    {open && <div className={cn(ui.card, "absolute right-0 top-12 w-64 overflow-hidden text-[15px]")}>
+                        <div className="border-b-2 border-dashed border-[#dfd6ce] px-4 py-3">
+                            {name && <p className="truncate">{name}</p>}
+                            <p className="truncate font-sans text-xs text-[#8a7d70]">{email}</p>
                         </div>
-                        <button type="button" onClick={() => void signOut()} className="flex w-full items-center gap-2 px-4 py-3 text-left font-semibold text-[#6d5c4b] transition hover:bg-[#f6efe6]"><LogOut size={15} />Sign out</button>
+                        <button type="button" onClick={() => void signOut()} className="flex w-full items-center gap-2 px-4 py-3 text-left text-[#5e4a38] transition hover:bg-[#fff2d8]"><LogOut size={15} />Sign out</button>
                     </div>}
-                </div> : <Link href="/album-login" className="rounded-full px-3 py-2 text-sm font-semibold text-[#6d5c4b] hover:text-[#2b1a07]">Sign in</Link>}
+                </div> : <Link href="/album-login" className="text-[16px] text-[#5e4a38] hover:text-[#2b1a07]">Sign in</Link>}
             </nav>
         </div>
     </header>;
