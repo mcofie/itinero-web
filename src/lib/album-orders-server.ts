@@ -1,7 +1,8 @@
 import { allowedMoves, formatOrderNumber, isOrderStatus, moveRequirements, STATUS_INFO, type OrderStatus } from "@/lib/album-fulfilment";
 import { albumServerContext, isAlbumAdmin } from "@/lib/album-server";
-import { NOTIFY_STATUSES, orderMessage } from "@/lib/order-messages";
-import { emailLayout, sendEmail } from "@/lib/email";
+import { NOTIFY_STATUSES } from "@/lib/order-messages";
+import { sendEmail } from "@/lib/email";
+import { orderEmail } from "@/lib/email-templates";
 import { ALERT_COLORS, orderFields, sendOrderAlert } from "@/lib/order-alerts";
 import { discountUses } from "@/lib/album-pricing-server";
 import { SITE_URL } from "@/lib/site-metadata";
@@ -74,11 +75,17 @@ export async function recordOrderEvent(admin: AdminClient, event: {
 
 /** Emails the customer about a status change and logs the attempt on the timeline. */
 export async function notifyCustomer(admin: AdminClient, order: OrderRow, status: OrderStatus) {
-    const message = orderMessage(status, {
+    const address = order.shipping_address;
+    const message = orderEmail(status, {
         id: order.id, title: order.title, orderNumber: order.order_number,
-        customerName: order.shipping_address?.fullName || order.customer_name,
+        customerName: address?.fullName || order.customer_name,
         customerMessage: order.customer_message, courierName: order.courier_name,
         courierPhone: order.courier_phone, deliveryDate: order.delivery_date, siteUrl: SITE_URL.origin,
+        coverId: order.cover_template_id, albumYear: order.album_year, coverTypeface: order.cover_typeface,
+        coverTextColor: order.cover_text_color, coverColor: order.cover_color, pageCount: order.page_count,
+        subtotal: order.subtotal, discountCode: order.discount_code, discountAmount: order.discount_amount,
+        deliveryFee: order.delivery_fee, taxRate: order.tax_rate, taxAmount: order.tax_amount, totalCost: order.total_cost,
+        address,
     });
     if (!message) return;
     const to = order.customer_email;
@@ -86,7 +93,7 @@ export async function notifyCustomer(admin: AdminClient, order: OrderRow, status
     let detail = "";
     if (!to) { result = "skipped"; detail = "No customer email on the order."; }
     else {
-        const sent = await sendEmail({ to, subject: message.subject, text: message.body, html: emailLayout(message.body, { preheader: message.subject }) });
+        const sent = await sendEmail({ to, subject: message.subject, text: message.text, html: message.html });
         result = sent.ok ? "sent" : sent.skipped ? "skipped" : "failed";
         if (!sent.ok) detail = sent.error;
     }

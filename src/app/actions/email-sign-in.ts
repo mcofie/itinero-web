@@ -1,7 +1,9 @@
 "use server";
 
 import { headers } from "next/headers";
-import { emailLayout, sendEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
+import { signInCodeEmail } from "@/lib/email-templates";
+import { SITE_URL } from "@/lib/site-metadata";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -47,13 +49,7 @@ export async function sendSignInCode(rawEmail: string): Promise<{ ok: true } | {
         return { ok: false, error: "We couldn’t create a sign-in code. Please try again." };
     }
 
-    const text = `Here’s your code to sign in to Itinero:\n\n${code}\n\nEnter it on the sign-in page to pick up where you left off. The code works once and expires soon.\n\nIf you didn’t ask for this, you can ignore this email.`;
-    const sent = await sendEmail({
-        to: email,
-        subject: `${code} is your Itinero sign-in code`,
-        text,
-        html: emailLayout("Here’s your code to sign in to Itinero. Enter it on the sign-in page to pick up where you left off.\n\nThe code works once and expires soon. If you didn’t ask for this, you can ignore this email.", { preheader: `Your sign-in code is ${code}`, highlight: code }),
-    });
+    const sent = await sendEmail({ to: email, ...signInCodeEmail({ code, siteUrl: SITE_URL.origin }) });
     if (!sent.ok) {
         console.error("[sign-in] Could not email the sign-in code:", sent.error);
         lastSent.delete(email);
