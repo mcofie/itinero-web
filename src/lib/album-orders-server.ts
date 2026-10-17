@@ -1,6 +1,7 @@
 import { allowedMoves, formatOrderNumber, isOrderStatus, moveRequirements, STATUS_INFO, type OrderStatus } from "@/lib/album-fulfilment";
 import { albumServerContext, isAlbumAdmin } from "@/lib/album-server";
 import { NOTIFY_STATUSES, orderMessage } from "@/lib/order-messages";
+import { emailLayout, sendEmail } from "@/lib/email";
 import { ALERT_COLORS, orderFields, sendOrderAlert } from "@/lib/order-alerts";
 import { discountUses } from "@/lib/album-pricing-server";
 import { SITE_URL } from "@/lib/site-metadata";
@@ -71,15 +72,6 @@ export async function recordOrderEvent(admin: AdminClient, event: {
     if (error) console.error("[orders] Could not record order event:", error.message);
 }
 
-const escapeHtml = (value: string) => value.replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
-
-function emailHtml(body: string) {
-    const html = escapeHtml(body)
-        .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#c16b36">$1</a>')
-        .split("\n\n").map(paragraph => `<p style="margin:0 0 16px">${paragraph.replaceAll("\n", "<br>")}</p>`).join("");
-    return `<div style="font-family:Georgia,serif;font-size:16px;line-height:1.55;color:#2b1a07;max-width:560px">${html}<p style="margin:24px 0 0;font-size:13px;color:#8a7d70">Itinero · travel albums</p></div>`;
-}
-
 /** Emails the customer about a status change and logs the attempt on the timeline. */
 export async function notifyCustomer(admin: AdminClient, order: OrderRow, status: OrderStatus) {
     const message = orderMessage(status, {
@@ -93,24 +85,10 @@ export async function notifyCustomer(admin: AdminClient, order: OrderRow, status
     let result: "sent" | "skipped" | "failed";
     let detail = "";
     if (!to) { result = "skipped"; detail = "No customer email on the order."; }
-    else if (!process.env.RESEND_API_KEY || !process.env.ORDER_EMAIL_FROM) { result = "skipped"; detail = "Email sending is not set up yet."; }
     else {
-        try {
-            const response = await fetch("https://api.resend.com/emails", {
-                method: "POST",
-                headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    from: process.env.ORDER_EMAIL_FROM, to: [to], subject: message.subject,
-                    text: message.body, html: emailHtml(message.body),
-                    ...(process.env.ORDER_EMAIL_REPLY_TO ? { reply_to: process.env.ORDER_EMAIL_REPLY_TO } : {}),
-                }),
-                cache: "no-store",
-            });
-            result = response.ok ? "sent" : "failed";
-            if (!response.ok) detail = (await response.text().catch(() => "")).slice(0, 300);
-        } catch (error) {
-            result = "failed"; detail = error instanceof Error ? error.message : "Network error";
-        }
+        const sent = await sendEmail({ to, subject: message.subject, text: message.body, html: emailLayout(message.body, { preheader: message.subject }) });
+        result = sent.ok ? "sent" : sent.skipped ? "skipped" : "failed";
+        if (!sent.ok) detail = sent.error;
     }
     await recordOrderEvent(admin, {
         photobookId: order.id, kind: "notification", toStatus: status, message: message.subject,

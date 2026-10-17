@@ -55,13 +55,12 @@ The admin portal at `/admin` signs in with email and password at `/admin/login`,
 
 ### Customer updates
 
-Customers follow their order at `/photobooks/{id}`. On payment, a change request, printing, out for delivery, delivered and cancelled, the app emails the customer through [Resend](https://resend.com) once these are set:
+Customers follow their order at `/photobooks/{id}`. On payment, a change request, printing, out for delivery, delivered and cancelled, the app emails the customer through [Zend](https://tryzend.com). Email sign-in codes go out the same way. Settings:
 
-- `RESEND_API_KEY`
-- `ORDER_EMAIL_FROM`, for example `Itinero <orders@tryitinero.com>`, on a domain verified in Resend
-- `ORDER_EMAIL_REPLY_TO` (optional)
+- `ZEND_API_KEY`, with the `email:send` scope
+- `EMAIL_FROM` (optional), defaults to `Itinero <hello@tryitinero.com>`. The domain must be verified in Zend under Email → Domains (SPF and DKIM records), or Zend refuses to send.
 
-Until then, each email is skipped and the timeline says so. Message text is in `src/lib/order-messages.ts`.
+Without the key, or while the domain is unverified, order emails are skipped or fail and the order timeline says why (a failure also posts a Discord alert). Sign-in falls back to Supabase's own sign-in link email. Message text is in `src/lib/order-messages.ts`; the email design is in `src/lib/email.ts`.
 
 WhatsApp updates are sent from the order page: **Send WhatsApp update** opens WhatsApp with the message for the current status, ready to send. Automatic WhatsApp messages need the WhatsApp Business Platform with approved message templates and are not set up.
 
