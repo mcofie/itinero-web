@@ -21,7 +21,7 @@ export async function sendEmail({ to, subject, html, text }: { to: string; subje
             const message = Array.isArray(result.message) ? result.message.join("; ") : result.message;
             return { ok: false, error: String(message || `Zend responded ${response.status}`).slice(0, 300) };
         }
-        return { ok: true, id: result._id ?? null };
+        return { ok: true, id: result.id ?? result._id ?? null };
     } catch (error) {
         return { ok: false, error: error instanceof Error ? error.message : "Network error" };
     }
